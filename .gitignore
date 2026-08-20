@@ -1,0 +1,38 @@
+# Build artifacts
+builds/
+build/
+*/build/
+*/Builds/
+*.app
+*.vst3
+*.component
+
+# IDE
+.vscode/
+.idea/
+*.xcworkspace
+*.xcodeproj
+*.sln
+*.vcxproj
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+
+# macOS
+.DS_Store
+*.dSYM/
+
+# Compiled
+*.o
+*.obj
+*.a
+*.lib
+*.so
+*.dylib
+*.dll
+
+# JUCE artifacts
+JuceLibraryCode/
+*.jucer.bak
