@@ -1,7 +1,7 @@
 #pragma once
 
 #include "PluginProcessor.h"
-#include <JuceHeader.h>
+#include <juce_gui_basics/juce_gui_basics.h>
 
 /**
  * SimpleGain Editor (GUI)
