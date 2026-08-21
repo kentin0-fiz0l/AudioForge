@@ -1,6 +1,7 @@
 #pragma once
 
 #include <juce_audio_processors/juce_audio_processors.h>
+#include <dsp/FilterDesign.h>
 #include "Oscillator.h"
 
 /**
@@ -37,6 +38,8 @@ public:
      * @param decay Decay time in seconds
      * @param sustain Sustain level (0.0-1.0)
      * @param release Release time in seconds
+     * @param filterCutoff Filter cutoff frequency in Hz
+     * @param filterResonance Filter resonance (Q factor)
      * @return Output sample value
      */
     float processSample(double sampleRate,
@@ -44,7 +47,9 @@ public:
                        float attack,
                        float decay,
                        float sustain,
-                       float release);
+                       float release,
+                       float filterCutoff,
+                       float filterResonance);
 
     /**
      * Check if this voice is currently playing.
@@ -69,6 +74,9 @@ private:
 
     // Oscillator
     Oscillator oscillator;
+
+    // Low-pass filter
+    AudioForge::DSP::BiquadFilter filter;
 
     // ADSR envelope
     enum class EnvelopeStage

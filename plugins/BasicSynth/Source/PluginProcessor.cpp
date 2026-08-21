@@ -101,6 +101,8 @@ void BasicSynthProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::M
     float decay = decayParam->get();
     float sustain = sustainParam->get();
     float release = releaseParam->get();
+    float filterCutoff = filterCutoffParam->get();
+    float filterResonance = filterResonanceParam->get();
 
     smoothedVolume.setTargetValue(volume);
 
@@ -132,7 +134,8 @@ void BasicSynthProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::M
             if (voice.isActive())
             {
                 mixedSample += voice.processSample(getSampleRate(), waveform,
-                                                  attack, decay, sustain, release);
+                                                  attack, decay, sustain, release,
+                                                  filterCutoff, filterResonance);
             }
         }
 

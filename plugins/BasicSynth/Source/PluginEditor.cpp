@@ -4,8 +4,8 @@
 BasicSynthEditor::BasicSynthEditor(BasicSynthProcessor& p)
     : AudioProcessorEditor(&p), audioProcessor(p)
 {
-    // Set editor size
-    setSize(500, 400);
+    // Set editor size (increased height for filter controls)
+    setSize(500, 480);
 
     // Waveform selector
     waveformLabel.setText("Waveform", juce::dontSendNotification);
@@ -155,6 +155,56 @@ BasicSynthEditor::BasicSynthEditor(BasicSynthProcessor& p)
     };
     addAndMakeVisible(releaseSlider);
 
+    // Filter Cutoff slider
+    filterCutoffLabel.setText("Cutoff", juce::dontSendNotification);
+    filterCutoffLabel.setColour(juce::Label::textColourId, juce::Colour(0xffa0aec0));
+    filterCutoffLabel.setJustificationType(juce::Justification::centred);
+    filterCutoffLabel.attachToComponent(&filterCutoffSlider, false);
+    addAndMakeVisible(filterCutoffLabel);
+
+    filterCutoffSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
+    filterCutoffSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
+    filterCutoffSlider.setRange(20.0, 20000.0, 1.0);
+    filterCutoffSlider.setValue(20000.0);
+    filterCutoffSlider.setSkewFactorFromMidPoint(1000.0);  // Log scale with 1kHz midpoint
+    filterCutoffSlider.setTextValueSuffix(" Hz");
+    filterCutoffSlider.setColour(juce::Slider::rotarySliderFillColourId, juce::Colour(0xff81e6d9));
+    filterCutoffSlider.setColour(juce::Slider::thumbColourId, juce::Colour(0xff4fd1c5));
+    filterCutoffSlider.setColour(juce::Slider::textBoxTextColourId, juce::Colour(0xffedf2f7));
+    filterCutoffSlider.setColour(juce::Slider::textBoxBackgroundColourId, juce::Colour(0xff2d3748));
+    filterCutoffSlider.onValueChange = [this]
+    {
+        auto* param = audioProcessor.getParameters()[6];
+        auto* floatParam = dynamic_cast<juce::AudioParameterFloat*>(param);
+        if (floatParam != nullptr)
+            floatParam->setValueNotifyingHost(floatParam->convertTo0to1(filterCutoffSlider.getValue()));
+    };
+    addAndMakeVisible(filterCutoffSlider);
+
+    // Filter Resonance slider
+    filterResonanceLabel.setText("Resonance", juce::dontSendNotification);
+    filterResonanceLabel.setColour(juce::Label::textColourId, juce::Colour(0xffa0aec0));
+    filterResonanceLabel.setJustificationType(juce::Justification::centred);
+    filterResonanceLabel.attachToComponent(&filterResonanceSlider, false);
+    addAndMakeVisible(filterResonanceLabel);
+
+    filterResonanceSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
+    filterResonanceSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
+    filterResonanceSlider.setRange(0.5, 10.0, 0.1);
+    filterResonanceSlider.setValue(0.707);
+    filterResonanceSlider.setColour(juce::Slider::rotarySliderFillColourId, juce::Colour(0xfffbb6ce));
+    filterResonanceSlider.setColour(juce::Slider::thumbColourId, juce::Colour(0xfff687b3));
+    filterResonanceSlider.setColour(juce::Slider::textBoxTextColourId, juce::Colour(0xffedf2f7));
+    filterResonanceSlider.setColour(juce::Slider::textBoxBackgroundColourId, juce::Colour(0xff2d3748));
+    filterResonanceSlider.onValueChange = [this]
+    {
+        auto* param = audioProcessor.getParameters()[7];
+        auto* floatParam = dynamic_cast<juce::AudioParameterFloat*>(param);
+        if (floatParam != nullptr)
+            floatParam->setValueNotifyingHost(floatParam->convertTo0to1(filterResonanceSlider.getValue()));
+    };
+    addAndMakeVisible(filterResonanceSlider);
+
     // Start timer for level meter updates (30 Hz)
     startTimer(33);
 }
@@ -188,6 +238,7 @@ void BasicSynthEditor::paint(juce::Graphics& g)
     g.setColour(juce::Colour(0xffa0aec0));
     g.setFont(juce::Font(14.0f, juce::Font::bold));
     g.drawText("ENVELOPE", 100, 115, 200, 20, juce::Justification::left);
+    g.drawText("FILTER", 100, 335, 200, 20, juce::Justification::left);
 
     // Level meter with improved design
     int meterX = 20;
@@ -261,6 +312,14 @@ void BasicSynthEditor::resized()
 
     // Volume control
     volumeSlider.setBounds(margin + labelWidth, y, controlWidth, controlHeight);
+
+    y += controlHeight + 20;
+
+    // Filter controls in a row
+    x = margin + labelWidth;
+    filterCutoffSlider.setBounds(x, y, controlWidth, controlHeight);
+    x += controlWidth + 10;
+    filterResonanceSlider.setBounds(x, y, controlWidth, controlHeight);
 }
 
 void BasicSynthEditor::timerCallback()

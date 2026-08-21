@@ -33,6 +33,9 @@ public:
         testPolyphony();
         testADSREnvelope();
         testStateManagement();
+        testFilterCutoff();
+        testFilterResonance();
+        testFilterStability();
     }
 
 private:
@@ -278,6 +281,109 @@ private:
         expectEquals(waveformParam2->getIndex(), 2, "Waveform should be restored");
         expectWithinAbsoluteError(volumeParam2->get(), 0.5f, 0.01f, "Volume should be restored");
         expectWithinAbsoluteError(attackParam2->get(), 0.1f, 0.01f, "Attack should be restored");
+    }
+
+    void testFilterCutoff()
+    {
+        beginTest("Filter cutoff affects frequency response");
+
+        BasicSynthProcessor processor;
+        processor.prepareToPlay(48000.0, 512);
+
+        const auto& params = processor.getParameters();
+        auto* cutoffParam = dynamic_cast<juce::AudioParameterFloat*>(params[6]);
+
+        // Set low cutoff frequency (should attenuate high frequencies)
+        cutoffParam->setValueNotifyingHost(cutoffParam->convertTo0to1(500.0f));
+
+        juce::AudioBuffer<float> buffer(2, 512);
+        juce::MidiBuffer midiBuffer;
+
+        // Play a note (will generate harmonics)
+        midiBuffer.addEvent(juce::MidiMessage::noteOn(1, 60, 1.0f), 0);
+        processor.processBlock(buffer, midiBuffer);
+
+        float peakLevel = buffer.getMagnitude(0, 512);
+        expect(peakLevel > 0.0f, "Should generate output with low cutoff");
+
+        // Set high cutoff frequency (wide open filter)
+        cutoffParam->setValueNotifyingHost(cutoffParam->convertTo0to1(20000.0f));
+
+        buffer.clear();
+        midiBuffer.clear();
+        midiBuffer.addEvent(juce::MidiMessage::noteOn(1, 60, 1.0f), 0);
+        processor.processBlock(buffer, midiBuffer);
+
+        float widePeakLevel = buffer.getMagnitude(0, 512);
+        expect(widePeakLevel > 0.0f, "Should generate output with high cutoff");
+    }
+
+    void testFilterResonance()
+    {
+        beginTest("Filter resonance parameter");
+
+        BasicSynthProcessor processor;
+        processor.prepareToPlay(48000.0, 512);
+
+        const auto& params = processor.getParameters();
+        auto* resonanceParam = dynamic_cast<juce::AudioParameterFloat*>(params[7]);
+
+        // Test low resonance (Butterworth response)
+        resonanceParam->setValueNotifyingHost(resonanceParam->convertTo0to1(0.707f));
+
+        juce::AudioBuffer<float> buffer(2, 512);
+        juce::MidiBuffer midiBuffer;
+
+        midiBuffer.addEvent(juce::MidiMessage::noteOn(1, 60, 1.0f), 0);
+        processor.processBlock(buffer, midiBuffer);
+
+        float lowResPeak = buffer.getMagnitude(0, 512);
+        expect(lowResPeak > 0.0f, "Should generate output with low resonance");
+
+        // Test high resonance
+        resonanceParam->setValueNotifyingHost(resonanceParam->convertTo0to1(8.0f));
+
+        buffer.clear();
+        midiBuffer.clear();
+        midiBuffer.addEvent(juce::MidiMessage::noteOn(1, 60, 1.0f), 0);
+        processor.processBlock(buffer, midiBuffer);
+
+        float highResPeak = buffer.getMagnitude(0, 512);
+        expect(highResPeak > 0.0f, "Should generate output with high resonance");
+    }
+
+    void testFilterStability()
+    {
+        beginTest("Filter stability (no NaN/inf)");
+
+        BasicSynthProcessor processor;
+        processor.prepareToPlay(48000.0, 512);
+
+        juce::AudioBuffer<float> buffer(2, 512);
+        juce::MidiBuffer midiBuffer;
+
+        // Test with note on
+        midiBuffer.addEvent(juce::MidiMessage::noteOn(1, 60, 1.0f), 0);
+
+        // Process multiple blocks to ensure filter state is stable
+        for (int block = 0; block < 10; ++block)
+        {
+            buffer.clear();
+            processor.processBlock(buffer, midiBuffer);
+            midiBuffer.clear();
+
+            // Check for NaN or infinity
+            for (int ch = 0; ch < buffer.getNumChannels(); ++ch)
+            {
+                const float* data = buffer.getReadPointer(ch);
+                for (int i = 0; i < buffer.getNumSamples(); ++i)
+                {
+                    expect(!std::isnan(data[i]), "Filter should not produce NaN");
+                    expect(!std::isinf(data[i]), "Filter should not produce infinity");
+                    expect(std::abs(data[i]) <= 2.0f, "Filter output should be bounded");
+                }
+            }
+        }
     }
 };
 

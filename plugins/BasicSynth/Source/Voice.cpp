@@ -39,7 +39,9 @@ float SynthVoice::processSample(double sampleRate,
                                 float attack,
                                 float decay,
                                 float sustain,
-                                float release)
+                                float release,
+                                float filterCutoff,
+                                float filterResonance)
 {
     if (!active)
         return 0.0f;
@@ -55,6 +57,16 @@ float SynthVoice::processSample(double sampleRate,
     // Apply envelope and velocity
     sample *= envelopeLevel * velocity;
 
+    // Apply low-pass filter
+    // Update filter coefficients (in a real plugin, you'd smooth these changes)
+    auto filterCoeffs = AudioForge::DSP::FilterDesign::makeLowPass(
+        filterCutoff,
+        static_cast<float>(sampleRate),
+        filterResonance);
+    filter.setCoefficients(filterCoeffs);
+
+    sample = filter.processSample(sample);
+
     return sample;
 }
 
@@ -68,6 +80,7 @@ void SynthVoice::reset()
     envelopeTime = 0.0f;
     releaseStartLevel = 0.0f;
     oscillator.reset();
+    filter.reset();
 }
 
 void SynthVoice::updateEnvelope(float deltaTime, float attack, float decay,

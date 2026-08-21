@@ -44,6 +44,12 @@ private:
     juce::Slider releaseSlider;
     juce::Label releaseLabel;
 
+    juce::Slider filterCutoffSlider;
+    juce::Label filterCutoffLabel;
+
+    juce::Slider filterResonanceSlider;
+    juce::Label filterResonanceLabel;
+
     // Level meter display
     float displayLevel = 0.0f;
 
