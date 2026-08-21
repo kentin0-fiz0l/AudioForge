@@ -541,56 +541,95 @@ b2 = (1.0 - alpha*A) / a0;`
   {
     id: 'simplecomp',
     name: 'SimpleComp',
-    version: '0.1.0',
-    status: 'in-development',
-    tagline: 'Basic compressor',
-    description: 'Straightforward dynamic range compressor with automatic makeup gain and visual gain reduction metering.',
+    version: '1.0.0',
+    status: 'released',
+    tagline: 'Dynamic range compressor with automatic makeup gain',
+    description: 'Professional-quality dynamic range compressor with envelope-based gain reduction, hard/soft knee modes, and real-time gain reduction metering. Features automatic makeup gain to maintain consistent output levels.',
     features: [
       {
-        name: 'Threshold, Ratio, Attack, Release',
-        description: 'All essential compressor controls'
+        name: 'Envelope Follower Compression',
+        description: 'Smooth gain reduction with attack and release envelope following'
+      },
+      {
+        name: 'Hard and Soft Knee Modes',
+        description: 'Choose between immediate compression (hard knee) or gradual transition (6dB soft knee)'
       },
       {
         name: 'Automatic Makeup Gain',
-        description: 'Compensate for volume reduction automatically'
+        description: 'Intelligent compensation (50%) based on threshold and ratio settings'
       },
       {
-        name: 'Gain Reduction Meter',
-        description: 'See how much compression is being applied'
+        name: 'Real-time Gain Reduction Meter',
+        description: 'Visual feedback with gradient display (0 to -20dB range, thread-safe)'
       },
       {
-        name: 'Soft Knee Option',
-        description: 'Gentler compression transition'
+        name: 'Professional UI',
+        description: 'Vertical sliders for threshold/ratio, rotary knobs for attack/release'
+      },
+      {
+        name: 'Flexible Timing Controls',
+        description: 'Attack (0.1-100ms) and Release (10-1000ms) with log scaling for fine control'
       }
     ],
     parameters: [
       {
         name: 'Threshold',
         range: '-60dB to 0dB',
-        description: 'Level at which compression begins'
+        description: 'Level at which compression begins (default: -20dB)'
       },
       {
         name: 'Ratio',
         range: '1:1 to 20:1',
-        description: 'Amount of compression applied'
+        description: 'Amount of compression applied (default: 4:1, slight curve for low ratios)'
       },
       {
         name: 'Attack',
         range: '0.1ms to 100ms',
-        description: 'How quickly compression responds'
+        description: 'How quickly compression responds to level increases (log scale, default: 10ms)'
       },
       {
         name: 'Release',
         range: '10ms to 1000ms',
-        description: 'How quickly compression releases'
+        description: 'How quickly compression releases when level drops (log scale, default: 100ms)'
       },
       {
         name: 'Knee',
         range: 'Hard / Soft',
-        description: 'Compression curve shape'
+        description: 'Compression curve shape (hard = immediate, soft = 6dB gradual transition)'
+      }
+    ],
+    useCases: [
+      'Taming vocal dynamics and evening out performances',
+      'Controlling drum transients and peak levels',
+      'Adding punch and sustain to bass and guitars',
+      'Mastering bus compression for glue and cohesion',
+      'Limiting peaks before broadcast or streaming',
+      'Learning fundamental compression concepts and envelope following'
+    ],
+    learningFocus: [
+      'Envelope follower design with attack/release coefficients',
+      'Gain reduction calculation (threshold, ratio, knee)',
+      'Hard vs. soft knee compression curves',
+      'Automatic makeup gain algorithms',
+      'Thread-safe metering with std::atomic',
+      'Exponential time constants for envelope smoothing',
+      'Per-channel state management for stereo processing',
+      'Parameter smoothing with log-scaled controls'
+    ],
+    algorithms: [
+      {
+        name: 'Envelope Follower',
+        description: 'Tracks input level with exponential attack/release coefficients calculated from time parameters',
+        code: 'float attackCoeff = std::exp(-1.0f / (attackMs * 0.001f * sampleRate));\nfloat releaseCoeff = std::exp(-1.0f / (releaseMs * 0.001f * sampleRate));\n\nfloat coeff = (inputLevelDB > linearToDb(envelope)) ? attackCoeff : releaseCoeff;\nenvelope = coeff * envelope + (1.0f - coeff) * inputLevel;'
+      },
+      {
+        name: 'Soft Knee Gain Reduction',
+        description: 'Gradual compression transition using quadratic curve in 6dB knee region',
+        code: 'float kneeStart = threshold - knee / 2.0f;\nfloat kneeEnd = threshold + knee / 2.0f;\n\nif (inputLevelDB >= kneeEnd) {\n  // Above knee: full compression\n  float overDB = inputLevelDB - threshold;\n  return overDB - (overDB / ratio);\n} else {\n  // In knee region: quadratic curve\n  float kneeInput = inputLevelDB - kneeStart;\n  float kneeRatio = kneeInput / knee;\n  float overDB = inputLevelDB - threshold;\n  float gainReduction = overDB - (overDB / ratio);\n  return gainReduction * kneeRatio * kneeRatio;\n}'
       }
     ],
     screenshots: [],
+    downloadUrl: '/downloads/SimpleComp-v1.0.0',
     docsUrl: '/docs/plugins/simplecomp'
   }
 ];
@@ -662,7 +701,7 @@ export const roadmap: RoadmapPhase[] = [
   {
     id: 'phase-2',
     name: 'Phase 2: Core Plugin Suite',
-    status: 'current',
+    status: 'complete',
     goal: 'Build useful, professional-quality effects',
     timeline: '2-3 months',
     items: [
@@ -706,12 +745,15 @@ export const roadmap: RoadmapPhase[] = [
       },
       {
         name: 'SimpleComp',
-        status: 'planned',
+        status: 'complete',
         features: [
-          'Threshold, ratio, attack, release',
-          'Automatic makeup gain',
-          'Gain reduction meter',
-          'Soft knee option'
+          'Threshold (-60dB to 0dB), Ratio (1:1 to 20:1)',
+          'Attack (0.1-100ms), Release (10-1000ms)',
+          'Envelope follower with exponential coefficients',
+          'Hard and soft knee modes (6dB soft knee)',
+          'Automatic makeup gain (50% compensation)',
+          'Real-time gain reduction metering (thread-safe)',
+          'Professional gradient UI with vertical sliders and rotary knobs'
         ]
       }
     ],
@@ -870,7 +912,7 @@ export const projectInfo = {
   github: 'https://github.com/yourusername/AudioForge',
   license: 'MIT',
   testCoverage: '100%',
-  totalTests: 67,
+  totalTests: 79,
   totalPlugins: plugins.length,
   releasedPlugins: getPluginsByStatus('released').length
 };

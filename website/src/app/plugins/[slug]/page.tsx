@@ -16,6 +16,7 @@ export async function generateStaticParams() {
     { slug: 'basicsynth' },
     { slug: 'cleandelay' },
     { slug: 'simpleeq' },
+    { slug: 'simplecomp' },
   ];
 }
 
