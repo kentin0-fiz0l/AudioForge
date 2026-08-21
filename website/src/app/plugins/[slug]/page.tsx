@@ -8,11 +8,14 @@ interface PluginPageProps {
   params: Promise<{ slug: string }>;
 }
 
-// Generate static params for SimpleGain and PanUtil
+// Generate static params for all released plugins
 export async function generateStaticParams() {
   return [
     { slug: 'simplegain' },
     { slug: 'panutil' },
+    { slug: 'basicsynth' },
+    { slug: 'cleandelay' },
+    { slug: 'simpleeq' },
   ];
 }
 

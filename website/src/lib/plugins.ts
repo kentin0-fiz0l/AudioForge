@@ -405,60 +405,137 @@ rightDelayBuffer[writePos] = rightInput + (rightFeedback * feedback);`
     id: 'simpleeq',
     name: 'SimpleEQ',
     version: '0.1.0',
-    status: 'in-development',
-    tagline: '3-band parametric EQ',
-    description: 'Beginner-friendly parametric EQ with visual frequency response curve and spectrum analyzer. Essential for tone shaping and frequency balance.',
+    status: 'released',
+    tagline: '3-band parametric EQ with HPF/LPF',
+    description: 'Professional 3-band parametric equalizer with optional high-pass and low-pass filters. Features shelf and peaking filters for precise tone shaping across the frequency spectrum.',
     features: [
       {
-        name: '3-band Parametric EQ',
-        description: 'Low, mid, and high frequency bands with adjustable Q'
+        name: 'Low Shelf (20Hz-500Hz)',
+        description: 'Boost or cut bass frequencies with smooth shelving curve (±12dB, Q=0.707)'
       },
       {
-        name: 'High-pass and Low-pass Filters',
-        description: 'Remove unwanted low or high frequencies'
+        name: 'Parametric Mid (200Hz-5kHz)',
+        description: 'Precise mid-range control with peaking filter (±12dB, Q=1.0)'
       },
       {
-        name: 'Visual Frequency Response',
-        description: 'See the EQ curve in real-time'
+        name: 'High Shelf (2kHz-20kHz)',
+        description: 'Shape high frequencies with smooth shelving curve (±12dB, Q=0.707)'
       },
       {
-        name: 'Spectrum Analyzer',
-        description: 'View the frequency content of your audio'
+        name: 'Optional High-Pass Filter',
+        description: 'Remove unwanted low frequencies (20Hz-500Hz, 12dB/octave)'
+      },
+      {
+        name: 'Optional Low-Pass Filter',
+        description: 'Tame excessive high frequencies (2kHz-20kHz, 12dB/octave)'
+      },
+      {
+        name: 'Real-time Metering',
+        description: 'Input and output level monitoring with gradient display'
       }
     ],
     parameters: [
       {
         name: 'Low Freq',
         range: '20Hz to 500Hz',
-        description: 'Low band center frequency'
+        description: 'Low shelf transition frequency (log scale)'
       },
       {
         name: 'Low Gain',
         range: '-12dB to +12dB',
-        description: 'Low band gain'
+        description: 'Low shelf gain amount'
       },
       {
         name: 'Mid Freq',
         range: '200Hz to 5kHz',
-        description: 'Mid band center frequency'
+        description: 'Mid band center frequency (log scale)'
       },
       {
         name: 'Mid Gain',
         range: '-12dB to +12dB',
-        description: 'Mid band gain'
+        description: 'Mid band gain amount'
       },
       {
         name: 'High Freq',
         range: '2kHz to 20kHz',
-        description: 'High band center frequency'
+        description: 'High shelf transition frequency (log scale)'
       },
       {
         name: 'High Gain',
         range: '-12dB to +12dB',
-        description: 'High band gain'
+        description: 'High shelf gain amount'
+      },
+      {
+        name: 'HPF Enabled',
+        range: 'Off / On',
+        description: 'Enable/disable high-pass filter'
+      },
+      {
+        name: 'HPF Freq',
+        range: '20Hz to 500Hz',
+        description: 'High-pass filter cutoff frequency'
+      },
+      {
+        name: 'LPF Enabled',
+        range: 'Off / On',
+        description: 'Enable/disable low-pass filter'
+      },
+      {
+        name: 'LPF Freq',
+        range: '2kHz to 20kHz',
+        description: 'Low-pass filter cutoff frequency'
+      }
+    ],
+    useCases: [
+      'Remove rumble - Enable HPF at 40-80Hz to clean up low-end mud',
+      'Tame harsh vocals - Cut 2-4kHz by 3-6dB to reduce sibilance',
+      'Add air - Boost 8-12kHz shelf by 2-4dB for sparkle',
+      'Telephone effect - HPF at 300Hz + LPF at 3kHz for lo-fi sound',
+      'Bass enhancement - Boost 80-120Hz shelf by 3-6dB for weight',
+      'De-essing - Enable LPF at 8kHz to reduce harsh highs'
+    ],
+    learningFocus: [
+      'Biquad filter design (shelf, peaking, HPF, LPF)',
+      'Filter coefficient caching for performance',
+      'Cascaded filter processing (5 filters in series)',
+      'Shelf vs peaking filter behavior',
+      'Per-channel filter state management',
+      'Professional EQ UI design with color coding',
+      'Parameter smoothing for click-free adjustments',
+      'State persistence across sessions'
+    ],
+    algorithms: [
+      {
+        name: 'Low Shelf Filter',
+        description: 'Smooth bass boost/cut with Butterworth response (Q=0.707)',
+        code: `// Calculate shelf coefficients
+A = pow(10.0, gainDb / 40.0);  // Convert dB to linear
+w0 = 2π * frequency / sampleRate;
+alpha = sin(w0) / (2.0 * Q);
+beta = sqrt(A) / Q;
+
+// Biquad coefficients
+a0 = (A+1) + (A-1)*cos(w0) + beta*sin(w0);
+b0 = A*((A+1) - (A-1)*cos(w0) + beta*sin(w0)) / a0;
+b1 = 2*A*((A-1) - (A+1)*cos(w0)) / a0;
+b2 = A*((A+1) - (A-1)*cos(w0) - beta*sin(w0)) / a0;`
+      },
+      {
+        name: 'Peaking EQ',
+        description: 'Bell curve for precise mid-range control (Q=1.0)',
+        code: `// Peaking filter for mid band
+A = pow(10.0, gainDb / 40.0);
+w0 = 2π * frequency / sampleRate;
+alpha = sin(w0) / (2.0 * Q);
+
+a0 = 1.0 + alpha/A;
+b0 = (1.0 + alpha*A) / a0;
+b1 = (-2.0 * cos(w0)) / a0;
+b2 = (1.0 - alpha*A) / a0;`
       }
     ],
     screenshots: [],
+    downloadUrl: '/downloads/SimpleEQ-v0.1.0',
     docsUrl: '/docs/plugins/simpleeq'
   },
   {
@@ -564,7 +641,7 @@ export const roadmap: RoadmapPhase[] = [
       {
         name: 'Testing framework',
         status: 'complete',
-        features: ['JUCE UnitTestRunner', '54 test suites', '100% pass rate']
+        features: ['JUCE UnitTestRunner', '67 test suites', '100% pass rate']
       },
       {
         name: 'CI/CD pipeline',
@@ -616,12 +693,15 @@ export const roadmap: RoadmapPhase[] = [
       },
       {
         name: 'SimpleEQ',
-        status: 'planned',
+        status: 'complete',
         features: [
-          '3-band parametric EQ',
-          'High-pass and low-pass filters',
-          'Visual frequency response curve',
-          'Spectrum analyzer'
+          'Low shelf (20Hz-500Hz, ±12dB)',
+          'Parametric mid band (200Hz-5kHz, ±12dB, Q=1.0)',
+          'High shelf (2kHz-20kHz, ±12dB)',
+          'Optional high-pass filter (20Hz-500Hz, 12dB/oct)',
+          'Optional low-pass filter (2kHz-20kHz, 12dB/oct)',
+          'Biquad filter cascading with coefficient caching',
+          'Per-channel filter state for stereo processing'
         ]
       },
       {
@@ -790,7 +870,7 @@ export const projectInfo = {
   github: 'https://github.com/yourusername/AudioForge',
   license: 'MIT',
   testCoverage: '100%',
-  totalTests: 54,
+  totalTests: 67,
   totalPlugins: plugins.length,
   releasedPlugins: getPluginsByStatus('released').length
 };
