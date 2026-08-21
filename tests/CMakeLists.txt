@@ -19,6 +19,7 @@ add_executable(TestRunner
     Plugins/BasicSynthTests.cpp
     Plugins/CleanDelayTests.cpp
     Plugins/SimpleEQTests.cpp
+    Plugins/SimpleCompTests.cpp
     Integration/PluginIntegrationTests.cpp)
 
 # Link JUCE libraries
@@ -34,6 +35,7 @@ target_include_directories(TestRunner PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/BasicSynth/Source
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/CleanDelay/Source
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/SimpleEQ/Source
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/SimpleComp/Source
     ${CMAKE_CURRENT_SOURCE_DIR}/../shared)  # For shared DSP library
 
 # Add plugin source files directly for testing
@@ -51,7 +53,9 @@ target_sources(TestRunner PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/CleanDelay/Source/PluginProcessor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/CleanDelay/Source/PluginEditor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/SimpleEQ/Source/PluginProcessor.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/SimpleEQ/Source/PluginEditor.cpp)
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/SimpleEQ/Source/PluginEditor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/SimpleComp/Source/PluginProcessor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/SimpleComp/Source/PluginEditor.cpp)
 
 # Compiler definitions
 target_compile_definitions(TestRunner PUBLIC
