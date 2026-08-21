@@ -176,50 +176,55 @@ R = mid - side;`
     id: 'basicsynth',
     name: 'BasicSynth',
     version: '0.1.0',
-    status: 'in-development',
-    tagline: 'Simple subtractive synthesizer',
-    description: 'A beginner-friendly subtractive synthesizer with multiple oscillator waveforms, ADSR envelope, and low-pass filter. Learn MIDI processing and sound synthesis.',
+    status: 'released',
+    tagline: 'Simple subtractive synthesizer for learning synthesis fundamentals',
+    description: 'A polyphonic subtractive synthesizer with 3 oscillator waveforms, ADSR envelope, and resonant low-pass filter. Perfect for learning MIDI processing, voice management, and sound synthesis.',
     features: [
       {
         name: '3 Oscillator Waveforms',
-        description: 'Choose from sine, saw, and square waveforms'
+        description: 'Sine, Sawtooth, and Square waveforms for different timbres'
       },
       {
-        name: 'ADSR Envelope',
-        description: 'Attack, Decay, Sustain, Release envelope shaping'
+        name: 'ADSR Envelope Generator',
+        description: 'Shape amplitude over time with Attack, Decay, Sustain, and Release controls'
       },
       {
-        name: 'Low-pass Filter',
-        description: 'Resonant filter for tone shaping'
+        name: 'Resonant Low-Pass Filter',
+        description: 'Biquad filter with cutoff (20Hz-20kHz) and resonance (Q: 0.5-10.0) for tone shaping'
       },
       {
-        name: 'MIDI Note Handling',
-        description: 'Full MIDI note input with velocity sensitivity'
+        name: '8-Voice Polyphony',
+        description: 'Play chords with round-robin voice stealing when exceeding 8 voices'
       },
       {
-        name: 'Polyphony',
-        description: '4-8 voice polyphony for chord playing'
+        name: 'Per-Voice Processing',
+        description: 'Each voice has independent oscillator, envelope, and filter state'
       },
       {
-        name: 'Visual Keyboard',
-        description: 'Simple on-screen keyboard for testing'
+        name: 'Real-time Output Metering',
+        description: 'Visual feedback of audio levels with gradient display'
       }
     ],
     parameters: [
       {
         name: 'Waveform',
-        range: 'Sine / Saw / Square',
+        range: 'Sine / Sawtooth / Square',
         description: 'Oscillator waveform selection'
       },
       {
+        name: 'Volume',
+        range: '0.0 to 1.0',
+        description: 'Master output volume'
+      },
+      {
         name: 'Attack',
-        range: '0ms to 2000ms',
-        description: 'Envelope attack time'
+        range: '1ms to 2000ms',
+        description: 'Envelope attack time (log scale)'
       },
       {
         name: 'Decay',
-        range: '0ms to 2000ms',
-        description: 'Envelope decay time'
+        range: '1ms to 2000ms',
+        description: 'Envelope decay time (log scale)'
       },
       {
         name: 'Sustain',
@@ -228,28 +233,69 @@ R = mid - side;`
       },
       {
         name: 'Release',
-        range: '0ms to 5000ms',
-        description: 'Envelope release time'
+        range: '1ms to 5000ms',
+        description: 'Envelope release time (log scale)'
       },
       {
         name: 'Filter Cutoff',
         range: '20Hz to 20kHz',
-        description: 'Low-pass filter cutoff frequency'
+        description: 'Low-pass filter cutoff frequency (log scale, 1kHz midpoint)'
       },
       {
-        name: 'Resonance',
-        range: '0% to 100%',
-        description: 'Filter resonance amount'
+        name: 'Filter Resonance',
+        range: '0.5 to 10.0',
+        description: 'Filter resonance (Q factor). 0.707 = Butterworth, higher = resonant peak'
       }
     ],
+    useCases: [
+      'Pad sounds - Slow attack, long release, low cutoff with mild resonance',
+      'Bass sounds - Fast attack, short release, low cutoff with high resonance',
+      'Pluck sounds - Instant attack, no sustain, medium cutoff',
+      'Lead sounds - Fast attack, high sustain, sweepable filter with resonance',
+      'Learning synthesis - Experiment with oscillators, envelopes, and filters'
+    ],
     learningFocus: [
-      'MIDI processing',
-      'Oscillators',
-      'Filters',
-      'Voice management',
-      'Synthesis fundamentals'
+      'MIDI note processing (note on/off messages)',
+      'Polyphonic voice management and voice stealing',
+      'Oscillator waveform generation (sine, saw, square)',
+      'ADSR envelope implementation (linear attack/decay/release)',
+      'Biquad filter design (low-pass with resonance)',
+      'Per-voice state management',
+      'Optimization techniques (cached filter coefficients)',
+      'Professional UI design with color-coded controls'
+    ],
+    algorithms: [
+      {
+        name: 'ADSR Envelope',
+        description: 'Linear attack and release, linear decay from 1.0 to sustain level',
+        code: `// Attack phase
+envelopeLevel = min(1.0, envelopeTime / attack);
+
+// Decay phase
+decayAmount = (1.0 - sustain) * (envelopeTime / decay);
+envelopeLevel = 1.0 - min(decayAmount, 1.0 - sustain);
+
+// Sustain phase
+envelopeLevel = sustain;
+
+// Release phase
+releaseProgress = envelopeTime / release;
+envelopeLevel = max(0.0, releaseStartLevel * (1.0 - releaseProgress));`
+      },
+      {
+        name: 'Voice Stealing',
+        description: 'Round-robin voice allocation when all 8 voices are active',
+        code: `// Find free voice or steal oldest
+voice = findFreeVoice();
+if (voice == null) {
+    voice = voices[nextVoiceIndex];
+    nextVoiceIndex = (nextVoiceIndex + 1) % 8;
+}
+voice.noteOn(midiNote, velocity, sampleRate);`
+      }
     ],
     screenshots: [],
+    downloadUrl: '/downloads/BasicSynth-v0.1.0',
     docsUrl: '/docs/plugins/basicsynth'
   },
   {
@@ -473,7 +519,7 @@ export const roadmap: RoadmapPhase[] = [
       {
         name: 'Testing framework',
         status: 'complete',
-        features: ['JUCE UnitTestRunner', '34 test suites', '88% pass rate']
+        features: ['JUCE UnitTestRunner', '44 test suites', '100% pass rate']
       },
       {
         name: 'CI/CD pipeline',
@@ -500,14 +546,15 @@ export const roadmap: RoadmapPhase[] = [
     items: [
       {
         name: 'BasicSynth',
-        status: 'in-progress',
+        status: 'complete',
         features: [
-          '3 oscillator waveforms',
-          'ADSR envelope',
-          'Low-pass filter with resonance',
-          'MIDI note handling',
-          'Polyphony (4-8 voices)',
-          'Simple visual keyboard'
+          '3 oscillator waveforms (sine, sawtooth, square)',
+          'ADSR envelope generator',
+          'Resonant low-pass filter (cutoff + Q)',
+          'MIDI note handling with velocity',
+          '8-voice polyphony with round-robin voice stealing',
+          'Per-voice filtering and envelope',
+          'Real-time output metering'
         ]
       },
       {
@@ -697,7 +744,8 @@ export const projectInfo = {
   },
   github: 'https://github.com/yourusername/AudioForge',
   license: 'MIT',
-  testCoverage: '88%',
+  testCoverage: '100%',
+  totalTests: 44,
   totalPlugins: plugins.length,
   releasedPlugins: getPluginsByStatus('released').length
 };

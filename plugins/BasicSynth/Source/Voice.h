@@ -77,6 +77,8 @@ private:
 
     // Low-pass filter
     AudioForge::DSP::BiquadFilter filter;
+    float lastFilterCutoff = -1.0f;    // Track last cutoff for optimization
+    float lastFilterResonance = -1.0f; // Track last resonance for optimization
 
     // ADSR envelope
     enum class EnvelopeStage
