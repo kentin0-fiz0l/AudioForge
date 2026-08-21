@@ -1,0 +1,16 @@
+name: audioforge
+region: sfo
+static_sites:
+  - name: audioforge-website
+    github:
+      repo: kentino/AudioForge
+      branch: main
+      deploy_on_push: true
+    source_dir: /website
+    output_dir: /website/out
+    build_command: npm run build
+    routes:
+      - path: /
+    envs:
+      - key: NODE_VERSION
+        value: "18"
