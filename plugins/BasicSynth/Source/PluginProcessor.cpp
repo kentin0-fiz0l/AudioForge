@@ -68,6 +68,9 @@ BasicSynthProcessor::~BasicSynthProcessor()
 
 void BasicSynthProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
+    // Inform base class of sample rate and buffer size
+    setRateAndBufferSizeDetails(sampleRate, samplesPerBlock);
+
     // Initialize smoothed volume
     smoothedVolume.reset(sampleRate, 0.05); // 50ms smoothing
     smoothedVolume.setCurrentAndTargetValue(volumeParam->get());

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <cmath>
+#include <dsp/AudioForgeDSP.h>
 
 /**
  * Audio Oscillator
@@ -44,9 +44,4 @@ public:
 private:
     float phase = 0.0f;        // Current phase (0.0 to 1.0)
     float phaseIncrement = 0.0f; // Phase increment per sample
-
-    // Waveform generators
-    float generateSine();
-    float generateSawtooth();
-    float generateSquare();
 };

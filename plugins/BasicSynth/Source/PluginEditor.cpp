@@ -31,13 +31,19 @@ BasicSynthEditor::BasicSynthEditor(BasicSynthProcessor& p)
 
     // Volume slider
     volumeLabel.setText("Volume", juce::dontSendNotification);
-    volumeLabel.attachToComponent(&volumeSlider, true);
+    volumeLabel.setColour(juce::Label::textColourId, juce::Colour(0xffa0aec0));
+    volumeLabel.setJustificationType(juce::Justification::centred);
+    volumeLabel.attachToComponent(&volumeSlider, false);
     addAndMakeVisible(volumeLabel);
 
     volumeSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     volumeSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
     volumeSlider.setRange(0.0, 1.0, 0.01);
     volumeSlider.setValue(0.7);
+    volumeSlider.setColour(juce::Slider::rotarySliderFillColourId, juce::Colour(0xff63b3ed));
+    volumeSlider.setColour(juce::Slider::thumbColourId, juce::Colour(0xff4299e1));
+    volumeSlider.setColour(juce::Slider::textBoxTextColourId, juce::Colour(0xffedf2f7));
+    volumeSlider.setColour(juce::Slider::textBoxBackgroundColourId, juce::Colour(0xff2d3748));
     volumeSlider.onValueChange = [this]
     {
         auto* param = audioProcessor.getParameters()[1];
@@ -49,7 +55,9 @@ BasicSynthEditor::BasicSynthEditor(BasicSynthProcessor& p)
 
     // Attack slider
     attackLabel.setText("Attack", juce::dontSendNotification);
-    attackLabel.attachToComponent(&attackSlider, true);
+    attackLabel.setColour(juce::Label::textColourId, juce::Colour(0xffa0aec0));
+    attackLabel.setJustificationType(juce::Justification::centred);
+    attackLabel.attachToComponent(&attackSlider, false);
     addAndMakeVisible(attackLabel);
 
     attackSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
@@ -58,6 +66,10 @@ BasicSynthEditor::BasicSynthEditor(BasicSynthProcessor& p)
     attackSlider.setValue(0.01);
     attackSlider.setSkewFactorFromMidPoint(0.1);
     attackSlider.setTextValueSuffix(" s");
+    attackSlider.setColour(juce::Slider::rotarySliderFillColourId, juce::Colour(0xff68d391));
+    attackSlider.setColour(juce::Slider::thumbColourId, juce::Colour(0xff48bb78));
+    attackSlider.setColour(juce::Slider::textBoxTextColourId, juce::Colour(0xffedf2f7));
+    attackSlider.setColour(juce::Slider::textBoxBackgroundColourId, juce::Colour(0xff2d3748));
     attackSlider.onValueChange = [this]
     {
         auto* param = audioProcessor.getParameters()[2];
@@ -69,7 +81,9 @@ BasicSynthEditor::BasicSynthEditor(BasicSynthProcessor& p)
 
     // Decay slider
     decayLabel.setText("Decay", juce::dontSendNotification);
-    decayLabel.attachToComponent(&decaySlider, true);
+    decayLabel.setColour(juce::Label::textColourId, juce::Colour(0xffa0aec0));
+    decayLabel.setJustificationType(juce::Justification::centred);
+    decayLabel.attachToComponent(&decaySlider, false);
     addAndMakeVisible(decayLabel);
 
     decaySlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
@@ -78,6 +92,10 @@ BasicSynthEditor::BasicSynthEditor(BasicSynthProcessor& p)
     decaySlider.setValue(0.1);
     decaySlider.setSkewFactorFromMidPoint(0.1);
     decaySlider.setTextValueSuffix(" s");
+    decaySlider.setColour(juce::Slider::rotarySliderFillColourId, juce::Colour(0xfffbd38d));
+    decaySlider.setColour(juce::Slider::thumbColourId, juce::Colour(0xfff6ad55));
+    decaySlider.setColour(juce::Slider::textBoxTextColourId, juce::Colour(0xffedf2f7));
+    decaySlider.setColour(juce::Slider::textBoxBackgroundColourId, juce::Colour(0xff2d3748));
     decaySlider.onValueChange = [this]
     {
         auto* param = audioProcessor.getParameters()[3];
@@ -89,13 +107,19 @@ BasicSynthEditor::BasicSynthEditor(BasicSynthProcessor& p)
 
     // Sustain slider
     sustainLabel.setText("Sustain", juce::dontSendNotification);
-    sustainLabel.attachToComponent(&sustainSlider, true);
+    sustainLabel.setColour(juce::Label::textColourId, juce::Colour(0xffa0aec0));
+    sustainLabel.setJustificationType(juce::Justification::centred);
+    sustainLabel.attachToComponent(&sustainSlider, false);
     addAndMakeVisible(sustainLabel);
 
     sustainSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     sustainSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
     sustainSlider.setRange(0.0, 1.0, 0.01);
     sustainSlider.setValue(0.7);
+    sustainSlider.setColour(juce::Slider::rotarySliderFillColourId, juce::Colour(0xfffc8181));
+    sustainSlider.setColour(juce::Slider::thumbColourId, juce::Colour(0xfff56565));
+    sustainSlider.setColour(juce::Slider::textBoxTextColourId, juce::Colour(0xffedf2f7));
+    sustainSlider.setColour(juce::Slider::textBoxBackgroundColourId, juce::Colour(0xff2d3748));
     sustainSlider.onValueChange = [this]
     {
         auto* param = audioProcessor.getParameters()[4];
@@ -107,7 +131,9 @@ BasicSynthEditor::BasicSynthEditor(BasicSynthProcessor& p)
 
     // Release slider
     releaseLabel.setText("Release", juce::dontSendNotification);
-    releaseLabel.attachToComponent(&releaseSlider, true);
+    releaseLabel.setColour(juce::Label::textColourId, juce::Colour(0xffa0aec0));
+    releaseLabel.setJustificationType(juce::Justification::centred);
+    releaseLabel.attachToComponent(&releaseSlider, false);
     addAndMakeVisible(releaseLabel);
 
     releaseSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
@@ -116,6 +142,10 @@ BasicSynthEditor::BasicSynthEditor(BasicSynthProcessor& p)
     releaseSlider.setValue(0.3);
     releaseSlider.setSkewFactorFromMidPoint(0.3);
     releaseSlider.setTextValueSuffix(" s");
+    releaseSlider.setColour(juce::Slider::rotarySliderFillColourId, juce::Colour(0xffb794f4));
+    releaseSlider.setColour(juce::Slider::thumbColourId, juce::Colour(0xff9f7aea));
+    releaseSlider.setColour(juce::Slider::textBoxTextColourId, juce::Colour(0xffedf2f7));
+    releaseSlider.setColour(juce::Slider::textBoxBackgroundColourId, juce::Colour(0xff2d3748));
     releaseSlider.onValueChange = [this]
     {
         auto* param = audioProcessor.getParameters()[5];
@@ -135,24 +165,64 @@ BasicSynthEditor::~BasicSynthEditor()
 
 void BasicSynthEditor::paint(juce::Graphics& g)
 {
-    // Background
-    g.fillAll(juce::Colours::darkgrey);
+    // Gradient background
+    juce::ColourGradient gradient(juce::Colour(0xff2d3748), 0, 0,
+                                 juce::Colour(0xff1a202c), 0, static_cast<float>(getHeight()),
+                                 false);
+    g.setGradientFill(gradient);
+    g.fillAll();
 
-    // Title
-    g.setColour(juce::Colours::white);
-    g.setFont(24.0f);
-    g.drawText("BasicSynth", 20, 10, getWidth() - 40, 30, juce::Justification::centred);
+    // Title area with rounded rectangle
+    g.setColour(juce::Colour(0xff4a5568).withAlpha(0.3f));
+    g.fillRoundedRectangle(10, 10, getWidth() - 20, 40, 8.0f);
 
-    // Level meter
-    g.setColour(juce::Colours::black);
-    g.fillRect(20, getHeight() - 50, getWidth() - 40, 30);
+    // Title text with shadow
+    g.setColour(juce::Colours::black.withAlpha(0.5f));
+    g.setFont(juce::Font(26.0f, juce::Font::bold));
+    g.drawText("BasicSynth", 21, 11, getWidth() - 40, 40, juce::Justification::centred);
 
-    g.setColour(juce::Colours::green);
-    int meterWidth = static_cast<int>((getWidth() - 40) * displayLevel);
-    g.fillRect(20, getHeight() - 50, meterWidth, 30);
+    g.setColour(juce::Colour(0xff63b3ed));
+    g.drawText("BasicSynth", 20, 10, getWidth() - 40, 40, juce::Justification::centred);
 
-    g.setColour(juce::Colours::white);
-    g.drawRect(20, getHeight() - 50, getWidth() - 40, 30);
+    // Section labels with better styling
+    g.setColour(juce::Colour(0xffa0aec0));
+    g.setFont(juce::Font(14.0f, juce::Font::bold));
+    g.drawText("ENVELOPE", 100, 115, 200, 20, juce::Justification::left);
+
+    // Level meter with improved design
+    int meterX = 20;
+    int meterY = getHeight() - 50;
+    int meterW = getWidth() - 40;
+    int meterH = 30;
+
+    // Meter background with inset effect
+    g.setColour(juce::Colours::black.withAlpha(0.8f));
+    g.fillRoundedRectangle(meterX, meterY, meterW, meterH, 4.0f);
+
+    // Meter level with gradient
+    if (displayLevel > 0.0f)
+    {
+        int filledWidth = static_cast<int>(meterW * displayLevel);
+
+        juce::ColourGradient meterGradient(
+            juce::Colour(0xff48bb78), meterX, meterY,
+            displayLevel > 0.8f ? juce::Colour(0xfff56565) : juce::Colour(0xff48bb78),
+            meterX + filledWidth, meterY,
+            false);
+
+        g.setGradientFill(meterGradient);
+        g.fillRoundedRectangle(meterX + 2, meterY + 2,
+                              filledWidth - 4, meterH - 4, 2.0f);
+    }
+
+    // Meter border
+    g.setColour(juce::Colour(0xff4a5568));
+    g.drawRoundedRectangle(meterX, meterY, meterW, meterH, 4.0f, 2.0f);
+
+    // Meter label
+    g.setColour(juce::Colour(0xffa0aec0));
+    g.setFont(10.0f);
+    g.drawText("OUTPUT LEVEL", meterX, meterY - 15, 100, 15, juce::Justification::left);
 }
 
 void BasicSynthEditor::resized()
@@ -163,6 +233,12 @@ void BasicSynthEditor::resized()
     const int margin = 20;
 
     int y = 60;
+
+    // Waveform selector styling
+    waveformSelector.setColour(juce::ComboBox::backgroundColourId, juce::Colour(0xff2d3748));
+    waveformSelector.setColour(juce::ComboBox::textColourId, juce::Colour(0xffedf2f7));
+    waveformSelector.setColour(juce::ComboBox::outlineColourId, juce::Colour(0xff4a5568));
+    waveformSelector.setColour(juce::ComboBox::buttonColourId, juce::Colour(0xff4299e1));
 
     // Waveform selector (wider, not rotary)
     waveformSelector.setBounds(margin + labelWidth, y, 200, 24);

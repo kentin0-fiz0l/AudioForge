@@ -1,5 +1,6 @@
 #include "Voice.h"
 #include <juce_core/juce_core.h>
+#include <dsp/AudioForgeDSP.h>
 
 SynthVoice::SynthVoice()
 {
@@ -11,14 +12,15 @@ void SynthVoice::noteOn(int midiNoteNumber, float noteVelocity, double sampleRat
     currentNote = midiNoteNumber;
     velocity = noteVelocity;
 
-    // Convert MIDI note to frequency: f = 440 * 2^((n-69)/12)
-    float frequency = 440.0f * std::pow(2.0f, (midiNoteNumber - 69) / 12.0f);
+    // Convert MIDI note to frequency using shared DSP library
+    float frequency = AudioForge::DSP::WaveformGenerators::midiNoteToFrequency(midiNoteNumber);
     oscillator.setFrequency(frequency, sampleRate);
 
     // Start envelope in attack phase
     envelopeStage = EnvelopeStage::Attack;
     envelopeLevel = 0.0f;
     envelopeTime = 0.0f;
+    releaseStartLevel = 0.0f;
 }
 
 void SynthVoice::noteOff()
@@ -26,7 +28,8 @@ void SynthVoice::noteOff()
     if (!active)
         return;
 
-    // Enter release phase
+    // Enter release phase, storing current level
+    releaseStartLevel = envelopeLevel;
     envelopeStage = EnvelopeStage::Release;
     envelopeTime = 0.0f;
 }
@@ -63,6 +66,7 @@ void SynthVoice::reset()
     envelopeStage = EnvelopeStage::Off;
     envelopeLevel = 0.0f;
     envelopeTime = 0.0f;
+    releaseStartLevel = 0.0f;
     oscillator.reset();
 }
 
@@ -136,16 +140,13 @@ void SynthVoice::updateEnvelope(float deltaTime, float attack, float decay,
             }
             else
             {
-                // Linear release from current level to 0
-                float releaseDecay = envelopeTime / release;
-                float startLevel = envelopeLevel; // Capture level at start of release
+                // Linear release from releaseStartLevel to 0
+                float releaseProgress = envelopeTime / release;
+                envelopeLevel = juce::jmax(0.0f, releaseStartLevel * (1.0f - releaseProgress));
 
-                // We need to store the starting level - for now use a simple approach
-                // TODO: Store release start level in the Voice class
-                envelopeLevel = juce::jmax(0.0f, sustain * (1.0f - releaseDecay));
-
-                if (envelopeLevel <= 0.0f || envelopeTime >= release)
+                if (envelopeLevel <= 0.001f || envelopeTime >= release)
                 {
+                    // Voice is silent, deactivate
                     envelopeLevel = 0.0f;
                     active = false;
                     envelopeStage = EnvelopeStage::Off;

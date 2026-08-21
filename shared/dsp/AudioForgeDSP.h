@@ -25,6 +25,9 @@
 // Filter design
 #include "FilterDesign.h"
 
+// Waveform generation
+#include "WaveformGenerators.h"
+
 /**
  * AudioForge namespace contains all library code.
  */

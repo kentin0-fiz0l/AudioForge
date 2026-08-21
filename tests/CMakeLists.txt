@@ -16,6 +16,7 @@ add_executable(TestRunner
     DSP/ParameterSmoothingTests.cpp
     Plugins/SimpleGainTests.cpp
     Plugins/PanUtilTests.cpp
+    Plugins/BasicSynthTests.cpp
     Integration/PluginIntegrationTests.cpp)
 
 # Link JUCE libraries
@@ -28,6 +29,7 @@ target_link_libraries(TestRunner PRIVATE
 target_include_directories(TestRunner PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/SimpleGain/Source
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/PanUtil/Source
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/BasicSynth/Source
     ${CMAKE_CURRENT_SOURCE_DIR}/../shared)  # For shared DSP library
 
 # Add plugin source files directly for testing
@@ -37,7 +39,11 @@ target_sources(TestRunner PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/SimpleGain/Source/PluginProcessor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/SimpleGain/Source/PluginEditor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/PanUtil/Source/PluginProcessor.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/PanUtil/Source/PluginEditor.cpp)
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/PanUtil/Source/PluginEditor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/BasicSynth/Source/PluginProcessor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/BasicSynth/Source/PluginEditor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/BasicSynth/Source/Voice.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/BasicSynth/Source/Oscillator.cpp)
 
 # Compiler definitions
 target_compile_definitions(TestRunner PUBLIC

@@ -83,6 +83,7 @@ private:
     EnvelopeStage envelopeStage = EnvelopeStage::Off;
     float envelopeLevel = 0.0f;
     float envelopeTime = 0.0f; // Time in current stage (seconds)
+    float releaseStartLevel = 0.0f; // Level at start of release phase
 
     // Helper methods
     void updateEnvelope(float deltaTime, float attack, float decay,
