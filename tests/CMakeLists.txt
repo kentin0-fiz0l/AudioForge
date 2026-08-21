@@ -2,6 +2,9 @@ cmake_minimum_required(VERSION 3.15)
 
 project(AudioForgeTests VERSION 1.0.0)
 
+# Coverage support option
+option(ENABLE_COVERAGE "Enable code coverage reporting" OFF)
+
 # Add JUCE to the project
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../JUCE ${CMAKE_CURRENT_BINARY_DIR}/JUCE)
 
@@ -48,3 +51,44 @@ target_compile_definitions(TestRunner PUBLIC
 
 # Set C++ standard
 target_compile_features(TestRunner PRIVATE cxx_std_17)
+
+# Code coverage configuration
+if(ENABLE_COVERAGE)
+    message(STATUS "Code coverage enabled")
+
+    # Add coverage flags for GCC/Clang
+    if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+        target_compile_options(TestRunner PRIVATE
+            --coverage
+            -fprofile-arcs
+            -ftest-coverage
+            -O0
+            -g)
+
+        target_link_options(TestRunner PRIVATE
+            --coverage)
+
+        # Add gcov library for Clang
+        if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+            target_link_libraries(TestRunner PRIVATE
+                --coverage)
+        endif()
+    else()
+        message(WARNING "Code coverage only supported for GCC and Clang compilers")
+    endif()
+endif()
+
+# Create .lcovrc configuration file for coverage exclusions
+if(ENABLE_COVERAGE)
+    file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/.lcovrc
+"# LCOV configuration for AudioForge
+# Exclude external code from coverage reports
+
+# Branch coverage
+lcov_branch_coverage = 1
+
+# Exclude patterns
+# These patterns exclude JUCE framework, test code, and system headers
+# from coverage calculations to focus on actual plugin code
+")
+endif()

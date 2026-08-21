@@ -1,5 +1,9 @@
 # AudioForge
 
+[![Build and Test](https://github.com/yourusername/AudioForge/actions/workflows/build-test.yml/badge.svg)](https://github.com/yourusername/AudioForge/actions/workflows/build-test.yml)
+[![Code Coverage](https://codecov.io/gh/yourusername/AudioForge/branch/main/graph/badge.svg)](https://codecov.io/gh/yourusername/AudioForge)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 Professional-quality DAW plugins, free and open source.
 
 ## Overview
@@ -93,7 +97,7 @@ cmake --build build
 ./build/TestRunner -v        # Verbose output
 ```
 
-Test coverage: 30/34 tests passing (88%)
+Test suite: 34/34 tests passing (100%) | Coverage: See badge above
 
 ## Development Roadmap
 
