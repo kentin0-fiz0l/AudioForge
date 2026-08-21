@@ -10,29 +10,30 @@ echo ""
 echo "📦 Build complete! Output directory: out/"
 echo ""
 
-# Check if doctl is installed
-if ! command -v doctl &> /dev/null; then
-    echo "⚠️  doctl CLI not found. Install it first:"
-    echo "   brew install doctl"
-    echo "   doctl auth init"
+# Check if AWS CLI is installed
+if ! command -v aws &> /dev/null; then
+    echo "⚠️  AWS CLI not found. Install it first:"
+    echo "   brew install awscli"
+    echo "   aws configure --profile digitalocean"
     exit 1
 fi
 
 # Configuration (update these values)
-SPACE_NAME="audioforge-site"
+BUCKET="audioforge-site"
 REGION="sfo3"  # Change to your DigitalOcean region
+ENDPOINT="https://${REGION}.digitaloceanspaces.com"
 
 echo "🚀 Deploying to DigitalOcean Spaces..."
-echo "   Space: $SPACE_NAME"
+echo "   Bucket: $BUCKET"
 echo "   Region: $REGION"
 echo ""
 
-# Upload to Spaces
-doctl spaces upload out/* \
-  --space "$SPACE_NAME" \
-  --region "$REGION" \
-  --recursive \
-  --force
+# Upload to Spaces using AWS CLI
+aws s3 sync out/ s3://$BUCKET/ \
+  --endpoint-url=$ENDPOINT \
+  --profile=digitalocean \
+  --acl public-read \
+  --delete
 
 echo ""
 echo "✅ Deployment complete!"
