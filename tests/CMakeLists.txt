@@ -43,7 +43,7 @@ target_compile_definitions(TestRunner PUBLIC
     JUCE_USE_CURL=0
     JUCE_DISPLAY_SPLASH_SCREEN=0
     JUCE_STANDALONE_APPLICATION=1
-    JucePlugin_Name="SimpleGain"
+    JucePlugin_Name="AudioForge_TestRunner"
     AUDIOFORGE_TESTS=1)
 
 # Set C++ standard
