@@ -1,0 +1,97 @@
+name: Code Quality
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+jobs:
+  format-check:
+    name: Format Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install clang-format
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang-format
+
+      - name: Check formatting
+        run: |
+          find plugins -name '*.cpp' -o -name '*.h' | while read file; do
+            clang-format --dry-run --Werror "$file" || {
+              echo "❌ $file needs formatting"
+              echo "Run: clang-format -i $file"
+              exit 1
+            }
+          done
+
+  lint:
+    name: C++ Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang-tidy
+
+      - name: Run clang-tidy
+        continue-on-error: true
+        run: |
+          # Basic lint checks on plugin source files
+          find plugins/*/Source -name '*.cpp' | while read file; do
+            echo "Linting $file"
+            clang-tidy "$file" -- -std=c++17 || true
+          done
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  dependencies:
+    name: Dependency Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Check JUCE submodule
+        run: |
+          if [ ! -d "JUCE/.git" ]; then
+            echo "❌ JUCE submodule not initialized"
+            exit 1
+          fi
+          echo "✓ JUCE submodule initialized"
+
+      - name: Verify JUCE version
+        run: |
+          cd JUCE
+          git describe --tags || git rev-parse --short HEAD

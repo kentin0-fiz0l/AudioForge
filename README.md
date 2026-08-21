@@ -8,17 +8,20 @@ AudioForge is a collection of high-quality audio plugins for music production. S
 
 ## Current Plugins
 
-### In Development
-- **SimpleGain** - Clean gain/volume control with metering (learning project)
-- **BasicSynth** - Simple subtractive synthesizer
-- **PanUtil** - Stereo panning utility
+### Released (v1.0.0)
+- **SimpleGain** - Clean gain/volume control with metering (-60 to +12 dB)
+- **PanUtil** - Stereo panning utility with balance and width controls
 
-### Planned
+### In Development
+- **BasicSynth** - Simple subtractive synthesizer (Phase 2)
+- **CleanDelay** - Stereo delay effect (Phase 2)
+- **SimpleEQ** - 3-band parametric EQ (Phase 2)
+- **SimpleComp** - Basic compressor (Phase 2)
+
+### Planned (Phase 3+)
 - Reverb effects
-- Delay/echo
-- EQ
-- Compression
-- More synths
+- Advanced modulation
+- Creative effects
 
 ## Tech Stack
 
@@ -31,12 +34,19 @@ AudioForge is a collection of high-quality audio plugins for music production. S
 
 ```
 AudioForge/
+├── .github/              # GitHub Actions CI/CD workflows
 ├── JUCE/                 # JUCE framework (submodule)
 ├── plugins/              # Individual plugin projects
-│   ├── SimpleGain/
-│   ├── BasicSynth/
-│   └── PanUtil/
-├── shared/               # Shared code/utilities
+│   ├── SimpleGain/       # ✅ Complete (v1.0.0)
+│   └── PanUtil/          # ✅ Complete (v1.0.0)
+├── shared/               # Shared DSP library
+│   └── dsp/              # Reusable DSP components
+│       ├── ParameterSmoothing.h
+│       ├── Metering.h
+│       ├── PanningAlgorithms.h
+│       ├── FilterDesign.h
+│       └── Utilities.h
+├── tests/                # JUCE UnitTestRunner test suite
 ├── docs/                 # Documentation and tutorials
 └── builds/               # Compiled plugins
 ```
@@ -73,14 +83,28 @@ Built plugins will be in `builds/`. Copy them to your DAW's plugin folder:
 - **Windows VST3**: `C:\Program Files\Common Files\VST3\`
 - **Linux VST3**: `~/.vst3/`
 
+### Running Tests
+
+```bash
+cd tests
+cmake -B build
+cmake --build build
+./build/TestRunner           # Run all tests
+./build/TestRunner -v        # Verbose output
+```
+
+Test coverage: 30/34 tests passing (88%)
+
 ## Development Roadmap
 
-### Phase 1: Foundation (Current)
-- [x] Project setup
-- [ ] JUCE integration
-- [ ] SimpleGain plugin (learning DSP basics)
-- [ ] Build system and CI
-- [ ] Basic documentation
+### Phase 1: Infrastructure Foundation ✅ COMPLETE
+- [x] Project setup with JUCE
+- [x] SimpleGain plugin (v1.0.0)
+- [x] PanUtil plugin (v1.0.0)
+- [x] Shared DSP library (5 reusable components)
+- [x] Testing framework (JUCE UnitTestRunner, 34 test suites)
+- [x] CI/CD pipeline (GitHub Actions, multi-platform builds)
+- [x] Documentation
 
 ### Phase 2: Core Plugins
 - [ ] BasicSynth (oscillators, filters, ADSR)

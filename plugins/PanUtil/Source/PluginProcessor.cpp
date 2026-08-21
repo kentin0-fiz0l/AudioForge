@@ -76,43 +76,25 @@ void PanUtilProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::Midi
 
         float L = leftChannel[sample];
         float R = rightChannel[sample];
+        float outL, outR;
 
-        // Apply width control first (M/S processing)
-        float mid = (L + R) * 0.5f;   // Sum to mono
-        float side = (L - R) * 0.5f;  // Difference (stereo info)
+        // Apply width control first
+        AudioForge::DSP::PanningAlgorithms::applyStereoWidth(L, R, width, outL, outR);
 
-        // Scale side signal by width
-        side *= width;
-
-        // Convert back to L/R
-        L = mid + side;
-        R = mid - side;
-
-        // Apply panning
+        // Apply panning based on mode
         if (mode == 0)  // Pan mode
         {
-            // Constant power panning
-            // pan = -1.0 (left), 0.0 (center), +1.0 (right)
-            float angle = (pan + 1.0f) * 0.25f * juce::MathConstants<float>::pi;
-            float leftGain = std::cos(angle);
-            float rightGain = std::sin(angle);
-
-            leftChannel[sample] = L * leftGain;
-            rightChannel[sample] = R * rightGain;
+            // Use constant-power panning from shared library
+            auto gains = AudioForge::DSP::PanningAlgorithms::constantPowerPan(pan);
+            leftChannel[sample] = outL * gains.leftGain;
+            rightChannel[sample] = outR * gains.rightGain;
         }
         else  // Balance mode
         {
-            // Balance: attenuate one side, not the other
-            if (pan < 0.0f)  // Pan left = reduce right
-            {
-                leftChannel[sample] = L;
-                rightChannel[sample] = R * (1.0f + pan);
-            }
-            else  // Pan right = reduce left
-            {
-                leftChannel[sample] = L * (1.0f - pan);
-                rightChannel[sample] = R;
-            }
+            // Use balance algorithm from shared library
+            auto gains = AudioForge::DSP::PanningAlgorithms::balance(pan);
+            leftChannel[sample] = outL * gains.leftGain;
+            rightChannel[sample] = outR * gains.rightGain;
         }
 
         // Track peaks for metering
@@ -120,9 +102,9 @@ void PanUtilProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::Midi
         peakRight = juce::jmax(peakRight, std::abs(rightChannel[sample]));
     }
 
-    // Update meters
-    leftLevel.store(peakLeft);
-    rightLevel.store(peakRight);
+    // Update meters (thread-safe)
+    leftMeter.updateLevel(peakLeft);
+    rightMeter.updateLevel(peakRight);
 }
 
 juce::AudioProcessorEditor* PanUtilProcessor::createEditor()
@@ -148,7 +130,9 @@ void PanUtilProcessor::setStateInformation(const void* data, int sizeInBytes)
 }
 
 //==============================================================================
+#ifndef AUDIOFORGE_TESTS
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
     return new PanUtilProcessor();
 }
+#endif

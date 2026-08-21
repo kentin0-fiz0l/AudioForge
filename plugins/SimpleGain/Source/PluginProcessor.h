@@ -2,6 +2,7 @@
 
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <juce_dsp/juce_dsp.h>
+#include <dsp/AudioForgeDSP.h>
 
 /**
  * SimpleGain Audio Processor
@@ -53,18 +54,18 @@ public:
 
     //==============================================================================
     // Parameter access for editor
-    float getCurrentLevel() const { return currentLevel.load(); }
+    float getCurrentLevel() const { return levelMeter.getLevel(); }
 
 private:
     //==============================================================================
     // Parameters
     juce::AudioParameterFloat* gainParam;
 
-    // Smoothed gain to avoid clicks
-    juce::SmoothedValue<float> smoothedGain;
+    // Smoothed gain to avoid clicks (using shared DSP library)
+    AudioForge::DSP::ParameterSmoothing<float> smoothedGain;
 
-    // Level metering (atomic for thread safety)
-    std::atomic<float> currentLevel { 0.0f };
+    // Level metering (using shared DSP library)
+    AudioForge::DSP::ThreadSafeMeter levelMeter;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SimpleGainProcessor)
 };

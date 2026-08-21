@@ -2,6 +2,7 @@
 
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <juce_dsp/juce_dsp.h>
+#include <dsp/AudioForgeDSP.h>
 
 /**
  * PanUtil Audio Processor
@@ -55,8 +56,8 @@ public:
 
     //==============================================================================
     // Parameter access for editor
-    float getLeftLevel() const { return leftLevel.load(); }
-    float getRightLevel() const { return rightLevel.load(); }
+    float getLeftLevel() const { return leftMeter.getLevel(); }
+    float getRightLevel() const { return rightMeter.getLevel(); }
 
 private:
     //==============================================================================
@@ -65,13 +66,13 @@ private:
     juce::AudioParameterFloat* widthParam;    // 0.0 to 2.0 (1.0 = normal)
     juce::AudioParameterChoice* modeParam;    // 0 = Pan, 1 = Balance
 
-    // Smoothed values for click-free operation
-    juce::SmoothedValue<float> smoothedPan;
-    juce::SmoothedValue<float> smoothedWidth;
+    // Smoothed values for click-free operation (using shared DSP library)
+    AudioForge::DSP::ParameterSmoothing<float> smoothedPan;
+    AudioForge::DSP::ParameterSmoothing<float> smoothedWidth;
 
-    // Level metering (atomic for thread safety)
-    std::atomic<float> leftLevel { 0.0f };
-    std::atomic<float> rightLevel { 0.0f };
+    // Level metering (using shared DSP library)
+    AudioForge::DSP::ThreadSafeMeter leftMeter;
+    AudioForge::DSP::ThreadSafeMeter rightMeter;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PanUtilProcessor)
 };

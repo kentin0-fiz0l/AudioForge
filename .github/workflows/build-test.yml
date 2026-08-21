@@ -1,0 +1,162 @@
+name: Build and Test
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  BUILD_TYPE: Release
+  CMAKE_VERSION: 3.15.x
+
+jobs:
+  build-and-test:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macOS
+            os: macos-latest
+            artifact_name: macOS
+            vst3_path: "*/build/*_artefacts/VST3/*.vst3"
+
+          - name: Windows
+            os: windows-latest
+            artifact_name: Windows
+            vst3_path: "*/build/*_artefacts/VST3/*.vst3"
+
+          - name: Linux
+            os: ubuntu-latest
+            artifact_name: Linux
+            vst3_path: "*/build/*_artefacts/VST3/*.vst3"
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Setup CMake
+        uses: jwlawson/actions-setup-cmake@v2
+        with:
+          cmake-version: ${{ env.CMAKE_VERSION }}
+
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libasound2-dev \
+            libcurl4-openssl-dev \
+            libfreetype6-dev \
+            libgl1-mesa-dev \
+            libjack-jackd2-dev \
+            libx11-dev \
+            libxcomposite-dev \
+            libxcursor-dev \
+            libxext-dev \
+            libxinerama-dev \
+            libxrandr-dev \
+            libxrender-dev \
+            mesa-common-dev
+
+      - name: Cache JUCE build
+        uses: actions/cache@v4
+        with:
+          path: |
+            plugins/*/build/_deps
+            plugins/*/build/JUCE
+            tests/build/_deps
+            tests/build/JUCE
+          key: ${{ runner.os }}-juce-${{ hashFiles('JUCE/**') }}
+          restore-keys: |
+            ${{ runner.os }}-juce-
+
+      - name: Build SimpleGain
+        working-directory: plugins/SimpleGain
+        run: |
+          cmake -B build -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}
+          cmake --build build --config ${{ env.BUILD_TYPE }} --parallel
+
+      - name: Build PanUtil
+        working-directory: plugins/PanUtil
+        run: |
+          cmake -B build -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}
+          cmake --build build --config ${{ env.BUILD_TYPE }} --parallel
+
+      - name: Build Test Runner
+        working-directory: tests
+        run: |
+          cmake -B build -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}
+          cmake --build build --config ${{ env.BUILD_TYPE }} --parallel
+
+      - name: Run Tests
+        working-directory: tests
+        run: |
+          echo "::group::Running AudioForge Test Suite"
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            ./build/${{ env.BUILD_TYPE }}/TestRunner.exe || exit 1
+          else
+            ./build/TestRunner || exit 1
+          fi
+          echo "::endgroup::"
+
+      - name: Upload test results on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ matrix.artifact_name }}
+          path: tests/build/test-output.txt
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: AudioForge-${{ matrix.artifact_name }}
+          path: |
+            plugins/SimpleGain/build/SimpleGain_artefacts/VST3/*.vst3
+            plugins/PanUtil/build/PanUtil_artefacts/VST3/*.vst3
+          retention-days: 7
+          if-no-files-found: error
+
+  validation:
+    name: Validate Plugins
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: List artifacts
+        run: |
+          echo "=== Built Artifacts ==="
+          find artifacts -type f -name "*.vst3" -o -type d -name "*.vst3"
+          echo "=== Artifact sizes ==="
+          du -sh artifacts/*
+
+      - name: Validate artifact structure
+        run: |
+          for artifact in artifacts/*/plugins/*/build/*_artefacts/VST3/*.vst3; do
+            if [ -d "$artifact" ]; then
+              echo "✓ Found VST3 bundle: $(basename $artifact)"
+              # Check for required files in VST3 bundle
+              if [ -d "$artifact/Contents" ]; then
+                echo "  ✓ Contains Contents directory"
+              else
+                echo "  ✗ Missing Contents directory"
+                exit 1
+              fi
+            fi
+          done

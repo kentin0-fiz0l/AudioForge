@@ -26,7 +26,7 @@ void SimpleGainProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 
     // Set initial gain from parameter
     float gainDb = gainParam->get();
-    float gainLinear = juce::Decibels::decibelsToGain(gainDb);
+    float gainLinear = AudioForge::DSP::Utilities::dbToLinear(gainDb);
     smoothedGain.setCurrentAndTargetValue(gainLinear);
 }
 
@@ -41,7 +41,7 @@ void SimpleGainProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::M
 
     // Get parameter value and convert from dB to linear gain
     float gainDb = gainParam->get();
-    float targetGain = juce::Decibels::decibelsToGain(gainDb);
+    float targetGain = AudioForge::DSP::Utilities::dbToLinear(gainDb);
     smoothedGain.setTargetValue(targetGain);
 
     // Get number of channels and samples
@@ -70,8 +70,8 @@ void SimpleGainProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::M
         }
     }
 
-    // Update level meter (thread-safe atomic)
-    currentLevel.store(peakLevel);
+    // Update level meter (thread-safe)
+    levelMeter.updateLevel(peakLevel);
 }
 
 juce::AudioProcessorEditor* SimpleGainProcessor::createEditor()
@@ -95,7 +95,9 @@ void SimpleGainProcessor::setStateInformation(const void* data, int sizeInBytes)
 
 //==============================================================================
 // This creates new instances of the plugin
+#ifndef AUDIOFORGE_TESTS
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
     return new SimpleGainProcessor();
 }
+#endif

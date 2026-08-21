@@ -1,0 +1,269 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., 1.0.0)'
+        required: true
+
+env:
+  BUILD_TYPE: Release
+
+jobs:
+  create-release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+      version: ${{ steps.get_version.outputs.version }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get version
+        id: get_version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          if [ -f CHANGELOG.md ]; then
+            # Extract changelog for this version
+            sed -n "/## \[${{ steps.get_version.outputs.version }}\]/,/## \[/p" CHANGELOG.md | sed '$d' > /tmp/changelog.txt
+            echo "changelog<<EOF" >> $GITHUB_OUTPUT
+            cat /tmp/changelog.txt >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          else
+            echo "changelog=Release ${{ steps.get_version.outputs.version }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ steps.get_version.outputs.version }}
+          release_name: AudioForge v${{ steps.get_version.outputs.version }}
+          body: |
+            # AudioForge v${{ steps.get_version.outputs.version }}
+
+            ${{ steps.changelog.outputs.changelog }}
+
+            ## Installation
+
+            1. Download the ZIP file for your platform
+            2. Extract the contents
+            3. Copy the `.vst3` files to your DAW's plugin folder:
+               - **macOS**: `~/Library/Audio/Plug-Ins/VST3/`
+               - **Windows**: `C:\Program Files\Common Files\VST3\`
+               - **Linux**: `~/.vst3/`
+
+            ## Included Plugins
+
+            - **SimpleGain** - Clean gain/volume control with metering
+            - **PanUtil** - Stereo panning utility
+
+            ## Platform Support
+
+            - macOS 10.13+
+            - Windows 10+
+            - Linux (Ubuntu 20.04+, or equivalent)
+
+            ## Requirements
+
+            - VST3 compatible DAW
+          draft: false
+          prerelease: false
+
+  build-release:
+    name: Build ${{ matrix.name }}
+    needs: create-release
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macOS
+            os: macos-latest
+            archive_name: macOS
+            vst3_ext: vst3
+
+          - name: Windows
+            os: windows-latest
+            archive_name: Windows
+            vst3_ext: vst3
+
+          - name: Linux
+            os: ubuntu-latest
+            archive_name: Linux
+            vst3_ext: vst3
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup CMake
+        uses: jwlawson/actions-setup-cmake@v2
+        with:
+          cmake-version: 3.15.x
+
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libasound2-dev \
+            libcurl4-openssl-dev \
+            libfreetype6-dev \
+            libgl1-mesa-dev \
+            libjack-jackd2-dev \
+            libx11-dev \
+            libxcomposite-dev \
+            libxcursor-dev \
+            libxext-dev \
+            libxinerama-dev \
+            libxrandr-dev \
+            libxrender-dev \
+            mesa-common-dev
+
+      - name: Cache JUCE build
+        uses: actions/cache@v4
+        with:
+          path: |
+            plugins/*/build/_deps
+            plugins/*/build/JUCE
+            tests/build/_deps
+            tests/build/JUCE
+          key: ${{ runner.os }}-juce-release-${{ hashFiles('JUCE/**') }}
+          restore-keys: |
+            ${{ runner.os }}-juce-release-
+            ${{ runner.os }}-juce-
+
+      - name: Build SimpleGain
+        working-directory: plugins/SimpleGain
+        run: |
+          cmake -B build -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}
+          cmake --build build --config ${{ env.BUILD_TYPE }} --parallel
+
+      - name: Build PanUtil
+        working-directory: plugins/PanUtil
+        run: |
+          cmake -B build -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}
+          cmake --build build --config ${{ env.BUILD_TYPE }} --parallel
+
+      - name: Build and Run Tests
+        working-directory: tests
+        run: |
+          cmake -B build -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}
+          cmake --build build --config ${{ env.BUILD_TYPE }} --parallel
+          echo "::group::Running tests before release"
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            ./build/${{ env.BUILD_TYPE }}/TestRunner.exe || {
+              echo "::error::Tests failed - aborting release"
+              exit 1
+            }
+          else
+            ./build/TestRunner || {
+              echo "::error::Tests failed - aborting release"
+              exit 1
+            }
+          fi
+          echo "::endgroup::"
+          echo "✅ All tests passed - proceeding with release"
+
+      - name: Package plugins (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          mkdir -p release
+          cd release
+
+          # Package SimpleGain
+          if [ -d ../plugins/SimpleGain/build/SimpleGain_artefacts/VST3/SimpleGain.vst3 ]; then
+            zip -r "SimpleGain-${{ needs.create-release.outputs.version }}-${{ matrix.archive_name }}.zip" \
+              ../plugins/SimpleGain/build/SimpleGain_artefacts/VST3/SimpleGain.vst3
+          fi
+
+          # Package PanUtil
+          if [ -d ../plugins/PanUtil/build/PanUtil_artefacts/VST3/PanUtil.vst3 ]; then
+            zip -r "PanUtil-${{ needs.create-release.outputs.version }}-${{ matrix.archive_name }}.zip" \
+              ../plugins/PanUtil/build/PanUtil_artefacts/VST3/PanUtil.vst3
+          fi
+
+          # Create combined bundle
+          mkdir -p AudioForge
+          cp -r ../plugins/SimpleGain/build/SimpleGain_artefacts/VST3/SimpleGain.vst3 AudioForge/ || true
+          cp -r ../plugins/PanUtil/build/PanUtil_artefacts/VST3/PanUtil.vst3 AudioForge/ || true
+          zip -r "AudioForge-${{ needs.create-release.outputs.version }}-${{ matrix.archive_name }}.zip" AudioForge
+
+          ls -lh *.zip
+
+      - name: Package plugins (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path release
+          Set-Location release
+
+          # Package SimpleGain
+          if (Test-Path ..\plugins\SimpleGain\build\SimpleGain_artefacts\VST3\SimpleGain.vst3) {
+            Compress-Archive -Path ..\plugins\SimpleGain\build\SimpleGain_artefacts\VST3\SimpleGain.vst3 `
+              -DestinationPath "SimpleGain-${{ needs.create-release.outputs.version }}-${{ matrix.archive_name }}.zip"
+          }
+
+          # Package PanUtil
+          if (Test-Path ..\plugins\PanUtil\build\PanUtil_artefacts\VST3\PanUtil.vst3) {
+            Compress-Archive -Path ..\plugins\PanUtil\build\PanUtil_artefacts\VST3\PanUtil.vst3 `
+              -DestinationPath "PanUtil-${{ needs.create-release.outputs.version }}-${{ matrix.archive_name }}.zip"
+          }
+
+          # Create combined bundle
+          New-Item -ItemType Directory -Force -Path AudioForge
+          Copy-Item ..\plugins\SimpleGain\build\SimpleGain_artefacts\VST3\SimpleGain.vst3 AudioForge\ -Recurse -ErrorAction SilentlyContinue
+          Copy-Item ..\plugins\PanUtil\build\PanUtil_artefacts\VST3\PanUtil.vst3 AudioForge\ -Recurse -ErrorAction SilentlyContinue
+          Compress-Archive -Path AudioForge -DestinationPath "AudioForge-${{ needs.create-release.outputs.version }}-${{ matrix.archive_name }}.zip"
+
+          Get-ChildItem *.zip
+
+      - name: Upload SimpleGain to Release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ./release/SimpleGain-${{ needs.create-release.outputs.version }}-${{ matrix.archive_name }}.zip
+          asset_name: SimpleGain-${{ needs.create-release.outputs.version }}-${{ matrix.archive_name }}.zip
+          asset_content_type: application/zip
+
+      - name: Upload PanUtil to Release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ./release/PanUtil-${{ needs.create-release.outputs.version }}-${{ matrix.archive_name }}.zip
+          asset_name: PanUtil-${{ needs.create-release.outputs.version }}-${{ matrix.archive_name }}.zip
+          asset_content_type: application/zip
+
+      - name: Upload AudioForge Bundle to Release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ./release/AudioForge-${{ needs.create-release.outputs.version }}-${{ matrix.archive_name }}.zip
+          asset_name: AudioForge-${{ needs.create-release.outputs.version }}-${{ matrix.archive_name }}.zip
+          asset_content_type: application/zip

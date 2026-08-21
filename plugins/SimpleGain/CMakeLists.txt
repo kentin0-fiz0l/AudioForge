@@ -5,6 +5,9 @@ project(SimpleGain VERSION 1.0.0)
 # Add JUCE to the project
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../JUCE ${CMAKE_CURRENT_BINARY_DIR}/JUCE)
 
+# Add AudioForge shared DSP library
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../shared ${CMAKE_CURRENT_BINARY_DIR}/shared)
+
 # Create the plugin
 juce_add_plugin(SimpleGain
     COMPANY_NAME "AudioForge"
@@ -32,10 +35,11 @@ target_compile_definitions(SimpleGain PUBLIC
     JUCE_USE_CURL=0
     JUCE_DISPLAY_SPLASH_SCREEN=0)
 
-# Link JUCE libraries
+# Link JUCE libraries and shared DSP library
 target_link_libraries(SimpleGain PRIVATE
     juce::juce_audio_utils
-    juce::juce_dsp)
+    juce::juce_dsp
+    AudioForgeDSP)
 
 # Set C++ standard
 target_compile_features(SimpleGain PRIVATE cxx_std_17)
