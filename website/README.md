@@ -11,7 +11,8 @@ AudioForge is a collection of professional-quality audio plugins built with mode
 - **Framework**: Next.js 14 with App Router
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS
-- **Deployment**: Static site export (Vercel or GitHub Pages)
+- **Deployment**: Static site export to DigitalOcean
+- **Domain**: audioforge.fluxstudio.art
 
 ## Features
 
@@ -57,30 +58,29 @@ website/
 ├── src/
 │   ├── app/
 │   │   ├── page.tsx              # Homepage
-│   │   ├── layout.tsx            # Root layout
+│   │   ├── layout.tsx            # Root layout with SEO
 │   │   ├── globals.css           # Global styles
 │   │   ├── plugins/
-│   │   │   ├── page.tsx          # Plugin listing
 │   │   │   └── [slug]/
 │   │   │       └── page.tsx      # Individual plugin pages
-│   │   ├── documentation/
+│   │   ├── docs/
 │   │   │   └── page.tsx          # Documentation
 │   │   └── roadmap/
 │   │       └── page.tsx          # Roadmap
 │   ├── components/
-│   │   ├── Header.tsx            # Navigation header
+│   │   ├── Hero.tsx              # Hero section
+│   │   ├── Navigation.tsx        # Nav header
 │   │   ├── Footer.tsx            # Footer
 │   │   ├── PluginCard.tsx        # Plugin card component
-│   │   └── ...                   # Other components
-│   └── data/
-│       └── plugins.ts            # Plugin data
+│   │   └── FeatureGrid.tsx       # Features grid
+│   └── lib/
+│       └── plugins.ts            # Plugin data and metadata
 ├── public/
 │   ├── images/                   # Static images
 │   ├── sitemap.xml              # SEO sitemap
 │   └── robots.txt               # Crawler instructions
 ├── next.config.mjs              # Next.js configuration
 ├── tailwind.config.ts           # Tailwind configuration
-├── vercel.json                  # Vercel deployment config
 └── package.json                 # Dependencies
 ```
 
@@ -92,7 +92,11 @@ website/
 npm run build
 ```
 
-This generates a static site in the `out/` directory.
+This generates a static site in the `out/` directory with:
+- 9 static HTML pages
+- Optimized assets
+- 92.7 kB first load JS
+- Complete SEO metadata
 
 ### Test Production Build Locally
 
@@ -104,77 +108,158 @@ npm install -g serve
 serve out
 ```
 
-## Deployment
+## Deployment to DigitalOcean
 
-### Deploy to Vercel (Recommended)
+### Option 1: DigitalOcean App Platform (Recommended)
 
-1. Install Vercel CLI:
+Easiest deployment method with automatic builds and HTTPS:
+
+1. **Create a new App on DigitalOcean:**
+   - Go to DigitalOcean Dashboard → Apps → Create App
+   - Connect your GitHub repository
+   - Select the `AudioForge` repository
+   - Set source directory to `/website`
+
+2. **Configure the App:**
+   - **Build Command**: `npm run build`
+   - **Output Directory**: `out`
+   - **Environment Variables**: None needed
+   - **Plan**: Static Site (cheapest option, $3/mo)
+
+3. **Set up custom domain:**
+   - In App settings, add domain: `audioforge.fluxstudio.art`
+   - Copy the CNAME record provided by DigitalOcean
+   - Add CNAME record to FluxStudio.art DNS:
+     ```
+     Type: CNAME
+     Name: audioforge
+     Value: [your-app-name].ondigitalocean.app
+     TTL: 3600
+     ```
+
+4. **Deploy:**
+   - DigitalOcean will auto-deploy on every push to main
+   - HTTPS certificate is automatically provisioned
+   - Site will be live at `audioforge.fluxstudio.art`
+
+### Option 2: DigitalOcean Spaces + CDN
+
+Cheapest option for pure static hosting ($5/mo for 250GB storage + bandwidth):
+
+1. **Create a Space:**
+   - Go to DigitalOcean Dashboard → Spaces → Create Space
+   - Name: `audioforge-site`
+   - Region: Choose closest to your users (e.g., SFO3)
+   - Enable CDN
+   - Set Files Listing to "Public"
+
+2. **Upload the static site:**
+   ```bash
+   # Install s3cmd or use doctl
+   npm install -g @digitalocean/doctl
+
+   # Authenticate
+   doctl auth init
+
+   # Build the site
+   npm run build
+
+   # Upload to Spaces (replace YOUR-SPACE-NAME and REGION)
+   doctl spaces upload out/* \
+     --space audioforge-site \
+     --region sfo3 \
+     --recursive
+   ```
+
+3. **Configure Space as website:**
+   - In Space settings → Enable "Static Website Hosting"
+   - Set index document: `index.html`
+   - Set error document: `404.html`
+
+4. **Set up custom domain:**
+   - In Space settings → Add custom domain: `audioforge.fluxstudio.art`
+   - Add CNAME record to FluxStudio.art DNS:
+     ```
+     Type: CNAME
+     Name: audioforge
+     Value: audioforge-site.sfo3.cdn.digitaloceanspaces.com
+     TTL: 3600
+     ```
+
+5. **Enable SSL:**
+   - DigitalOcean will provision a Let's Encrypt certificate automatically
+
+### Option 3: Manual Deployment Script
+
+Create a deployment script for easy updates:
+
 ```bash
-npm install -g vercel
+#!/bin/bash
+# deploy.sh
+
+echo "Building site..."
+npm run build
+
+echo "Uploading to DigitalOcean Spaces..."
+doctl spaces upload out/* \
+  --space audioforge-site \
+  --region sfo3 \
+  --recursive \
+  --force
+
+echo "Deployment complete!"
+echo "Site live at: https://audioforge.fluxstudio.art"
 ```
 
-2. Deploy:
+Make it executable:
 ```bash
-vercel
+chmod +x deploy.sh
+./deploy.sh
 ```
 
-3. For production deployment:
-```bash
-vercel --prod
+## DNS Configuration
+
+Add this CNAME record to FluxStudio.art DNS (e.g., in DigitalOcean Networking or your DNS provider):
+
+```
+Type: CNAME
+Name: audioforge
+Value: [depends on deployment option]
+TTL: 3600
 ```
 
-### Deploy to GitHub Pages
+**Values by deployment option:**
+- **App Platform**: `your-app-name.ondigitalocean.app`
+- **Spaces CDN**: `audioforge-site.sfo3.cdn.digitaloceanspaces.com`
 
-1. Add to package.json scripts:
-```json
-{
-  "scripts": {
-    "deploy": "npm run build && gh-pages -d out"
-  }
-}
-```
+## Cost Comparison
 
-2. Install gh-pages:
-```bash
-npm install --save-dev gh-pages
-```
-
-3. Deploy:
-```bash
-npm run deploy
-```
-
-### Deploy to Other Static Hosts
-
-The `out/` directory contains a complete static site that can be deployed to:
-- Netlify
-- Cloudflare Pages
-- AWS S3 + CloudFront
-- Any static file host
-
-Simply upload the contents of the `out/` directory to your hosting provider.
-
-## Environment Variables
-
-No environment variables are required for the static site. All configuration is done in the code.
+- **App Platform**: $3/month (static site plan)
+- **Spaces + CDN**: $5/month (250GB storage + bandwidth)
+- **Both options include**:
+  - Automatic HTTPS
+  - CDN distribution
+  - 99.99% uptime SLA
 
 ## SEO Optimization
 
 The site includes:
-- Comprehensive meta tags in layout.tsx and page.tsx files
-- Sitemap.xml for search engine crawling
-- Robots.txt for crawler control
+- Comprehensive meta tags in all pages
+- Open Graph and Twitter Card metadata
+- JSON-LD structured data (Organization, SoftwareApplication)
+- Sitemap.xml at `/sitemap.xml`
+- Robots.txt at `/robots.txt`
 - Semantic HTML structure
-- Open Graph tags for social sharing
-- JSON-LD structured data (ready to add)
+- Optimized images with Next.js Image component
 
 ## Performance
 
 - Static site generation for instant page loads
 - Optimized fonts with local hosting
 - Lazy-loaded images
-- Minimal JavaScript bundle
+- Minimal JavaScript bundle (92.7 kB first load)
 - Tailwind CSS for efficient styling
+- CDN distribution via DigitalOcean
 
 ## Theme Configuration
 
@@ -192,13 +277,21 @@ The site uses a dark theme with purple-pink gradient accents:
 - Safari (latest)
 - Edge (latest)
 
+## Monitoring
+
+After deployment, monitor:
+- **Performance**: DigitalOcean App Platform → Metrics
+- **Bandwidth**: Spaces → Usage
+- **Uptime**: Set up DigitalOcean monitoring alerts
+
 ## Contributing
 
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Test locally
-5. Submit a pull request
+4. Test locally with `npm run dev`
+5. Build and verify with `npm run build && serve out`
+6. Submit a pull request
 
 ## License
 
@@ -211,8 +304,8 @@ For questions or support, please open an issue on GitHub.
 ## Related Projects
 
 - [AudioForge Plugins](../plugins/) - The actual VST3 plugins
-- [AudioForge Documentation](https://audioforge.dev/documentation/) - Full documentation
+- [FluxStudio Marketplace](https://fluxstudio.art/audioforge) - Download plugins
 
 ## Roadmap
 
-See the [Roadmap page](https://audioforge.dev/roadmap/) for upcoming features and planned plugins.
+See the [Roadmap page](https://audioforge.fluxstudio.art/roadmap) for upcoming features and planned plugins.
