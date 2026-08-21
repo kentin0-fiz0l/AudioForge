@@ -299,61 +299,106 @@ voice.noteOn(midiNote, velocity, sampleRate);`
     docsUrl: '/docs/plugins/basicsynth'
   },
   {
-    id: 'cleanldelay',
+    id: 'cleandelay',
     name: 'CleanDelay',
     version: '0.1.0',
-    status: 'in-development',
-    tagline: 'Stereo delay effect',
-    description: 'Professional stereo delay with tempo sync, ping-pong mode, and feedback filtering. Perfect for adding depth and space to your mixes.',
+    status: 'released',
+    tagline: 'Professional stereo delay with ping-pong mode',
+    description: 'A versatile stereo delay effect for creating rhythmic echoes, ambient textures, and stereo width enhancement. Features clean circular buffer implementation with feedback control and ping-pong mode for alternating L/R delays.',
     features: [
       {
-        name: 'Delay Time',
-        description: 'Adjustable delay from 1ms to 2 seconds'
+        name: 'Adjustable Delay Time',
+        description: '1ms to 2000ms with logarithmic scaling for musical control'
       },
       {
         name: 'Feedback Control',
-        description: 'Control the number of delay repeats'
+        description: '0% to 99% feedback for controlled echo repetitions'
       },
       {
         name: 'Wet/Dry Mix',
-        description: 'Blend delayed signal with original'
+        description: 'Seamless blending from 100% dry to 100% wet'
       },
       {
-        name: 'Sync to DAW Tempo',
-        description: 'Lock delay time to musical subdivisions'
+        name: 'Ping-Pong Mode',
+        description: 'Alternating left/right delays for wide stereo imaging'
       },
       {
-        name: 'Stereo Ping-Pong',
-        description: 'Alternating left/right delay repeats'
+        name: 'Real-time Metering',
+        description: 'Input and output level monitoring'
       },
       {
-        name: 'Feedback Filter',
-        description: 'High-pass filter in feedback path to prevent muddiness'
+        name: 'Clean Signal Path',
+        description: 'High-quality circular buffer implementation'
       }
     ],
     parameters: [
       {
         name: 'Delay Time',
         range: '1ms to 2000ms',
-        description: 'Delay time in milliseconds or tempo-synced notes'
+        description: 'Time between echoes (log scale for musical control)'
       },
       {
         name: 'Feedback',
-        range: '0% to 100%',
-        description: 'Amount of delayed signal fed back'
+        range: '0% to 99%',
+        description: 'Amount of delayed signal fed back into the delay line'
       },
       {
-        name: 'Mix',
+        name: 'Mix (Wet)',
         range: '0% to 100%',
-        description: 'Wet/dry balance'
+        description: 'Balance between dry (original) and wet (delayed) signal'
       },
       {
-        name: 'Sync',
-        range: 'On / Off',
-        description: 'Enable tempo sync'
+        name: 'Ping-Pong',
+        range: 'Off / On',
+        description: 'Enable alternating left/right delays for stereo effect'
+      }
+    ],
+    useCases: [
+      'Vocal slapback - Quick doubling effect (80-120ms, low feedback)',
+      'Rhythmic eighth note delay - Syncopated echoes (250ms @ 120 BPM, ping-pong on)',
+      'Ambient wash - Lush delay clouds (500-800ms, high feedback, ping-pong on)',
+      'Haas effect - Stereo width enhancement (10-30ms, no feedback)',
+      'Dub-style echo throw - Classic dub delays (375ms dotted eighth, automate mix)',
+      'Guitar lead enhancement - Fill out single-note lines (375-500ms, medium feedback)'
+    ],
+    learningFocus: [
+      'Circular buffer implementation for delay lines',
+      'Cross-channel feedback for ping-pong stereo effect',
+      'Wet/dry signal mixing',
+      'Buffer index wrapping and modulo arithmetic',
+      'Multi-channel processing with shared write position',
+      'Real-time parameter control (delay time, feedback, mix)',
+      'State persistence (save/restore delay parameters)',
+      'Professional UI with color-coded controls'
+    ],
+    algorithms: [
+      {
+        name: 'Circular Buffer Delay',
+        description: 'Efficient delay line using modulo arithmetic for buffer wrapping',
+        code: `// Write input to delay buffer
+delayBuffer[writePosition] = input + (feedback * delayedSample);
+
+// Read from delay buffer (delayed by delaySamples)
+readPosition = (writePosition - delaySamples + MAX_DELAY_SAMPLES) % MAX_DELAY_SAMPLES;
+delayedSample = delayBuffer[readPosition];
+
+// Advance write position
+writePosition = (writePosition + 1) % MAX_DELAY_SAMPLES;`
+      },
+      {
+        name: 'Ping-Pong Stereo Delay',
+        description: 'Cross-channel feedback for alternating L/R echoes',
+        code: `// Left channel gets feedback from right channel
+leftFeedback = pingPong ? rightDelayBuffer[readPos] : leftDelayBuffer[readPos];
+leftDelayBuffer[writePos] = leftInput + (leftFeedback * feedback);
+
+// Right channel gets feedback from left channel
+rightFeedback = pingPong ? leftDelayBuffer[readPos] : rightDelayBuffer[readPos];
+rightDelayBuffer[writePos] = rightInput + (rightFeedback * feedback);`
       }
     ],
     screenshots: [],
+    downloadUrl: '/downloads/CleanDelay-v0.1.0',
     docsUrl: '/docs/plugins/cleandelay'
   },
   {
@@ -519,7 +564,7 @@ export const roadmap: RoadmapPhase[] = [
       {
         name: 'Testing framework',
         status: 'complete',
-        features: ['JUCE UnitTestRunner', '44 test suites', '100% pass rate']
+        features: ['JUCE UnitTestRunner', '54 test suites', '100% pass rate']
       },
       {
         name: 'CI/CD pipeline',
@@ -559,14 +604,14 @@ export const roadmap: RoadmapPhase[] = [
       },
       {
         name: 'CleanDelay',
-        status: 'planned',
+        status: 'complete',
         features: [
-          'Delay time (1ms - 2 seconds)',
-          'Feedback control',
-          'Wet/dry mix',
-          'Sync to DAW tempo',
-          'Stereo ping-pong mode',
-          'High-pass filter in feedback path'
+          'Delay time (1ms - 2 seconds) with log scaling',
+          'Feedback control (0-99%)',
+          'Wet/dry mix (0-100%)',
+          'Stereo ping-pong mode (alternating L/R)',
+          'Input/output level metering',
+          'Circular buffer implementation (192k samples)'
         ]
       },
       {
@@ -745,7 +790,7 @@ export const projectInfo = {
   github: 'https://github.com/yourusername/AudioForge',
   license: 'MIT',
   testCoverage: '100%',
-  totalTests: 44,
+  totalTests: 54,
   totalPlugins: plugins.length,
   releasedPlugins: getPluginsByStatus('released').length
 };
