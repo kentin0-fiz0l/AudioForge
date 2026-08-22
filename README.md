@@ -32,7 +32,7 @@ AudioForge is a collection of high-quality audio plugins for music production. S
 
 - **Framework**: JUCE 7.x
 - **Language**: C++17
-- **Formats**: VST3 (AU and AAX coming later)
+- **Formats**: VST3, AU (Audio Units for macOS), Standalone (AAX coming later)
 - **Platforms**: macOS, Windows, Linux
 
 ## Project Structure
@@ -83,10 +83,13 @@ cmake --build build
 
 ### Installing Plugins
 
-Built plugins will be in `builds/`. Copy them to your DAW's plugin folder:
+Built plugins are automatically installed to your system plugin folders:
 - **macOS VST3**: `~/Library/Audio/Plug-Ins/VST3/`
+- **macOS AU**: `~/Library/Audio/Plug-Ins/Components/`
 - **Windows VST3**: `C:\Program Files\Common Files\VST3\`
 - **Linux VST3**: `~/.vst3/`
+
+All AudioForge plugins are available in both VST3 and AU formats on macOS.
 
 ### Running Tests
 

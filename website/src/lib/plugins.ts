@@ -1600,7 +1600,7 @@ export const projectInfo = {
   techStack: {
     framework: 'JUCE 7.x',
     language: 'C++17',
-    formats: ['VST3', 'AU (coming)', 'AAX (coming)'],
+    formats: ['VST3', 'AU (macOS)', 'Standalone', 'AAX (coming)'],
     platforms: ['macOS', 'Windows', 'Linux']
   },
   github: 'https://github.com/kentin0-fiz0l/AudioForge',

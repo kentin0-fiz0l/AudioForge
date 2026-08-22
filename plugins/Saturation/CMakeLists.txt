@@ -10,7 +10,7 @@ juce_add_plugin(Saturation
     COMPANY_NAME "AudioForge"
     PLUGIN_MANUFACTURER_CODE Afrg
     PLUGIN_CODE Satu
-    FORMATS VST3 Standalone
+    FORMATS VST3 AU Standalone
     PRODUCT_NAME "Saturation"
     PLUGIN_NAME "Saturation"
     DESCRIPTION "Multi-mode analog saturation and harmonic enhancement"

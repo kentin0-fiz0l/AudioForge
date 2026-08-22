@@ -10,7 +10,7 @@ juce_add_plugin(CleanDelay
     COMPANY_NAME "AudioForge"
     PLUGIN_MANUFACTURER_CODE AFge
     PLUGIN_CODE CnDl
-    FORMATS VST3 Standalone
+    FORMATS VST3 AU Standalone
     PRODUCT_NAME "CleanDelay"
 
     # Plugin characteristics

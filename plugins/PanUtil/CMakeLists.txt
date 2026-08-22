@@ -13,7 +13,7 @@ juce_add_plugin(PanUtil
     COMPANY_NAME "AudioForge"
     PLUGIN_MANUFACTURER_CODE AFrg
     PLUGIN_CODE PanU
-    FORMATS VST3 Standalone
+    FORMATS VST3 AU Standalone
     PRODUCT_NAME "PanUtil"
     PLUGIN_NAME "PanUtil"
     IS_SYNTH FALSE

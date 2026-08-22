@@ -13,7 +13,7 @@ juce_add_plugin(SimpleGain
     COMPANY_NAME "AudioForge"
     PLUGIN_MANUFACTURER_CODE AFrg
     PLUGIN_CODE SmpG
-    FORMATS VST3 Standalone
+    FORMATS VST3 AU Standalone
     PRODUCT_NAME "SimpleGain"
     PLUGIN_NAME "SimpleGain"
     IS_SYNTH FALSE

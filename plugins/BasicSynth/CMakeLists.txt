@@ -13,7 +13,7 @@ juce_add_plugin(BasicSynth
     COMPANY_NAME "AudioForge"
     PLUGIN_MANUFACTURER_CODE AFrg
     PLUGIN_CODE BaSy
-    FORMATS VST3 Standalone
+    FORMATS VST3 AU Standalone
     PRODUCT_NAME "BasicSynth"
     PLUGIN_NAME "BasicSynth"
     IS_SYNTH TRUE

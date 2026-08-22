@@ -10,7 +10,7 @@ juce_add_plugin(SimpleEQ
     COMPANY_NAME "AudioForge"
     PLUGIN_MANUFACTURER_CODE AFge
     PLUGIN_CODE SmEQ
-    FORMATS VST3 Standalone
+    FORMATS VST3 AU Standalone
     PRODUCT_NAME "SimpleEQ"
 
     # Plugin characteristics

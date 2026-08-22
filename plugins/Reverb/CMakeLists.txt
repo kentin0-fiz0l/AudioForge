@@ -10,7 +10,7 @@ juce_add_plugin(Reverb
     COMPANY_NAME "AudioForge"
     PLUGIN_MANUFACTURER_CODE Afrg
     PLUGIN_CODE Revb
-    FORMATS VST3 Standalone
+    FORMATS VST3 AU Standalone
     PRODUCT_NAME "Reverb"
     DESCRIPTION "Algorithmic reverb with Freeverb-inspired design"
     IS_SYNTH FALSE

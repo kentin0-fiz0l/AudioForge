@@ -10,7 +10,7 @@ juce_add_plugin(ChorusFlanger
     COMPANY_NAME "AudioForge"
     PLUGIN_MANUFACTURER_CODE Afrg
     PLUGIN_CODE Chfl
-    FORMATS VST3 Standalone
+    FORMATS VST3 AU Standalone
     PRODUCT_NAME "ChorusFlanger"
     DESCRIPTION "Chorus and Flanger modulation effects"
     IS_SYNTH FALSE

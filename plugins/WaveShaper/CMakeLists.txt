@@ -10,7 +10,7 @@ juce_add_plugin(WaveShaper
     COMPANY_NAME "AudioForge"
     PLUGIN_MANUFACTURER_CODE Afrg
     PLUGIN_CODE WvSh
-    FORMATS VST3 Standalone
+    FORMATS VST3 AU Standalone
     PRODUCT_NAME "WaveShaper"
     PLUGIN_NAME "WaveShaper"
     DESCRIPTION "Waveshaping distortion with multiple curve shapes"

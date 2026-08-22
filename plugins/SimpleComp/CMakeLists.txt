@@ -10,7 +10,7 @@ juce_add_plugin(SimpleComp
     COMPANY_NAME "AudioForge"
     PLUGIN_MANUFACTURER_CODE Afrg
     PLUGIN_CODE SmCp
-    FORMATS VST3 Standalone
+    FORMATS VST3 AU Standalone
     PRODUCT_NAME "SimpleComp"
     PLUGIN_NAME "SimpleComp"
     DESCRIPTION "Basic dynamic range compressor"
