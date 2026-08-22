@@ -38,7 +38,7 @@ lcov --capture \
      --directory build \
      --output-file build/coverage.info \
      --rc branch_coverage=1 \
-     --ignore-errors inconsistent,gcov,format,count,unsupported
+     --ignore-errors inconsistent,gcov,format,count,unsupported,deprecated
 
 echo -e "${BLUE}Step 6: Filtering coverage data...${NC}"
 # Remove external code from coverage
