@@ -1,5 +1,6 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
+#include "dsp/SaturationAlgorithms.h"
 #include <cmath>
 
 SaturationAudioProcessor::SaturationAudioProcessor()
@@ -222,8 +223,8 @@ void SaturationAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
             // Apply drive (0-10x multiplier)
             float driven = input * (1.0f + drive * 9.0f);
 
-            // Apply saturation (placeholder - will be replaced with actual algorithms)
-            float saturated = std::tanh(driven);
+            // Apply saturation based on selected mode
+            float saturated = AudioForge::DSP::SaturationAlgorithms::saturate(driven, mode);
 
             channelData[sample] = saturated;
         }
