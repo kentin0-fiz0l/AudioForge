@@ -763,6 +763,168 @@ else
     screenshots: [],
     downloadUrl: '/downloads/WaveShaper-v1.0.0',
     docsUrl: '/docs/plugins/waveshaper'
+  },
+  {
+    id: 'saturation',
+    name: 'Saturation',
+    version: '1.0.0',
+    status: 'released',
+    tagline: 'Multi-mode analog saturation with harmonic enhancement',
+    description: 'Professional analog saturation plugin with 5 distinct saturation modes, each modeling different analog hardware characteristics. Features real-time harmonic analysis, oversampling for aliasing-free distortion, and comprehensive tone shaping controls.',
+    features: [
+      {
+        name: '5 Saturation Modes',
+        description: 'Tape (soft, even harmonics), Tube (asymmetric warmth), Transistor (hard clipping), Transformer (gentle H2), and Diode (asymmetric hard clipping)'
+      },
+      {
+        name: 'Real-time Harmonic Analyzer',
+        description: 'Visual feedback showing H1-H8 harmonic content with color-coded bars (orange=even/warm, cyan=odd/bright)'
+      },
+      {
+        name: 'Oversampling (Off/2x/4x)',
+        description: 'High-quality oversampling using polyphase IIR filters to eliminate aliasing artifacts'
+      },
+      {
+        name: 'Drive Control (0-100%)',
+        description: 'Variable drive amount up to 10x gain multiplier for intense saturation'
+      },
+      {
+        name: 'Dual Tone Controls',
+        description: 'Independent low and high shelf filters (±12dB) at 200Hz and 5kHz for pre/post tone shaping'
+      },
+      {
+        name: 'Mix Control (Dry/Wet)',
+        description: 'Blend original and saturated signals for parallel processing (0-100%)'
+      },
+      {
+        name: 'DC Blocker',
+        description: 'Automatic DC offset removal at 20Hz for clean output'
+      },
+      {
+        name: 'Input/Output Metering',
+        description: 'Real-time level monitoring with 30 FPS updates'
+      }
+    ],
+    parameters: [
+      {
+        name: 'Drive',
+        range: '0% to 100%',
+        description: 'Amount of drive/saturation (maps to 1-10x gain multiplier)'
+      },
+      {
+        name: 'Mode',
+        range: '5 modes',
+        description: 'Saturation algorithm type (Tape, Tube, Transistor, Transformer, Diode)'
+      },
+      {
+        name: 'Tone Low',
+        range: '-12dB to +12dB',
+        description: 'Low shelf filter at 200Hz (Q=0.707)'
+      },
+      {
+        name: 'Tone High',
+        range: '-12dB to +12dB',
+        description: 'High shelf filter at 5kHz (Q=0.707)'
+      },
+      {
+        name: 'Mix',
+        range: '0% to 100%',
+        description: 'Dry/wet blend (0% = dry, 100% = wet)'
+      },
+      {
+        name: 'Oversampling',
+        range: 'Off / 2x / 4x',
+        description: 'Oversampling factor for aliasing reduction'
+      }
+    ],
+    useCases: [
+      'Add warmth to digital recordings - Tape mode with low drive (10-30%) and even harmonics',
+      'Vintage tube warmth - Tube mode with medium drive (40-60%) for asymmetric saturation',
+      'Aggressive distortion - Transistor mode with high drive for hard clipping and odd harmonics',
+      'Subtle glue and cohesion - Transformer mode with low drive for gentle H2 enrichment',
+      'Creative effects - Diode mode for strong asymmetric saturation and unique harmonics',
+      'Parallel saturation - Mix at 30-50% for New York-style parallel processing',
+      'Aliasing-free overdriven tones - Use 2x or 4x oversampling for clean high-gain saturation'
+    ],
+    learningFocus: [
+      'Analog saturation modeling (tape, tube, transistor, transformer, diode)',
+      'Harmonic distortion (even vs odd harmonics)',
+      'Oversampling techniques for aliasing reduction',
+      'Polyphase IIR filter design',
+      'Real-time FFT analysis for harmonic content',
+      'Shelf filter design for tone shaping',
+      'DC blocking filters',
+      'Custom UI components (harmonic analyzer visualization)',
+      'Per-sample nonlinear processing'
+    ],
+    algorithms: [
+      {
+        name: 'Tape Saturation',
+        description: 'Soft compression with even harmonics (H2, H4, H6) for warmth',
+        code: `// Tape saturation formula
+const float x = input * 0.7f;
+if (abs(x) < 0.1f) return input;
+
+const float absX = abs(x);
+const float sign = (x > 0.0f) ? 1.0f : -1.0f;
+const float compressed = absX / (1.0f + absX * 0.6f);
+return sign * compressed * 1.4f;`
+      },
+      {
+        name: 'Tube Saturation',
+        description: 'Asymmetric waveshaping for warm tube-like saturation (H2, H3, H4)',
+        code: `// Tube saturation (asymmetric)
+if (input > 0.0f)
+    return tanh(input * 1.2f) * 0.9f;  // Harder positive
+else
+    return tanh(input * 0.8f) * 1.05f; // Softer negative`
+      },
+      {
+        name: 'Transistor Saturation',
+        description: 'Hard clipping with odd harmonics (H3, H5, H7) for aggressive tone',
+        code: `// Transistor saturation
+if (abs(input) < 0.7f)
+    return input;  // Linear region
+
+const float sign = (input > 0.0f) ? 1.0f : -1.0f;
+const float absInput = abs(input);
+const float hardClip = 0.7f + (absInput - 0.7f) * 0.3f;
+return sign * min(hardClip, 1.2f);`
+      },
+      {
+        name: 'Transformer Saturation',
+        description: 'Gentle compression with H2 dominant harmonic for subtle warmth',
+        code: `// Transformer saturation
+const float asymmetry = 0.15f;
+const float asymmetricInput = input + input * input * asymmetry;
+return tanh(asymmetricInput * 0.6f) * 1.2f;`
+      },
+      {
+        name: 'Diode Saturation',
+        description: 'Asymmetric hard clipping for strong H2, H3, H5 harmonics',
+        code: `// Diode saturation (very asymmetric)
+if (input > 0.0f)
+    return min(input, 0.7f);  // Hard clip positive at 0.7
+else
+    return max(input, -1.2f); // Soft clip negative at -1.2`
+      },
+      {
+        name: 'Oversampling',
+        description: 'Polyphase IIR oversampling for aliasing-free saturation',
+        code: `// Upsample by factor (2x or 4x)
+auto oversampledBlock = oversampler->processSamplesUp(audioBlock);
+
+// Process at higher sample rate
+processSaturation(oversampledBlock);
+
+// Downsample back to original rate
+auto outputBlock = juce::dsp::AudioBlock<float>(buffer);
+oversampler->processSamplesDown(outputBlock);`
+      }
+    ],
+    screenshots: [],
+    downloadUrl: '/downloads/Saturation-v1.0.0',
+    docsUrl: '/docs/plugins/saturation'
   }
 ];
 
@@ -916,6 +1078,19 @@ export const roadmap: RoadmapPhase[] = [
         ]
       },
       {
+        name: 'Saturation',
+        status: 'complete',
+        features: [
+          '5 saturation modes (Tape, Tube, Transistor, Transformer, Diode)',
+          'Drive control (0-10x multiplier)',
+          'Real-time harmonic analyzer (H1-H8 visualization)',
+          'Oversampling (Off/2x/4x) for aliasing reduction',
+          'Dual tone controls (±12dB low/high shelves)',
+          'Mix control for parallel processing',
+          'DC blocker and input/output metering'
+        ]
+      },
+      {
         name: 'Website with downloads',
         status: 'in-progress',
         features: ['Simple static site']
@@ -1057,7 +1232,7 @@ export const projectInfo = {
   github: 'https://github.com/kentin0-fiz0l/AudioForge',
   license: 'MIT',
   testCoverage: '100%',
-  totalTests: 97,
+  totalTests: 113,
   totalPlugins: plugins.length,
   releasedPlugins: getPluginsByStatus('released').length
 };

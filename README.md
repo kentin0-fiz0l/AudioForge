@@ -20,6 +20,7 @@ AudioForge is a collection of high-quality audio plugins for music production. S
 - **SimpleEQ** - 3-band parametric EQ with high/low-pass filters
 - **SimpleComp** - Compressor with auto makeup gain and soft/hard knee modes
 - **WaveShaper** - Waveshaping distortion with 5 curve modes and real-time visualization
+- **Saturation** - Multi-mode analog saturation with harmonic enhancement and oversampling
 
 ### Planned (Phase 3+)
 - Reverb effects
@@ -96,7 +97,7 @@ cmake --build build
 ./build/TestRunner -v        # Verbose output
 ```
 
-Test suite: 97/97 tests passing (100%) | Coverage: See badge above
+Test suite: 113/113 tests passing (100%) | Coverage: See badge above
 
 ## Development Roadmap
 
