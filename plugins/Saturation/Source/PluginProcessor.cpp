@@ -277,7 +277,7 @@ bool SaturationAudioProcessor::hasEditor() const
 
 juce::AudioProcessorEditor* SaturationAudioProcessor::createEditor()
 {
-    return new juce::GenericAudioProcessorEditor (*this);
+    return new SaturationAudioProcessorEditor (*this);
 }
 
 void SaturationAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
