@@ -1,5 +1,6 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
+#include "dsp/WaveShaping.h"
 #include <cmath>
 
 WaveShaperAudioProcessor::WaveShaperAudioProcessor()
@@ -141,19 +142,19 @@ void WaveShaperAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
         {
             const float input = channelData[sample];
             const float drySignal = input;
-            
-            // Apply drive
-            float driven = input * (1.0f + drive * 10.0f);  // Up to 11x drive
-            
-            // Apply waveshaping based on mode
-            float shaped = driven;  // Placeholder - will implement actual shaping next
-            
+
+            // Apply drive (0-10x multiplier)
+            float driven = input * (1.0f + drive * 10.0f);
+
+            // Apply waveshaping based on selected mode
+            float shaped = AudioForge::DSP::WaveShaping::shape(driven, shapeMode);
+
             // Mix dry/wet
             float output = drySignal * (1.0f - mix) + shaped * mix;
-            
+
             // Apply output gain
             output *= outputGain;
-            
+
             channelData[sample] = output;
         }
     }
