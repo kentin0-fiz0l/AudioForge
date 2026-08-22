@@ -4,7 +4,7 @@
 WaveShaperAudioProcessorEditor::WaveShaperAudioProcessorEditor (WaveShaperAudioProcessor& p)
     : AudioProcessorEditor (&p), audioProcessor (p)
 {
-    setSize (500, 400);
+    setSize (600, 420);
 
     // Drive slider
     driveSlider.setSliderStyle (juce::Slider::RotaryHorizontalVerticalDrag);
@@ -70,6 +70,16 @@ WaveShaperAudioProcessorEditor::WaveShaperAudioProcessorEditor (WaveShaperAudioP
     outputMeterLabel.setText ("Output: 0.0 dB", juce::dontSendNotification);
     addAndMakeVisible (outputMeterLabel);
 
+    // Curve visualization
+    curveDisplay.setShapeMode(audioProcessor.shapeParam->getIndex());
+    addAndMakeVisible (curveDisplay);
+
+    // Add listener to shape selector to update curve
+    shapeSelector.onChange = [this]()
+    {
+        curveDisplay.setShapeMode(shapeSelector.getSelectedId() - 1);
+    };
+
     // Start timer for meter updates
     startTimerHz (30);
 }
@@ -115,14 +125,24 @@ void WaveShaperAudioProcessorEditor::resized()
 
     bounds.removeFromTop (20);  // Spacing
 
-    // Middle row: Shape selector and Output gain
-    auto middleRow = bounds.removeFromTop (120);
+    // Middle section: Curve display, Shape selector, and Output gain
+    auto middleSection = bounds.removeFromTop (140);
 
-    auto shapeArea = middleRow.removeFromLeft (knobWidth * 2);
+    // Curve display on the left
+    auto curveArea = middleSection.removeFromLeft (200);
+    curveDisplay.setBounds (curveArea.reduced (10));
+
+    middleSection.removeFromLeft (10);  // Spacing
+
+    // Shape selector and Output gain on the right
+    auto controlsArea = middleSection;
+    const int controlWidth = controlsArea.getWidth() / 2;
+
+    auto shapeArea = controlsArea.removeFromLeft (controlWidth);
     shapeLabel.setBounds (shapeArea.removeFromTop (20));
     shapeSelector.setBounds (shapeArea.reduced (10).removeFromTop (30));
 
-    auto outputArea = middleRow;
+    auto outputArea = controlsArea;
     outputGainLabel.setBounds (outputArea.removeFromTop (20));
     outputGainSlider.setBounds (outputArea.reduced (10));
 
