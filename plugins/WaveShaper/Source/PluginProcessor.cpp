@@ -208,7 +208,9 @@ void WaveShaperAudioProcessor::setStateInformation (const void* data, int sizeIn
     *outputGainParam = stream.readFloat();
 }
 
+#ifndef AUDIOFORGE_TESTS
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
     return new WaveShaperAudioProcessor();
 }
+#endif

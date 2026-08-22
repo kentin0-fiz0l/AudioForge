@@ -302,7 +302,9 @@ void SaturationAudioProcessor::setStateInformation (const void* data, int sizeIn
     *oversamplingParam = stream.readInt();
 }
 
+#ifndef AUDIOFORGE_TESTS
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
     return new SaturationAudioProcessor();
 }
+#endif
