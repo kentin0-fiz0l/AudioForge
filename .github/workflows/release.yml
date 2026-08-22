@@ -73,7 +73,11 @@ jobs:
             ## Included Plugins
 
             - **SimpleGain** - Clean gain/volume control with metering
-            - **PanUtil** - Stereo panning utility
+            - **PanUtil** - Stereo panning utility with balance and width controls
+            - **BasicSynth** - Simple subtractive synthesizer with ADSR envelope and filter
+            - **CleanDelay** - Stereo delay effect with ping-pong mode and tempo sync
+            - **SimpleEQ** - 3-band parametric EQ with high/low-pass filters
+            - **SimpleComp** - Compressor with auto makeup gain and soft/hard knee modes
 
             ## Platform Support
 
@@ -153,17 +157,11 @@ jobs:
             ${{ runner.os }}-juce-release-
             ${{ runner.os }}-juce-
 
-      - name: Build SimpleGain
-        working-directory: plugins/SimpleGain
+      - name: Build all plugins
         run: |
-          cmake -B build -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}
-          cmake --build build --config ${{ env.BUILD_TYPE }} --parallel
-
-      - name: Build PanUtil
-        working-directory: plugins/PanUtil
-        run: |
-          cmake -B build -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}
-          cmake --build build --config ${{ env.BUILD_TYPE }} --parallel
+          # Use the package-releases.sh script to build all plugins
+          chmod +x package-releases.sh
+          ./package-releases.sh
 
       - name: Build and Run Tests
         working-directory: tests
@@ -188,26 +186,25 @@ jobs:
       - name: Package plugins (Unix)
         if: runner.os != 'Windows'
         run: |
-          mkdir -p release
-          cd release
+          mkdir -p release_artifacts
 
-          # Package SimpleGain
-          if [ -d ../plugins/SimpleGain/build/SimpleGain_artefacts/VST3/SimpleGain.vst3 ]; then
-            zip -r "SimpleGain-${{ needs.create-release.outputs.version }}-${{ matrix.archive_name }}.zip" \
-              ../plugins/SimpleGain/build/SimpleGain_artefacts/VST3/SimpleGain.vst3
-          fi
-
-          # Package PanUtil
-          if [ -d ../plugins/PanUtil/build/PanUtil_artefacts/VST3/PanUtil.vst3 ]; then
-            zip -r "PanUtil-${{ needs.create-release.outputs.version }}-${{ matrix.archive_name }}.zip" \
-              ../plugins/PanUtil/build/PanUtil_artefacts/VST3/PanUtil.vst3
-          fi
+          # The package-releases.sh script already created releases/*.zip
+          # Copy and rename them for the platform
+          for zip in releases/*.zip; do
+            if [ -f "$zip" ]; then
+              filename=$(basename "$zip")
+              pluginname="${filename%-v*}"
+              cp "$zip" "release_artifacts/${pluginname}-${{ needs.create-release.outputs.version }}-${{ matrix.archive_name }}.zip"
+            fi
+          done
 
           # Create combined bundle
           mkdir -p AudioForge
-          cp -r ../plugins/SimpleGain/build/SimpleGain_artefacts/VST3/SimpleGain.vst3 AudioForge/ || true
-          cp -r ../plugins/PanUtil/build/PanUtil_artefacts/VST3/PanUtil.vst3 AudioForge/ || true
-          zip -r "AudioForge-${{ needs.create-release.outputs.version }}-${{ matrix.archive_name }}.zip" AudioForge
+          for plugin in SimpleGain PanUtil BasicSynth CleanDelay SimpleEQ SimpleComp; do
+            cp -r plugins/$plugin/build/${plugin}_artefacts/*/VST3/${plugin}.vst3 AudioForge/ 2>/dev/null || true
+          done
+          cd release_artifacts
+          zip -r "AudioForge-${{ needs.create-release.outputs.version }}-${{ matrix.archive_name }}.zip" ../AudioForge
 
           ls -lh *.zip
 
@@ -215,55 +212,39 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          New-Item -ItemType Directory -Force -Path release
-          Set-Location release
+          New-Item -ItemType Directory -Force -Path release_artifacts
 
-          # Package SimpleGain
-          if (Test-Path ..\plugins\SimpleGain\build\SimpleGain_artefacts\VST3\SimpleGain.vst3) {
-            Compress-Archive -Path ..\plugins\SimpleGain\build\SimpleGain_artefacts\VST3\SimpleGain.vst3 `
-              -DestinationPath "SimpleGain-${{ needs.create-release.outputs.version }}-${{ matrix.archive_name }}.zip"
-          }
-
-          # Package PanUtil
-          if (Test-Path ..\plugins\PanUtil\build\PanUtil_artefacts\VST3\PanUtil.vst3) {
-            Compress-Archive -Path ..\plugins\PanUtil\build\PanUtil_artefacts\VST3\PanUtil.vst3 `
-              -DestinationPath "PanUtil-${{ needs.create-release.outputs.version }}-${{ matrix.archive_name }}.zip"
+          # The package-releases.sh script already created releases/*.zip
+          # Copy and rename them for the platform
+          Get-ChildItem releases\*.zip | ForEach-Object {
+            $filename = $_.BaseName -replace '-v.*$', ''
+            Copy-Item $_.FullName "release_artifacts\$filename-${{ needs.create-release.outputs.version }}-${{ matrix.archive_name }}.zip"
           }
 
           # Create combined bundle
           New-Item -ItemType Directory -Force -Path AudioForge
-          Copy-Item ..\plugins\SimpleGain\build\SimpleGain_artefacts\VST3\SimpleGain.vst3 AudioForge\ -Recurse -ErrorAction SilentlyContinue
-          Copy-Item ..\plugins\PanUtil\build\PanUtil_artefacts\VST3\PanUtil.vst3 AudioForge\ -Recurse -ErrorAction SilentlyContinue
-          Compress-Archive -Path AudioForge -DestinationPath "AudioForge-${{ needs.create-release.outputs.version }}-${{ matrix.archive_name }}.zip"
+          $plugins = @('SimpleGain', 'PanUtil', 'BasicSynth', 'CleanDelay', 'SimpleEQ', 'SimpleComp')
+          foreach ($plugin in $plugins) {
+            $vst3Path = "..\plugins\$plugin\build\${plugin}_artefacts\*\VST3\$plugin.vst3"
+            Copy-Item $vst3Path AudioForge\ -Recurse -ErrorAction SilentlyContinue
+          }
+          Set-Location release_artifacts
+          Compress-Archive -Path ..\AudioForge -DestinationPath "AudioForge-${{ needs.create-release.outputs.version }}-${{ matrix.archive_name }}.zip"
 
           Get-ChildItem *.zip
 
-      - name: Upload SimpleGain to Release
+      - name: Upload all plugin releases
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: ./release/SimpleGain-${{ needs.create-release.outputs.version }}-${{ matrix.archive_name }}.zip
-          asset_name: SimpleGain-${{ needs.create-release.outputs.version }}-${{ matrix.archive_name }}.zip
+          asset_path: ./release_artifacts/*.zip
           asset_content_type: application/zip
 
-      - name: Upload PanUtil to Release
-        uses: actions/upload-release-asset@v1
+      - name: Upload releases to GitHub
+        uses: softprops/action-gh-release@v1
+        with:
+          files: release_artifacts/*.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: ./release/PanUtil-${{ needs.create-release.outputs.version }}-${{ matrix.archive_name }}.zip
-          asset_name: PanUtil-${{ needs.create-release.outputs.version }}-${{ matrix.archive_name }}.zip
-          asset_content_type: application/zip
-
-      - name: Upload AudioForge Bundle to Release
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: ./release/AudioForge-${{ needs.create-release.outputs.version }}-${{ matrix.archive_name }}.zip
-          asset_name: AudioForge-${{ needs.create-release.outputs.version }}-${{ matrix.archive_name }}.zip
-          asset_content_type: application/zip

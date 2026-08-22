@@ -1,7 +1,7 @@
 # AudioForge
 
-[![Build and Test](https://github.com/yourusername/AudioForge/actions/workflows/build-test.yml/badge.svg)](https://github.com/yourusername/AudioForge/actions/workflows/build-test.yml)
-[![Code Coverage](https://codecov.io/gh/yourusername/AudioForge/branch/main/graph/badge.svg)](https://codecov.io/gh/yourusername/AudioForge)
+[![Build and Test](https://github.com/kentin0-fiz0l/AudioForge/actions/workflows/build-test.yml/badge.svg)](https://github.com/kentin0-fiz0l/AudioForge/actions/workflows/build-test.yml)
+[![Code Coverage](https://codecov.io/gh/kentin0-fiz0l/AudioForge/branch/main/graph/badge.svg?token=YOUR_CODECOV_TOKEN)](https://codecov.io/gh/kentin0-fiz0l/AudioForge)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 Professional-quality DAW plugins, free and open source.
@@ -15,12 +15,10 @@ AudioForge is a collection of high-quality audio plugins for music production. S
 ### Released (v1.0.0)
 - **SimpleGain** - Clean gain/volume control with metering (-60 to +12 dB)
 - **PanUtil** - Stereo panning utility with balance and width controls
-
-### In Development
-- **BasicSynth** - Simple subtractive synthesizer (Phase 2)
-- **CleanDelay** - Stereo delay effect (Phase 2)
-- **SimpleEQ** - 3-band parametric EQ (Phase 2)
-- **SimpleComp** - Basic compressor (Phase 2)
+- **BasicSynth** - Simple subtractive synthesizer with ADSR envelope and filter
+- **CleanDelay** - Stereo delay effect with ping-pong mode and tempo sync
+- **SimpleEQ** - 3-band parametric EQ with high/low-pass filters
+- **SimpleComp** - Compressor with auto makeup gain and soft/hard knee modes
 
 ### Planned (Phase 3+)
 - Reverb effects
