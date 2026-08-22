@@ -19,6 +19,7 @@ AudioForge is a collection of high-quality audio plugins for music production. S
 - **CleanDelay** - Stereo delay effect with ping-pong mode and tempo sync
 - **SimpleEQ** - 3-band parametric EQ with high/low-pass filters
 - **SimpleComp** - Compressor with auto makeup gain and soft/hard knee modes
+- **WaveShaper** - Waveshaping distortion with 5 curve modes and real-time visualization
 
 ### Planned (Phase 3+)
 - Reverb effects
@@ -95,7 +96,7 @@ cmake --build build
 ./build/TestRunner -v        # Verbose output
 ```
 
-Test suite: 34/34 tests passing (100%) | Coverage: See badge above
+Test suite: 97/97 tests passing (100%) | Coverage: See badge above
 
 ## Development Roadmap
 

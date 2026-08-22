@@ -631,6 +631,138 @@ b2 = (1.0 - alpha*A) / a0;`
     screenshots: [],
     downloadUrl: '/downloads/SimpleComp-v1.0.0',
     docsUrl: '/docs/plugins/simplecomp'
+  },
+  {
+    id: 'waveshaper',
+    name: 'WaveShaper',
+    version: '1.0.0',
+    status: 'released',
+    tagline: 'Waveshaping distortion with 5 curve modes and tone control',
+    description: 'Professional waveshaping distortion plugin with multiple saturation curves, drive control, and integrated tone filtering. Features real-time curve visualization to see how each mode shapes your audio.',
+    features: [
+      {
+        name: '5 Waveshaping Modes',
+        description: 'Soft Clip, Hard Clip, Tanh, Cubic, and Asymmetric curves for different distortion characters'
+      },
+      {
+        name: 'Drive Control (0-100%)',
+        description: 'Variable drive amount up to 11x gain multiplier for intense saturation'
+      },
+      {
+        name: 'Real-time Curve Visualization',
+        description: 'See the waveshaping transfer function update live as you change modes'
+      },
+      {
+        name: 'Mix Control (Dry/Wet)',
+        description: 'Blend original and distorted signals for parallel processing (0-100%)'
+      },
+      {
+        name: 'Tone Filter',
+        description: 'Integrated low-pass filter (500Hz-20kHz) to tame harsh highs'
+      },
+      {
+        name: 'Output Gain',
+        description: 'Level compensation from -12dB to +12dB for gain staging'
+      },
+      {
+        name: 'DC Blocker',
+        description: 'Automatic DC offset removal at 20Hz for clean output'
+      },
+      {
+        name: 'Input/Output Metering',
+        description: 'Real-time level monitoring with 30 FPS updates'
+      }
+    ],
+    parameters: [
+      {
+        name: 'Drive',
+        range: '0% to 100%',
+        description: 'Amount of drive/distortion (0-10x multiplier)'
+      },
+      {
+        name: 'Mix',
+        range: '0% to 100%',
+        description: 'Dry/wet blend (0% = dry, 100% = wet)'
+      },
+      {
+        name: 'Tone',
+        range: '0% to 100%',
+        description: 'Low-pass filter cutoff (500Hz to 20kHz)'
+      },
+      {
+        name: 'Shape',
+        range: '5 modes',
+        description: 'Waveshaping curve type (Soft Clip, Hard Clip, Tanh, Cubic, Asymmetric)'
+      },
+      {
+        name: 'Output',
+        range: '-12dB to +12dB',
+        description: 'Output level compensation'
+      }
+    ],
+    useCases: [
+      'Gentle saturation - Soft Clip mode with low drive (10-30%) for warmth',
+      'Hard digital clipping - Hard Clip mode with high drive for aggressive distortion',
+      'Analog-style warmth - Tanh mode with medium drive (40-60%) for tube-like saturation',
+      'Harmonic enhancement - Cubic mode for adding odd harmonics',
+      'Asymmetric tube emulation - Asymmetric mode for vintage warmth with even harmonics',
+      'Parallel distortion - Mix control at 50% for New York-style parallel processing',
+      'Taming harsh distortion - Use Tone control to roll off high frequencies after saturation'
+    ],
+    learningFocus: [
+      'Waveshaping algorithms (polynomial, tanh, clipping)',
+      'Transfer function visualization',
+      'Per-sample nonlinear processing',
+      'Harmonic distortion (odd vs even harmonics)',
+      'Soft vs hard clipping behavior',
+      'DC offset and blocking filters',
+      'Parallel processing techniques',
+      'Post-distortion tone shaping'
+    ],
+    algorithms: [
+      {
+        name: 'Soft Clip',
+        description: 'Smooth saturation using polynomial approximation that approaches ±1 asymptotically',
+        code: `// Soft clipping formula
+if (|input| < 1.0)
+    return input;  // Linear pass-through
+else
+    sign = input > 0 ? 1.0 : -1.0;
+    saturated = 1.0 - 1.0 / (|input| + 1.0);
+    return sign * saturated;`
+      },
+      {
+        name: 'Hard Clip',
+        description: 'Digital clipping at ±1 threshold for aggressive distortion',
+        code: `// Hard clipping
+return clamp(input, -1.0, 1.0);`
+      },
+      {
+        name: 'Tanh Saturation',
+        description: 'Classic hyperbolic tangent curve for smooth saturation',
+        code: `// Tanh saturation
+return tanh(input);  // Approaches ±1 asymptotically`
+      },
+      {
+        name: 'Cubic Waveshaping',
+        description: 'Polynomial distortion (x - x³/3) that adds odd harmonics',
+        code: `// Cubic waveshaping
+output = input - (input³ / 3.0);
+return clamp(output, -1.0, 1.0);`
+      },
+      {
+        name: 'Asymmetric Waveshaping',
+        description: 'Different curves for positive and negative signals, adding even harmonics for warmth',
+        code: `// Asymmetric waveshaping
+if (input > 0.0)
+    return tanh(input * 1.5) * 0.85;  // Harder positive
+else
+    return tanh(input * 0.8) * 0.95;  // Softer negative`
+      }
+    ],
+    screenshots: [],
+    downloadUrl: '/downloads/WaveShaper-v1.0.0',
+    docsUrl: '/docs/plugins/waveshaper'
   }
 ];
 
@@ -765,11 +897,24 @@ export const roadmap: RoadmapPhase[] = [
   },
   {
     id: 'phase-3',
-    name: 'Phase 3: Distribution & Website',
-    status: 'planned',
-    goal: 'Get plugins into users\' hands, build community',
-    timeline: '6 months',
+    name: 'Phase 3: Distribution & Expansion',
+    status: 'current',
+    goal: 'Expand plugin suite and improve distribution',
+    timeline: '3-6 months',
     items: [
+      {
+        name: 'WaveShaper',
+        status: 'complete',
+        features: [
+          '5 waveshaping modes (Soft Clip, Hard Clip, Tanh, Cubic, Asymmetric)',
+          'Drive control (0-10x multiplier)',
+          'Real-time curve visualization',
+          'Mix control for parallel processing',
+          'Tone filter (500Hz-20kHz)',
+          'Output gain compensation (-12 to +12 dB)',
+          'DC blocker and input/output metering'
+        ]
+      },
       {
         name: 'Website with downloads',
         status: 'in-progress',
@@ -909,10 +1054,10 @@ export const projectInfo = {
     formats: ['VST3', 'AU (coming)', 'AAX (coming)'],
     platforms: ['macOS', 'Windows', 'Linux']
   },
-  github: 'https://github.com/yourusername/AudioForge',
+  github: 'https://github.com/kentin0-fiz0l/AudioForge',
   license: 'MIT',
   testCoverage: '100%',
-  totalTests: 79,
+  totalTests: 97,
   totalPlugins: plugins.length,
   releasedPlugins: getPluginsByStatus('released').length
 };
