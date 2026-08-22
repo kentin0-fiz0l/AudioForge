@@ -1095,6 +1095,197 @@ if (lfoPhaseRight >= 1.0f) lfoPhaseRight -= 1.0f;`
     screenshots: [],
     downloadUrl: '/downloads/ChorusFlanger-v1.0.0',
     docsUrl: '/docs/plugins/chorusflanger'
+  },
+  {
+    id: 'reverb',
+    name: 'Reverb',
+    version: '1.0.0',
+    status: 'released',
+    tagline: 'Algorithmic reverb with Freeverb-inspired design',
+    description: 'Classic Schroeder reverberator with 8 parallel comb filters and 4 series all-pass filters. Create realistic room acoustics from tight spaces to expansive halls with adjustable room size, damping, stereo width, pre-delay, and freeze mode for infinite sustain.',
+    features: [
+      {
+        name: '8 Parallel Comb Filters',
+        description: 'Tuned delay lines with damping create the reverb tail density (delays: 1116-1617 samples at 44.1kHz)'
+      },
+      {
+        name: '4 Series All-Pass Filters',
+        description: 'Diffusion stage for smooth reverb texture (delays: 225-556 samples at 44.1kHz)'
+      },
+      {
+        name: 'Room Size Control (0-100%)',
+        description: 'Adjusts feedback amount from small rooms (28% feedback) to large halls (84% feedback)'
+      },
+      {
+        name: 'Damping Control (0-100%)',
+        description: 'One-pole low-pass filter in comb feedback path simulates high-frequency absorption'
+      },
+      {
+        name: 'Stereo Width (0-100%)',
+        description: 'Mid/side processing creates stereo spread from mono to ultra-wide'
+      },
+      {
+        name: 'Pre-Delay (0-100ms)',
+        description: 'Initial delay before reverb onset for depth and clarity'
+      },
+      {
+        name: 'Freeze Mode',
+        description: 'Infinite sustain by setting feedback to 100% and muting input for ambient pad creation'
+      },
+      {
+        name: 'Dual Level Meters',
+        description: 'Real-time input/output metering for gain staging'
+      }
+    ],
+    parameters: [
+      {
+        name: 'Room Size',
+        range: '0% to 100%',
+        description: 'Feedback amount: 28-84% (small room to large hall)'
+      },
+      {
+        name: 'Damping',
+        range: '0% to 100%',
+        description: 'High-frequency absorption amount (0% = bright, 100% = dark)'
+      },
+      {
+        name: 'Width',
+        range: '0% to 100%',
+        description: 'Stereo spread (0% = mono, 100% = ultra-wide)'
+      },
+      {
+        name: 'Pre-Delay',
+        range: '0 to 100 ms',
+        description: 'Time before reverb onset'
+      },
+      {
+        name: 'Mix',
+        range: '0% to 100%',
+        description: 'Dry/wet balance (0% = dry, 100% = wet)'
+      },
+      {
+        name: 'Freeze',
+        range: 'Off / On',
+        description: 'Infinite sustain mode (mutes input, sets feedback to 100%)'
+      }
+    ],
+    useCases: [
+      'Small room ambience - Room size 20-30%, damping 60-70%, short pre-delay for tight spaces',
+      'Large hall reverb - Room size 70-90%, damping 30-50%, 20-40ms pre-delay for concert halls',
+      'Vocal plate simulation - Room size 40-60%, damping 20-30%, width 80-100% for classic plate sound',
+      'Ambient pad creation - Freeze mode on, play chords and let them sustain infinitely',
+      'Snare drum reverb - Room size 30-40%, short pre-delay, mix at 30-40% for natural drum sound',
+      'Guitar spring reverb - High damping (70-80%), medium room size, stereo width for surf guitar',
+      'Dialogue room tone - Low room size (10-20%), high damping, subtle mix (15-25%) for realism'
+    ],
+    learningFocus: [
+      'Schroeder reverberator topology (parallel combs + series all-pass)',
+      'Comb filter tuning to avoid metallic resonances',
+      'Damping with one-pole low-pass filter in feedback path',
+      'All-pass filters for diffusion without coloring the spectrum',
+      'Stereo decorrelation with independent L/R delay lines',
+      'Circular buffer implementation for delays',
+      'Freeze mode implementation (feedback = 1.0)',
+      'Sample rate scaling for delay times'
+    ],
+    algorithms: [
+      {
+        name: 'Comb Filter with Damping',
+        description: 'Parallel comb filters with low-pass damping in feedback path',
+        code: `// Comb filter structure
+struct CombFilter {
+  float buffer[bufferSize];
+  int bufferIndex = 0;
+  float feedback = 0.84f;
+  float damp1 = 0.5f;  // damping coefficient
+  float damp2 = 0.5f;  // 1 - damp1
+  float filterStore = 0.0f;
+
+  float process(float input) {
+    float output = buffer[bufferIndex];
+
+    // One-pole damping filter
+    filterStore = (output * damp2) + (filterStore * damp1);
+
+    // Write to buffer with damped feedback
+    buffer[bufferIndex] = input + (filterStore * feedback);
+
+    bufferIndex = (bufferIndex + 1) % bufferSize;
+    return output;
+  }
+};`
+      },
+      {
+        name: 'All-Pass Filter',
+        description: 'Series all-pass filters for diffusion',
+        code: `// All-pass filter structure
+struct AllPassFilter {
+  float buffer[bufferSize];
+  int bufferIndex = 0;
+  float feedback = 0.5f;
+
+  float process(float input) {
+    float bufOut = buffer[bufferIndex];
+    float output = -input + bufOut;
+
+    buffer[bufferIndex] = input + (bufOut * feedback);
+
+    bufferIndex = (bufferIndex + 1) % bufferSize;
+    return output;
+  }
+};`
+      },
+      {
+        name: 'Stereo Processing',
+        description: 'Independent L/R processing with 23-sample offset for decorrelation',
+        code: `// Process left and right independently
+float combOutL = 0.0f, combOutR = 0.0f;
+
+// 8 parallel comb filters (different tunings for L/R)
+for (int i = 0; i < 8; ++i) {
+  combOutL += combsLeft[i].process(monoInput);
+  combOutR += combsRight[i].process(monoInput);
+}
+
+// 4 series all-pass filters
+float wetL = combOutL, wetR = combOutR;
+for (int i = 0; i < 4; ++i) {
+  wetL = allPassesLeft[i].process(wetL);
+  wetR = allPassesRight[i].process(wetR);
+}
+
+// Apply stereo width (mid/side processing)
+float mono = (wetL + wetR) * 0.5f;
+float side = (wetL - wetR) * 0.5f * width;
+wetL = mono + side;
+wetR = mono - side;`
+      },
+      {
+        name: 'Freeze Mode',
+        description: 'Infinite sustain by muting input and maximizing feedback',
+        code: `// Get freeze parameter
+bool freeze = freezeParam->get();
+
+// Update comb filter feedback
+float feedback = freeze ? 1.0f : (0.28f + roomSize * 0.56f);
+
+for (int i = 0; i < numCombs; ++i) {
+  combsLeft[i].feedback = feedback;
+  combsRight[i].feedback = feedback;
+}
+
+// Mute input in freeze mode
+if (freeze) {
+  inputL = 0.0f;
+  inputR = 0.0f;
+}
+
+// Reverb tail sustains indefinitely with feedback = 1.0`
+      }
+    ],
+    screenshots: [],
+    downloadUrl: '/downloads/Reverb-v1.0.0',
+    docsUrl: '/docs/plugins/reverb'
   }
 ];
 
@@ -1415,7 +1606,7 @@ export const projectInfo = {
   github: 'https://github.com/kentin0-fiz0l/AudioForge',
   license: 'MIT',
   testCoverage: '100%',
-  totalTests: 123,
+  totalTests: 136,
   totalPlugins: plugins.length,
   releasedPlugins: getPluginsByStatus('released').length
 };

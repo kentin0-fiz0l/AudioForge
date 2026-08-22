@@ -25,6 +25,7 @@ add_executable(TestRunner
     Plugins/WaveShaperTests.cpp
     Plugins/SaturationTests.cpp
     Plugins/ChorusFlangerTests.cpp
+    Plugins/ReverbTests.cpp
     Integration/PluginIntegrationTests.cpp)
 
 # Link JUCE libraries
@@ -44,6 +45,7 @@ target_include_directories(TestRunner PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/WaveShaper/Source
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/Saturation/Source
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/ChorusFlanger/Source
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/Reverb/Source
     ${CMAKE_CURRENT_SOURCE_DIR}/../shared)  # For shared DSP library
 
 # Add plugin source files directly for testing
@@ -69,7 +71,9 @@ target_sources(TestRunner PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/Saturation/Source/PluginProcessor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/Saturation/Source/PluginEditor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/ChorusFlanger/Source/PluginProcessor.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/ChorusFlanger/Source/PluginEditor.cpp)
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/ChorusFlanger/Source/PluginEditor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/Reverb/Source/PluginProcessor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/Reverb/Source/PluginEditor.cpp)
 
 # Compiler definitions
 target_compile_definitions(TestRunner PUBLIC

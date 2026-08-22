@@ -22,9 +22,9 @@ AudioForge is a collection of high-quality audio plugins for music production. S
 - **WaveShaper** - Waveshaping distortion with 5 curve modes and real-time visualization
 - **Saturation** - Multi-mode analog saturation with harmonic enhancement and oversampling
 - **Chorus/Flanger** - LFO-based modulation effects with stereo width and real-time visualization
+- **Reverb** - Freeverb-inspired algorithmic reverb with freeze mode and stereo width control
 
 ### Planned (Phase 3+)
-- Reverb effects
 - Advanced modulation
 - Creative effects
 
@@ -98,7 +98,7 @@ cmake --build build
 ./build/TestRunner -v        # Verbose output
 ```
 
-Test suite: 123/123 tests passing (100%) | Coverage: See badge above
+Test suite: 136/136 tests passing (100%) | Coverage: See badge above
 
 ### Generating Code Coverage
 
