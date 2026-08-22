@@ -36,3 +36,11 @@ cmake_install.cmake
 # JUCE artifacts
 JuceLibraryCode/
 *.jucer.bak
+
+# Code coverage
+coverage_report/
+*.gcov
+*.gcda
+*.gcno
+coverage/
+*.info
