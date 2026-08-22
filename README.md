@@ -100,6 +100,34 @@ cmake --build build
 
 Test suite: 123/123 tests passing (100%) | Coverage: See badge above
 
+### Generating Code Coverage
+
+Generate a detailed HTML coverage report locally:
+
+```bash
+./generate_coverage.sh       # Run from AudioForge root directory
+```
+
+This script will:
+1. Clean previous build artifacts
+2. Configure CMake with coverage enabled
+3. Build and run the full test suite
+4. Generate coverage data with lcov
+5. Filter out JUCE framework and test code
+6. Create an HTML report in `tests/coverage_report/`
+
+Open the report:
+```bash
+open tests/coverage_report/index.html
+```
+
+**Current Coverage Metrics:**
+- **Line Coverage**: 46.3% (1,488 / 3,217 lines)
+- **Function Coverage**: 90.5% (3,004 / 3,319 functions)
+- **Branch Coverage**: 21.4% (840 / 3,930 branches)
+
+Coverage reports are also generated automatically by our CI/CD pipeline on every push and pull request.
+
 ## Development Roadmap
 
 ### Phase 1: Infrastructure Foundation ✅ COMPLETE

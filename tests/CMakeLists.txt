@@ -116,11 +116,12 @@ if(ENABLE_COVERAGE)
 "# LCOV configuration for AudioForge
 # Exclude external code from coverage reports
 
-# Branch coverage
-lcov_branch_coverage = 1
+# Branch coverage (updated to non-deprecated option)
+branch_coverage = 1
 
 # Exclude patterns
 # These patterns exclude JUCE framework, test code, and system headers
 # from coverage calculations to focus on actual plugin code
+geninfo_auto_base = 1
 ")
 endif()
