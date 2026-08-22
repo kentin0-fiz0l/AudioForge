@@ -26,15 +26,21 @@ public:
     {
         // Clamp to prevent overflow
         input = std::clamp(input, -3.0f, 3.0f);
-        
-        // Polynomial soft clipping (approximates tanh)
-        // Formula: x - (x^3)/3 for small x, approaches ±1 for large x
-        if (std::abs(input) < 1.0f)
+
+        // Soft clipping using polynomial approximation
+        // For |x| < 1: pass through
+        // For |x| >= 1: apply smooth saturation approaching ±1.5
+        const float absInput = std::abs(input);
+
+        if (absInput < 1.0f)
             return input;
-        else if (input > 0.0f)
-            return (3.0f * input - input * input * input) / (3.0f + input * input);
         else
-            return (3.0f * input + input * input * input) / (3.0f + input * input);
+        {
+            // Smooth saturation curve
+            const float sign = (input > 0.0f) ? 1.0f : -1.0f;
+            const float saturated = 1.0f - 1.0f / (absInput + 1.0f);
+            return sign * saturated;
+        }
     }
 
     /**
