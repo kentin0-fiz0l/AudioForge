@@ -925,6 +925,176 @@ oversampler->processSamplesDown(outputBlock);`
     screenshots: [],
     downloadUrl: '/downloads/Saturation-v1.0.0',
     docsUrl: '/docs/plugins/saturation'
+  },
+  {
+    id: 'chorusflanger',
+    name: 'Chorus/Flanger',
+    version: '1.0.0',
+    status: 'released',
+    tagline: 'LFO-based modulation effects for movement and depth',
+    description: 'Classic chorus and flanger effects using LFO-modulated delay lines. Create everything from subtle voice doubling to dramatic swept comb filtering with adjustable modulation, stereo width, and real-time LFO visualization.',
+    features: [
+      {
+        name: 'Dual Effect Modes',
+        description: 'Chorus (wide, slow modulation) and Flanger (narrow, fast modulation with feedback) in one plugin'
+      },
+      {
+        name: 'Real-time LFO Visualizer',
+        description: 'See the modulation waveform and L/R phase positions with color-coded indicators (orange=left, cyan=right)'
+      },
+      {
+        name: 'Adjustable LFO Rate (0.1-10 Hz)',
+        description: 'Control modulation speed with log scaling from slow chorusing to fast flanging'
+      },
+      {
+        name: 'Modulation Depth (0-100%)',
+        description: 'Variable depth control for subtle to extreme pitch modulation'
+      },
+      {
+        name: 'Dual LFO Waveforms',
+        description: 'Sine (smooth) and Triangle (linear) waveforms for different modulation characters'
+      },
+      {
+        name: 'Stereo Width Control',
+        description: 'Phase offset between L/R LFOs (0-100%) creates wide stereo movement'
+      },
+      {
+        name: 'Feedback Control (0-95%)',
+        description: 'Adjustable feedback for flanger resonance and comb filtering intensity'
+      },
+      {
+        name: 'Mix Control',
+        description: 'Blend dry and wet signals for parallel processing (0-100%)'
+      }
+    ],
+    parameters: [
+      {
+        name: 'Rate',
+        range: '0.1 to 10 Hz',
+        description: 'LFO frequency with log scaling centered at 1 Hz'
+      },
+      {
+        name: 'Depth',
+        range: '0% to 100%',
+        description: 'Modulation amount (delay time variation)'
+      },
+      {
+        name: 'Mode',
+        range: 'Chorus / Flanger',
+        description: 'Chorus: 15ms base + ±10ms modulation | Flanger: 3ms base + ±2.5ms modulation'
+      },
+      {
+        name: 'Feedback',
+        range: '0% to 95%',
+        description: 'Amount of output fed back into delay line (more prominent in flanger mode)'
+      },
+      {
+        name: 'Mix',
+        range: '0% to 100%',
+        description: 'Dry/wet balance (0% = dry, 100% = wet)'
+      },
+      {
+        name: 'Waveform',
+        range: 'Sine / Triangle',
+        description: 'LFO waveform shape (Sine = smooth, Triangle = linear)'
+      },
+      {
+        name: 'Stereo Width',
+        range: '0% to 100%',
+        description: 'Phase offset between L/R LFOs for stereo movement (50% = 90° offset)'
+      }
+    ],
+    useCases: [
+      'Vocal doubling - Chorus mode with slow rate (0.3-0.8 Hz), medium depth for thick vocals',
+      'Guitar widening - Chorus mode with stereo width at 75-100% for spacious guitar tones',
+      'Synth movement - Flanger mode with medium rate (1-3 Hz) and high feedback for sweeping pads',
+      'Classic jet flanger - Flanger mode with fast rate (5-8 Hz), high feedback, and high depth',
+      'Subtle enhancement - Chorus mode with low depth (20-30%) and mix at 30% for gentle thickness',
+      'Extreme modulation - Flanger mode with max depth and feedback for dramatic comb filtering',
+      'Stereo auto-pan - High stereo width creates alternating L/R movement'
+    ],
+    learningFocus: [
+      'LFO (Low-Frequency Oscillator) implementation',
+      'Circular delay buffer with write position tracking',
+      'Fractional delay using linear interpolation',
+      'Feedback loops in delay-based effects',
+      'Stereo processing with phase offset',
+      'Time-based modulation effects',
+      'Real-time visualization of LFO state',
+      'Preventing feedback instability'
+    ],
+    algorithms: [
+      {
+        name: 'LFO Generation',
+        description: 'Sine and triangle waveforms for smooth and linear modulation',
+        code: `// Sine LFO
+float lfoSine = sin(phase * 2π);
+
+// Triangle LFO
+float lfoTriangle = 4.0f * abs(phase - 0.5f) - 1.0f;
+
+// Phase advancement
+phase += (rate / sampleRate);
+if (phase >= 1.0f) phase -= 1.0f;`
+      },
+      {
+        name: 'Fractional Delay Interpolation',
+        description: 'Linear interpolation between samples for smooth pitch changes',
+        code: `// Calculate read position (fractional)
+float readPos = writePos - delayInSamples;
+while (readPos < 0.0f) readPos += bufferSize;
+
+// Get integer and fractional parts
+int readPosInt = (int)readPos;
+float frac = readPos - readPosInt;
+
+// Linear interpolation
+int nextPos = (readPosInt + 1) % bufferSize;
+float sample1 = buffer[readPosInt];
+float sample2 = buffer[nextPos];
+return sample1 + frac * (sample2 - sample1);`
+      },
+      {
+        name: 'Modulated Delay',
+        description: 'LFO modulates delay time for pitch variation',
+        code: `// Calculate modulated delay time
+float baseDelay = (mode == CHORUS) ? 15ms : 3ms;
+float modRange = (mode == CHORUS) ? 10ms : 2.5ms;
+
+float lfoValue = getLFO(phase, waveform);  // -1 to +1
+float delayTime = baseDelay + lfoValue * modRange * depth;
+
+// Read from delay buffer with interpolation
+float delayed = getInterpolatedSample(buffer, delayTime);`
+      },
+      {
+        name: 'Feedback Processing',
+        description: 'Feedback creates comb filtering for flanger resonance',
+        code: `// Read delayed sample
+float delayed = getInterpolatedSample(buffer, delayTime);
+
+// Write to delay buffer (input + feedback)
+buffer[writePos] = input + delayed * feedback;
+
+// Mix dry/wet
+output = input * (1.0 - mix) + delayed * mix;`
+      },
+      {
+        name: 'Stereo Phase Offset',
+        description: 'Independent L/R LFO phases create stereo movement',
+        code: `// Left channel LFO
+lfoPhaseLeft += rateIncrement;
+if (lfoPhaseLeft >= 1.0f) lfoPhaseLeft -= 1.0f;
+
+// Right channel with phase offset
+float phaseOffset = stereoWidth * 0.5f;  // 0-0.5 (0-180°)
+lfoPhaseRight = lfoPhaseLeft + phaseOffset;
+if (lfoPhaseRight >= 1.0f) lfoPhaseRight -= 1.0f;`
+      }
+    ],
+    screenshots: [],
+    downloadUrl: '/downloads/ChorusFlanger-v1.0.0',
+    docsUrl: '/docs/plugins/chorusflanger'
   }
 ];
 
@@ -1091,6 +1261,19 @@ export const roadmap: RoadmapPhase[] = [
         ]
       },
       {
+        name: 'Chorus/Flanger',
+        status: 'complete',
+        features: [
+          'Dual effect modes (Chorus and Flanger)',
+          'Adjustable LFO rate (0.1-10 Hz) and depth (0-100%)',
+          'Real-time LFO visualizer with L/R phase indicators',
+          'Two LFO waveforms (Sine and Triangle)',
+          'Stereo width control (0-100% phase offset)',
+          'Feedback control (0-95%) for flanger resonance',
+          'Mix control for parallel processing'
+        ]
+      },
+      {
         name: 'Website with downloads',
         status: 'in-progress',
         features: ['Simple static site']
@@ -1232,7 +1415,7 @@ export const projectInfo = {
   github: 'https://github.com/kentin0-fiz0l/AudioForge',
   license: 'MIT',
   testCoverage: '100%',
-  totalTests: 113,
+  totalTests: 123,
   totalPlugins: plugins.length,
   releasedPlugins: getPluginsByStatus('released').length
 };
