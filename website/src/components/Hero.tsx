@@ -22,19 +22,21 @@ export const Hero: React.FC<HeroProps> = ({ className = '' }) => {
 
           {/* Subheadline */}
           <p className="text-lg md:text-xl text-foreground/80 mb-8 max-w-2xl mx-auto">
-            High-quality VST3 plugins for music production. From essential utilities to creative effects, built with JUCE and modern C++.
+            10 professional VST3 and AU plugins for music production. From essential utilities to creative effects, built with JUCE and modern C++.
           </p>
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
             <a
-              href="https://fluxstudio.art/audioforge"
+              href="https://github.com/kentin0-fiz0l/AudioForge/releases/latest"
+              target="_blank"
+              rel="noopener noreferrer"
               className="px-8 py-4 bg-gradient-primary text-white font-semibold rounded-lg hover:opacity-90 transition-opacity shadow-lg w-full sm:w-auto text-center"
             >
-              Download Plugins
+              Download v1.0.0
             </a>
             <a
-              href="https://github.com/yourusername/AudioForge"
+              href="https://github.com/kentin0-fiz0l/AudioForge"
               target="_blank"
               rel="noopener noreferrer"
               className="px-8 py-4 bg-foreground/10 text-foreground font-semibold rounded-lg hover:bg-foreground/20 transition-colors border border-foreground/20 w-full sm:w-auto text-center"
@@ -49,13 +51,16 @@ export const Hero: React.FC<HeroProps> = ({ className = '' }) => {
               VST3
             </span>
             <span className="px-4 py-2 bg-foreground/10 text-foreground/80 rounded-full text-sm font-medium border border-foreground/20">
+              AU (macOS)
+            </span>
+            <span className="px-4 py-2 bg-foreground/10 text-foreground/80 rounded-full text-sm font-medium border border-foreground/20">
               macOS / Windows / Linux
             </span>
             <span className="px-4 py-2 bg-foreground/10 text-foreground/80 rounded-full text-sm font-medium border border-foreground/20">
               MIT License
             </span>
             <span className="px-4 py-2 bg-primary/20 text-primary-light rounded-full text-sm font-medium border border-primary">
-              88% Test Coverage
+              100% Test Coverage
             </span>
           </div>
         </div>

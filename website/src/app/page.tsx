@@ -6,18 +6,18 @@ import { plugins, getCurrentPhase, roadmap } from '@/lib/plugins';
 
 export const metadata: Metadata = {
   title: "AudioForge - Professional DAW Plugins, Free Forever",
-  description: "High-quality VST3 plugins for music production. From essential utilities to creative effects, built with JUCE and modern C++. Free, open source, and professional-grade.",
-  keywords: ["VST3", "audio plugins", "DAW", "music production", "JUCE", "free plugins", "open source", "SimpleGain", "PanUtil", "audio effects"],
+  description: "10 professional VST3 and AU plugins for music production. From essential utilities to creative effects, built with JUCE and modern C++. Free, open source, and professional-grade.",
+  keywords: ["VST3", "AU", "Audio Units", "audio plugins", "DAW", "music production", "JUCE", "free plugins", "open source", "Logic Pro", "Ableton", "audio effects"],
   openGraph: {
-    title: "AudioForge - Professional DAW Plugins, Free Forever",
-    description: "High-quality VST3 plugins for music production. Free, open source, and professional-grade.",
+    title: "AudioForge v1.0.0 - Professional DAW Plugins, Free Forever",
+    description: "10 professional VST3 and AU plugins for music production. Free, open source, and professional-grade.",
     type: "website",
-    url: "https://fluxstudio.art/audioforge",
+    url: "https://audioforge.fluxstudio.art",
   },
   twitter: {
     card: "summary_large_image",
-    title: "AudioForge - Professional DAW Plugins, Free Forever",
-    description: "High-quality VST3 plugins for music production. Free, open source, and professional-grade.",
+    title: "AudioForge v1.0.0 - Professional DAW Plugins, Free Forever",
+    description: "10 professional VST3 and AU plugins for music production. Free, open source, and professional-grade.",
   },
 };
 
@@ -205,7 +205,7 @@ export default function Home() {
                   All code is MIT licensed and available on GitHub. Report bugs, request features, or contribute to the project.
                 </p>
                 <a
-                  href="https://github.com/yourusername/AudioForge"
+                  href="https://github.com/kentin0-fiz0l/AudioForge"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center text-primary hover:text-primary-light font-semibold transition-colors"
@@ -239,7 +239,7 @@ export default function Home() {
                   Questions? Issues? We&apos;re here to help. Open an issue on GitHub or join our community discussions.
                 </p>
                 <a
-                  href="https://github.com/yourusername/AudioForge/issues"
+                  href="https://github.com/kentin0-fiz0l/AudioForge/issues"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center text-primary hover:text-primary-light font-semibold transition-colors"
@@ -254,7 +254,7 @@ export default function Home() {
                 <div className="text-4xl mb-4">🎓</div>
                 <h3 className="text-2xl font-bold text-foreground mb-3">Learn Audio DSP</h3>
                 <p className="text-foreground/70 mb-6">
-                  Clean, well-documented code with 88% test coverage. Study real-world implementations of audio algorithms.
+                  Clean, well-documented code with 100% test coverage (136 passing tests). Study real-world implementations of audio algorithms.
                 </p>
                 <a
                   href="/docs/learning"
@@ -272,13 +272,15 @@ export default function Home() {
                 Ready to Try AudioForge?
               </h3>
               <p className="text-foreground/70 text-lg mb-8 max-w-2xl mx-auto">
-                Download our VST3 plugins and start making music today. Free forever, no strings attached.
+                Download AudioForge v1.0.0 with 10 plugins (VST3 & AU) and start making music today. Free forever, no strings attached.
               </p>
               <a
-                href="https://fluxstudio.art/audioforge"
+                href="https://github.com/kentin0-fiz0l/AudioForge/releases/latest"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="inline-block px-10 py-4 bg-gradient-primary text-white font-semibold text-lg rounded-lg hover:opacity-90 transition-opacity shadow-lg"
               >
-                Download Now
+                Download v1.0.0 (70 MB)
               </a>
             </div>
           </div>
