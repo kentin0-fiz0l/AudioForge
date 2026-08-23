@@ -137,6 +137,38 @@ if [ $BUILD_FAILED -eq 1 ]; then
     exit 1
 fi
 
+# Code signing (macOS only)
+if [[ "$OSTYPE" == "darwin"* ]] && [ -n "$CODESIGN_IDENTITY" ]; then
+    echo ""
+    echo -e "${BLUE}Signing macOS plugins...${NC}"
+    echo -e "${YELLOW}Using identity: $CODESIGN_IDENTITY${NC}"
+
+    # Sign VST3 plugins
+    for plugin in "$VST3_DIR"/*.vst3; do
+        if [ -d "$plugin" ]; then
+            codesign --force --deep --sign "$CODESIGN_IDENTITY" \
+                --options runtime "$plugin"
+            echo -e "${GREEN}✓ Signed $(basename "$plugin")${NC}"
+        fi
+    done
+
+    # Sign AU plugins
+    for plugin in "$AU_DIR"/*.component; do
+        if [ -d "$plugin" ]; then
+            codesign --force --deep --sign "$CODESIGN_IDENTITY" \
+                --options runtime "$plugin"
+            echo -e "${GREEN}✓ Signed $(basename "$plugin")${NC}"
+        fi
+    done
+
+    echo -e "${GREEN}✓ All plugins signed successfully${NC}"
+elif [[ "$OSTYPE" == "darwin"* ]]; then
+    echo ""
+    echo -e "${YELLOW}⚠ CODESIGN_IDENTITY not set - plugins will not be signed${NC}"
+    echo -e "${YELLOW}  Set CODESIGN_IDENTITY environment variable to enable signing${NC}"
+    echo -e "${YELLOW}  Example: export CODESIGN_IDENTITY=\"Developer ID Application: Your Name (TEAM_ID)\"${NC}"
+fi
+
 # Create README
 echo ""
 echo -e "${BLUE}Creating README.txt...${NC}"
