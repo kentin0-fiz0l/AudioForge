@@ -29,19 +29,50 @@ All manuals are written in Markdown format for:
 
 To convert these manuals to PDF format for distribution:
 
-#### Option 1: Pandoc (Recommended)
+#### Quick Start (Automated)
 
-**Install Pandoc**:
+**1. Install dependencies**:
+
+See [INSTALL-LATEX.md](INSTALL-LATEX.md) for detailed installation instructions.
+
 ```bash
 # macOS
 brew install pandoc
+brew install --cask basictex
+eval "$(/usr/libexec/path_helper)"
+
+# Linux (Ubuntu/Debian)
+sudo apt install pandoc texlive-xetex texlive-fonts-recommended
 
 # Windows
 choco install pandoc
-
-# Linux
-sudo apt install pandoc texlive-latex-base texlive-fonts-recommended
+# Download MiKTeX from https://miktex.org/download
 ```
+
+**2. Run conversion script**:
+
+```bash
+cd docs/manuals
+./convert-to-pdf.sh
+```
+
+**Expected output**:
+```
+✓ Pandoc found: pandoc 3.10.2
+✓ XeLaTeX found
+
+Found 10 manuals to convert
+
+→ Converting SimpleGain-Manual.md...
+✓ Created SimpleGain-Manual.pdf
+
+Success: 10 / 10
+Total size: 2.1M
+
+Done!
+```
+
+#### Manual Conversion (Individual Files)
 
 **Convert single manual**:
 ```bash
@@ -51,17 +82,6 @@ pandoc SimpleGain-Manual.md -o SimpleGain-Manual.pdf \
     --variable geometry:margin=1in \
     --variable fontsize=11pt \
     --toc
-```
-
-**Convert all manuals** (batch):
-```bash
-for file in *-Manual.md; do
-    pandoc "$file" -o "${file%.md}.pdf" \
-        --pdf-engine=xelatex \
-        --variable geometry:margin=1in \
-        --variable fontsize=11pt \
-        --toc
-done
 ```
 
 #### Option 2: Online Converters
