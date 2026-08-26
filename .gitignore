@@ -45,3 +45,9 @@ coverage_report/
 coverage/
 *.info
 releases/
+
+# Python virtual environments
+.venv-pdf/
+
+# Generated PDFs (optional - uncomment if you don't want to commit PDFs)
+# docs/manuals/*.pdf

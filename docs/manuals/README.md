@@ -29,7 +29,54 @@ All manuals are written in Markdown format for:
 
 To convert these manuals to PDF format for distribution:
 
-#### Quick Start (Automated)
+#### Method 1: Python/WeasyPrint (Recommended - No LaTeX Required)
+
+**Quick and easy**, no system dependencies needed:
+
+```bash
+cd docs/manuals
+
+# Create virtual environment and install dependencies (first time only)
+python3 -m venv .venv-pdf
+source .venv-pdf/bin/activate
+pip install weasyprint markdown pymdown-extensions
+
+# Run conversion
+python3 convert-to-pdf-python.py
+```
+
+**Expected output**:
+```
+========================================
+AudioForge Manual PDF Converter
+(Python/WeasyPrint)
+========================================
+
+Found 10 manuals to convert
+
+→ Converting SimpleGain-Manual.md...
+✓ Created SimpleGain-Manual.pdf (116 KB)
+
+Success: 10 / 10
+Total size: 0.5 MB
+
+Done!
+```
+
+**Pros**:
+- ✅ No LaTeX installation required
+- ✅ Fast conversion (~5 seconds total)
+- ✅ Works on all platforms (macOS, Linux, Windows)
+- ✅ Smaller file sizes
+
+**Cons**:
+- ⚠️ Slightly different formatting than LaTeX
+
+---
+
+#### Method 2: Pandoc/XeLaTeX (Traditional - High Quality)
+
+**Professional LaTeX output** with advanced typography:
 
 **1. Install dependencies**:
 
