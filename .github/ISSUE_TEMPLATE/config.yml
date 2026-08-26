@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 GitHub Discussions
+    url: https://github.com/kentin0-fiz0l/AudioForge/discussions
+    about: Ask questions, share ideas, or discuss AudioForge with the community
+  - name: 📚 Documentation
+    url: https://audioforge.fluxstudio.art/docs
+    about: Read user manuals, installation guides, and tutorials
+  - name: 🌐 Website
+    url: https://audioforge.fluxstudio.art
+    about: Visit the AudioForge website for downloads and information
