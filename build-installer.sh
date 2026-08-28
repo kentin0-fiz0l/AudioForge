@@ -2,7 +2,7 @@
 
 # AudioForge Installer Build Script
 # Builds all plugins and creates distribution packages
-# Version: 1.0.0
+# Version: 1.1.0
 
 set -e  # Exit on error
 
@@ -14,7 +14,7 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Version
-VERSION="1.0.0"
+VERSION="1.1.0"
 PROJECT_ROOT="$(cd "$(dirname "$0")" && pwd)"
 
 # Plugin list
@@ -174,7 +174,7 @@ echo ""
 echo -e "${BLUE}Creating README.txt...${NC}"
 
 cat > "$STAGING_DIR/README.txt" << 'EOF'
-AudioForge v1.0.0
+AudioForge v1.1.0
 =================
 
 Professional-quality DAW plugins, free and open source.

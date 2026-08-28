@@ -2,7 +2,7 @@
 
 # AudioForge DMG Creator
 # Creates professional macOS DMG installer from staging directory
-# Version: 1.0.0
+# Version: 1.1.0
 
 set -e  # Exit on error
 
@@ -14,7 +14,7 @@ BLUE='\033[0;34m'
 NC='\033[0m'
 
 # Version
-VERSION="1.0.0"
+VERSION="1.1.0"
 PROJECT_ROOT="$(cd "$(dirname "$0")" && pwd)"
 
 # Paths
