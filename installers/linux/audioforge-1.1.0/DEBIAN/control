@@ -1,0 +1,22 @@
+Package: audioforge
+Version: 1.1.0
+Section: sound
+Priority: optional
+Architecture: amd64
+Maintainer: AudioForge <contact@audioforge.art>
+Homepage: https://audioforge.fluxstudio.art
+Description: Professional audio plugins (VST3)
+ AudioForge is a collection of 10 professional-quality audio plugins
+ for music production, including:
+ - SimpleGain: Gain/volume control
+ - PanUtil: Stereo panning and width
+ - BasicSynth: Subtractive synthesizer
+ - CleanDelay: Stereo delay effect
+ - SimpleEQ: 3-band parametric EQ
+ - SimpleComp: Compressor
+ - WaveShaper: Distortion effect
+ - Saturation: Analog-style saturation
+ - ChorusFlanger: Modulation effects
+ - Reverb: Algorithmic reverb
+ .
+ All plugins are free and open source (GPL-3.0).

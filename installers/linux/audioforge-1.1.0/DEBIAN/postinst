@@ -1,0 +1,4 @@
+#!/bin/bash
+echo "AudioForge plugins installed to /usr/lib/vst3/"
+echo "Please rescan plugins in your DAW."
+exit 0

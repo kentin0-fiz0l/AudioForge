@@ -2,7 +2,7 @@
 
 # AudioForge DMG Creator (Simplified)
 # Creates macOS DMG installer without customization
-# Version: 1.1.0
+# Version: 1.1.1
 
 set -e
 
@@ -12,7 +12,7 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
-VERSION="1.1.0"
+VERSION="1.1.1"
 PROJECT_ROOT="$(cd "$(dirname "$0")" && pwd)"
 
 STAGING_DIR="$PROJECT_ROOT/releases/staging"

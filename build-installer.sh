@@ -2,7 +2,7 @@
 
 # AudioForge Installer Build Script
 # Builds all plugins and creates distribution packages
-# Version: 1.1.0
+# Version: 1.1.1
 
 set -e  # Exit on error
 
@@ -14,7 +14,7 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Version
-VERSION="1.1.0"
+VERSION="1.1.1"
 PROJECT_ROOT="$(cd "$(dirname "$0")" && pwd)"
 
 # Plugin list
