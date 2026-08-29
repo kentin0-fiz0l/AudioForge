@@ -4,6 +4,7 @@
 #include <juce_dsp/juce_dsp.h>
 #include <dsp/AudioForgeDSP.h>
 #include "Voice.h"
+#include "EffectsChain.h"
 
 /**
  * BasicSynth Audio Processor
@@ -70,6 +71,17 @@ public:
     static constexpr const char* PARAM_FILTER_RESONANCE = "filterResonance";
     static constexpr const char* PARAM_FILTER_TYPE = "filterType";
 
+    // Effects parameter IDs
+    static constexpr const char* PARAM_CHORUS_RATE = "chorusRate";
+    static constexpr const char* PARAM_CHORUS_DEPTH = "chorusDepth";
+    static constexpr const char* PARAM_CHORUS_MIX = "chorusMix";
+    static constexpr const char* PARAM_REVERB_SIZE = "reverbSize";
+    static constexpr const char* PARAM_REVERB_DAMPING = "reverbDamping";
+    static constexpr const char* PARAM_REVERB_MIX = "reverbMix";
+    static constexpr const char* PARAM_SATURATION_DRIVE = "saturationDrive";
+    static constexpr const char* PARAM_SATURATION_MIX = "saturationMix";
+    static constexpr const char* PARAM_SATURATION_TYPE = "saturationType";
+
 private:
     //==============================================================================
     // Parameters
@@ -83,10 +95,24 @@ private:
     juce::AudioParameterFloat* filterResonanceParam; // Filter resonance (Q)
     juce::AudioParameterChoice* filterTypeParam;  // LP, HP, BP, Notch
 
+    // Effects parameters
+    juce::AudioParameterFloat* chorusRateParam;
+    juce::AudioParameterFloat* chorusDepthParam;
+    juce::AudioParameterFloat* chorusMixParam;
+    juce::AudioParameterFloat* reverbSizeParam;
+    juce::AudioParameterFloat* reverbDampingParam;
+    juce::AudioParameterFloat* reverbMixParam;
+    juce::AudioParameterFloat* saturationDriveParam;
+    juce::AudioParameterFloat* saturationMixParam;
+    juce::AudioParameterChoice* saturationTypeParam;
+
     // Voice management
     static constexpr int MAX_VOICES = 8;
     std::array<SynthVoice, MAX_VOICES> voices;
     int nextVoiceIndex = 0;
+
+    // Effects chain
+    EffectsChain effectsChain;
 
     // Smoothed master volume
     AudioForge::DSP::ParameterSmoothing<float> smoothedVolume;

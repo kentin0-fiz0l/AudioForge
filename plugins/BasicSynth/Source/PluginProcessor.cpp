@@ -66,6 +66,63 @@ BasicSynthProcessor::BasicSynthProcessor()
         "Filter Type",
         juce::StringArray("Low-pass", "High-pass", "Band-pass", "Notch"),
         0)); // Default: Low-pass
+
+    // Chorus parameters
+    addParameter(chorusRateParam = new juce::AudioParameterFloat(
+        PARAM_CHORUS_RATE,
+        "Chorus Rate",
+        juce::NormalisableRange<float>(0.1f, 10.0f, 0.1f),
+        0.5f));
+
+    addParameter(chorusDepthParam = new juce::AudioParameterFloat(
+        PARAM_CHORUS_DEPTH,
+        "Chorus Depth",
+        juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f),
+        0.5f));
+
+    addParameter(chorusMixParam = new juce::AudioParameterFloat(
+        PARAM_CHORUS_MIX,
+        "Chorus Mix",
+        juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f),
+        0.3f));
+
+    // Reverb parameters
+    addParameter(reverbSizeParam = new juce::AudioParameterFloat(
+        PARAM_REVERB_SIZE,
+        "Reverb Size",
+        juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f),
+        0.5f));
+
+    addParameter(reverbDampingParam = new juce::AudioParameterFloat(
+        PARAM_REVERB_DAMPING,
+        "Reverb Damping",
+        juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f),
+        0.5f));
+
+    addParameter(reverbMixParam = new juce::AudioParameterFloat(
+        PARAM_REVERB_MIX,
+        "Reverb Mix",
+        juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f),
+        0.3f));
+
+    // Saturation parameters
+    addParameter(saturationDriveParam = new juce::AudioParameterFloat(
+        PARAM_SATURATION_DRIVE,
+        "Saturation Drive",
+        juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f),
+        0.0f));
+
+    addParameter(saturationMixParam = new juce::AudioParameterFloat(
+        PARAM_SATURATION_MIX,
+        "Saturation Mix",
+        juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f),
+        0.0f));
+
+    addParameter(saturationTypeParam = new juce::AudioParameterChoice(
+        PARAM_SATURATION_TYPE,
+        "Saturation Type",
+        juce::StringArray("Soft Clip", "Hard Clip", "Tube"),
+        0)); // Default: Soft Clip
 }
 
 BasicSynthProcessor::~BasicSynthProcessor()
@@ -80,6 +137,9 @@ void BasicSynthProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
     // Initialize smoothed volume
     smoothedVolume.reset(sampleRate, 0.05); // 50ms smoothing
     smoothedVolume.setCurrentAndTargetValue(volumeParam->get());
+
+    // Prepare effects chain
+    effectsChain.prepare(sampleRate, samplesPerBlock);
 
     // Reset all voices
     for (auto& voice : voices)
@@ -151,13 +211,40 @@ void BasicSynthProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::M
         float masterVolume = smoothedVolume.getNextValue();
         mixedSample *= masterVolume;
 
-        // Track peak for metering
-        peakLevel = juce::jmax(peakLevel, std::abs(mixedSample));
+        // Update effects parameters
+        effectsChain.setSaturation(
+            saturationDriveParam->get(),
+            saturationMixParam->get(),
+            saturationTypeParam->getIndex());
 
-        // Write to all output channels (mono to stereo)
-        for (int channel = 0; channel < numChannels; ++channel)
+        effectsChain.setChorus(
+            chorusRateParam->get(),
+            chorusDepthParam->get(),
+            chorusMixParam->get());
+
+        effectsChain.setReverb(
+            reverbSizeParam->get(),
+            reverbDampingParam->get(),
+            reverbMixParam->get());
+
+        // Process through effects chain (mono in, stereo out)
+        float leftSample, rightSample;
+        effectsChain.processSample(mixedSample, leftSample, rightSample);
+
+        // Track peak for metering (use max of left/right)
+        float peakSample = juce::jmax(std::abs(leftSample), std::abs(rightSample));
+        peakLevel = juce::jmax(peakLevel, peakSample);
+
+        // Write stereo output
+        if (numChannels >= 2)
         {
-            buffer.setSample(channel, sample, mixedSample);
+            buffer.setSample(0, sample, leftSample);   // Left
+            buffer.setSample(1, sample, rightSample);  // Right
+        }
+        else if (numChannels == 1)
+        {
+            // Mono output: average left and right
+            buffer.setSample(0, sample, (leftSample + rightSample) * 0.5f);
         }
     }
 
