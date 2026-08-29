@@ -14,7 +14,9 @@ void SynthVoice::noteOn(int midiNoteNumber, float noteVelocity, double sampleRat
 
     // Convert MIDI note to frequency using shared DSP library
     float frequency = AudioForge::DSP::WaveformGenerators::midiNoteToFrequency(midiNoteNumber);
-    oscillator.setFrequency(frequency, sampleRate);
+
+    // Set frequency for all oscillators in the bank
+    oscillatorBank.setFrequency(frequency, sampleRate);
 
     // Start envelope in attack phase
     envelopeStage = EnvelopeStage::Attack;
@@ -50,9 +52,8 @@ float SynthVoice::processSample(double sampleRate,
     float deltaTime = 1.0f / static_cast<float>(sampleRate);
     updateEnvelope(deltaTime, attack, decay, sustain, release);
 
-    // Generate oscillator sample
-    auto waveformEnum = static_cast<Oscillator::Waveform>(waveform);
-    float sample = oscillator.getNextSample(waveformEnum);
+    // Generate sample from oscillator bank (automatically mixes all enabled oscillators)
+    float sample = oscillatorBank.getNextSample();
 
     // Apply envelope and velocity
     sample *= envelopeLevel * velocity;
@@ -84,7 +85,7 @@ void SynthVoice::reset()
     envelopeLevel = 0.0f;
     envelopeTime = 0.0f;
     releaseStartLevel = 0.0f;
-    oscillator.reset();
+    oscillatorBank.reset();
     filter.reset();
     lastFilterCutoff = -1.0f;
     lastFilterResonance = -1.0f;

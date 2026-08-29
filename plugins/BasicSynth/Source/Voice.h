@@ -3,6 +3,7 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <dsp/FilterDesign.h>
 #include "Oscillator.h"
+#include "OscillatorBank.h"
 
 /**
  * Synthesizer Voice
@@ -72,8 +73,8 @@ private:
     int currentNote = -1;
     float velocity = 0.0f;
 
-    // Oscillator
-    Oscillator oscillator;
+    // Oscillator bank (5 oscillators + noise)
+    OscillatorBank oscillatorBank;
 
     // Low-pass filter
     AudioForge::DSP::BiquadFilter filter;
