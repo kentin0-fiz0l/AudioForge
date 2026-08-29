@@ -1,4 +1,5 @@
 #include "Oscillator.h"
+#include <algorithm>
 
 Oscillator::Oscillator()
 {
@@ -28,12 +29,23 @@ float Oscillator::getNextSample(Waveform waveform)
         case Waveform::Square:
             sample = AudioForge::DSP::WaveformGenerators::square(phase);
             break;
+
+        case Waveform::Pulse:
+            // Pulse wave: square wave with adjustable duty cycle
+            sample = (phase < pulseWidth) ? 1.0f : -1.0f;
+            break;
     }
 
     // Advance phase using shared utility
     AudioForge::DSP::WaveformGenerators::advancePhase(phase, phaseIncrement);
 
     return sample;
+}
+
+void Oscillator::setPulseWidth(float width)
+{
+    // Clamp to safe range (0.05-0.95) to avoid DC offset issues
+    pulseWidth = std::max(0.05f, std::min(0.95f, width));
 }
 
 void Oscillator::reset()

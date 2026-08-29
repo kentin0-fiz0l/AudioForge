@@ -15,7 +15,8 @@ public:
     {
         Sine = 0,
         Sawtooth = 1,
-        Square = 2
+        Square = 2,
+        Pulse = 3  // Square wave with adjustable pulse width
     };
 
     Oscillator();
@@ -37,6 +38,13 @@ public:
     float getNextSample(Waveform waveform);
 
     /**
+     * Set the pulse width for pulse waveforms.
+     *
+     * @param width Pulse width (0.05 to 0.95), default 0.5 (square wave)
+     */
+    void setPulseWidth(float width);
+
+    /**
      * Reset the oscillator phase to 0.
      */
     void reset();
@@ -44,4 +52,5 @@ public:
 private:
     float phase = 0.0f;        // Current phase (0.0 to 1.0)
     float phaseIncrement = 0.0f; // Phase increment per sample
+    float pulseWidth = 0.5f;   // Pulse width for pulse waveforms (0.05-0.95)
 };
