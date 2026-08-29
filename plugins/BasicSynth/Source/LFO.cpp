@@ -97,7 +97,7 @@ float LFO::generateSample() const
             // Note: This is a simplified implementation
             // For true S&H, we'd store the value and only change on phase wrap
             if (phase < 0.001f)  // Near phase reset
-                const_cast<LFO*>(this)->random.setSeed(static_cast<int64>(phase * 1000000));
+                const_cast<LFO*>(this)->random.setSeed(static_cast<juce::int64>(phase * 1000000));
 
             return const_cast<LFO*>(this)->random.nextFloat() * 2.0f - 1.0f;
         }

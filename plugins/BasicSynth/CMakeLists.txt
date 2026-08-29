@@ -28,7 +28,12 @@ target_sources(BasicSynth PRIVATE
     Source/PluginProcessor.cpp
     Source/PluginEditor.cpp
     Source/Voice.cpp
-    Source/Oscillator.cpp)
+    Source/Oscillator.cpp
+    Source/OscillatorBank.cpp
+    Source/NoiseGenerator.cpp
+    Source/LFO.cpp
+    Source/ModulationMatrix.cpp
+    Source/ADSREnvelope.cpp)
 
 # Compiler definitions
 target_compile_definitions(BasicSynth PUBLIC

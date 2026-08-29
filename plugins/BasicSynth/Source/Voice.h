@@ -6,6 +6,7 @@
 #include "OscillatorBank.h"
 #include "LFO.h"
 #include "ModulationMatrix.h"
+#include "ADSREnvelope.h"
 
 /**
  * Synthesizer Voice
@@ -90,22 +91,7 @@ private:
     float lastFilterCutoff = -1.0f;    // Track last cutoff for optimization
     float lastFilterResonance = -1.0f; // Track last resonance for optimization
 
-    // ADSR envelope
-    enum class EnvelopeStage
-    {
-        Off,
-        Attack,
-        Decay,
-        Sustain,
-        Release
-    };
-
-    EnvelopeStage envelopeStage = EnvelopeStage::Off;
-    float envelopeLevel = 0.0f;
-    float envelopeTime = 0.0f; // Time in current stage (seconds)
-    float releaseStartLevel = 0.0f; // Level at start of release phase
-
-    // Helper methods
-    void updateEnvelope(float deltaTime, float attack, float decay,
-                       float sustain, float release);
+    // ADSR envelopes
+    ADSREnvelope ampEnvelope;    // Amplitude envelope
+    ADSREnvelope filterEnvelope; // Filter envelope
 };
