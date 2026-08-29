@@ -60,6 +60,12 @@ BasicSynthProcessor::BasicSynthProcessor()
         "Filter Resonance",
         juce::NormalisableRange<float>(0.5f, 10.0f, 0.1f),
         0.707f)); // Default: butterworth (no resonance)
+
+    addParameter(filterTypeParam = new juce::AudioParameterChoice(
+        PARAM_FILTER_TYPE,
+        "Filter Type",
+        juce::StringArray("Low-pass", "High-pass", "Band-pass", "Notch"),
+        0)); // Default: Low-pass
 }
 
 BasicSynthProcessor::~BasicSynthProcessor()
@@ -133,9 +139,11 @@ void BasicSynthProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::M
         {
             if (voice.isActive())
             {
+                int filterType = filterTypeParam->getIndex();
                 mixedSample += voice.processSample(getSampleRate(), waveform,
                                                   attack, decay, sustain, release,
-                                                  filterCutoff, filterResonance);
+                                                  filterCutoff, filterResonance,
+                                                  filterType);
             }
         }
 

@@ -1,12 +1,12 @@
 #pragma once
 
 #include <juce_audio_processors/juce_audio_processors.h>
-#include <dsp/FilterDesign.h>
 #include "Oscillator.h"
 #include "OscillatorBank.h"
 #include "LFO.h"
 #include "ModulationMatrix.h"
 #include "ADSREnvelope.h"
+#include "MultiModeFilter.h"
 
 /**
  * Synthesizer Voice
@@ -44,6 +44,7 @@ public:
      * @param release Release time in seconds
      * @param filterCutoff Filter cutoff frequency in Hz
      * @param filterResonance Filter resonance (Q factor)
+     * @param filterType Filter type (0=LP, 1=HP, 2=BP, 3=Notch)
      * @return Output sample value
      */
     float processSample(double sampleRate,
@@ -53,7 +54,8 @@ public:
                        float sustain,
                        float release,
                        float filterCutoff,
-                       float filterResonance);
+                       float filterResonance,
+                       int filterType);
 
     /**
      * Check if this voice is currently playing.
@@ -86,10 +88,8 @@ private:
     // Modulation matrix
     ModulationMatrix modulationMatrix;
 
-    // Low-pass filter
-    AudioForge::DSP::BiquadFilter filter;
-    float lastFilterCutoff = -1.0f;    // Track last cutoff for optimization
-    float lastFilterResonance = -1.0f; // Track last resonance for optimization
+    // Multi-mode filter
+    MultiModeFilter filter;
 
     // ADSR envelopes
     ADSREnvelope ampEnvelope;    // Amplitude envelope

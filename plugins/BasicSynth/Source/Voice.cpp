@@ -42,7 +42,8 @@ float SynthVoice::processSample(double sampleRate,
                                 float sustain,
                                 float release,
                                 float filterCutoff,
-                                float filterResonance)
+                                float filterResonance,
+                                int filterType)
 {
     if (!active)
         return 0.0f;
@@ -99,19 +100,10 @@ float SynthVoice::processSample(double sampleRate,
     // Apply amplitude envelope and velocity
     sample *= ampEnvValue * velocity;
 
-    // Apply low-pass filter
-    // Only recalculate coefficients when parameters change (performance optimization)
-    if (modulatedCutoff != lastFilterCutoff || filterResonance != lastFilterResonance)
-    {
-        auto filterCoeffs = AudioForge::DSP::FilterDesign::makeLowPass(
-            modulatedCutoff,
-            static_cast<float>(sampleRate),
-            filterResonance);
-        filter.setCoefficients(filterCoeffs);
-        lastFilterCutoff = modulatedCutoff;
-        lastFilterResonance = filterResonance;
-    }
-
+    // Apply multi-mode filter
+    // MultiModeFilter handles parameter change detection internally
+    filter.setParameters(modulatedCutoff, filterResonance, sampleRate);
+    filter.setFilterType(static_cast<MultiModeFilter::FilterType>(filterType));
     sample = filter.processSample(sample);
 
     return sample;
@@ -126,7 +118,5 @@ void SynthVoice::reset()
     filterEnvelope.reset();
     oscillatorBank.reset();
     filter.reset();
-    lastFilterCutoff = -1.0f;
-    lastFilterResonance = -1.0f;
 }
 

@@ -68,6 +68,7 @@ public:
     static constexpr const char* PARAM_RELEASE = "release";
     static constexpr const char* PARAM_FILTER_CUTOFF = "filterCutoff";
     static constexpr const char* PARAM_FILTER_RESONANCE = "filterResonance";
+    static constexpr const char* PARAM_FILTER_TYPE = "filterType";
 
 private:
     //==============================================================================
@@ -80,6 +81,7 @@ private:
     juce::AudioParameterFloat* releaseParam;      // ADSR Release (ms)
     juce::AudioParameterFloat* filterCutoffParam; // Filter cutoff (Hz)
     juce::AudioParameterFloat* filterResonanceParam; // Filter resonance (Q)
+    juce::AudioParameterChoice* filterTypeParam;  // LP, HP, BP, Notch
 
     // Voice management
     static constexpr int MAX_VOICES = 8;

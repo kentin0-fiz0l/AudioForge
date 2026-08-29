@@ -33,7 +33,8 @@ target_sources(BasicSynth PRIVATE
     Source/NoiseGenerator.cpp
     Source/LFO.cpp
     Source/ModulationMatrix.cpp
-    Source/ADSREnvelope.cpp)
+    Source/ADSREnvelope.cpp
+    Source/MultiModeFilter.cpp)
 
 # Compiler definitions
 target_compile_definitions(BasicSynth PUBLIC
