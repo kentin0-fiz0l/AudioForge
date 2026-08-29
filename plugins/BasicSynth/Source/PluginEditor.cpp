@@ -4,8 +4,8 @@
 BasicSynthEditor::BasicSynthEditor(BasicSynthProcessor& p)
     : AudioProcessorEditor(&p), audioProcessor(p)
 {
-    // Set editor size (increased height for filter controls)
-    setSize(500, 480);
+    // Set editor size (expanded for all new controls)
+    setSize(700, 650);
 
     // Waveform selector
     waveformLabel.setText("Waveform", juce::dontSendNotification);
@@ -205,6 +205,101 @@ BasicSynthEditor::BasicSynthEditor(BasicSynthProcessor& p)
     };
     addAndMakeVisible(filterResonanceSlider);
 
+    // Filter Type selector
+    filterTypeLabel.setText("Filter Type", juce::dontSendNotification);
+    filterTypeLabel.attachToComponent(&filterTypeSelector, true);
+    addAndMakeVisible(filterTypeLabel);
+
+    filterTypeSelector.addItem("Low-pass", 1);
+    filterTypeSelector.addItem("High-pass", 2);
+    filterTypeSelector.addItem("Band-pass", 3);
+    filterTypeSelector.addItem("Notch", 4);
+    filterTypeSelector.setSelectedId(1);
+    filterTypeSelector.onChange = [this]
+    {
+        auto* param = audioProcessor.getParameters()[8];
+        auto* choiceParam = dynamic_cast<juce::AudioParameterChoice*>(param);
+        if (choiceParam != nullptr)
+        {
+            float normalizedValue = static_cast<float>(filterTypeSelector.getSelectedId() - 1) /
+                                  (filterTypeSelector.getNumItems() - 1);
+            choiceParam->setValueNotifyingHost(normalizedValue);
+        }
+    };
+    addAndMakeVisible(filterTypeSelector);
+
+    // Chorus Mix slider
+    chorusMixLabel.setText("Chorus", juce::dontSendNotification);
+    chorusMixLabel.setColour(juce::Label::textColourId, juce::Colour(0xffa0aec0));
+    chorusMixLabel.setJustificationType(juce::Justification::centred);
+    chorusMixLabel.attachToComponent(&chorusMixSlider, false);
+    addAndMakeVisible(chorusMixLabel);
+
+    chorusMixSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
+    chorusMixSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
+    chorusMixSlider.setRange(0.0, 1.0, 0.01);
+    chorusMixSlider.setValue(0.3);
+    chorusMixSlider.setColour(juce::Slider::rotarySliderFillColourId, juce::Colour(0xffa78bfa));
+    chorusMixSlider.setColour(juce::Slider::thumbColourId, juce::Colour(0xff9f7aea));
+    chorusMixSlider.setColour(juce::Slider::textBoxTextColourId, juce::Colour(0xffedf2f7));
+    chorusMixSlider.setColour(juce::Slider::textBoxBackgroundColourId, juce::Colour(0xff2d3748));
+    chorusMixSlider.onValueChange = [this]
+    {
+        auto* param = audioProcessor.getParameters()[11];
+        auto* floatParam = dynamic_cast<juce::AudioParameterFloat*>(param);
+        if (floatParam != nullptr)
+            floatParam->setValueNotifyingHost(floatParam->convertTo0to1(chorusMixSlider.getValue()));
+    };
+    addAndMakeVisible(chorusMixSlider);
+
+    // Reverb Mix slider
+    reverbMixLabel.setText("Reverb", juce::dontSendNotification);
+    reverbMixLabel.setColour(juce::Label::textColourId, juce::Colour(0xffa0aec0));
+    reverbMixLabel.setJustificationType(juce::Justification::centred);
+    reverbMixLabel.attachToComponent(&reverbMixSlider, false);
+    addAndMakeVisible(reverbMixLabel);
+
+    reverbMixSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
+    reverbMixSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
+    reverbMixSlider.setRange(0.0, 1.0, 0.01);
+    reverbMixSlider.setValue(0.3);
+    reverbMixSlider.setColour(juce::Slider::rotarySliderFillColourId, juce::Colour(0xff90cdf4));
+    reverbMixSlider.setColour(juce::Slider::thumbColourId, juce::Colour(0xff63b3ed));
+    reverbMixSlider.setColour(juce::Slider::textBoxTextColourId, juce::Colour(0xffedf2f7));
+    reverbMixSlider.setColour(juce::Slider::textBoxBackgroundColourId, juce::Colour(0xff2d3748));
+    reverbMixSlider.onValueChange = [this]
+    {
+        auto* param = audioProcessor.getParameters()[14];
+        auto* floatParam = dynamic_cast<juce::AudioParameterFloat*>(param);
+        if (floatParam != nullptr)
+            floatParam->setValueNotifyingHost(floatParam->convertTo0to1(reverbMixSlider.getValue()));
+    };
+    addAndMakeVisible(reverbMixSlider);
+
+    // Saturation Drive slider
+    saturationDriveLabel.setText("Drive", juce::dontSendNotification);
+    saturationDriveLabel.setColour(juce::Label::textColourId, juce::Colour(0xffa0aec0));
+    saturationDriveLabel.setJustificationType(juce::Justification::centred);
+    saturationDriveLabel.attachToComponent(&saturationDriveSlider, false);
+    addAndMakeVisible(saturationDriveLabel);
+
+    saturationDriveSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
+    saturationDriveSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
+    saturationDriveSlider.setRange(0.0, 1.0, 0.01);
+    saturationDriveSlider.setValue(0.0);
+    saturationDriveSlider.setColour(juce::Slider::rotarySliderFillColourId, juce::Colour(0xfffc8181));
+    saturationDriveSlider.setColour(juce::Slider::thumbColourId, juce::Colour(0xfff56565));
+    saturationDriveSlider.setColour(juce::Slider::textBoxTextColourId, juce::Colour(0xffedf2f7));
+    saturationDriveSlider.setColour(juce::Slider::textBoxBackgroundColourId, juce::Colour(0xff2d3748));
+    saturationDriveSlider.onValueChange = [this]
+    {
+        auto* param = audioProcessor.getParameters()[15];
+        auto* floatParam = dynamic_cast<juce::AudioParameterFloat*>(param);
+        if (floatParam != nullptr)
+            floatParam->setValueNotifyingHost(floatParam->convertTo0to1(saturationDriveSlider.getValue()));
+    };
+    addAndMakeVisible(saturationDriveSlider);
+
     // Start timer for level meter updates (30 Hz)
     startTimer(33);
 }
@@ -239,6 +334,7 @@ void BasicSynthEditor::paint(juce::Graphics& g)
     g.setFont(juce::Font(14.0f, juce::Font::bold));
     g.drawText("ENVELOPE", 100, 115, 200, 20, juce::Justification::left);
     g.drawText("FILTER", 100, 335, 200, 20, juce::Justification::left);
+    g.drawText("EFFECTS", 100, 485, 200, 20, juce::Justification::left);
 
     // Level meter with improved design
     int meterX = 20;
@@ -278,9 +374,9 @@ void BasicSynthEditor::paint(juce::Graphics& g)
 
 void BasicSynthEditor::resized()
 {
-    const int labelWidth = 80;
-    const int controlWidth = 100;
-    const int controlHeight = 100;
+    const int labelWidth = 100;
+    const int controlWidth = 90;
+    const int controlHeight = 90;
     const int margin = 20;
 
     int y = 60;
@@ -320,6 +416,27 @@ void BasicSynthEditor::resized()
     filterCutoffSlider.setBounds(x, y, controlWidth, controlHeight);
     x += controlWidth + 10;
     filterResonanceSlider.setBounds(x, y, controlWidth, controlHeight);
+    x += controlWidth + 10;
+
+    // Filter type selector styling
+    filterTypeSelector.setColour(juce::ComboBox::backgroundColourId, juce::Colour(0xff2d3748));
+    filterTypeSelector.setColour(juce::ComboBox::textColourId, juce::Colour(0xffedf2f7));
+    filterTypeSelector.setColour(juce::ComboBox::outlineColourId, juce::Colour(0xff4a5568));
+    filterTypeSelector.setColour(juce::ComboBox::buttonColourId, juce::Colour(0xff4fd1c5));
+
+    filterTypeSelector.setBounds(x, y + 30, 120, 24);
+
+    y += controlHeight + 30;
+
+    // Effects controls in a row
+    x = margin + labelWidth;
+    chorusMixSlider.setBounds(x, y, controlWidth, controlHeight);
+    x += controlWidth + 10;
+
+    reverbMixSlider.setBounds(x, y, controlWidth, controlHeight);
+    x += controlWidth + 10;
+
+    saturationDriveSlider.setBounds(x, y, controlWidth, controlHeight);
 }
 
 void BasicSynthEditor::timerCallback()
