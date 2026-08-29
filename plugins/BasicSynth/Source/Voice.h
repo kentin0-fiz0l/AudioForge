@@ -4,6 +4,8 @@
 #include <dsp/FilterDesign.h>
 #include "Oscillator.h"
 #include "OscillatorBank.h"
+#include "LFO.h"
+#include "ModulationMatrix.h"
 
 /**
  * Synthesizer Voice
@@ -75,6 +77,13 @@ private:
 
     // Oscillator bank (5 oscillators + noise)
     OscillatorBank oscillatorBank;
+
+    // LFOs (2 per voice)
+    LFO lfo1;
+    LFO lfo2;
+
+    // Modulation matrix
+    ModulationMatrix modulationMatrix;
 
     // Low-pass filter
     AudioForge::DSP::BiquadFilter filter;

@@ -1,6 +1,8 @@
 #include "Voice.h"
 #include <juce_core/juce_core.h>
 #include <dsp/AudioForgeDSP.h>
+#include <cmath>
+#include <algorithm>
 
 SynthVoice::SynthVoice()
 {
@@ -52,6 +54,27 @@ float SynthVoice::processSample(double sampleRate,
     float deltaTime = 1.0f / static_cast<float>(sampleRate);
     updateEnvelope(deltaTime, attack, decay, sustain, release);
 
+    // Update LFOs
+    float lfo1Value = lfo1.getNextSample(sampleRate);
+    float lfo2Value = lfo2.getNextSample(sampleRate);
+
+    // Collect modulation source values
+    ModulationMatrix::SourceValues sources;
+    sources.lfo1 = lfo1Value;
+    sources.lfo2 = lfo2Value;
+    sources.ampEnvelope = envelopeLevel;
+    sources.filterEnvelope = envelopeLevel; // TODO: Add separate filter envelope
+    sources.velocity = velocity;
+    sources.modWheel = 0.0f; // TODO: Get from MIDI CC
+
+    // Get modulation for filter cutoff
+    float cutoffMod = modulationMatrix.getModulation(
+        ModulationMatrix::Destination::FilterCutoff, sources);
+
+    // Apply modulation to filter cutoff (±2 octaves)
+    float modulatedCutoff = filterCutoff * std::pow(2.0f, cutoffMod * 2.0f);
+    modulatedCutoff = std::max(20.0f, std::min(20000.0f, modulatedCutoff));
+
     // Generate sample from oscillator bank (automatically mixes all enabled oscillators)
     float sample = oscillatorBank.getNextSample();
 
@@ -60,14 +83,14 @@ float SynthVoice::processSample(double sampleRate,
 
     // Apply low-pass filter
     // Only recalculate coefficients when parameters change (performance optimization)
-    if (filterCutoff != lastFilterCutoff || filterResonance != lastFilterResonance)
+    if (modulatedCutoff != lastFilterCutoff || filterResonance != lastFilterResonance)
     {
         auto filterCoeffs = AudioForge::DSP::FilterDesign::makeLowPass(
-            filterCutoff,
+            modulatedCutoff,
             static_cast<float>(sampleRate),
             filterResonance);
         filter.setCoefficients(filterCoeffs);
-        lastFilterCutoff = filterCutoff;
+        lastFilterCutoff = modulatedCutoff;
         lastFilterResonance = filterResonance;
     }
 
