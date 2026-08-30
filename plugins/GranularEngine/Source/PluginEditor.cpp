@@ -36,6 +36,8 @@ GranularEngineEditor::GranularEngineEditor(GranularEngineProcessor& p)
     windowTypeCombo.addItem("Gaussian", 2);
     windowTypeCombo.addItem("Triangle", 3);
     windowTypeCombo.addItem("Tukey", 4);
+    windowTypeCombo.addItem("Blackman", 5);
+    windowTypeCombo.addItem("Kaiser", 6);
     windowTypeCombo.setSelectedId(1);
     addAndMakeVisible(windowTypeCombo);
 
@@ -180,7 +182,7 @@ GranularEngineEditor::GranularEngineEditor(GranularEngineProcessor& p)
 
     windowTypeCombo.onChange = [this]() {
         auto* param = audioProcessor.getParameters()[9];
-        param->setValueNotifyingHost((windowTypeCombo.getSelectedId() - 1) / 3.0f);
+        param->setValueNotifyingHost((windowTypeCombo.getSelectedId() - 1) / 5.0f);
     };
 
     windowShapeSlider.onValueChange = [this]() {
@@ -416,6 +418,38 @@ void GranularEngineEditor::paintWindowPreview(juce::Graphics& g, juce::Rectangle
             {
                 y = 1.0f;
             }
+        }
+        else if (windowType == 4)  // Blackman
+        {
+            const float a0 = 0.42f;
+            const float a1 = 0.5f;
+            const float a2 = 0.08f;
+            y = a0 - a1 * std::cos(2.0f * juce::MathConstants<float>::pi * x)
+                   + a2 * std::cos(4.0f * juce::MathConstants<float>::pi * x);
+        }
+        else if (windowType == 5)  // Kaiser
+        {
+            float beta = windowShape * 10.0f;
+
+            // Modified Bessel I0 approximation
+            auto besselI0 = [](float x) -> float
+            {
+                float sum = 1.0f;
+                float term = 1.0f;
+                for (int k = 1; k < 20; ++k)
+                {
+                    float kf = (float)k;
+                    term *= (x * x) / (4.0f * kf * kf);
+                    sum += term;
+                    if (term < 1e-6f) break;
+                }
+                return sum;
+            };
+
+            float denominator = besselI0(beta);
+            float n = 2.0f * x - 1.0f;  // Map x from [0,1] to [-1,1]
+            float arg = beta * std::sqrt(1.0f - n * n);
+            y = besselI0(arg) / denominator;
         }
 
         // Convert to screen coordinates

@@ -16,6 +16,7 @@ struct Grain
     float playbackPosition = 0.0f;  // Current playback position (float for pitch shifting)
     float playbackRate = 1.0f;      // Playback speed (1.0 = normal, 2.0 = octave up)
     bool reverse = false;           // Play grain backwards
+    bool pingpong = false;          // Pingpong mode (bounce direction at endpoints)
     bool active = false;            // Is this grain playing?
     float panPosition = 0.5f;       // Stereo pan (0=left, 1=right)
 
@@ -24,12 +25,17 @@ struct Grain
         playbackPosition = 0.0f;
         playbackRate = 1.0f;
         reverse = false;
+        pingpong = false;
         active = false;
         panPosition = 0.5f;
     }
 
     bool isFinished() const
     {
+        // Pingpong mode never finishes (loops forever)
+        if (pingpong)
+            return false;
+
         if (reverse)
             return playbackPosition < 0.0f;
         else
@@ -63,6 +69,7 @@ public:
     void setSprayAmount(float amount);            // Position randomization (0-1)
     void setReverseProbability(float probability); // Chance of reverse grain (0-1)
     void setStereoWidth(float width);             // Stereo spread (0-2, 1=normal)
+    void setGrainDirection(int direction);        // 0=forward, 1=backward, 2=pingpong
 
     float getGrainDensity() const { return grainDensity; }
     float getTimeStretch() const { return timeStretch; }
@@ -71,6 +78,7 @@ public:
     float getSprayAmount() const { return sprayAmount; }
     float getReverseProbability() const { return reverseProbability; }
     float getStereoWidth() const { return stereoWidth; }
+    int getGrainDirection() const { return grainDirection; }
 
     //==============================================================================
     // Grain Processing
@@ -96,6 +104,7 @@ private:
     float sprayAmount = 0.0f;         // Position randomization (0-1)
     float reverseProbability = 0.0f;  // Probability of reverse grain (0-1)
     float stereoWidth = 1.0f;         // Stereo width (0-2)
+    int grainDirection = 0;           // 0=forward, 1=backward, 2=pingpong
 
     //==============================================================================
     // Grain Pool

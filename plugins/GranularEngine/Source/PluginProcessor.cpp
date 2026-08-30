@@ -69,11 +69,11 @@ GranularEngineProcessor::GranularEngineProcessor()
         juce::NormalisableRange<float>(0.0f, 100.0f, 1.0f),
         100.0f));  // Default: 100% wet
 
-    // Window Type (0=Hann, 1=Gaussian, 2=Triangle, 3=Tukey)
+    // Window Type (0=Hann, 1=Gaussian, 2=Triangle, 3=Tukey, 4=Blackman, 5=Kaiser)
     addParameter(windowTypeParam = new juce::AudioParameterInt(
         PARAM_WINDOW_TYPE,
         "Window Type",
-        0, 3,
+        0, 5,
         0));  // Default: Hann
 
     // Window Shape (affects Gaussian width and Tukey taper)

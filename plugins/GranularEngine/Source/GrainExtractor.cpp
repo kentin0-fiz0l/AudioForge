@@ -24,11 +24,15 @@ void GrainExtractor::setGrainSize(int samples)
         createTriangleWindow();
     else if (windowType == 3)
         createTukeyWindow();
+    else if (windowType == 4)
+        createBlackmanWindow();
+    else if (windowType == 5)
+        createKaiserWindow();
 }
 
 void GrainExtractor::setWindowType(int type)
 {
-    windowType = juce::jlimit(0, 3, type);
+    windowType = juce::jlimit(0, 5, type);
 
     // Recreate window
     if (windowType == 0)
@@ -39,17 +43,23 @@ void GrainExtractor::setWindowType(int type)
         createTriangleWindow();
     else if (windowType == 3)
         createTukeyWindow();
+    else if (windowType == 4)
+        createBlackmanWindow();
+    else if (windowType == 5)
+        createKaiserWindow();
 }
 
 void GrainExtractor::setWindowShape(float shape)
 {
     windowShape = juce::jlimit(0.0f, 1.0f, shape);
 
-    // Recreate window if using Gaussian or Tukey (shape-dependent windows)
+    // Recreate window if using shape-dependent windows
     if (windowType == 1)
         createGaussianWindow();
     else if (windowType == 3)
         createTukeyWindow();
+    else if (windowType == 5)
+        createKaiserWindow();  // Kaiser uses shape for beta parameter
 }
 
 void GrainExtractor::extractGrain(const GrainBuffer& buffer, int startPosition, float* destination)
@@ -146,5 +156,63 @@ void GrainExtractor::createTukeyWindow()
             // Flat top
             window[i] = 1.0f;
         }
+    }
+}
+
+void GrainExtractor::createBlackmanWindow()
+{
+    window.resize(grainSize);
+
+    // Blackman window: excellent stopband attenuation, minimal spectral leakage
+    // w(n) = 0.42 - 0.5*cos(2πn/(N-1)) + 0.08*cos(4πn/(N-1))
+    const float a0 = 0.42f;
+    const float a1 = 0.5f;
+    const float a2 = 0.08f;
+
+    for (int i = 0; i < grainSize; ++i)
+    {
+        float n = (float)i / (grainSize - 1);
+        window[i] = a0
+                  - a1 * std::cos(2.0f * juce::MathConstants<float>::pi * n)
+                  + a2 * std::cos(4.0f * juce::MathConstants<float>::pi * n);
+    }
+}
+
+void GrainExtractor::createKaiserWindow()
+{
+    window.resize(grainSize);
+
+    // Kaiser window: variable shape controlled by beta parameter
+    // windowShape controls beta: 0 = beta 0 (rectangular), 1 = beta 10 (very selective)
+    float beta = windowShape * 10.0f;  // Map 0-1 to 0-10 range
+
+    // Modified Bessel function of first kind, order 0 (I0)
+    auto besselI0 = [](float x) -> float
+    {
+        float sum = 1.0f;
+        float term = 1.0f;
+        const int maxIterations = 50;
+
+        for (int k = 1; k < maxIterations; ++k)
+        {
+            float kf = (float)k;
+            term *= (x * x) / (4.0f * kf * kf);
+            sum += term;
+
+            if (term < 1e-6f)
+                break;
+        }
+
+        return sum;
+    };
+
+    float denominator = besselI0(beta);
+    int center = (grainSize - 1) / 2;
+
+    for (int i = 0; i < grainSize; ++i)
+    {
+        float n = (float)(i - center) / (float)center;
+        float arg = beta * std::sqrt(1.0f - n * n);
+        window[i] = besselI0(arg) / denominator;
     }
 }

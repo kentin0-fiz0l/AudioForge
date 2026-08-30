@@ -70,6 +70,11 @@ void GrainScheduler::setStereoWidth(float width)
     stereoWidth = juce::jlimit(0.0f, 2.0f, width);
 }
 
+void GrainScheduler::setGrainDirection(int direction)
+{
+    grainDirection = juce::jlimit(0, 2, direction);
+}
+
 void GrainScheduler::processBlock(const GrainBuffer& buffer,
                                    GrainExtractor& extractor,
                                    float* leftOutput,
@@ -119,16 +124,40 @@ void GrainScheduler::processBlock(const GrainBuffer& buffer,
                 leftOutput[i] += sample * leftGain;
                 rightOutput[i] += sample * rightGain;
 
-                // Advance playback position based on rate
-                if (grain.reverse)
-                    grain.playbackPosition -= grain.playbackRate;
-                else
-                    grain.playbackPosition += grain.playbackRate;
-
-                // Check if grain finished
-                if (grain.isFinished())
+                // Advance playback position based on rate and direction
+                if (grain.pingpong)
                 {
-                    grain.reset();
+                    // Pingpong mode: bounce direction at endpoints
+                    if (grain.reverse)
+                        grain.playbackPosition -= grain.playbackRate;
+                    else
+                        grain.playbackPosition += grain.playbackRate;
+
+                    // Check for direction change at endpoints
+                    if (grain.playbackPosition >= (float)grain.samples.size())
+                    {
+                        grain.reverse = true;
+                        grain.playbackPosition = (float)grain.samples.size() - 1.0f;
+                    }
+                    else if (grain.playbackPosition < 0.0f)
+                    {
+                        grain.reverse = false;
+                        grain.playbackPosition = 0.0f;
+                    }
+                }
+                else
+                {
+                    // Normal mode: forward or backward
+                    if (grain.reverse)
+                        grain.playbackPosition -= grain.playbackRate;
+                    else
+                        grain.playbackPosition += grain.playbackRate;
+
+                    // Check if grain finished
+                    if (grain.isFinished())
+                    {
+                        grain.reset();
+                    }
                 }
             }
         }
@@ -175,14 +204,35 @@ void GrainScheduler::triggerGrain(const GrainBuffer& buffer, GrainExtractor& ext
     // 12 semitones = 1 octave = 2x playback rate
     grain->playbackRate = std::pow(2.0f, pitchShift / 12.0f);
 
-    // Determine if grain should be reversed
-    grain->reverse = (random.nextFloat() < reverseProbability);
-
-    // Set initial playback position
-    if (grain->reverse)
-        grain->playbackPosition = (float)grain->samples.size() - 1.0f;
-    else
+    // Determine grain playback direction
+    if (grainDirection == 0)  // Forward
+    {
+        grain->reverse = false;
+        grain->pingpong = false;
         grain->playbackPosition = 0.0f;
+    }
+    else if (grainDirection == 1)  // Backward
+    {
+        grain->reverse = true;
+        grain->pingpong = false;
+        grain->playbackPosition = (float)grain->samples.size() - 1.0f;
+    }
+    else if (grainDirection == 2)  // Pingpong
+    {
+        grain->reverse = false;  // Start forward
+        grain->pingpong = true;
+        grain->playbackPosition = 0.0f;
+    }
+    else  // Fallback to random reversal based on probability
+    {
+        grain->reverse = (random.nextFloat() < reverseProbability);
+        grain->pingpong = false;
+
+        if (grain->reverse)
+            grain->playbackPosition = (float)grain->samples.size() - 1.0f;
+        else
+            grain->playbackPosition = 0.0f;
+    }
 
     // Set stereo pan position (0.5 = center, apply stereo width)
     float centerPan = 0.5f;
