@@ -56,6 +56,31 @@ GranularEngineEditor::GranularEngineEditor(GranularEngineProcessor& p)
     windowShapeLabel.setJustificationType(juce::Justification::centred);
     addAndMakeVisible(windowShapeLabel);
 
+    // Preset buttons
+    savePresetButton.setButtonText("Save Preset");
+    savePresetButton.onClick = [this]()
+    {
+        auto presetsDir = audioProcessor.getDefaultPresetsDirectory();
+        auto presetFile = presetsDir.getChildFile("quick-save.xml");
+        audioProcessor.savePreset(presetFile);
+    };
+    addAndMakeVisible(savePresetButton);
+
+    loadPresetButton.setButtonText("Load Preset");
+    loadPresetButton.onClick = [this]()
+    {
+        auto presetsDir = audioProcessor.getDefaultPresetsDirectory();
+        auto presetFile = presetsDir.getChildFile("quick-save.xml");
+        audioProcessor.loadPreset(presetFile);
+    };
+    addAndMakeVisible(loadPresetButton);
+
+    // MIDI status label
+    midiStatusLabel.setText("MIDI: Ready", juce::dontSendNotification);
+    midiStatusLabel.setJustificationType(juce::Justification::centred);
+    midiStatusLabel.setColour(juce::Label::textColourId, juce::Colours::lightgreen);
+    addAndMakeVisible(midiStatusLabel);
+
     // Grain Density Slider
     grainDensitySlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     grainDensitySlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
@@ -278,6 +303,11 @@ void GranularEngineEditor::resized()
     y = 570;
     positionLabel.setBounds(margin, y, 80, 20);
     positionSlider.setBounds(margin + 90, y, 560, 20);
+
+    // Preset buttons and MIDI status (top right)
+    savePresetButton.setBounds(getWidth() - 130, 10, 110, 25);
+    loadPresetButton.setBounds(getWidth() - 130, 40, 110, 25);
+    midiStatusLabel.setBounds(getWidth() - 130, 70, 110, 20);
 }
 
 //==============================================================================

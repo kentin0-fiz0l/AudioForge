@@ -75,5 +75,9 @@ private:
     juce::Slider windowShapeSlider;
     juce::Label windowShapeLabel;
 
+    juce::TextButton savePresetButton;
+    juce::TextButton loadPresetButton;
+    juce::Label midiStatusLabel;
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(GranularEngineEditor)
 };

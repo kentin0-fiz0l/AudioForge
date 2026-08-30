@@ -29,7 +29,7 @@ public:
 
     //==============================================================================
     const juce::String getName() const override { return "GranularEngine"; }
-    bool acceptsMidi() const override { return false; }
+    bool acceptsMidi() const override { return true; }
     bool producesMidi() const override { return false; }
     bool isMidiEffect() const override { return false; }
     double getTailLengthSeconds() const override { return 0.0; }
@@ -44,6 +44,13 @@ public:
     //==============================================================================
     void getStateInformation(juce::MemoryBlock& destData) override;
     void setStateInformation(const void* data, int sizeInBytes) override;
+
+    //==============================================================================
+    // Preset Management
+    bool savePreset(const juce::File& file);
+    bool loadPreset(const juce::File& file);
+    juce::File getDefaultPresetsDirectory();
+    static juce::StringArray getPresetNames();  // Get list of available presets
 
     //==============================================================================
     // Parameter IDs
@@ -69,6 +76,10 @@ private:
     // Output buffers
     std::vector<float> granularLeftOutput;
     std::vector<float> granularRightOutput;
+
+    // MIDI state
+    bool midiGateActive = false;
+    float midiVelocity = 0.0f;
 
     //==============================================================================
     // Parameters

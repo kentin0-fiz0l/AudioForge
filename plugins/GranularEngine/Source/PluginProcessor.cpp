@@ -125,12 +125,29 @@ bool GranularEngineProcessor::isBusesLayoutSupported(const BusesLayout& layouts)
         && !layouts.getMainInputChannelSet().isDisabled();
 }
 
-void GranularEngineProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer&)
+void GranularEngineProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     juce::ScopedNoDenormals noDenormals;
 
     const int numSamples = buffer.getNumSamples();
     const int numChannels = buffer.getNumChannels();
+
+    // Process MIDI messages
+    for (const auto metadata : midiMessages)
+    {
+        auto message = metadata.getMessage();
+
+        if (message.isNoteOn())
+        {
+            midiGateActive = true;
+            midiVelocity = message.getVelocity() / 127.0f;
+        }
+        else if (message.isNoteOff())
+        {
+            midiGateActive = false;
+            midiVelocity = 0.0f;
+        }
+    }
 
     // Update parameters
     int grainSizeSamples = (int)((grainSizeParam->get() / 1000.0f) * getSampleRate());
@@ -149,7 +166,11 @@ void GranularEngineProcessor::processBlock(juce::AudioBuffer<float>& buffer, juc
         grainExtractor.setWindowShape(windowShapeParam->get());
     }
 
-    grainScheduler.setGrainDensity(grainDensityParam->get());
+    // Modulate grain density with MIDI velocity when notes are active
+    float baseDensity = grainDensityParam->get();
+    float effectiveDensity = midiGateActive ? (baseDensity * midiVelocity) : baseDensity;
+
+    grainScheduler.setGrainDensity(effectiveDensity);
     grainScheduler.setTimeStretch(timeStretchParam->get());
     grainScheduler.setReadPosition(positionParam->get());
     grainScheduler.setPitchShift(pitchShiftParam->get());
@@ -224,6 +245,108 @@ void GranularEngineProcessor::setStateInformation(const void* data, int sizeInBy
     dryWetParam->setValueNotifyingHost(dryWetParam->convertTo0to1(stream.readFloat()));
     windowTypeParam->setValueNotifyingHost(windowTypeParam->convertTo0to1(stream.readInt()));
     windowShapeParam->setValueNotifyingHost(windowShapeParam->convertTo0to1(stream.readFloat()));
+}
+
+//==============================================================================
+// Preset Management
+
+bool GranularEngineProcessor::savePreset(const juce::File& file)
+{
+    // Create XML from current state
+    juce::XmlElement root("GranularEnginePreset");
+    root.setAttribute("version", "1.0");
+
+    // Save all parameters
+    root.setAttribute("grainSize", grainSizeParam->get());
+    root.setAttribute("grainDensity", grainDensityParam->get());
+    root.setAttribute("timeStretch", timeStretchParam->get());
+    root.setAttribute("position", positionParam->get());
+    root.setAttribute("pitchShift", pitchShiftParam->get());
+    root.setAttribute("spray", sprayParam->get());
+    root.setAttribute("reverse", reverseParam->get());
+    root.setAttribute("stereoWidth", stereoWidthParam->get());
+    root.setAttribute("dryWet", dryWetParam->get());
+    root.setAttribute("windowType", windowTypeParam->get());
+    root.setAttribute("windowShape", windowShapeParam->get());
+
+    // Write to file
+    return root.writeTo(file);
+}
+
+bool GranularEngineProcessor::loadPreset(const juce::File& file)
+{
+    if (!file.existsAsFile())
+        return false;
+
+    // Parse XML
+    auto xml = juce::XmlDocument::parse(file);
+    if (xml == nullptr)
+        return false;
+
+    // Load parameters
+    if (xml->hasAttribute("grainSize"))
+        grainSizeParam->setValueNotifyingHost(grainSizeParam->convertTo0to1(xml->getDoubleAttribute("grainSize")));
+
+    if (xml->hasAttribute("grainDensity"))
+        grainDensityParam->setValueNotifyingHost(grainDensityParam->convertTo0to1(xml->getDoubleAttribute("grainDensity")));
+
+    if (xml->hasAttribute("timeStretch"))
+        timeStretchParam->setValueNotifyingHost(timeStretchParam->convertTo0to1(xml->getDoubleAttribute("timeStretch")));
+
+    if (xml->hasAttribute("position"))
+        positionParam->setValueNotifyingHost(positionParam->convertTo0to1(xml->getDoubleAttribute("position")));
+
+    if (xml->hasAttribute("pitchShift"))
+        pitchShiftParam->setValueNotifyingHost(pitchShiftParam->convertTo0to1(xml->getDoubleAttribute("pitchShift")));
+
+    if (xml->hasAttribute("spray"))
+        sprayParam->setValueNotifyingHost(sprayParam->convertTo0to1(xml->getDoubleAttribute("spray")));
+
+    if (xml->hasAttribute("reverse"))
+        reverseParam->setValueNotifyingHost(reverseParam->convertTo0to1(xml->getDoubleAttribute("reverse")));
+
+    if (xml->hasAttribute("stereoWidth"))
+        stereoWidthParam->setValueNotifyingHost(stereoWidthParam->convertTo0to1(xml->getDoubleAttribute("stereoWidth")));
+
+    if (xml->hasAttribute("dryWet"))
+        dryWetParam->setValueNotifyingHost(dryWetParam->convertTo0to1(xml->getDoubleAttribute("dryWet")));
+
+    if (xml->hasAttribute("windowType"))
+        windowTypeParam->setValueNotifyingHost(windowTypeParam->convertTo0to1(xml->getIntAttribute("windowType")));
+
+    if (xml->hasAttribute("windowShape"))
+        windowShapeParam->setValueNotifyingHost(windowShapeParam->convertTo0to1(xml->getDoubleAttribute("windowShape")));
+
+    return true;
+}
+
+juce::File GranularEngineProcessor::getDefaultPresetsDirectory()
+{
+    auto userDocuments = juce::File::getSpecialLocation(juce::File::userDocumentsDirectory);
+    auto presetsDir = userDocuments.getChildFile("AudioForge").getChildFile("GranularEngine").getChildFile("Presets");
+
+    if (!presetsDir.exists())
+        presetsDir.createDirectory();
+
+    return presetsDir;
+}
+
+juce::StringArray GranularEngineProcessor::getPresetNames()
+{
+    juce::StringArray names;
+
+    auto userDocuments = juce::File::getSpecialLocation(juce::File::userDocumentsDirectory);
+    auto presetsDir = userDocuments.getChildFile("AudioForge").getChildFile("GranularEngine").getChildFile("Presets");
+
+    if (presetsDir.exists())
+    {
+        auto presetFiles = presetsDir.findChildFiles(juce::File::findFiles, false, "*.xml");
+
+        for (const auto& file : presetFiles)
+            names.add(file.getFileNameWithoutExtension());
+    }
+
+    return names;
 }
 
 //==============================================================================
