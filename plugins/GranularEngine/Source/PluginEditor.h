@@ -8,7 +8,8 @@
  *
  * User interface for the GranularEngine granular synthesis plugin.
  */
-class GranularEngineEditor : public juce::AudioProcessorEditor
+class GranularEngineEditor : public juce::AudioProcessorEditor,
+                             private juce::Timer
 {
 public:
     GranularEngineEditor(GranularEngineProcessor&);
@@ -17,6 +18,24 @@ public:
     //==============================================================================
     void paint(juce::Graphics&) override;
     void resized() override;
+    void timerCallback() override;
+
+    //==============================================================================
+    // Mouse interaction
+    void mouseDown(const juce::MouseEvent& event) override;
+    void mouseDrag(const juce::MouseEvent& event) override;
+
+private:
+    //==============================================================================
+    // Visualization helpers
+    void paintWaveform(juce::Graphics& g, juce::Rectangle<int> bounds);
+    void paintWindowPreview(juce::Graphics& g, juce::Rectangle<int> bounds);
+    void paintGrainActivity(juce::Graphics& g, juce::Rectangle<int> bounds);
+
+    // UI bounds
+    juce::Rectangle<int> waveformBounds;
+    juce::Rectangle<int> windowPreviewBounds;
+    juce::Rectangle<int> activityBounds;
 
 private:
     // Reference to processor
