@@ -23,7 +23,7 @@ public:
     //==============================================================================
     // Spectrum Capture/Retrieval
     void captureSpectrum(const std::vector<float>& magnitude, const std::vector<float>& phase);
-    void getSpectrum(std::vector<float>& magnitude, std::vector<float>& phase) const;
+    void getSpectrum(std::vector<float>& magnitude, std::vector<float>& phase);
 
     //==============================================================================
     // Processing Parameters

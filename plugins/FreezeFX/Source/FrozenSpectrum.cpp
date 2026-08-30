@@ -1,4 +1,5 @@
 #include "FrozenSpectrum.h"
+#include <juce_core/juce_core.h>
 #include <algorithm>
 #include <cmath>
 
@@ -18,18 +19,34 @@ void FrozenSpectrum::captureSpectrum(const std::vector<float>& magnitude, const 
     frozenPhase = phase;
 }
 
-void FrozenSpectrum::getSpectrum(std::vector<float>& magnitude, std::vector<float>& phase) const
+void FrozenSpectrum::getSpectrum(std::vector<float>& magnitude, std::vector<float>& phase)
 {
     if (frozen && !frozenMagnitude.empty())
     {
         magnitude = frozenMagnitude;
         phase = frozenPhase;
+
+        // Apply spectral blur if enabled
+        if (blurAmount > 0.0f)
+        {
+            applyBlur(magnitude);
+        }
+
+        // Apply frequency range filtering (zero out bins outside range)
+        for (size_t i = 0; i < magnitude.size(); ++i)
+        {
+            if (i < static_cast<size_t>(lowBin) || i > static_cast<size_t>(highBin))
+            {
+                magnitude[i] = 0.0f;  // Zero magnitude outside frequency range
+                phase[i] = 0.0f;      // Zero phase as well
+            }
+        }
     }
 }
 
 void FrozenSpectrum::setBlurAmount(float amount)
 {
-    blurAmount = std::clamp(amount, 0.0f, 1.0f);
+    blurAmount = juce::jlimit(0.0f, 1.0f, amount);
 }
 
 void FrozenSpectrum::setFrequencyRange(float lowHz, float highHz, double sampleRate, int fftSize)
@@ -40,8 +57,8 @@ void FrozenSpectrum::setFrequencyRange(float lowHz, float highHz, double sampleR
 
     // Clamp to valid range
     int maxBin = fftSize / 2;
-    lowBin = std::clamp(lowBin, 0, maxBin);
-    highBin = std::clamp(highBin, lowBin, maxBin);
+    lowBin = juce::jlimit(0, maxBin, lowBin);
+    highBin = juce::jlimit(lowBin, maxBin, highBin);
 }
 
 void FrozenSpectrum::applyBlur(std::vector<float>& magnitude)
