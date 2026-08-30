@@ -29,6 +29,7 @@ target_sources(GranularEngine PRIVATE
     Source/PluginEditor.cpp
     Source/GrainBuffer.cpp
     Source/GrainExtractor.cpp
+    Source/GrainScheduler.cpp
 )
 
 # Link libraries

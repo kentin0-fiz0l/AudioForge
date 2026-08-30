@@ -13,6 +13,27 @@ GranularEngineProcessor::GranularEngineProcessor()
         juce::NormalisableRange<float>(10.0f, 500.0f, 1.0f),
         50.0f));  // Default: 50ms
 
+    // Grain Density (1-100 grains/second)
+    addParameter(grainDensityParam = new juce::AudioParameterFloat(
+        PARAM_GRAIN_DENSITY,
+        "Grain Density",
+        juce::NormalisableRange<float>(1.0f, 100.0f, 0.1f),
+        10.0f));  // Default: 10 grains/sec
+
+    // Time Stretch (0.25x - 4x)
+    addParameter(timeStretchParam = new juce::AudioParameterFloat(
+        PARAM_TIME_STRETCH,
+        "Time Stretch",
+        juce::NormalisableRange<float>(0.25f, 4.0f, 0.01f, 0.5f),
+        1.0f));  // Default: 1x (normal speed)
+
+    // Position (0-1: where in buffer to read)
+    addParameter(positionParam = new juce::AudioParameterFloat(
+        PARAM_POSITION,
+        "Position",
+        juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f),
+        0.5f));  // Default: middle of buffer
+
     // Dry/Wet Mix
     addParameter(dryWetParam = new juce::AudioParameterFloat(
         PARAM_DRY_WET,
@@ -37,8 +58,14 @@ void GranularEngineProcessor::prepareToPlay(double sampleRate, int samplesPerBlo
     int grainSizeSamples = (int)((grainSizeParam->get() / 1000.0f) * sampleRate);
     grainExtractor.setGrainSize(grainSizeSamples);
 
-    // Allocate temp grain buffer
-    grainTemp.resize(grainSizeSamples);
+    // Prepare grain scheduler
+    grainScheduler.prepare(sampleRate, grainSizeSamples);
+    grainScheduler.setGrainDensity(grainDensityParam->get());
+    grainScheduler.setTimeStretch(timeStretchParam->get());
+    grainScheduler.setReadPosition(positionParam->get());
+
+    // Allocate output buffer
+    granularOutput.resize(samplesPerBlock);
 }
 
 void GranularEngineProcessor::releaseResources()
@@ -60,28 +87,41 @@ void GranularEngineProcessor::processBlock(juce::AudioBuffer<float>& buffer, juc
     const int numSamples = buffer.getNumSamples();
     const int numChannels = buffer.getNumChannels();
 
-    // Phase 1: Simple pass-through with grain extraction test
+    // Update parameters
+    int grainSizeSamples = (int)((grainSizeParam->get() / 1000.0f) * getSampleRate());
+    if (grainSizeSamples != grainExtractor.getGrainSize())
+    {
+        grainExtractor.setGrainSize(grainSizeSamples);
+    }
+
+    grainScheduler.setGrainDensity(grainDensityParam->get());
+    grainScheduler.setTimeStretch(timeStretchParam->get());
+    grainScheduler.setReadPosition(positionParam->get());
+
+    float dryWet = dryWetParam->get() / 100.0f;
+
     // Write input to grain buffer
     for (int ch = 0; ch < numChannels; ++ch)
     {
         const float* input = buffer.getReadPointer(ch);
-
-        // Write input samples to buffer
         grainBuffer.writeBlock(input, numSamples);
     }
 
-    // For Phase 1, just pass through the input
-    // (In Phase 2, we'll start extracting and playing grains)
+    // Process granular synthesis
+    grainScheduler.processBlock(grainBuffer, grainExtractor,
+                                 granularOutput.data(), numSamples);
 
-    // Test: Extract a grain from 1 second ago and verify windowing works
-    // This is just for verification - output is still pass-through
-    int grainSizeSamples = grainExtractor.getGrainSize();
-    int readPosition = grainBuffer.getWritePosition() - (int)getSampleRate();  // 1 second ago
-
-    if (grainBuffer.getSamplesAvailable() >= grainSizeSamples)
+    // Mix dry and wet signals
+    for (int ch = 0; ch < numChannels; ++ch)
     {
-        grainExtractor.extractGrain(grainBuffer, readPosition, grainTemp.data());
-        // Grain is extracted and windowed in grainTemp, but we don't play it yet
+        float* channelData = buffer.getWritePointer(ch);
+
+        for (int i = 0; i < numSamples; ++i)
+        {
+            float dry = channelData[i];
+            float wet = granularOutput[i];
+            channelData[i] = dry * (1.0f - dryWet) + wet * dryWet;
+        }
     }
 }
 
@@ -95,6 +135,9 @@ void GranularEngineProcessor::getStateInformation(juce::MemoryBlock& destData)
     // Save plugin state
     juce::MemoryOutputStream stream(destData, true);
     stream.writeFloat(grainSizeParam->get());
+    stream.writeFloat(grainDensityParam->get());
+    stream.writeFloat(timeStretchParam->get());
+    stream.writeFloat(positionParam->get());
     stream.writeFloat(dryWetParam->get());
 }
 
@@ -103,6 +146,9 @@ void GranularEngineProcessor::setStateInformation(const void* data, int sizeInBy
     // Restore plugin state
     juce::MemoryInputStream stream(data, static_cast<size_t>(sizeInBytes), false);
     grainSizeParam->setValueNotifyingHost(grainSizeParam->convertTo0to1(stream.readFloat()));
+    grainDensityParam->setValueNotifyingHost(grainDensityParam->convertTo0to1(stream.readFloat()));
+    timeStretchParam->setValueNotifyingHost(timeStretchParam->convertTo0to1(stream.readFloat()));
+    positionParam->setValueNotifyingHost(positionParam->convertTo0to1(stream.readFloat()));
     dryWetParam->setValueNotifyingHost(dryWetParam->convertTo0to1(stream.readFloat()));
 }
 

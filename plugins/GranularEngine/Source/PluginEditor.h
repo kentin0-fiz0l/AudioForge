@@ -22,9 +22,18 @@ private:
     // Reference to processor
     GranularEngineProcessor& audioProcessor;
 
-    // UI Components (Phase 1: Basic)
+    // UI Components
     juce::Slider grainSizeSlider;
     juce::Label grainSizeLabel;
+
+    juce::Slider grainDensitySlider;
+    juce::Label grainDensityLabel;
+
+    juce::Slider timeStretchSlider;
+    juce::Label timeStretchLabel;
+
+    juce::Slider positionSlider;
+    juce::Label positionLabel;
 
     juce::Slider dryWetSlider;
     juce::Label dryWetLabel;

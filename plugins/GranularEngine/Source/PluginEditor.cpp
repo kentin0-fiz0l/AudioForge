@@ -28,14 +28,63 @@ GranularEngineEditor::GranularEngineEditor(GranularEngineProcessor& p)
     dryWetLabel.setJustificationType(juce::Justification::centred);
     addAndMakeVisible(dryWetLabel);
 
-    // Parameter connections (direct for Phase 1)
+    // Grain Density Slider
+    grainDensitySlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
+    grainDensitySlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
+    grainDensitySlider.setRange(1.0, 100.0, 0.1);
+    grainDensitySlider.setValue(10.0);
+    addAndMakeVisible(grainDensitySlider);
+
+    grainDensityLabel.setText("Density (g/s)", juce::dontSendNotification);
+    grainDensityLabel.setJustificationType(juce::Justification::centred);
+    addAndMakeVisible(grainDensityLabel);
+
+    // Time Stretch Slider
+    timeStretchSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
+    timeStretchSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
+    timeStretchSlider.setRange(0.25, 4.0, 0.01);
+    timeStretchSlider.setSkewFactor(0.5);
+    timeStretchSlider.setValue(1.0);
+    addAndMakeVisible(timeStretchSlider);
+
+    timeStretchLabel.setText("Time Stretch", juce::dontSendNotification);
+    timeStretchLabel.setJustificationType(juce::Justification::centred);
+    addAndMakeVisible(timeStretchLabel);
+
+    // Position Slider
+    positionSlider.setSliderStyle(juce::Slider::LinearHorizontal);
+    positionSlider.setTextBoxStyle(juce::Slider::TextBoxRight, false, 60, 20);
+    positionSlider.setRange(0.0, 1.0, 0.01);
+    positionSlider.setValue(0.5);
+    addAndMakeVisible(positionSlider);
+
+    positionLabel.setText("Position", juce::dontSendNotification);
+    positionLabel.setJustificationType(juce::Justification::centredLeft);
+    addAndMakeVisible(positionLabel);
+
+    // Parameter connections
     grainSizeSlider.onValueChange = [this]() {
         auto* param = audioProcessor.getParameters()[0];
-        param->setValueNotifyingHost(grainSizeSlider.getValue() / 500.0f);
+        param->setValueNotifyingHost((grainSizeSlider.getValue() - 10.0f) / 490.0f);
+    };
+
+    grainDensitySlider.onValueChange = [this]() {
+        auto* param = audioProcessor.getParameters()[1];
+        param->setValueNotifyingHost((grainDensitySlider.getValue() - 1.0f) / 99.0f);
+    };
+
+    timeStretchSlider.onValueChange = [this]() {
+        auto* param = audioProcessor.getParameters()[2];
+        param->setValueNotifyingHost((timeStretchSlider.getValue() - 0.25f) / 3.75f);
+    };
+
+    positionSlider.onValueChange = [this]() {
+        auto* param = audioProcessor.getParameters()[3];
+        param->setValueNotifyingHost(positionSlider.getValue());
     };
 
     dryWetSlider.onValueChange = [this]() {
-        auto* param = audioProcessor.getParameters()[1];
+        auto* param = audioProcessor.getParameters()[4];
         param->setValueNotifyingHost(dryWetSlider.getValue() / 100.0f);
     };
 }
@@ -57,25 +106,39 @@ void GranularEngineEditor::paint(juce::Graphics& g)
     // Subtitle
     g.setFont(14.0f);
     g.setColour(juce::Colours::lightgrey);
-    g.drawText("Phase 1: Buffer Management & Grain Extraction", 0, 45, getWidth(), 20, juce::Justification::centred);
+    g.drawText("Phase 2: Grain Scheduling & Playback", 0, 45, getWidth(), 20, juce::Justification::centred);
 
-    // Section header
+    // Section headers
     g.setFont(16.0f);
     g.setColour(juce::Colours::white);
     g.drawText("GRAIN PARAMETERS", 20, 100, 300, 30, juce::Justification::centredLeft);
+    g.drawText("PLAYBACK CONTROL", 20, 240, 300, 30, juce::Justification::centredLeft);
 }
 
 void GranularEngineEditor::resized()
 {
-    int y = 150;
-    int sliderSize = 100;
-    int margin = 50;
+    int y = 130;
+    int sliderSize = 90;
+    int margin = 30;
+    int spacing = 120;
 
-    // Grain Size
+    // Row 1: Grain parameters
     grainSizeSlider.setBounds(margin, y, sliderSize, sliderSize);
     grainSizeLabel.setBounds(margin, y + sliderSize, sliderSize, 20);
 
-    // Dry/Wet
-    dryWetSlider.setBounds(margin + 150, y, sliderSize, sliderSize);
-    dryWetLabel.setBounds(margin + 150, y + sliderSize, sliderSize, 20);
+    grainDensitySlider.setBounds(margin + spacing, y, sliderSize, sliderSize);
+    grainDensityLabel.setBounds(margin + spacing, y + sliderSize, sliderSize, 20);
+
+    dryWetSlider.setBounds(margin + spacing * 2, y, sliderSize, sliderSize);
+    dryWetLabel.setBounds(margin + spacing * 2, y + sliderSize, sliderSize, 20);
+
+    // Row 2: Playback controls
+    y = 270;
+
+    timeStretchSlider.setBounds(margin, y, sliderSize, sliderSize);
+    timeStretchLabel.setBounds(margin, y + sliderSize, sliderSize, 20);
+
+    // Position slider (horizontal)
+    positionLabel.setBounds(margin + spacing, y + 35, 80, 20);
+    positionSlider.setBounds(margin + spacing + 90, y + 35, 200, 20);
 }

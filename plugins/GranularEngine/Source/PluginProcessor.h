@@ -3,6 +3,7 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "GrainBuffer.h"
 #include "GrainExtractor.h"
+#include "GrainScheduler.h"
 
 /**
  * GranularEngine Plugin Processor
@@ -45,8 +46,11 @@ public:
     void setStateInformation(const void* data, int sizeInBytes) override;
 
     //==============================================================================
-    // Parameter IDs (Phase 1: Basic params)
+    // Parameter IDs
     static constexpr const char* PARAM_GRAIN_SIZE = "grainSize";
+    static constexpr const char* PARAM_GRAIN_DENSITY = "grainDensity";
+    static constexpr const char* PARAM_TIME_STRETCH = "timeStretch";
+    static constexpr const char* PARAM_POSITION = "position";
     static constexpr const char* PARAM_DRY_WET = "dryWet";
 
 private:
@@ -54,13 +58,17 @@ private:
     // DSP Components
     GrainBuffer grainBuffer;
     GrainExtractor grainExtractor;
+    GrainScheduler grainScheduler;
 
-    // Temporary grain storage
-    std::vector<float> grainTemp;
+    // Output buffers
+    std::vector<float> granularOutput;
 
     //==============================================================================
-    // Parameters (Phase 1)
+    // Parameters
     juce::AudioParameterFloat* grainSizeParam;
+    juce::AudioParameterFloat* grainDensityParam;
+    juce::AudioParameterFloat* timeStretchParam;
+    juce::AudioParameterFloat* positionParam;
     juce::AudioParameterFloat* dryWetParam;
 
     //==============================================================================
