@@ -99,6 +99,13 @@ void FreezeFXProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
         lowPassParam->get(),
         sampleRate,
         fftSize);
+
+    // Set up spectral processing callback
+    spectralProcessor.setSpectralCallback(
+        [this](std::vector<float>& magnitude, std::vector<float>& phase)
+        {
+            this->processSpectrum(magnitude, phase);
+        });
 }
 
 void FreezeFXProcessor::releaseResources()
@@ -193,6 +200,47 @@ void FreezeFXProcessor::setStateInformation(const void* data, int sizeInBytes)
     spectralBlurParam->setValueNotifyingHost(spectralBlurParam->convertTo0to1(stream.readFloat()));
     highPassParam->setValueNotifyingHost(highPassParam->convertTo0to1(stream.readFloat()));
     lowPassParam->setValueNotifyingHost(lowPassParam->convertTo0to1(stream.readFloat()));
+}
+
+//==============================================================================
+// Spectral Processing
+
+void FreezeFXProcessor::processSpectrum(std::vector<float>& magnitude, std::vector<float>& phase)
+{
+    // Get current parameters
+    float freezeMix = freezeMixParam->get();
+    float deltaTime = 1.0f / getSampleRate() * spectralProcessor.getHopSize();
+
+    // If frozen, blend with frozen spectrum
+    if (frozenSpectrum.isFrozen() && freezeMix > 0.0f)
+    {
+        std::vector<float> frozenMagnitude(magnitude.size());
+        std::vector<float> frozenPhase(phase.size());
+
+        // Get frozen spectrum
+        frozenSpectrum.getSpectrum(frozenMagnitude, frozenPhase);
+
+        // Blend magnitude: live → frozen based on mix
+        for (size_t i = 0; i < magnitude.size(); ++i)
+        {
+            magnitude[i] = magnitude[i] * (1.0f - freezeMix) + frozenMagnitude[i] * freezeMix;
+        }
+
+        // Evolve phase if randomization is enabled
+        float phaseRandom = phaseRandomParam->get();
+        if (phaseRandom > 0.0f)
+        {
+            phaseEvolver.evolvePhase(phase, deltaTime);
+        }
+        else
+        {
+            // Use frozen phase
+            for (size_t i = 0; i < phase.size(); ++i)
+            {
+                phase[i] = phase[i] * (1.0f - freezeMix) + frozenPhase[i] * freezeMix;
+            }
+        }
+    }
 }
 
 //==============================================================================

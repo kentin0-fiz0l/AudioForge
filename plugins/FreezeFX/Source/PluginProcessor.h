@@ -64,6 +64,10 @@ public:
 
 private:
     //==============================================================================
+    // Spectral Processing
+    void processSpectrum(std::vector<float>& magnitude, std::vector<float>& phase);
+
+    //==============================================================================
     // DSP Components
     SpectralProcessor spectralProcessor;
     FrozenSpectrum frozenSpectrum;

@@ -2,6 +2,7 @@
 
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <juce_dsp/juce_dsp.h>
+#include <functional>
 
 /**
  * SpectralProcessor
@@ -41,6 +42,14 @@ public:
 
     void setMagnitudeSpectrum(const std::vector<float>& magnitude);
     void setPhaseSpectrum(const std::vector<float>& phase);
+
+    //==============================================================================
+    // Spectral Processing Callback
+    // This function is called after FFT analysis, before IFFT synthesis
+    // Allows external modification of magnitude/phase spectrum
+    using SpectralCallback = std::function<void(std::vector<float>& magnitude,
+                                                  std::vector<float>& phase)>;
+    void setSpectralCallback(SpectralCallback callback) { spectralCallback = callback; }
 
 private:
     //==============================================================================
@@ -85,6 +94,10 @@ private:
     void createHannWindow();
 
     double sampleRate = 44100.0;
+
+    //==============================================================================
+    // Spectral Processing Callback
+    SpectralCallback spectralCallback;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SpectralProcessor)
 };

@@ -141,9 +141,11 @@ void SpectralProcessor::processFFTFrame(const float* input, float* output)
     // 3. Compute magnitude and phase
     computeMagnitudePhase(fftBuffer.data(), getNumBins());
 
-    // 4. Spectral processing happens here (currently pass-through)
-    // In Phase 2, we'll replace magnitude with frozen spectrum
-    // In Phase 3, we'll evolve the phase
+    // 4. Spectral processing callback (freezing, phase evolution, etc.)
+    if (spectralCallback)
+    {
+        spectralCallback(magnitudeSpectrum, phaseSpectrum);
+    }
 
     // 5. Reconstruct complex spectrum from magnitude and phase
     reconstructComplex(fftBuffer.data(), getNumBins());
