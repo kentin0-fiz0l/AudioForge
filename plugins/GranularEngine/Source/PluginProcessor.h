@@ -56,6 +56,8 @@ public:
     static constexpr const char* PARAM_REVERSE = "reverse";
     static constexpr const char* PARAM_STEREO_WIDTH = "stereoWidth";
     static constexpr const char* PARAM_DRY_WET = "dryWet";
+    static constexpr const char* PARAM_WINDOW_TYPE = "windowType";
+    static constexpr const char* PARAM_WINDOW_SHAPE = "windowShape";
 
 private:
     //==============================================================================
@@ -79,6 +81,8 @@ private:
     juce::AudioParameterFloat* reverseParam;
     juce::AudioParameterFloat* stereoWidthParam;
     juce::AudioParameterFloat* dryWetParam;
+    juce::AudioParameterInt* windowTypeParam;
+    juce::AudioParameterFloat* windowShapeParam;
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(GranularEngineProcessor)

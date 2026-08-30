@@ -22,11 +22,13 @@ void GrainExtractor::setGrainSize(int samples)
         createGaussianWindow();
     else if (windowType == 2)
         createTriangleWindow();
+    else if (windowType == 3)
+        createTukeyWindow();
 }
 
 void GrainExtractor::setWindowType(int type)
 {
-    windowType = juce::jlimit(0, 2, type);
+    windowType = juce::jlimit(0, 3, type);
 
     // Recreate window
     if (windowType == 0)
@@ -35,6 +37,19 @@ void GrainExtractor::setWindowType(int type)
         createGaussianWindow();
     else if (windowType == 2)
         createTriangleWindow();
+    else if (windowType == 3)
+        createTukeyWindow();
+}
+
+void GrainExtractor::setWindowShape(float shape)
+{
+    windowShape = juce::jlimit(0.0f, 1.0f, shape);
+
+    // Recreate window if using Gaussian or Tukey (shape-dependent windows)
+    if (windowType == 1)
+        createGaussianWindow();
+    else if (windowType == 3)
+        createTukeyWindow();
 }
 
 void GrainExtractor::extractGrain(const GrainBuffer& buffer, int startPosition, float* destination)
@@ -68,7 +83,10 @@ void GrainExtractor::createGaussianWindow()
 
     // Gaussian window: exp(-0.5 * ((n - center) / sigma)^2)
     float center = (grainSize - 1) / 2.0f;
-    float sigma = grainSize / 6.0f;  // ~99% of energy within window
+
+    // windowShape controls width: 0.1-1.0 (0 = narrow/peaky, 1 = wide/smooth)
+    float widthFactor = 0.1f + windowShape * 0.9f;
+    float sigma = grainSize / (6.0f / widthFactor);
 
     for (int i = 0; i < grainSize; ++i)
     {
@@ -95,6 +113,38 @@ void GrainExtractor::createTriangleWindow()
         {
             // Ramp down
             window[i] = 1.0f - ((float)(i - halfSize) / halfSize);
+        }
+    }
+}
+
+void GrainExtractor::createTukeyWindow()
+{
+    window.resize(grainSize);
+
+    // Tukey window (tapered cosine): combines flat top with cosine taper
+    // windowShape controls taper amount: 0 = rectangular, 1 = Hann
+    float alpha = windowShape;  // Taper fraction (0-1)
+
+    for (int i = 0; i < grainSize; ++i)
+    {
+        float x = (float)i / (grainSize - 1);
+
+        if (x < alpha / 2.0f)
+        {
+            // Leading taper (cosine rise)
+            float phase = 2.0f * x / alpha;
+            window[i] = 0.5f * (1.0f - std::cos(juce::MathConstants<float>::pi * phase));
+        }
+        else if (x > 1.0f - alpha / 2.0f)
+        {
+            // Trailing taper (cosine fall)
+            float phase = 2.0f * (1.0f - x) / alpha;
+            window[i] = 0.5f * (1.0f - std::cos(juce::MathConstants<float>::pi * phase));
+        }
+        else
+        {
+            // Flat top
+            window[i] = 1.0f;
         }
     }
 }

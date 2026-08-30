@@ -19,10 +19,13 @@ public:
     //==============================================================================
     // Configuration
     void prepare(double sampleRate);
-    void setGrainSize(int samples);  // Grain size in samples
-    void setWindowType(int type);    // 0=Hann, 1=Gaussian, 2=Triangle (Phase 4)
+    void setGrainSize(int samples);     // Grain size in samples
+    void setWindowType(int type);       // 0=Hann, 1=Gaussian, 2=Triangle, 3=Tukey
+    void setWindowShape(float shape);   // Window shape parameter (0-1)
 
     int getGrainSize() const { return grainSize; }
+    int getWindowType() const { return windowType; }
+    float getWindowShape() const { return windowShape; }
 
     //==============================================================================
     // Grain Extraction
@@ -34,12 +37,14 @@ private:
     void createHannWindow();
     void createGaussianWindow();
     void createTriangleWindow();
+    void createTukeyWindow();
 
     //==============================================================================
     // Parameters
     double sampleRate = 44100.0;
-    int grainSize = 2048;  // Default: ~46ms at 44.1kHz
-    int windowType = 0;    // 0=Hann
+    int grainSize = 2048;      // Default: ~46ms at 44.1kHz
+    int windowType = 0;        // 0=Hann, 1=Gaussian, 2=Triangle, 3=Tukey
+    float windowShape = 0.5f;  // Window shape parameter (Gaussian: width, Tukey: taper)
 
     //==============================================================================
     // Window Buffer

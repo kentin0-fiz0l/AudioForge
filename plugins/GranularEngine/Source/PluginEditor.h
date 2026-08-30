@@ -50,5 +50,11 @@ private:
     juce::Slider dryWetSlider;
     juce::Label dryWetLabel;
 
+    juce::ComboBox windowTypeCombo;
+    juce::Label windowTypeLabel;
+
+    juce::Slider windowShapeSlider;
+    juce::Label windowShapeLabel;
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(GranularEngineEditor)
 };

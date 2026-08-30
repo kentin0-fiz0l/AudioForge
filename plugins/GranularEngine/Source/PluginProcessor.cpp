@@ -68,6 +68,20 @@ GranularEngineProcessor::GranularEngineProcessor()
         "Dry/Wet",
         juce::NormalisableRange<float>(0.0f, 100.0f, 1.0f),
         100.0f));  // Default: 100% wet
+
+    // Window Type (0=Hann, 1=Gaussian, 2=Triangle, 3=Tukey)
+    addParameter(windowTypeParam = new juce::AudioParameterInt(
+        PARAM_WINDOW_TYPE,
+        "Window Type",
+        0, 3,
+        0));  // Default: Hann
+
+    // Window Shape (affects Gaussian width and Tukey taper)
+    addParameter(windowShapeParam = new juce::AudioParameterFloat(
+        PARAM_WINDOW_SHAPE,
+        "Window Shape",
+        juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f),
+        0.5f));  // Default: 0.5
 }
 
 GranularEngineProcessor::~GranularEngineProcessor()
@@ -85,6 +99,8 @@ void GranularEngineProcessor::prepareToPlay(double sampleRate, int samplesPerBlo
     // Set initial grain size
     int grainSizeSamples = (int)((grainSizeParam->get() / 1000.0f) * sampleRate);
     grainExtractor.setGrainSize(grainSizeSamples);
+    grainExtractor.setWindowType(windowTypeParam->get());
+    grainExtractor.setWindowShape(windowShapeParam->get());
 
     // Prepare grain scheduler
     grainScheduler.prepare(sampleRate, grainSizeSamples);
@@ -121,6 +137,16 @@ void GranularEngineProcessor::processBlock(juce::AudioBuffer<float>& buffer, juc
     if (grainSizeSamples != grainExtractor.getGrainSize())
     {
         grainExtractor.setGrainSize(grainSizeSamples);
+    }
+
+    if (windowTypeParam->get() != grainExtractor.getWindowType())
+    {
+        grainExtractor.setWindowType(windowTypeParam->get());
+    }
+
+    if (windowShapeParam->get() != grainExtractor.getWindowShape())
+    {
+        grainExtractor.setWindowShape(windowShapeParam->get());
     }
 
     grainScheduler.setGrainDensity(grainDensityParam->get());
@@ -179,6 +205,8 @@ void GranularEngineProcessor::getStateInformation(juce::MemoryBlock& destData)
     stream.writeFloat(reverseParam->get());
     stream.writeFloat(stereoWidthParam->get());
     stream.writeFloat(dryWetParam->get());
+    stream.writeInt(windowTypeParam->get());
+    stream.writeFloat(windowShapeParam->get());
 }
 
 void GranularEngineProcessor::setStateInformation(const void* data, int sizeInBytes)
@@ -194,6 +222,8 @@ void GranularEngineProcessor::setStateInformation(const void* data, int sizeInBy
     reverseParam->setValueNotifyingHost(reverseParam->convertTo0to1(stream.readFloat()));
     stereoWidthParam->setValueNotifyingHost(stereoWidthParam->convertTo0to1(stream.readFloat()));
     dryWetParam->setValueNotifyingHost(dryWetParam->convertTo0to1(stream.readFloat()));
+    windowTypeParam->setValueNotifyingHost(windowTypeParam->convertTo0to1(stream.readInt()));
+    windowShapeParam->setValueNotifyingHost(windowShapeParam->convertTo0to1(stream.readFloat()));
 }
 
 //==============================================================================

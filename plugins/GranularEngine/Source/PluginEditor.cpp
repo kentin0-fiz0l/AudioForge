@@ -28,6 +28,29 @@ GranularEngineEditor::GranularEngineEditor(GranularEngineProcessor& p)
     dryWetLabel.setJustificationType(juce::Justification::centred);
     addAndMakeVisible(dryWetLabel);
 
+    // Window Type ComboBox
+    windowTypeCombo.addItem("Hann", 1);
+    windowTypeCombo.addItem("Gaussian", 2);
+    windowTypeCombo.addItem("Triangle", 3);
+    windowTypeCombo.addItem("Tukey", 4);
+    windowTypeCombo.setSelectedId(1);
+    addAndMakeVisible(windowTypeCombo);
+
+    windowTypeLabel.setText("Window", juce::dontSendNotification);
+    windowTypeLabel.setJustificationType(juce::Justification::centred);
+    addAndMakeVisible(windowTypeLabel);
+
+    // Window Shape Slider
+    windowShapeSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
+    windowShapeSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
+    windowShapeSlider.setRange(0.0, 1.0, 0.01);
+    windowShapeSlider.setValue(0.5);
+    addAndMakeVisible(windowShapeSlider);
+
+    windowShapeLabel.setText("Shape", juce::dontSendNotification);
+    windowShapeLabel.setJustificationType(juce::Justification::centred);
+    addAndMakeVisible(windowShapeLabel);
+
     // Grain Density Slider
     grainDensitySlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     grainDensitySlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
@@ -151,6 +174,16 @@ GranularEngineEditor::GranularEngineEditor(GranularEngineProcessor& p)
         auto* param = audioProcessor.getParameters()[8];
         param->setValueNotifyingHost(dryWetSlider.getValue() / 100.0f);
     };
+
+    windowTypeCombo.onChange = [this]() {
+        auto* param = audioProcessor.getParameters()[9];
+        param->setValueNotifyingHost((windowTypeCombo.getSelectedId() - 1) / 3.0f);
+    };
+
+    windowShapeSlider.onValueChange = [this]() {
+        auto* param = audioProcessor.getParameters()[10];
+        param->setValueNotifyingHost(windowShapeSlider.getValue());
+    };
 }
 
 GranularEngineEditor::~GranularEngineEditor()
@@ -213,6 +246,16 @@ void GranularEngineEditor::resized()
 
     stereoWidthSlider.setBounds(margin + spacing * 3, y, sliderSize, sliderSize);
     stereoWidthLabel.setBounds(margin + spacing * 3, y + sliderSize, sliderSize, 20);
+
+    // Row 3: Window controls (smaller section)
+    y = 70;
+    int rightMargin = 470;
+
+    windowTypeCombo.setBounds(rightMargin, y, 100, 25);
+    windowTypeLabel.setBounds(rightMargin, y - 20, 100, 20);
+
+    windowShapeSlider.setBounds(rightMargin, y + 35, sliderSize, sliderSize);
+    windowShapeLabel.setBounds(rightMargin, y + 35 + sliderSize, sliderSize, 20);
 
     // Position slider (horizontal at bottom)
     y = 380;
