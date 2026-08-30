@@ -23,6 +23,7 @@ AudioForge is a collection of high-quality audio plugins for music production. S
 - **Saturation** - Multi-mode analog saturation with harmonic enhancement and oversampling
 - **Chorus/Flanger** - LFO-based modulation effects with stereo width and real-time visualization
 - **Reverb** - Freeverb-inspired algorithmic reverb with freeze mode and stereo width control
+- **FreezeFX** - Spectral freezing plugin with phase evolution, dual-mode algorithms, and real-time visualization
 
 ### Planned (Phase 3+)
 - Advanced modulation
