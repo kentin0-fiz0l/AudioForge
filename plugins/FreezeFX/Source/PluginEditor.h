@@ -8,7 +8,8 @@
  *
  * User interface for the FreezeFX spectral freezing plugin.
  */
-class FreezeFXEditor : public juce::AudioProcessorEditor
+class FreezeFXEditor : public juce::AudioProcessorEditor,
+                        private juce::Timer
 {
 public:
     FreezeFXEditor(FreezeFXProcessor&);
@@ -17,6 +18,7 @@ public:
     //==============================================================================
     void paint(juce::Graphics&) override;
     void resized() override;
+    void timerCallback() override;
 
 private:
     // Reference to processor
@@ -50,16 +52,11 @@ private:
     juce::Slider lowPassSlider;
     juce::Label lowPassLabel;
 
-    // Parameter attachments
-    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> freezeAttachment;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> freezeMixAttachment;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> fftSizeAttachment;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> overlapAttachment;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> phaseRandomAttachment;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> phaseSpeedAttachment;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> spectralBlurAttachment;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> highPassAttachment;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> lowPassAttachment;
+    //==============================================================================
+    // Spectrum Visualizer
+    void paintSpectrum(juce::Graphics& g, juce::Rectangle<int> bounds);
+
+    juce::Rectangle<int> spectrumArea;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FreezeFXEditor)
 };

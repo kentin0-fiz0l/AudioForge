@@ -1,4 +1,5 @@
 #include "PluginEditor.h"
+#include <cmath>
 
 FreezeFXEditor::FreezeFXEditor(FreezeFXProcessor& p)
     : AudioProcessorEditor(&p), audioProcessor(p)
@@ -90,8 +91,72 @@ FreezeFXEditor::FreezeFXEditor(FreezeFXProcessor& p)
     lowPassLabel.setJustificationType(juce::Justification::centredLeft);
     addAndMakeVisible(lowPassLabel);
 
-    // Note: Parameter attachments would go here in a full implementation
-    // For Phase 1, we're focusing on the FFT engine, not the full UI hookup
+    // Connect sliders to parameters using lambda listeners
+    freezeButton.onClick = [this]() {
+        auto* param = audioProcessor.getParameters()[0];
+        param->setValueNotifyingHost(freezeButton.getToggleState() ? 1.0f : 0.0f);
+    };
+
+    freezeMixSlider.onValueChange = [this]() {
+        auto* param = audioProcessor.getParameters()[1];
+        param->setValueNotifyingHost(freezeMixSlider.getValue() / 100.0f);
+    };
+    freezeMixSlider.setRange(0.0, 100.0, 1.0);
+    freezeMixSlider.setValue(100.0);
+
+    fftSizeSelector.onChange = [this]() {
+        auto* param = audioProcessor.getParameters()[2];
+        param->setValueNotifyingHost((fftSizeSelector.getSelectedId() - 1) / 3.0f);
+    };
+
+    overlapSelector.onChange = [this]() {
+        auto* param = audioProcessor.getParameters()[3];
+        param->setValueNotifyingHost((overlapSelector.getSelectedId() - 1) / 2.0f);
+    };
+
+    phaseRandomSlider.onValueChange = [this]() {
+        auto* param = audioProcessor.getParameters()[4];
+        param->setValueNotifyingHost(phaseRandomSlider.getValue() / 100.0f);
+    };
+    phaseRandomSlider.setRange(0.0, 100.0, 1.0);
+    phaseRandomSlider.setValue(50.0);
+
+    phaseSpeedSlider.onValueChange = [this]() {
+        auto* param = audioProcessor.getParameters()[5];
+        param->setValueNotifyingHost((phaseSpeedSlider.getValue() - 0.1f) / 9.9f);
+    };
+    phaseSpeedSlider.setRange(0.1, 10.0, 0.1);
+    phaseSpeedSlider.setValue(1.0);
+
+    spectralBlurSlider.onValueChange = [this]() {
+        auto* param = audioProcessor.getParameters()[6];
+        param->setValueNotifyingHost(spectralBlurSlider.getValue() / 100.0f);
+    };
+    spectralBlurSlider.setRange(0.0, 100.0, 1.0);
+    spectralBlurSlider.setValue(0.0);
+
+    highPassSlider.onValueChange = [this]() {
+        auto* param = audioProcessor.getParameters()[7];
+        // Log scale for frequency: 20Hz to 20kHz
+        float value = highPassSlider.getValue();
+        param->setValueNotifyingHost((std::log(value / 20.0f) / std::log(1000.0f)));
+    };
+    highPassSlider.setRange(20.0, 20000.0, 1.0);
+    highPassSlider.setSkewFactor(0.3);
+    highPassSlider.setValue(20.0);
+
+    lowPassSlider.onValueChange = [this]() {
+        auto* param = audioProcessor.getParameters()[8];
+        // Log scale for frequency: 20Hz to 20kHz
+        float value = lowPassSlider.getValue();
+        param->setValueNotifyingHost((std::log(value / 20.0f) / std::log(1000.0f)));
+    };
+    lowPassSlider.setRange(20.0, 20000.0, 1.0);
+    lowPassSlider.setSkewFactor(0.3);
+    lowPassSlider.setValue(20000.0);
+
+    // Start timer for UI updates (60 FPS)
+    startTimerHz(60);
 }
 
 FreezeFXEditor::~FreezeFXEditor()
@@ -114,6 +179,9 @@ void FreezeFXEditor::paint(juce::Graphics& g)
     g.drawText("PHASE EVOLUTION", 20, 200, 200, 20, juce::Justification::centredLeft);
     g.drawText("SPECTRAL PROCESSING", 20, 350, 200, 20, juce::Justification::centredLeft);
     g.drawText("FREQUENCY RANGE", 20, 480, 200, 20, juce::Justification::centredLeft);
+
+    // Spectrum visualizer
+    paintSpectrum(g, spectrumArea);
 }
 
 void FreezeFXEditor::resized()
@@ -157,4 +225,96 @@ void FreezeFXEditor::resized()
 
     lowPassLabel.setBounds(margin, y, 80, 20);
     lowPassSlider.setBounds(margin + 90, y, 350, 20);
+
+    // Spectrum visualizer area (top right)
+    spectrumArea = juce::Rectangle<int>(getWidth() - 240, 50, 220, 150);
+}
+
+void FreezeFXEditor::timerCallback()
+{
+    // Update UI from parameters
+    auto& params = audioProcessor.getParameters();
+
+    // Update freeze button
+    auto* freezeParam = dynamic_cast<juce::AudioParameterBool*>(params[0]);
+    if (freezeParam && freezeButton.getToggleState() != freezeParam->get())
+        freezeButton.setToggleState(freezeParam->get(), juce::dontSendNotification);
+
+    // Update sliders from parameters
+    auto* freezeMixParam = dynamic_cast<juce::AudioParameterFloat*>(params[1]);
+    if (freezeMixParam)
+        freezeMixSlider.setValue(freezeMixParam->get() * 100.0f, juce::dontSendNotification);
+
+    // Repaint spectrum area
+    repaint(spectrumArea);
+}
+
+void FreezeFXEditor::paintSpectrum(juce::Graphics& g, juce::Rectangle<int> bounds)
+{
+    // Background
+    g.setColour(juce::Colours::black.withAlpha(0.8f));
+    g.fillRect(bounds);
+
+    // Border
+    g.setColour(juce::Colours::white.withAlpha(0.3f));
+    g.drawRect(bounds, 1);
+
+    // Get spectrum data
+    const auto& spectralProc = audioProcessor.getSpectralProcessor();
+    const auto& magnitude = spectralProc.getMagnitudeSpectrum();
+
+    if (magnitude.empty())
+        return;
+
+    // Draw spectrum
+    juce::Path spectrumPath;
+    const float width = bounds.getWidth();
+    const float height = bounds.getHeight();
+    const float x = bounds.getX();
+    const float y = bounds.getY();
+
+    // Start from bottom left
+    spectrumPath.startNewSubPath(x, y + height);
+
+    // Draw magnitude spectrum (log scale)
+    int numBins = std::min((int)magnitude.size(), 512);  // Show first 512 bins
+    for (int i = 0; i < numBins; ++i)
+    {
+        float binX = x + (i / (float)numBins) * width;
+
+        // Convert magnitude to dB (with floor at -60dB)
+        float mag = magnitude[i];
+        float db = mag > 0.0f ? 20.0f * std::log10(mag) : -60.0f;
+        db = juce::jlimit(-60.0f, 0.0f, db);
+
+        // Map dB to height (0dB = top, -60dB = bottom)
+        float binY = y + height - ((db + 60.0f) / 60.0f) * height;
+
+        spectrumPath.lineTo(binX, binY);
+    }
+
+    // Close path
+    spectrumPath.lineTo(x + width, y + height);
+    spectrumPath.closeSubPath();
+
+    // Fill spectrum
+    if (audioProcessor.isCurrentlyFrozen())
+    {
+        g.setColour(juce::Colours::cyan.withAlpha(0.3f));
+        g.fillPath(spectrumPath);
+        g.setColour(juce::Colours::cyan);
+    }
+    else
+    {
+        g.setColour(juce::Colours::green.withAlpha(0.3f));
+        g.fillPath(spectrumPath);
+        g.setColour(juce::Colours::green);
+    }
+    g.strokePath(spectrumPath, juce::PathStrokeType(1.0f));
+
+    // Frequency labels
+    g.setColour(juce::Colours::white.withAlpha(0.5f));
+    g.setFont(10.0f);
+    g.drawText("20Hz", x, y + height - 15, 40, 15, juce::Justification::centredLeft);
+    g.drawText("20kHz", x + width - 45, y + height - 15, 45, 15, juce::Justification::centredRight);
 }
