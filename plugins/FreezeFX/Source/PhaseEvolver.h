@@ -29,6 +29,15 @@ public:
 
 private:
     //==============================================================================
+    // Evolution Modes
+    void evolvePhaseSmooth(std::vector<float>& phase, float timeStep);
+    void evolvePhaseRandom(std::vector<float>& phase, float timeStep);
+
+    //==============================================================================
+    // Utility
+    float wrapPhase(float phase);
+
+    //==============================================================================
     // Phase Increment (per bin)
     std::vector<float> phaseIncrement;
     std::vector<float> phaseAccumulator;
