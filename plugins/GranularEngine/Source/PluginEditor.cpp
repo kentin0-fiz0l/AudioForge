@@ -62,6 +62,50 @@ GranularEngineEditor::GranularEngineEditor(GranularEngineProcessor& p)
     positionLabel.setJustificationType(juce::Justification::centredLeft);
     addAndMakeVisible(positionLabel);
 
+    // Pitch Shift Slider
+    pitchShiftSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
+    pitchShiftSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
+    pitchShiftSlider.setRange(-24.0, 24.0, 0.1);
+    pitchShiftSlider.setValue(0.0);
+    addAndMakeVisible(pitchShiftSlider);
+
+    pitchShiftLabel.setText("Pitch (st)", juce::dontSendNotification);
+    pitchShiftLabel.setJustificationType(juce::Justification::centred);
+    addAndMakeVisible(pitchShiftLabel);
+
+    // Spray Slider
+    spraySlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
+    spraySlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
+    spraySlider.setRange(0.0, 100.0, 1.0);
+    spraySlider.setValue(0.0);
+    addAndMakeVisible(spraySlider);
+
+    sprayLabel.setText("Spray (%)", juce::dontSendNotification);
+    sprayLabel.setJustificationType(juce::Justification::centred);
+    addAndMakeVisible(sprayLabel);
+
+    // Reverse Slider
+    reverseSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
+    reverseSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
+    reverseSlider.setRange(0.0, 100.0, 1.0);
+    reverseSlider.setValue(0.0);
+    addAndMakeVisible(reverseSlider);
+
+    reverseLabel.setText("Reverse (%)", juce::dontSendNotification);
+    reverseLabel.setJustificationType(juce::Justification::centred);
+    addAndMakeVisible(reverseLabel);
+
+    // Stereo Width Slider
+    stereoWidthSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
+    stereoWidthSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
+    stereoWidthSlider.setRange(0.0, 200.0, 1.0);
+    stereoWidthSlider.setValue(100.0);
+    addAndMakeVisible(stereoWidthSlider);
+
+    stereoWidthLabel.setText("Width (%)", juce::dontSendNotification);
+    stereoWidthLabel.setJustificationType(juce::Justification::centred);
+    addAndMakeVisible(stereoWidthLabel);
+
     // Parameter connections
     grainSizeSlider.onValueChange = [this]() {
         auto* param = audioProcessor.getParameters()[0];
@@ -83,8 +127,28 @@ GranularEngineEditor::GranularEngineEditor(GranularEngineProcessor& p)
         param->setValueNotifyingHost(positionSlider.getValue());
     };
 
-    dryWetSlider.onValueChange = [this]() {
+    pitchShiftSlider.onValueChange = [this]() {
         auto* param = audioProcessor.getParameters()[4];
+        param->setValueNotifyingHost((pitchShiftSlider.getValue() + 24.0f) / 48.0f);
+    };
+
+    spraySlider.onValueChange = [this]() {
+        auto* param = audioProcessor.getParameters()[5];
+        param->setValueNotifyingHost(spraySlider.getValue() / 100.0f);
+    };
+
+    reverseSlider.onValueChange = [this]() {
+        auto* param = audioProcessor.getParameters()[6];
+        param->setValueNotifyingHost(reverseSlider.getValue() / 100.0f);
+    };
+
+    stereoWidthSlider.onValueChange = [this]() {
+        auto* param = audioProcessor.getParameters()[7];
+        param->setValueNotifyingHost(stereoWidthSlider.getValue() / 200.0f);
+    };
+
+    dryWetSlider.onValueChange = [this]() {
+        auto* param = audioProcessor.getParameters()[8];
         param->setValueNotifyingHost(dryWetSlider.getValue() / 100.0f);
     };
 }
@@ -106,21 +170,21 @@ void GranularEngineEditor::paint(juce::Graphics& g)
     // Subtitle
     g.setFont(14.0f);
     g.setColour(juce::Colours::lightgrey);
-    g.drawText("Phase 2: Grain Scheduling & Playback", 0, 45, getWidth(), 20, juce::Justification::centred);
+    g.drawText("Phase 3: Pitch Shifting & Advanced Controls", 0, 45, getWidth(), 20, juce::Justification::centred);
 
     // Section headers
     g.setFont(16.0f);
     g.setColour(juce::Colours::white);
     g.drawText("GRAIN PARAMETERS", 20, 100, 300, 30, juce::Justification::centredLeft);
-    g.drawText("PLAYBACK CONTROL", 20, 240, 300, 30, juce::Justification::centredLeft);
+    g.drawText("CREATIVE CONTROLS", 20, 240, 300, 30, juce::Justification::centredLeft);
 }
 
 void GranularEngineEditor::resized()
 {
     int y = 130;
-    int sliderSize = 90;
-    int margin = 30;
-    int spacing = 120;
+    int sliderSize = 85;
+    int margin = 25;
+    int spacing = 110;
 
     // Row 1: Grain parameters
     grainSizeSlider.setBounds(margin, y, sliderSize, sliderSize);
@@ -129,16 +193,29 @@ void GranularEngineEditor::resized()
     grainDensitySlider.setBounds(margin + spacing, y, sliderSize, sliderSize);
     grainDensityLabel.setBounds(margin + spacing, y + sliderSize, sliderSize, 20);
 
-    dryWetSlider.setBounds(margin + spacing * 2, y, sliderSize, sliderSize);
-    dryWetLabel.setBounds(margin + spacing * 2, y + sliderSize, sliderSize, 20);
+    timeStretchSlider.setBounds(margin + spacing * 2, y, sliderSize, sliderSize);
+    timeStretchLabel.setBounds(margin + spacing * 2, y + sliderSize, sliderSize, 20);
 
-    // Row 2: Playback controls
+    dryWetSlider.setBounds(margin + spacing * 3, y, sliderSize, sliderSize);
+    dryWetLabel.setBounds(margin + spacing * 3, y + sliderSize, sliderSize, 20);
+
+    // Row 2: Creative controls
     y = 270;
 
-    timeStretchSlider.setBounds(margin, y, sliderSize, sliderSize);
-    timeStretchLabel.setBounds(margin, y + sliderSize, sliderSize, 20);
+    pitchShiftSlider.setBounds(margin, y, sliderSize, sliderSize);
+    pitchShiftLabel.setBounds(margin, y + sliderSize, sliderSize, 20);
 
-    // Position slider (horizontal)
-    positionLabel.setBounds(margin + spacing, y + 35, 80, 20);
-    positionSlider.setBounds(margin + spacing + 90, y + 35, 200, 20);
+    spraySlider.setBounds(margin + spacing, y, sliderSize, sliderSize);
+    sprayLabel.setBounds(margin + spacing, y + sliderSize, sliderSize, 20);
+
+    reverseSlider.setBounds(margin + spacing * 2, y, sliderSize, sliderSize);
+    reverseLabel.setBounds(margin + spacing * 2, y + sliderSize, sliderSize, 20);
+
+    stereoWidthSlider.setBounds(margin + spacing * 3, y, sliderSize, sliderSize);
+    stereoWidthLabel.setBounds(margin + spacing * 3, y + sliderSize, sliderSize, 20);
+
+    // Position slider (horizontal at bottom)
+    y = 380;
+    positionLabel.setBounds(margin, y, 80, 20);
+    positionSlider.setBounds(margin + 90, y, 350, 20);
 }

@@ -35,6 +35,18 @@ private:
     juce::Slider positionSlider;
     juce::Label positionLabel;
 
+    juce::Slider pitchShiftSlider;
+    juce::Label pitchShiftLabel;
+
+    juce::Slider spraySlider;
+    juce::Label sprayLabel;
+
+    juce::Slider reverseSlider;
+    juce::Label reverseLabel;
+
+    juce::Slider stereoWidthSlider;
+    juce::Label stereoWidthLabel;
+
     juce::Slider dryWetSlider;
     juce::Label dryWetLabel;
 

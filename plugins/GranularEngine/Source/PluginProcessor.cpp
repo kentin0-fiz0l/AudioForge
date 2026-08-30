@@ -34,6 +34,34 @@ GranularEngineProcessor::GranularEngineProcessor()
         juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f),
         0.5f));  // Default: middle of buffer
 
+    // Pitch Shift (-24 to +24 semitones)
+    addParameter(pitchShiftParam = new juce::AudioParameterFloat(
+        PARAM_PITCH_SHIFT,
+        "Pitch Shift",
+        juce::NormalisableRange<float>(-24.0f, 24.0f, 0.1f),
+        0.0f));  // Default: no shift
+
+    // Spray Amount (0-100%)
+    addParameter(sprayParam = new juce::AudioParameterFloat(
+        PARAM_SPRAY,
+        "Spray",
+        juce::NormalisableRange<float>(0.0f, 100.0f, 1.0f),
+        0.0f));  // Default: no spray
+
+    // Reverse Probability (0-100%)
+    addParameter(reverseParam = new juce::AudioParameterFloat(
+        PARAM_REVERSE,
+        "Reverse",
+        juce::NormalisableRange<float>(0.0f, 100.0f, 1.0f),
+        0.0f));  // Default: no reverse
+
+    // Stereo Width (0-200%)
+    addParameter(stereoWidthParam = new juce::AudioParameterFloat(
+        PARAM_STEREO_WIDTH,
+        "Stereo Width",
+        juce::NormalisableRange<float>(0.0f, 200.0f, 1.0f),
+        100.0f));  // Default: 100% (normal stereo)
+
     // Dry/Wet Mix
     addParameter(dryWetParam = new juce::AudioParameterFloat(
         PARAM_DRY_WET,
@@ -64,8 +92,9 @@ void GranularEngineProcessor::prepareToPlay(double sampleRate, int samplesPerBlo
     grainScheduler.setTimeStretch(timeStretchParam->get());
     grainScheduler.setReadPosition(positionParam->get());
 
-    // Allocate output buffer
-    granularOutput.resize(samplesPerBlock);
+    // Allocate output buffers (stereo)
+    granularLeftOutput.resize(samplesPerBlock);
+    granularRightOutput.resize(samplesPerBlock);
 }
 
 void GranularEngineProcessor::releaseResources()
@@ -97,6 +126,10 @@ void GranularEngineProcessor::processBlock(juce::AudioBuffer<float>& buffer, juc
     grainScheduler.setGrainDensity(grainDensityParam->get());
     grainScheduler.setTimeStretch(timeStretchParam->get());
     grainScheduler.setReadPosition(positionParam->get());
+    grainScheduler.setPitchShift(pitchShiftParam->get());
+    grainScheduler.setSprayAmount(sprayParam->get() / 100.0f);
+    grainScheduler.setReverseProbability(reverseParam->get() / 100.0f);
+    grainScheduler.setStereoWidth(stereoWidthParam->get() / 100.0f);
 
     float dryWet = dryWetParam->get() / 100.0f;
 
@@ -107,19 +140,22 @@ void GranularEngineProcessor::processBlock(juce::AudioBuffer<float>& buffer, juc
         grainBuffer.writeBlock(input, numSamples);
     }
 
-    // Process granular synthesis
+    // Process granular synthesis (stereo output)
     grainScheduler.processBlock(grainBuffer, grainExtractor,
-                                 granularOutput.data(), numSamples);
+                                 granularLeftOutput.data(),
+                                 granularRightOutput.data(),
+                                 numSamples);
 
     // Mix dry and wet signals
     for (int ch = 0; ch < numChannels; ++ch)
     {
         float* channelData = buffer.getWritePointer(ch);
+        const float* wetData = (ch == 0) ? granularLeftOutput.data() : granularRightOutput.data();
 
         for (int i = 0; i < numSamples; ++i)
         {
             float dry = channelData[i];
-            float wet = granularOutput[i];
+            float wet = wetData[i];
             channelData[i] = dry * (1.0f - dryWet) + wet * dryWet;
         }
     }
@@ -138,6 +174,10 @@ void GranularEngineProcessor::getStateInformation(juce::MemoryBlock& destData)
     stream.writeFloat(grainDensityParam->get());
     stream.writeFloat(timeStretchParam->get());
     stream.writeFloat(positionParam->get());
+    stream.writeFloat(pitchShiftParam->get());
+    stream.writeFloat(sprayParam->get());
+    stream.writeFloat(reverseParam->get());
+    stream.writeFloat(stereoWidthParam->get());
     stream.writeFloat(dryWetParam->get());
 }
 
@@ -149,6 +189,10 @@ void GranularEngineProcessor::setStateInformation(const void* data, int sizeInBy
     grainDensityParam->setValueNotifyingHost(grainDensityParam->convertTo0to1(stream.readFloat()));
     timeStretchParam->setValueNotifyingHost(timeStretchParam->convertTo0to1(stream.readFloat()));
     positionParam->setValueNotifyingHost(positionParam->convertTo0to1(stream.readFloat()));
+    pitchShiftParam->setValueNotifyingHost(pitchShiftParam->convertTo0to1(stream.readFloat()));
+    sprayParam->setValueNotifyingHost(sprayParam->convertTo0to1(stream.readFloat()));
+    reverseParam->setValueNotifyingHost(reverseParam->convertTo0to1(stream.readFloat()));
+    stereoWidthParam->setValueNotifyingHost(stereoWidthParam->convertTo0to1(stream.readFloat()));
     dryWetParam->setValueNotifyingHost(dryWetParam->convertTo0to1(stream.readFloat()));
 }
 

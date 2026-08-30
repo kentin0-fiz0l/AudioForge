@@ -51,6 +51,10 @@ public:
     static constexpr const char* PARAM_GRAIN_DENSITY = "grainDensity";
     static constexpr const char* PARAM_TIME_STRETCH = "timeStretch";
     static constexpr const char* PARAM_POSITION = "position";
+    static constexpr const char* PARAM_PITCH_SHIFT = "pitchShift";
+    static constexpr const char* PARAM_SPRAY = "spray";
+    static constexpr const char* PARAM_REVERSE = "reverse";
+    static constexpr const char* PARAM_STEREO_WIDTH = "stereoWidth";
     static constexpr const char* PARAM_DRY_WET = "dryWet";
 
 private:
@@ -61,7 +65,8 @@ private:
     GrainScheduler grainScheduler;
 
     // Output buffers
-    std::vector<float> granularOutput;
+    std::vector<float> granularLeftOutput;
+    std::vector<float> granularRightOutput;
 
     //==============================================================================
     // Parameters
@@ -69,6 +74,10 @@ private:
     juce::AudioParameterFloat* grainDensityParam;
     juce::AudioParameterFloat* timeStretchParam;
     juce::AudioParameterFloat* positionParam;
+    juce::AudioParameterFloat* pitchShiftParam;
+    juce::AudioParameterFloat* sprayParam;
+    juce::AudioParameterFloat* reverseParam;
+    juce::AudioParameterFloat* stereoWidthParam;
     juce::AudioParameterFloat* dryWetParam;
 
     //==============================================================================

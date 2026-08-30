@@ -3,6 +3,7 @@
 GrainScheduler::GrainScheduler()
 {
     grainPool.resize(MAX_GRAINS);
+    random.setSeed(juce::Time::currentTimeMillis());
 }
 
 void GrainScheduler::prepare(double newSampleRate, int maxGrainSize)
@@ -49,13 +50,35 @@ void GrainScheduler::setReadPosition(float position)
     readPosition = juce::jlimit(0.0f, 1.0f, position);
 }
 
+void GrainScheduler::setPitchShift(float semitones)
+{
+    pitchShift = juce::jlimit(-24.0f, 24.0f, semitones);
+}
+
+void GrainScheduler::setSprayAmount(float amount)
+{
+    sprayAmount = juce::jlimit(0.0f, 1.0f, amount);
+}
+
+void GrainScheduler::setReverseProbability(float probability)
+{
+    reverseProbability = juce::jlimit(0.0f, 1.0f, probability);
+}
+
+void GrainScheduler::setStereoWidth(float width)
+{
+    stereoWidth = juce::jlimit(0.0f, 2.0f, width);
+}
+
 void GrainScheduler::processBlock(const GrainBuffer& buffer,
                                    GrainExtractor& extractor,
-                                   float* output,
+                                   float* leftOutput,
+                                   float* rightOutput,
                                    int numSamples)
 {
-    // Clear output
-    std::fill(output, output + numSamples, 0.0f);
+    // Clear outputs
+    std::fill(leftOutput, leftOutput + numSamples, 0.0f);
+    std::fill(rightOutput, rightOutput + numSamples, 0.0f);
 
     // Check if buffer has enough samples
     if (buffer.getSamplesAvailable() < extractor.getGrainSize())
@@ -72,13 +95,35 @@ void GrainScheduler::processBlock(const GrainBuffer& buffer,
             grainTimer -= samplesPerGrain;
         }
 
-        // Sum all active grains to output
+        // Sum all active grains to output (with pitch shifting and stereo)
         for (auto& grain : grainPool)
         {
             if (grain.active && !grain.isFinished())
             {
-                output[i] += grain.samples[grain.playbackPosition];
-                grain.playbackPosition++;
+                // Get sample with linear interpolation for pitch shifting
+                int pos = (int)grain.playbackPosition;
+                float frac = grain.playbackPosition - pos;
+
+                float sample1 = (pos >= 0 && pos < (int)grain.samples.size())
+                    ? grain.samples[pos] : 0.0f;
+                float sample2 = (pos + 1 >= 0 && pos + 1 < (int)grain.samples.size())
+                    ? grain.samples[pos + 1] : 0.0f;
+
+                float sample = sample1 + (sample2 - sample1) * frac;
+
+                // Apply stereo panning (equal power panning)
+                float panAngle = grain.panPosition * juce::MathConstants<float>::halfPi;
+                float leftGain = std::cos(panAngle);
+                float rightGain = std::sin(panAngle);
+
+                leftOutput[i] += sample * leftGain;
+                rightOutput[i] += sample * rightGain;
+
+                // Advance playback position based on rate
+                if (grain.reverse)
+                    grain.playbackPosition -= grain.playbackRate;
+                else
+                    grain.playbackPosition += grain.playbackRate;
 
                 // Check if grain finished
                 if (grain.isFinished())
@@ -93,7 +138,8 @@ void GrainScheduler::processBlock(const GrainBuffer& buffer,
     float normalization = 1.0f / std::sqrt((float)MAX_GRAINS);
     for (int i = 0; i < numSamples; ++i)
     {
-        output[i] *= normalization;
+        leftOutput[i] *= normalization;
+        rightOutput[i] *= normalization;
     }
 }
 
@@ -104,25 +150,57 @@ void GrainScheduler::triggerGrain(const GrainBuffer& buffer, GrainExtractor& ext
     if (grain == nullptr)
         return;  // No available grains
 
-    // Calculate read position in buffer
-    int bufferSize = buffer.getBufferSize();
+    // Calculate read position in buffer with spray/scatter
     int samplesAvailable = buffer.getSamplesAvailable();
     int writePos = buffer.getWritePosition();
 
-    // Read position: 0 = oldest sample, 1 = newest sample
-    int samplesBack = (int)((1.0f - readPosition) * samplesAvailable);
+    // Base position: 0 = oldest sample, 1 = newest sample
+    float basePosition = readPosition;
+
+    // Add spray (random offset)
+    if (sprayAmount > 0.0f)
+    {
+        float sprayRange = sprayAmount * 0.5f;  // ±50% of spray amount
+        float sprayOffset = (random.nextFloat() * 2.0f - 1.0f) * sprayRange;
+        basePosition = juce::jlimit(0.0f, 1.0f, basePosition + sprayOffset);
+    }
+
+    int samplesBack = (int)((1.0f - basePosition) * samplesAvailable);
     int readPos = writePos - samplesBack;
 
     // Extract grain from buffer
-    int grainSize = extractor.getGrainSize();
     extractor.extractGrain(buffer, readPos, grain->samples.data());
+
+    // Set pitch shift (convert semitones to playback rate)
+    // 12 semitones = 1 octave = 2x playback rate
+    grain->playbackRate = std::pow(2.0f, pitchShift / 12.0f);
+
+    // Determine if grain should be reversed
+    grain->reverse = (random.nextFloat() < reverseProbability);
+
+    // Set initial playback position
+    if (grain->reverse)
+        grain->playbackPosition = (float)grain->samples.size() - 1.0f;
+    else
+        grain->playbackPosition = 0.0f;
+
+    // Set stereo pan position (0.5 = center, apply stereo width)
+    float centerPan = 0.5f;
+    if (stereoWidth != 1.0f)
+    {
+        // Random pan position
+        float randomPan = random.nextFloat();
+        // Apply stereo width: 0 = mono center, 1 = normal stereo, 2 = ultra-wide
+        float panOffset = (randomPan - 0.5f) * stereoWidth;
+        grain->panPosition = juce::jlimit(0.0f, 1.0f, centerPan + panOffset);
+    }
+    else
+    {
+        grain->panPosition = centerPan;
+    }
 
     // Activate grain
     grain->active = true;
-    grain->playbackPosition = 0;
-
-    // Note: Time-stretching will be implemented by adjusting grain overlap
-    // For now, grains play at normal speed (timeStretch parameter ready for Phase 3)
 }
 
 Grain* GrainScheduler::findInactiveGrain()
