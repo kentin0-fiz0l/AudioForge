@@ -14,6 +14,112 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.5.0] - 2026-08-30
+
+### Enhanced BasicSynth - Professional Synthesizer Upgrade 🎹
+
+Major feature release transforming BasicSynth from simple learning tool to professional-grade instrument.
+
+#### Added - Synthesis Engine
+- **OscillatorBank**: 5 independent oscillators per voice (up from 1)
+  - Per-oscillator level, detune (±12 semitones), and pulse width controls
+  - Automatic mixing with normalization to prevent clipping
+- **NoiseGenerator**: White and pink noise (Paul Kellett's algorithm)
+- **Pulse Waveform**: Adjustable pulse width (5-95% duty cycle)
+- **8-voice polyphony**: 40 total oscillators at full capacity
+
+#### Added - Modulation System
+- **2 LFOs per voice** with 5 waveform shapes:
+  - Sine, Triangle, Sawtooth, Square, Sample & Hold
+  - Rate control (0.1-10 Hz)
+  - Tempo sync capability
+- **4-slot Modulation Matrix** for flexible routing:
+  - Sources: LFO1, LFO2, Amp Envelope, Filter Envelope, Velocity, Mod Wheel
+  - Destinations: Pitch, Filter Cutoff, PWM, Amplitude, Pan Position
+  - Additive modulation (multiple sources can target same destination)
+
+#### Added - Envelope System
+- **Independent amp and filter envelopes** (separate ADSR controls)
+- **ADSREnvelope class**: Reusable envelope generator
+  - Linear attack/release, exponential decay
+  - Proper voice deactivation when amp envelope completes
+- **Filter envelope**: Faster response (0.5x attack, 0.8x decay, 0.7x release) for snappy filtering
+
+#### Added - Multi-Mode Filter
+- **State-variable filter** with 4 filter types:
+  - Low-pass (classic warm synth sound)
+  - High-pass (remove low frequencies)
+  - Band-pass (emphasize middle frequencies)
+  - Notch (scooped sound, LP + HP combined)
+- **Filter envelope modulation** (±2 octaves)
+- **Resonance control** (Q = 0.5-20)
+- Smooth transitions between filter types
+
+#### Added - Professional Effects Chain
+- **Stereo Chorus**:
+  - Modulated delay lines (5-30ms range)
+  - LFO-based delay time modulation with 90° phase offset for stereo width
+  - Parameters: Rate (0.1-10 Hz), Depth (0-1), Mix (0-1)
+- **Algorithmic Reverb**:
+  - Schroeder reverb (4 parallel comb filters + 2 series allpass filters)
+  - One-pole lowpass damping for high-frequency roll-off
+  - Parameters: Room Size (0-1), Damping (0-1), Mix (0-1)
+- **Saturation/Distortion**:
+  - 3 waveshaping modes: Soft Clip (tanh), Hard Clip (clamp), Tube (asymmetric)
+  - Automatic gain compensation
+  - Parameters: Drive (0-1 → 1x-10x gain), Mix (0-1), Type (0-2)
+- **Signal flow**: Input → Saturation → Chorus → Reverb → Stereo Output
+
+#### Added - Enhanced User Interface
+- **Expanded window size** (700x650, up from 500x480)
+- **Filter type selector** (ComboBox for LP/HP/BP/Notch)
+- **Effects controls**:
+  - Chorus Mix slider (purple theme)
+  - Reverb Mix slider (blue theme)
+  - Saturation Drive slider (red theme)
+- **Organized layout** with section headers (ENVELOPE, FILTER, EFFECTS)
+- **Color-coded controls** for easy identification
+
+#### Changed
+- **Mono to stereo conversion**: BasicSynth now outputs stereo (effects chain)
+- **Voice class architecture**: Integrated OscillatorBank, LFOs, ModulationMatrix, ADSREnvelopes
+- **Filter implementation**: Replaced simple low-pass with multi-mode state-variable filter
+
+#### Technical Details
+- Added 18 new classes (~2,150 lines of C++17 code)
+- Modified 6 core files (Voice, Processor, Editor, Oscillator, CMakeLists)
+- Sample-accurate envelope processing
+- < 3ms total effects latency
+- Optimized for real-time performance
+
+#### Files Added
+- `OscillatorBank.h/cpp` - Multi-oscillator management
+- `NoiseGenerator.h/cpp` - White/pink noise generation
+- `LFO.h/cpp` - Low-frequency oscillator
+- `ModulationMatrix.h/cpp` - Flexible modulation routing
+- `ADSREnvelope.h/cpp` - Reusable envelope generator
+- `MultiModeFilter.h/cpp` - State-variable filter
+- `Chorus.h/cpp` - Stereo chorus effect
+- `Reverb.h/cpp` - Algorithmic reverb
+- `Saturation.h/cpp` - Waveshaping distortion
+- `EffectsChain.h/cpp` - Effects chain manager
+
+#### Known Limitations
+- Oscillator bank, LFO, and modulation matrix use defaults (no per-parameter UI yet)
+- Advanced effects parameters accessible via parameter list (not all exposed in UI)
+- Preset saving/loading not implemented
+
+#### Future Plans (v1.6.0+)
+- Oscillator bank UI (per-oscillator controls)
+- LFO shape selector UI
+- Visual modulation matrix routing display
+- Additional effects (delay, phaser)
+- Preset management system
+
+**Release**: [v1.5.0 on GitHub](https://github.com/kentin0-fiz0l/AudioForge/releases/tag/v1.5.0)
+
+---
+
 ## [1.1.0] - TBD (In Development)
 
 ### Added

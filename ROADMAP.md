@@ -1,6 +1,6 @@
 # AudioForge Development Roadmap
 
-**Current Status**: v1.0.1 released with 10 professional plugins, macOS DMG installer, and deployed website
+**Current Status**: v1.5.0 released with Enhanced BasicSynth (professional synthesizer upgrade), v1.1.0 distribution work in progress
 
 ## Completed Phases ✅
 
@@ -38,6 +38,58 @@ Got plugins into users' hands:
 - ⚠️ Plugins are unsigned (macOS Gatekeeper warnings, Windows SmartScreen blocks)
 - ⚠️ Windows/Linux have no installers (manual .vst3 file copying required)
 - ⚠️ Missing user manuals (PDF), video tutorials, contributing guidelines
+
+### v1.5.0: Enhanced BasicSynth - Professional Synthesizer (COMPLETED) ✅
+
+Transformed BasicSynth from simple learning tool to professional-grade instrument:
+
+**Phase 1: Multiple Oscillators**
+- ✅ OscillatorBank class managing 5 oscillators per voice
+- ✅ NoiseGenerator (white/pink noise, Paul Kellett's algorithm)
+- ✅ Pulse waveform with adjustable pulse width (5-95%)
+- ✅ Per-oscillator level, detune (±12 semitones), PWM controls
+- ✅ Automatic mixing with normalization
+
+**Phase 2: LFOs & Modulation Matrix**
+- ✅ 2 LFOs per voice with 5 waveforms (Sine/Tri/Saw/Square/S&H)
+- ✅ LFO rate control (0.1-10 Hz), tempo sync support
+- ✅ 4-slot modulation matrix for flexible routing
+- ✅ Sources: LFO1/2, Amp Env, Filter Env, Velocity, Mod Wheel
+- ✅ Destinations: Pitch, Filter Cutoff, PWM, Amplitude, Pan
+
+**Phase 3: Filter Envelope**
+- ✅ Independent amp and filter envelopes (separate ADSR controls)
+- ✅ Reusable ADSREnvelope class (linear attack/release, exp decay)
+- ✅ Filter envelope with faster response for snappy filtering
+- ✅ Proper voice deactivation when amp envelope completes
+
+**Phase 4: Multi-Mode Filter**
+- ✅ State-variable filter with 4 types (LP/HP/BP/Notch)
+- ✅ Filter envelope modulation (±2 octaves)
+- ✅ Resonance control (Q = 0.5-20)
+- ✅ Smooth transitions between filter types
+
+**Phase 5: Effects Chain**
+- ✅ Stereo Chorus (modulated delay, 5-30ms, LFO-based)
+- ✅ Algorithmic Reverb (Schroeder: 4 comb + 2 allpass filters)
+- ✅ Saturation (3 modes: Soft/Hard/Tube, harmonic warmth)
+- ✅ Signal flow: Input → Saturation → Chorus → Reverb → Stereo Output
+
+**Phase 6: Enhanced UI**
+- ✅ Expanded window (700x650, up from 500x480)
+- ✅ Filter type selector (LP/HP/BP/Notch dropdown)
+- ✅ Effects controls (Chorus/Reverb/Saturation mix sliders)
+- ✅ Organized layout with section headers (ENVELOPE, FILTER, EFFECTS)
+- ✅ Color-coded controls for easy identification
+
+**Technical Achievement**:
+- ~2,150 new lines of C++17 code
+- 18 new classes, 6 modified core files
+- 8-voice polyphony (40 total oscillators at capacity)
+- < 3ms total effects latency
+- Sample-accurate envelope processing
+
+**Released**: August 30, 2026 | **GitHub**: [v1.5.0](https://github.com/kentin0-fiz0l/AudioForge/releases/tag/v1.5.0)
 
 ---
 
