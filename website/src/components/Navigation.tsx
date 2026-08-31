@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { Logo } from './Logo';
 
 interface NavLink {
   label: string;
@@ -13,7 +14,7 @@ const navLinks: NavLink[] = [
   { label: 'Features', href: '#features' },
   { label: 'Roadmap', href: '#roadmap' },
   { label: 'Docs', href: '/docs' },
-  { label: 'GitHub', href: 'https://github.com/yourusername/AudioForge', external: true },
+  { label: 'GitHub', href: 'https://github.com/kentin0-fiz0l/AudioForge', external: true },
 ];
 
 export const Navigation: React.FC = () => {
@@ -40,13 +41,8 @@ export const Navigation: React.FC = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
-          <a href="/" className="flex items-center space-x-2 group">
-            <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
-              <span className="text-white font-bold text-lg">AF</span>
-            </div>
-            <span className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">
-              AudioForge
-            </span>
+          <a href="/" className="transition-transform hover:scale-105">
+            <Logo size="sm" />
           </a>
 
           {/* Desktop Navigation */}

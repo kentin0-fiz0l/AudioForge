@@ -32,14 +32,14 @@ export default function Home() {
       <Hero />
 
       {/* Plugin Showcase */}
-      <section id="plugins" className="py-16 md:py-24 bg-foreground/5">
+      <section id="plugins" className="py-16 md:py-24 bg-background-light">
         <div className="container mx-auto px-4">
           {/* Section Header */}
           <div className="text-center mb-12 md:mb-16">
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4">
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4 font-display">
               Our Plugins
             </h2>
-            <p className="text-foreground/70 text-lg max-w-2xl mx-auto">
+            <p className="text-foreground-muted text-lg max-w-2xl mx-auto">
               Professional audio tools for every step of your production workflow.
             </p>
           </div>
@@ -74,14 +74,14 @@ export default function Home() {
       <FeatureGrid />
 
       {/* Roadmap Teaser */}
-      <section className="py-16 md:py-24 bg-foreground/5">
+      <section className="py-16 md:py-24 bg-background-light">
         <div className="container mx-auto px-4">
           {/* Section Header */}
           <div className="text-center mb-12 md:mb-16">
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4">
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4 font-display">
               Roadmap
             </h2>
-            <p className="text-foreground/70 text-lg max-w-2xl mx-auto">
+            <p className="text-foreground-muted text-lg max-w-2xl mx-auto">
               We&apos;re building a complete suite of production tools. Here&apos;s what we&apos;re working on.
             </p>
           </div>
@@ -89,16 +89,16 @@ export default function Home() {
           {/* Current Phase */}
           {currentPhase && (
             <div className="max-w-4xl mx-auto mb-12">
-              <div className="bg-gradient-to-br from-primary/10 to-accent/10 border-2 border-primary/30 rounded-2xl p-8 shadow-lg shadow-primary/10">
+              <div className="bg-background border border-primary/30 rounded-2xl p-8 shadow-glow-primary">
                 <div className="flex items-center gap-3 mb-4">
-                  <span className="px-4 py-1.5 bg-primary/20 text-primary-light rounded-full text-sm font-semibold border border-primary">
+                  <span className="px-4 py-1.5 bg-primary/20 text-primary rounded-full text-sm font-semibold border border-primary font-mono">
                     Current Phase
                   </span>
-                  <h3 className="text-2xl md:text-3xl font-bold text-foreground">
+                  <h3 className="text-2xl md:text-3xl font-bold text-foreground font-display">
                     {currentPhase.name}
                   </h3>
                 </div>
-                <p className="text-foreground/80 text-lg mb-6">{currentPhase.goal}</p>
+                <p className="text-foreground-muted text-lg mb-6">{currentPhase.goal}</p>
                 {currentPhase.timeline && (
                   <p className="text-foreground/60 mb-6">Timeline: {currentPhase.timeline}</p>
                 )}
@@ -187,10 +187,10 @@ export default function Home() {
           <div className="max-w-4xl mx-auto">
             {/* Section Header */}
             <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4">
+              <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4 font-display">
                 Community & Support
               </h2>
-              <p className="text-foreground/70 text-lg">
+              <p className="text-foreground-muted text-lg">
                 Join our growing community of producers and developers.
               </p>
             </div>
@@ -198,7 +198,7 @@ export default function Home() {
             {/* Community Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
               {/* GitHub */}
-              <div className="bg-foreground/5 border border-foreground/10 rounded-xl p-8 hover:border-primary/50 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10">
+              <div className="bg-background-light border border-primary/10 rounded-xl p-8 hover:border-primary/40 transition-all duration-300 hover:shadow-glow-primary">
                 <div className="text-4xl mb-4">💻</div>
                 <h3 className="text-2xl font-bold text-foreground mb-3">Open Source</h3>
                 <p className="text-foreground/70 mb-6">
@@ -216,7 +216,7 @@ export default function Home() {
               </div>
 
               {/* Documentation */}
-              <div className="bg-foreground/5 border border-foreground/10 rounded-xl p-8 hover:border-primary/50 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10">
+              <div className="bg-background-light border border-primary/10 rounded-xl p-8 hover:border-primary/40 transition-all duration-300 hover:shadow-glow-primary">
                 <div className="text-4xl mb-4">📚</div>
                 <h3 className="text-2xl font-bold text-foreground mb-3">Documentation</h3>
                 <p className="text-foreground/70 mb-6">
@@ -232,7 +232,7 @@ export default function Home() {
               </div>
 
               {/* Support */}
-              <div className="bg-foreground/5 border border-foreground/10 rounded-xl p-8 hover:border-primary/50 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10">
+              <div className="bg-background-light border border-primary/10 rounded-xl p-8 hover:border-primary/40 transition-all duration-300 hover:shadow-glow-primary">
                 <div className="text-4xl mb-4">💬</div>
                 <h3 className="text-2xl font-bold text-foreground mb-3">Get Help</h3>
                 <p className="text-foreground/70 mb-6">
@@ -250,7 +250,7 @@ export default function Home() {
               </div>
 
               {/* Learning */}
-              <div className="bg-foreground/5 border border-foreground/10 rounded-xl p-8 hover:border-primary/50 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10">
+              <div className="bg-background-light border border-primary/10 rounded-xl p-8 hover:border-primary/40 transition-all duration-300 hover:shadow-glow-primary">
                 <div className="text-4xl mb-4">🎓</div>
                 <h3 className="text-2xl font-bold text-foreground mb-3">Learn Audio DSP</h3>
                 <p className="text-foreground/70 mb-6">
@@ -267,20 +267,20 @@ export default function Home() {
             </div>
 
             {/* CTA Section */}
-            <div className="bg-gradient-to-br from-primary/10 to-accent/10 border border-primary/30 rounded-2xl p-8 md:p-12 text-center">
-              <h3 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
+            <div className="bg-background border border-primary/30 rounded-2xl p-8 md:p-12 text-center shadow-glow-primary">
+              <h3 className="text-2xl md:text-3xl font-bold text-foreground mb-4 font-display">
                 Ready to Try AudioForge?
               </h3>
-              <p className="text-foreground/70 text-lg mb-8 max-w-2xl mx-auto">
-                Download AudioForge v1.0.0 with 10 plugins (VST3 & AU) and start making music today. Free forever, no strings attached.
+              <p className="text-foreground-muted text-lg mb-8 max-w-2xl mx-auto">
+                Download AudioForge v1.3.0 with 13 plugins (VST3 & AU) and start making music today. Free forever, no strings attached.
               </p>
               <a
                 href="https://github.com/kentin0-fiz0l/AudioForge/releases/latest"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-block px-10 py-4 bg-gradient-primary text-white font-semibold text-lg rounded-lg hover:opacity-90 transition-opacity shadow-lg"
+                className="inline-block px-10 py-4 bg-gradient-primary text-white font-semibold text-lg rounded-lg hover:shadow-glow-primary transition-all"
               >
-                Download v1.0.0 (70 MB)
+                Download v1.3.0
               </a>
             </div>
           </div>
@@ -288,13 +288,13 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="py-8 bg-foreground/5 border-t border-foreground/10">
+      <footer className="py-8 bg-background-light border-t border-primary/10">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
-            <p className="text-foreground/60 text-sm">
+            <p className="text-foreground-muted text-sm">
               AudioForge is an open source project licensed under the MIT License.
             </p>
-            <p className="text-foreground/40 text-xs mt-2">
+            <p className="text-foreground-dim text-xs mt-2 font-mono">
               Built with JUCE framework and modern C++17
             </p>
           </div>
