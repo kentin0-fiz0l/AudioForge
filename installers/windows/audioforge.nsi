@@ -2,7 +2,7 @@
 ; Installs VST3 plugins to the standard Windows plugin directory
 
 !define PRODUCT_NAME "AudioForge"
-!define PRODUCT_VERSION "1.1.0"
+!define PRODUCT_VERSION "1.3.0"
 !define PRODUCT_PUBLISHER "AudioForge"
 !define PRODUCT_WEB_SITE "https://audioforge.fluxstudio.art"
 !define VST3_PATH "$COMMONFILES64\VST3"
@@ -38,7 +38,7 @@ ShowInstDetails show
 ShowUnInstDetails show
 
 ; Version information
-VIProductVersion "1.1.0.0"
+VIProductVersion "1.3.0.0"
 VIAddVersionKey "ProductName" "${PRODUCT_NAME}"
 VIAddVersionKey "ProductVersion" "${PRODUCT_VERSION}"
 VIAddVersionKey "CompanyName" "${PRODUCT_PUBLISHER}"
@@ -88,7 +88,8 @@ Section "Main Installation" SEC01
 SectionEnd
 
 Section "Uninstall"
-  ; Remove all plugins
+  ; Remove all plugins (13 total)
+  ; Core Suite (11 plugins)
   Delete "${VST3_PATH}\SimpleGain.vst3"
   Delete "${VST3_PATH}\PanUtil.vst3"
   Delete "${VST3_PATH}\BasicSynth.vst3"
@@ -99,6 +100,11 @@ Section "Uninstall"
   Delete "${VST3_PATH}\Saturation.vst3"
   Delete "${VST3_PATH}\ChorusFlanger.vst3"
   Delete "${VST3_PATH}\Reverb.vst3"
+  Delete "${VST3_PATH}\FreezeFX.vst3"
+
+  ; Advanced Suite (2 plugins)
+  Delete "${VST3_PATH}\GranularEngine.vst3"
+  Delete "${VST3_PATH}\SpectralFreeze.vst3"
 
   ; Remove uninstaller and README
   Delete "$INSTDIR\Uninstall.exe"

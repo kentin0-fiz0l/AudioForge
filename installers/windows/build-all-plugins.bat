@@ -1,11 +1,11 @@
 @echo off
 REM AudioForge Windows Plugin Build Script
-REM Builds all 10 plugins for Windows (VST3)
-REM Version: 1.1.1
+REM Builds all 13 plugins for Windows (VST3)
+REM Version: 1.3.0
 
 echo ======================================
 echo AudioForge Windows Build Script
-echo Version: 1.1.1
+echo Version: 1.3.0
 echo ======================================
 echo.
 
@@ -15,8 +15,8 @@ if not exist "plugins\" (
     exit /b 1
 )
 
-REM Plugin list
-set PLUGINS=SimpleGain PanUtil BasicSynth CleanDelay SimpleEQ SimpleComp WaveShaper Saturation ChorusFlanger Reverb
+REM Plugin list (13 total)
+set PLUGINS=SimpleGain PanUtil BasicSynth CleanDelay SimpleEQ SimpleComp WaveShaper Saturation ChorusFlanger Reverb FreezeFX GranularEngine SpectralFreeze
 
 REM Build counter
 set SUCCESS=0
@@ -68,8 +68,8 @@ for %%P in (%PLUGINS%) do (
 echo ======================================
 echo Build Summary
 echo ======================================
-echo Successful: %SUCCESS%/10
-echo Failed: %FAILED%/10
+echo Successful: %SUCCESS%/13
+echo Failed: %FAILED%/13
 echo ======================================
 
 if %FAILED% gtr 0 (

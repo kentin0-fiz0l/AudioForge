@@ -82,7 +82,7 @@ Write-Host ""
 Write-ColorOutput Green "✓ Successfully signed $pluginCount VST3 plugins"
 
 # Sign installer executable (if it exists)
-$InstallerPath = "AudioForge-Setup-v1.1.0.exe"
+$InstallerPath = "AudioForge-Setup-v1.3.0.exe"
 if (Test-Path $InstallerPath) {
     Write-Host ""
     Write-Host "→ Signing installer executable..." -ForegroundColor Blue

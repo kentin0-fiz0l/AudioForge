@@ -1,11 +1,11 @@
 @echo off
 REM AudioForge Windows Plugin Staging Script
 REM Copies built plugins to staging directory for installer creation
-REM Version: 1.1.1
+REM Version: 1.3.0
 
 echo ======================================
 echo AudioForge Plugin Staging Script
-echo Version: 1.1.1
+echo Version: 1.3.0
 echo ======================================
 echo.
 
@@ -28,8 +28,8 @@ echo.
 echo Copying plugins to staging...
 echo.
 
-REM Plugin list
-set PLUGINS=SimpleGain PanUtil BasicSynth CleanDelay SimpleEQ SimpleComp WaveShaper Saturation ChorusFlanger Reverb
+REM Plugin list (13 total)
+set PLUGINS=SimpleGain PanUtil BasicSynth CleanDelay SimpleEQ SimpleComp WaveShaper Saturation ChorusFlanger Reverb FreezeFX GranularEngine SpectralFreeze
 
 REM Copy counter
 set COPIED=0
@@ -67,8 +67,8 @@ echo.
 echo ======================================
 echo Staging Summary
 echo ======================================
-echo Copied: %COPIED%/10 plugins
-echo Missing: %MISSING%/10 plugins
+echo Copied: %COPIED%/13 plugins
+echo Missing: %MISSING%/13 plugins
 echo Location: %STAGING_DIR%
 echo ======================================
 
