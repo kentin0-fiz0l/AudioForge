@@ -11,6 +11,7 @@ import { AnimatedSection } from '@/components/AnimatedSection';
 import { FAQ } from '@/components/FAQ';
 import { Newsletter } from '@/components/Newsletter';
 import { DocsPreview } from '@/components/DocsPreview';
+import { Testimonials } from '@/components/Testimonials';
 import { plugins, getCurrentPhase, roadmap } from '@/lib/plugins';
 
 export default function Home() {
@@ -300,6 +301,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Testimonials Section */}
+      <Testimonials />
 
       {/* FAQ Section */}
       <FAQ />
