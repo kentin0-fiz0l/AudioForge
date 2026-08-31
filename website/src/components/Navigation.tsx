@@ -88,27 +88,39 @@ export const Navigation: React.FC = () => {
         </div>
 
         {/* Mobile Menu */}
-        {isMobileMenuOpen && (
-          <div className="md:hidden border-t border-foreground/10 py-4 bg-background/95 backdrop-blur-md">
+        <div
+          className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${
+            isMobileMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+          }`}
+        >
+          <div className="border-t border-primary/10 py-4 bg-background-light/95 backdrop-blur-md">
             <div className="flex flex-col space-y-1">
-              {navLinks.map((link) => (
+              {navLinks.map((link, index) => (
                 <a
                   key={link.href}
                   href={link.href}
                   target={link.external ? '_blank' : undefined}
                   rel={link.external ? 'noopener noreferrer' : undefined}
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="px-4 py-3 text-foreground/80 hover:text-foreground hover:bg-foreground/10 rounded-lg transition-all font-medium"
+                  className="px-4 py-3 text-foreground-muted hover:text-foreground hover:bg-primary/10 rounded-lg transition-all font-medium transform hover:translate-x-1"
+                  style={{
+                    animationDelay: `${index * 50}ms`,
+                    animation: isMobileMenuOpen ? 'slideIn 0.3s ease-out forwards' : 'none',
+                  }}
                 >
-                  {link.label}
-                  {link.external && (
-                    <span className="ml-1 text-xs">↗</span>
-                  )}
+                  <span className="flex items-center justify-between">
+                    {link.label}
+                    {link.external && (
+                      <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                    )}
+                  </span>
                 </a>
               ))}
             </div>
           </div>
-        )}
+        </div>
       </div>
     </nav>
   );

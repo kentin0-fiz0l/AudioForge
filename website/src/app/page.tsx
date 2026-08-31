@@ -1,44 +1,83 @@
+'use client';
+
 import { Hero } from '@/components/Hero';
 import { PluginCard } from '@/components/PluginCard';
 import { FeatureGrid } from '@/components/FeatureGrid';
 import { Footer } from '@/components/Footer';
+import { Stats } from '@/components/Stats';
+import { StickyDownload } from '@/components/StickyDownload';
+import { ScrollToTop } from '@/components/ScrollToTop';
+import { AnimatedSection } from '@/components/AnimatedSection';
 import { plugins, getCurrentPhase, roadmap } from '@/lib/plugins';
-
-export const metadata = {
-  title: 'AudioForge - Professional Audio Plugins, Free Forever',
-  description: '13 professional VST3 and AU plugins for music production. From essential utilities to advanced spectral effects, built with JUCE and modern C++.',
-};
+import { useState } from 'react';
 
 export default function Home() {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterType, setFilterType] = useState('all');
+
   const currentPhase = getCurrentPhase();
-  const releasedPlugins = plugins.filter(p => p.status === 'released');
-  const upcomingPlugins = plugins.filter(p => p.status === 'in-development' || p.status === 'planned');
+
+  // Filter plugins based on search and filter
+  let filteredPlugins = plugins;
+
+  if (searchTerm) {
+    filteredPlugins = filteredPlugins.filter(p =>
+      p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.tagline.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }
+
+  if (filterType !== 'all') {
+    if (filterType === 'released') {
+      filteredPlugins = filteredPlugins.filter(p => p.status === 'released');
+    }
+    // Add more filter logic as needed
+  }
+
+  const releasedPlugins = filteredPlugins.filter(p => p.status === 'released');
+  const upcomingPlugins = filteredPlugins.filter(p => p.status === 'in-development' || p.status === 'planned');
 
   return (
     <main className="min-h-screen">
+      {/* Sticky Download Button */}
+      <StickyDownload />
+
+      {/* Scroll to Top Button */}
+      <ScrollToTop />
+
       {/* Hero Section */}
       <Hero />
+
+      {/* Stats Section */}
+      <Stats />
 
       {/* Plugin Showcase */}
       <section id="plugins" className="py-16 md:py-24 bg-background-light">
         <div className="container mx-auto px-4">
           {/* Section Header */}
-          <div className="text-center mb-12 md:mb-16">
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4 font-display">
-              Our Plugins
-            </h2>
-            <p className="text-foreground-muted text-lg max-w-2xl mx-auto">
-              Professional audio tools for every step of your production workflow.
-            </p>
-          </div>
+          <AnimatedSection animation="fade-up">
+            <div className="text-center mb-12 md:mb-16">
+              <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4 font-display">
+                Our Plugins
+              </h2>
+              <p className="text-foreground-muted text-lg max-w-2xl mx-auto">
+                Professional audio tools for every step of your production workflow.
+              </p>
+            </div>
+          </AnimatedSection>
 
           {/* Released Plugins Grid */}
           {releasedPlugins.length > 0 && (
             <>
-              <h3 className="text-2xl font-bold text-foreground mb-6">Available Now</h3>
+              <AnimatedSection animation="fade-up">
+                <h3 className="text-2xl font-bold text-foreground mb-6">Available Now</h3>
+              </AnimatedSection>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 mb-12">
-                {releasedPlugins.map((plugin) => (
-                  <PluginCard key={plugin.id} plugin={plugin} />
+                {releasedPlugins.map((plugin, index) => (
+                  <AnimatedSection key={plugin.id} animation="fade-up" delay={index * 50}>
+                    <PluginCard plugin={plugin} />
+                  </AnimatedSection>
                 ))}
               </div>
             </>
@@ -47,10 +86,14 @@ export default function Home() {
           {/* Upcoming Plugins Grid */}
           {upcomingPlugins.length > 0 && (
             <>
-              <h3 className="text-2xl font-bold text-foreground mb-6">Coming Soon</h3>
+              <AnimatedSection animation="fade-up">
+                <h3 className="text-2xl font-bold text-foreground mb-6">Coming Soon</h3>
+              </AnimatedSection>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-                {upcomingPlugins.map((plugin) => (
-                  <PluginCard key={plugin.id} plugin={plugin} />
+                {upcomingPlugins.map((plugin, index) => (
+                  <AnimatedSection key={plugin.id} animation="fade-up" delay={index * 50}>
+                    <PluginCard plugin={plugin} />
+                  </AnimatedSection>
                 ))}
               </div>
             </>
