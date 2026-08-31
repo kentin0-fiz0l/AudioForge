@@ -150,7 +150,7 @@ if [[ "$OSTYPE" == "darwin"* ]] && [ -n "$CODESIGN_IDENTITY" ]; then
     for plugin in "$VST3_DIR"/*.vst3; do
         if [ -d "$plugin" ]; then
             codesign --force --deep --sign "$CODESIGN_IDENTITY" \
-                --options runtime "$plugin"
+                --timestamp --options runtime "$plugin"
             echo -e "${GREEN}✓ Signed $(basename "$plugin")${NC}"
         fi
     done
@@ -159,7 +159,7 @@ if [[ "$OSTYPE" == "darwin"* ]] && [ -n "$CODESIGN_IDENTITY" ]; then
     for plugin in "$AU_DIR"/*.component; do
         if [ -d "$plugin" ]; then
             codesign --force --deep --sign "$CODESIGN_IDENTITY" \
-                --options runtime "$plugin"
+                --timestamp --options runtime "$plugin"
             echo -e "${GREEN}✓ Signed $(basename "$plugin")${NC}"
         fi
     done
