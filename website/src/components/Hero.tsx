@@ -22,7 +22,7 @@ export const Hero: React.FC<HeroProps> = ({ className = '' }) => {
 
           {/* Subheadline */}
           <p className="text-lg md:text-xl text-foreground/80 mb-8 max-w-2xl mx-auto">
-            10 professional VST3 and AU plugins for music production. From essential utilities to creative effects, built with JUCE and modern C++.
+            13 professional VST3 and AU plugins for music production. From essential utilities to advanced spectral effects, built with JUCE and modern C++.
           </p>
 
           {/* CTA Buttons */}
@@ -33,7 +33,7 @@ export const Hero: React.FC<HeroProps> = ({ className = '' }) => {
               rel="noopener noreferrer"
               className="px-8 py-4 bg-gradient-primary text-white font-semibold rounded-lg hover:opacity-90 transition-opacity shadow-lg w-full sm:w-auto text-center"
             >
-              Download v1.0.0
+              Download v1.3.0
             </a>
             <a
               href="https://github.com/kentin0-fiz0l/AudioForge"

@@ -6,18 +6,18 @@ import { plugins, getCurrentPhase, roadmap } from '@/lib/plugins';
 
 export const metadata: Metadata = {
   title: "AudioForge - Professional DAW Plugins, Free Forever",
-  description: "10 professional VST3 and AU plugins for music production. From essential utilities to creative effects, built with JUCE and modern C++. Free, open source, and professional-grade.",
-  keywords: ["VST3", "AU", "Audio Units", "audio plugins", "DAW", "music production", "JUCE", "free plugins", "open source", "Logic Pro", "Ableton", "audio effects"],
+  description: "13 professional VST3 and AU plugins for music production. From essential utilities to advanced spectral effects, built with JUCE and modern C++. Free, open source, and professional-grade.",
+  keywords: ["VST3", "AU", "Audio Units", "audio plugins", "DAW", "music production", "JUCE", "free plugins", "open source", "Logic Pro", "Ableton", "audio effects", "granular synthesis", "spectral processing"],
   openGraph: {
-    title: "AudioForge v1.0.0 - Professional DAW Plugins, Free Forever",
-    description: "10 professional VST3 and AU plugins for music production. Free, open source, and professional-grade.",
+    title: "AudioForge v1.3.0 - Professional DAW Plugins, Free Forever",
+    description: "13 professional VST3 and AU plugins for music production. Free, open source, and professional-grade.",
     type: "website",
     url: "https://audioforge.fluxstudio.art",
   },
   twitter: {
     card: "summary_large_image",
-    title: "AudioForge v1.0.0 - Professional DAW Plugins, Free Forever",
-    description: "10 professional VST3 and AU plugins for music production. Free, open source, and professional-grade.",
+    title: "AudioForge v1.3.0 - Professional DAW Plugins, Free Forever",
+    description: "13 professional VST3 and AU plugins for music production. Free, open source, and professional-grade.",
   },
 };
 

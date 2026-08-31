@@ -1286,6 +1286,216 @@ if (freeze) {
     screenshots: [],
     downloadUrl: '/downloads/Reverb-v1.0.0',
     docsUrl: '/docs/plugins/reverb'
+  },
+  {
+    id: 'freezefx',
+    name: 'FreezeFX',
+    version: '1.0.0',
+    status: 'released',
+    tagline: 'Spectral freezing plugin with phase evolution',
+    description: 'Freeze and manipulate the spectral content of incoming audio. Creates sustained textures, ambient pads, and creative effects by capturing and holding the frequency spectrum while optionally evolving the phase information.',
+    features: [
+      {
+        name: 'Spectral Freeze',
+        description: 'Capture and hold the frequency spectrum of incoming audio'
+      },
+      {
+        name: 'Phase Evolution',
+        description: 'Continuous phase rotation for animated frozen textures'
+      },
+      {
+        name: 'Dual-Mode Algorithms',
+        description: 'Simple and advanced freeze modes for different sonic characteristics'
+      },
+      {
+        name: 'Real-time Visualization',
+        description: 'Visual feedback of freeze state and spectral content'
+      },
+      {
+        name: 'Mix Control',
+        description: 'Blend frozen and live signals (0-100%)'
+      }
+    ],
+    parameters: [
+      {
+        name: 'Freeze',
+        range: 'Off / On',
+        description: 'Enable/disable spectral freeze'
+      },
+      {
+        name: 'Mix',
+        range: '0% to 100%',
+        description: 'Dry/wet balance'
+      }
+    ],
+    useCases: [
+      'Ambient pad creation from transient sounds',
+      'Sustain effects for percussive instruments',
+      'Creative texture design and sound sculpting',
+      'Drone and atmospheric effects'
+    ],
+    screenshots: [],
+    downloadUrl: '/downloads/FreezeFX-v1.0.0',
+    docsUrl: '/docs/plugins/freezefx'
+  },
+  {
+    id: 'granularengine',
+    name: 'GranularEngine',
+    version: '1.2.0',
+    status: 'released',
+    tagline: 'Real-time granular synthesis with MIDI control',
+    description: 'Advanced granular synthesis plugin that transforms incoming audio into clouds of tiny grains. Features 6 window functions, MIDI integration for note triggering, grain direction control, real-time visualization, and 10 factory presets for instant creative results.',
+    features: [
+      {
+        name: '6 Window Functions',
+        description: 'Hann, Hamming, Blackman, Tukey, Gaussian, and Triangle for different grain characters'
+      },
+      {
+        name: 'Grain Control',
+        description: 'Adjustable grain size (10-500ms), density (1-100 grains/sec), and pitch (-24 to +24 semitones)'
+      },
+      {
+        name: 'MIDI Integration',
+        description: 'Trigger grains with MIDI notes for melodic granular synthesis'
+      },
+      {
+        name: 'Grain Direction',
+        description: 'Forward, reverse, or random playback direction for varied textures'
+      },
+      {
+        name: '60 FPS Visualization',
+        description: 'Real-time grain activity display with active grain indicators'
+      },
+      {
+        name: '10 Factory Presets',
+        description: 'Ready-to-use starting points including Shimmer, Glitch, Ambient Cloud, and more'
+      }
+    ],
+    parameters: [
+      {
+        name: 'Grain Size',
+        range: '10ms to 500ms',
+        description: 'Duration of each grain'
+      },
+      {
+        name: 'Grain Density',
+        range: '1 to 100 grains/sec',
+        description: 'Number of grains triggered per second'
+      },
+      {
+        name: 'Pitch Shift',
+        range: '-24 to +24 semitones',
+        description: 'Transpose grains up or down'
+      },
+      {
+        name: 'Window Function',
+        range: '6 types',
+        description: 'Grain envelope shape'
+      },
+      {
+        name: 'Direction',
+        range: 'Forward / Reverse / Random',
+        description: 'Grain playback direction'
+      },
+      {
+        name: 'Mix',
+        range: '0% to 100%',
+        description: 'Dry/wet balance'
+      }
+    ],
+    useCases: [
+      'Transform vocals into ethereal pads and textures',
+      'Create rhythmic stutter effects and glitches',
+      'Generate ambient soundscapes from any source',
+      'Melodic granular synthesis via MIDI',
+      'Time-stretching and pitch-shifting effects',
+      'Sound design for film and game audio'
+    ],
+    screenshots: [],
+    downloadUrl: '/downloads/GranularEngine-v1.2.0',
+    docsUrl: '/docs/plugins/granularengine'
+  },
+  {
+    id: 'spectralfreeze',
+    name: 'SpectralFreeze',
+    version: '1.2.0',
+    status: 'released',
+    tagline: 'Professional spectral manipulation with 5 advanced effects',
+    description: 'Professional spectral freezing plugin with advanced manipulation capabilities. Features a 2048-sample FFT engine, freeze/unfreeze control, 5 sophisticated effects (blur, shift, gate, morph, randomize), 60 FPS spectrogram visualization with color-coded frequency bands, parameter smoothing, and 6 factory presets.',
+    features: [
+      {
+        name: '2048-Sample FFT Engine',
+        description: 'High-resolution spectral analysis with Hann window and 75% overlap'
+      },
+      {
+        name: 'Freeze/Unfreeze Control',
+        description: 'Capture and manipulate the spectral snapshot with smooth transitions'
+      },
+      {
+        name: '5 Advanced Effects',
+        description: 'Spectral blur, shift, gate, morph, and randomize for creative sound design'
+      },
+      {
+        name: '60 FPS Spectrogram',
+        description: 'Real-time visualization with color-coded frequency bands (bass=orange, mid=cyan, high=magenta)'
+      },
+      {
+        name: 'Parameter Smoothing',
+        description: 'Click-free parameter changes with 50ms smoothing for all controls'
+      },
+      {
+        name: '6 Factory Presets',
+        description: 'Instant results with presets like Gentle Blur, Harmonic Shift, Spectral Gate, and more'
+      }
+    ],
+    parameters: [
+      {
+        name: 'Freeze',
+        range: 'Off / On',
+        description: 'Capture spectral snapshot'
+      },
+      {
+        name: 'Blur Amount',
+        range: '0% to 100%',
+        description: 'Frequency smearing intensity'
+      },
+      {
+        name: 'Shift Amount',
+        range: '-24 to +24 semitones',
+        description: 'Spectral pitch transposition'
+      },
+      {
+        name: 'Gate Threshold',
+        range: '-60dB to 0dB',
+        description: 'Spectral gating threshold'
+      },
+      {
+        name: 'Morph Amount',
+        range: '0% to 100%',
+        description: 'Blend between spectral snapshots'
+      },
+      {
+        name: 'Randomize',
+        range: '0% to 100%',
+        description: 'Controlled spectral chaos'
+      },
+      {
+        name: 'Mix',
+        range: '0% to 100%',
+        description: 'Dry/wet balance'
+      }
+    ],
+    useCases: [
+      'Create evolving ambient textures from static sounds',
+      'Spectral filtering and frequency isolation',
+      'Harmonic shifting and pitch manipulation',
+      'Sound design for film, games, and electronic music',
+      'Experimental processing and glitch effects',
+      'Morphing between different sonic characters'
+    ],
+    screenshots: [],
+    downloadUrl: '/downloads/SpectralFreeze-v1.2.0',
+    docsUrl: '/docs/plugins/spectralfreeze'
   }
 ];
 
