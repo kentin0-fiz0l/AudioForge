@@ -14,7 +14,7 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Version
-VERSION="1.1.1"
+VERSION="1.3.0"
 PROJECT_ROOT="$(cd "$(dirname "$0")" && pwd)"
 
 # Plugin list
@@ -29,6 +29,9 @@ PLUGINS=(
     "Saturation"
     "ChorusFlanger"
     "Reverb"
+    "FreezeFX"
+    "GranularEngine"
+    "SpectralFreeze"
 )
 
 # Paths
@@ -174,7 +177,7 @@ echo ""
 echo -e "${BLUE}Creating README.txt...${NC}"
 
 cat > "$STAGING_DIR/README.txt" << 'EOF'
-AudioForge v1.1.0
+AudioForge v1.3.0
 =================
 
 Professional-quality DAW plugins, free and open source.
@@ -192,9 +195,10 @@ Manual Installation:
 2. Copy AU plugins to: ~/Library/Audio/Plug-Ins/Components/
 3. Rescan plugins in your DAW
 
-PLUGINS INCLUDED
-----------------
+PLUGINS INCLUDED (12 Total)
+----------------------------
 
+Core Processing Suite (v1.0.0):
 1. SimpleGain - Clean gain/volume control with metering
 2. PanUtil - Stereo panning and width control
 3. BasicSynth - Simple subtractive synthesizer
@@ -205,6 +209,11 @@ PLUGINS INCLUDED
 8. Saturation - Multi-mode analog saturation
 9. ChorusFlanger - LFO-based modulation effects
 10. Reverb - Freeverb-inspired algorithmic reverb
+11. FreezeFX - Spectral freezing plugin
+
+Advanced Effects Suite (v1.2.0):
+12. GranularEngine - Real-time granular synthesis
+13. SpectralFreeze - Professional spectral manipulation
 
 COMPATIBILITY
 -------------
@@ -251,7 +260,7 @@ echo -e "${BLUE}Creating installation scripts...${NC}"
 cat > "$STAGING_DIR/Install AudioForge.command" << 'EOF'
 #!/bin/bash
 
-# AudioForge v1.0.0 Installation Script
+# AudioForge v1.3.0 Installation Script
 
 # Colors
 RED='\033[0;31m'
@@ -262,7 +271,7 @@ NC='\033[0m'
 clear
 
 echo "======================================"
-echo "AudioForge v1.0.0 Installer"
+echo "AudioForge v1.3.0 Installer"
 echo "======================================"
 echo ""
 echo "This script will install all AudioForge plugins to:"
@@ -337,7 +346,7 @@ echo -e "${GREEN}✓ Install AudioForge.command created${NC}"
 cat > "$STAGING_DIR/Uninstall AudioForge.command" << 'EOF'
 #!/bin/bash
 
-# AudioForge v1.0.0 Uninstallation Script
+# AudioForge v1.3.0 Uninstallation Script
 
 # Colors
 RED='\033[0;31m'
@@ -348,7 +357,7 @@ NC='\033[0m'
 clear
 
 echo "======================================"
-echo "AudioForge v1.0.0 Uninstaller"
+echo "AudioForge v1.3.0 Uninstaller"
 echo "======================================"
 echo ""
 echo -e "${YELLOW}WARNING: This will remove all AudioForge plugins${NC}"
@@ -376,6 +385,9 @@ PLUGINS=(
     "Saturation"
     "ChorusFlanger"
     "Reverb"
+    "FreezeFX"
+    "GranularEngine"
+    "SpectralFreeze"
 )
 
 echo ""

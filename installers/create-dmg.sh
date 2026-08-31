@@ -75,10 +75,13 @@ echo -e "${GREEN}✓ Temporary DMG created${NC}"
 
 # Mount the temporary DMG
 echo -e "${BLUE}→ Mounting DMG...${NC}"
-MOUNT_DIR=$(hdiutil attach -readwrite -noverify -noautoopen "$TEMP_DMG" | egrep '^/dev/' | sed 1q | awk '{print $3}')
+MOUNT_OUTPUT=$(hdiutil attach -readwrite -noverify -noautoopen "$TEMP_DMG" 2>&1)
+MOUNT_DIR=$(echo "$MOUNT_OUTPUT" | grep "Apple_HFS" | awk -F'\t' '{print $NF}' | tr -d '\n' | xargs)
 
-if [ -z "$MOUNT_DIR" ]; then
+if [ -z "$MOUNT_DIR" ] || [ ! -d "$MOUNT_DIR" ]; then
     echo -e "${RED}✗ Failed to mount DMG${NC}"
+    echo "Output: $MOUNT_OUTPUT"
+    echo "Mount dir: '$MOUNT_DIR'"
     exit 1
 fi
 
