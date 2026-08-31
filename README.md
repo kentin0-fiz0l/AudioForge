@@ -11,9 +11,9 @@ Professional-quality DAW plugins, free and open source.
 
 **[Download Latest Release](https://github.com/kentin0-fiz0l/AudioForge/releases/latest)** - v1.3.0
 
-- **macOS**: Signed & notarized DMG (VST3 + AU)
-- **Windows**: NSIS installer (VST3) - *Coming soon*
-- **Linux**: .deb, .rpm, AppImage (VST3) - *Coming soon*
+- **macOS**: Signed & notarized DMG (VST3 + AU) - **Available now!**
+- **Windows**: NSIS installer (VST3) - *Coming in v1.3.1 (September 2026)*
+- **Linux**: .deb, .rpm, AppImage (VST3) - *Coming in v1.3.2 (September 2026)*
 
 ## Overview
 
@@ -44,9 +44,10 @@ AudioForge is a collection of high-quality audio plugins for music production. S
 ### Distribution (v1.3.0) ✅
 - ✅ macOS code signing (Developer ID Application)
 - ✅ Apple notarization (zero Gatekeeper warnings)
-- ✅ Professional DMG installer
-- 🔧 Windows NSIS installer (build pending)
-- 🔧 Linux packages (.deb, .rpm, AppImage) (build pending)
+- ✅ Professional DMG installer (v1.3.0 available now)
+- 🔧 Windows NSIS installer (scripts ready, v1.3.1 planned)
+- 🔧 Linux packages (scripts ready, v1.3.2 planned)
+- ✅ GitHub Discussions enabled for community
 
 ### Planned (v1.4.0+)
 - Video tutorial series (5 videos scripted)
@@ -92,9 +93,21 @@ AudioForge/
     └── linux/            # .deb, .rpm, AppImage scripts
 ```
 
-## What's New in v1.2.0 🎉
+## What's New in v1.3.0 🎉
 
-### GranularEngine - Real-Time Granular Synthesis
+### Professional Distribution (macOS)
+- **Code Signed & Notarized**: Zero Gatekeeper warnings on macOS installation
+- **Universal Binary**: Native support for Intel and Apple Silicon Macs
+- **One-Click Installer**: Professional DMG with automated deployment
+- **GitHub Discussions**: Community Q&A and feature requests now enabled
+
+Full release notes: [v1.3.0 Release Notes](docs/v1.3.0-Release-Notes.md)
+
+---
+
+## Plugin Features
+
+### GranularEngine v1.2.0 - Real-Time Granular Synthesis
 - **6 Window Functions**: Hann, Gaussian, Triangle, Tukey, Blackman, Kaiser
 - **Grain Control**: Size (10-500ms), density (1-50 grains/sec), pitch (-24 to +24 semitones)
 - **Direction Control**: Forward, backward, pingpong grain playback
@@ -102,7 +115,7 @@ AudioForge/
 - **Preset System**: 10 factory presets + quick save/load
 - **60 FPS Visualization**: Real-time waveform, window preview, grain activity
 
-### SpectralFreeze - Professional Spectral Manipulation
+### SpectralFreeze v1.2.0 - Professional Spectral Manipulation
 - **FFT Engine**: 2048-sample FFT with 75% overlap for high-quality spectral processing
 - **Core Features**: Freeze/unfreeze, spectral blur, low/high-cut filters, dry/wet mix
 - **Advanced Effects**: Stretch, shift, morph, gate, randomize spectral content
