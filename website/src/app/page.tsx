@@ -9,34 +9,11 @@ import { StickyDownload } from '@/components/StickyDownload';
 import { ScrollToTop } from '@/components/ScrollToTop';
 import { AnimatedSection } from '@/components/AnimatedSection';
 import { plugins, getCurrentPhase, roadmap } from '@/lib/plugins';
-import { useState } from 'react';
 
 export default function Home() {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterType, setFilterType] = useState('all');
-
   const currentPhase = getCurrentPhase();
-
-  // Filter plugins based on search and filter
-  let filteredPlugins = plugins;
-
-  if (searchTerm) {
-    filteredPlugins = filteredPlugins.filter(p =>
-      p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.tagline.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }
-
-  if (filterType !== 'all') {
-    if (filterType === 'released') {
-      filteredPlugins = filteredPlugins.filter(p => p.status === 'released');
-    }
-    // Add more filter logic as needed
-  }
-
-  const releasedPlugins = filteredPlugins.filter(p => p.status === 'released');
-  const upcomingPlugins = filteredPlugins.filter(p => p.status === 'in-development' || p.status === 'planned');
+  const releasedPlugins = plugins.filter(p => p.status === 'released');
+  const upcomingPlugins = plugins.filter(p => p.status === 'in-development' || p.status === 'planned');
 
   return (
     <main className="min-h-screen">
