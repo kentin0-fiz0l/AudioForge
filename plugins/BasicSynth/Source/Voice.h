@@ -1,12 +1,12 @@
 #pragma once
 
 #include <juce_audio_processors/juce_audio_processors.h>
+#include <synth/ADSREnvelope.h>
+#include <synth/MultiModeFilter.h>
 #include "Oscillator.h"
 #include "OscillatorBank.h"
 #include "LFO.h"
 #include "ModulationMatrix.h"
-#include "ADSREnvelope.h"
-#include "MultiModeFilter.h"
 
 /**
  * Synthesizer Voice

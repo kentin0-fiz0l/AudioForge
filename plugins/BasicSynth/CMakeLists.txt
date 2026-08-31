@@ -33,8 +33,6 @@ target_sources(BasicSynth PRIVATE
     Source/NoiseGenerator.cpp
     Source/LFO.cpp
     Source/ModulationMatrix.cpp
-    Source/ADSREnvelope.cpp
-    Source/MultiModeFilter.cpp
     Source/Chorus.cpp
     Source/Reverb.cpp
     Source/Saturation.cpp
@@ -47,11 +45,12 @@ target_compile_definitions(BasicSynth PUBLIC
     JUCE_USE_CURL=0
     JUCE_DISPLAY_SPLASH_SCREEN=0)
 
-# Link JUCE libraries and shared DSP library
+# Link JUCE libraries and shared libraries
 target_link_libraries(BasicSynth PRIVATE
     juce::juce_audio_utils
     juce::juce_dsp
-    AudioForgeDSP)
+    AudioForgeDSP
+    AudioForgeSynth)
 
 # Set C++ standard
 target_compile_features(BasicSynth PRIVATE cxx_std_17)
