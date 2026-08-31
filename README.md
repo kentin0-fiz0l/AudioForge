@@ -3,16 +3,25 @@
 [![Build and Test](https://github.com/kentin0-fiz0l/AudioForge/actions/workflows/build-test.yml/badge.svg)](https://github.com/kentin0-fiz0l/AudioForge/actions/workflows/build-test.yml)
 [![Code Coverage](https://codecov.io/gh/kentin0-fiz0l/AudioForge/branch/main/graph/badge.svg?token=YOUR_CODECOV_TOKEN)](https://codecov.io/gh/kentin0-fiz0l/AudioForge)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Latest Release](https://img.shields.io/github/v/release/kentin0-fiz0l/AudioForge)](https://github.com/kentin0-fiz0l/AudioForge/releases/latest)
 
 Professional-quality DAW plugins, free and open source.
+
+## 📦 Download
+
+**[Download Latest Release](https://github.com/kentin0-fiz0l/AudioForge/releases/latest)** - v1.3.0
+
+- **macOS**: Signed & notarized DMG (VST3 + AU)
+- **Windows**: NSIS installer (VST3) - *Coming soon*
+- **Linux**: .deb, .rpm, AppImage (VST3) - *Coming soon*
 
 ## Overview
 
 AudioForge is a collection of high-quality audio plugins for music production. Starting with essential utilities and effects, we're building a suite of tools that producers actually want to use.
 
-## Current Plugins
+## Current Plugins (13 Total)
 
-### Core Processing Suite (v1.0.0)
+### Core Processing Suite (11 plugins)
 - **SimpleGain** - Clean gain/volume control with metering (-60 to +12 dB)
 - **PanUtil** - Stereo panning utility with balance and width controls
 - **BasicSynth** - Simple subtractive synthesizer with ADSR envelope and filter
@@ -25,17 +34,24 @@ AudioForge is a collection of high-quality audio plugins for music production. S
 - **Reverb** - Freeverb-inspired algorithmic reverb with freeze mode and stereo width control
 - **FreezeFX** - Spectral freezing plugin with phase evolution, dual-mode algorithms, and real-time visualization
 
-### Advanced Effects Suite (v1.2.0) 🆕
+### Advanced Effects Suite (2 plugins) 🆕
 - **GranularEngine** - Real-time granular synthesis with 6 window functions, MIDI control, grain direction control, visualization, and preset system
-- **SpectralFreeze** - Professional spectral manipulation with freeze/unfreeze, 5 advanced effects (stretch, shift, morph, gate, randomize), 60 FPS spectrogram visualization, parameter smoothing, and 6 factory presets
+- **SpectralFreeze** - Professional spectral manipulation with freeze/unfreeze, 5 advanced effects (blur, shift, morph, gate, randomize), 60 FPS spectrogram visualization, parameter smoothing, and 6 factory presets
 
 ### Documentation
 - **SpectralFreeze**: [User Manual](docs/SpectralFreeze-Manual.md) - Complete 300+ line guide with creative techniques
 
-### Planned (Phase 3+)
-- Code signing for macOS and Windows
-- Professional installers (.dmg, .exe, .deb, .rpm)
-- Video tutorial series
+### Distribution (v1.3.0) ✅
+- ✅ macOS code signing (Developer ID Application)
+- ✅ Apple notarization (zero Gatekeeper warnings)
+- ✅ Professional DMG installer
+- 🔧 Windows NSIS installer (build pending)
+- 🔧 Linux packages (.deb, .rpm, AppImage) (build pending)
+
+### Planned (v1.4.0+)
+- Video tutorial series (5 videos scripted)
+- Plugin screenshot gallery
+- AAX format for Pro Tools
 - Additional creative effects
 
 ## Tech Stack
