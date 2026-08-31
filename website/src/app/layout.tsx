@@ -1,24 +1,30 @@
 import type { Metadata } from "next";
-import localFont from "next/font/local";
+import { Navigation } from "@/components/Navigation";
 import "./globals.css";
-
-const geistSans = localFont({
-  src: "./fonts/GeistVF.woff",
-  variable: "--font-geist-sans",
-  weight: "100 900",
-});
-const geistMono = localFont({
-  src: "./fonts/GeistMonoVF.woff",
-  variable: "--font-geist-mono",
-  weight: "100 900",
-});
 
 export const metadata: Metadata = {
   title: "AudioForge - Professional VST3 Plugins",
-  description: "Professional-quality audio plugins built with modern C++ and JUCE framework",
-  metadataBase: new URL('https://audioforge.dev'),
+  description: "13 professional VST3 and AU plugins for music production. Free, open source, and professional-grade.",
+  metadataBase: new URL('https://audioforge-site.sfo3.cdn.digitaloceanspaces.com'),
+  icons: {
+    icon: '/favicon.svg',
+    apple: '/favicon.svg',
+  },
   alternates: {
-    canonical: '/',
+    canonical: '/index.html',
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: 'https://audioforge-site.sfo3.cdn.digitaloceanspaces.com/index.html',
+    title: 'AudioForge - Professional VST3 & AU Plugins',
+    description: '13 professional audio plugins for music production. Built with JUCE, free and open source.',
+    siteName: 'AudioForge',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'AudioForge - Professional VST3 & AU Plugins',
+    description: '13 professional audio plugins for music production. Built with JUCE, free and open source.',
   },
 };
 
@@ -27,11 +33,10 @@ const organizationSchema = {
   "@context": "https://schema.org",
   "@type": "Organization",
   "name": "AudioForge",
-  "url": "https://audioforge.dev",
-  "logo": "https://audioforge.dev/images/logo.png",
+  "url": "https://audioforge-site.sfo3.cdn.digitaloceanspaces.com/index.html",
   "description": "Professional-quality audio plugins built with modern C++ and JUCE framework",
   "sameAs": [
-    "https://github.com/yourusername/AudioForge"
+    "https://github.com/kentin0-fiz0l/AudioForge"
   ]
 };
 
@@ -47,7 +52,7 @@ const softwareSchema = {
     "price": "0",
     "priceCurrency": "USD"
   },
-  "description": "Professional-quality audio plugins built with modern C++ and JUCE framework"
+  "description": "13 professional VST3 and AU plugins for music production. Built with JUCE and modern C++17."
 };
 
 export default function RootLayout({
@@ -71,9 +76,8 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
-      >
+      <body className="antialiased bg-background text-foreground min-h-screen">
+        <Navigation />
         {children}
       </body>
     </html>
