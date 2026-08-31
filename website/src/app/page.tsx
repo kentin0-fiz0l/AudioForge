@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useMemo } from 'react';
 import { Hero } from '@/components/Hero';
 import { PluginCard } from '@/components/PluginCard';
 import { FeatureGrid } from '@/components/FeatureGrid';
@@ -12,11 +13,35 @@ import { FAQ } from '@/components/FAQ';
 import { Newsletter } from '@/components/Newsletter';
 import { DocsPreview } from '@/components/DocsPreview';
 import { Testimonials } from '@/components/Testimonials';
+import { PluginFilter, type PluginCategory } from '@/components/PluginFilter';
 import { plugins, getCurrentPhase, roadmap } from '@/lib/plugins';
 
 export default function Home() {
+  const [activeCategory, setActiveCategory] = useState<PluginCategory>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+
   const currentPhase = getCurrentPhase();
-  const releasedPlugins = plugins.filter(p => p.status === 'released');
+
+  // Filter plugins based on category and search
+  const filteredPlugins = useMemo(() => {
+    return plugins.filter((plugin) => {
+      // Status filter
+      const isReleased = plugin.status === 'released';
+
+      // Category filter
+      const matchesCategory = activeCategory === 'all' || plugin.category === activeCategory;
+
+      // Search filter
+      const matchesSearch =
+        searchQuery === '' ||
+        plugin.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        plugin.tagline.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        plugin.description.toLowerCase().includes(searchQuery.toLowerCase());
+
+      return isReleased && matchesCategory && matchesSearch;
+    });
+  }, [activeCategory, searchQuery]);
+
   const upcomingPlugins = plugins.filter(p => p.status === 'in-development' || p.status === 'planned');
 
   return (
@@ -48,20 +73,48 @@ export default function Home() {
             </div>
           </AnimatedSection>
 
-          {/* Released Plugins Grid */}
-          {releasedPlugins.length > 0 && (
-            <>
-              <AnimatedSection animation="fade-up">
-                <h3 className="text-2xl font-bold text-foreground mb-6">Available Now</h3>
-              </AnimatedSection>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 mb-12">
-                {releasedPlugins.map((plugin, index) => (
-                  <AnimatedSection key={plugin.id} animation="fade-up" delay={index * 50}>
-                    <PluginCard plugin={plugin} />
-                  </AnimatedSection>
-                ))}
+          {/* Plugin Filter */}
+          <AnimatedSection animation="fade-up">
+            <PluginFilter
+              onFilterChange={setActiveCategory}
+              onSearchChange={setSearchQuery}
+              activeCategory={activeCategory}
+              searchQuery={searchQuery}
+            />
+          </AnimatedSection>
+
+          {/* Filtered Plugins Grid */}
+          {filteredPlugins.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 mb-12">
+              {filteredPlugins.map((plugin, index) => (
+                <AnimatedSection key={plugin.id} animation="fade-up" delay={index * 50}>
+                  <PluginCard plugin={plugin} />
+                </AnimatedSection>
+              ))}
+            </div>
+          ) : (
+            <AnimatedSection animation="fade-up">
+              <div className="text-center py-16">
+                <div className="w-16 h-16 mx-auto mb-4 bg-primary/10 border border-primary/20 rounded-full flex items-center justify-center">
+                  <svg className="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold text-foreground mb-2">No plugins found</h3>
+                <p className="text-foreground/60 mb-6">
+                  Try adjusting your search or filter to find what you&apos;re looking for.
+                </p>
+                <button
+                  onClick={() => {
+                    setActiveCategory('all');
+                    setSearchQuery('');
+                  }}
+                  className="px-6 py-3 bg-gradient-primary text-white font-semibold rounded-lg hover:shadow-glow-primary transition-all"
+                >
+                  Clear Filters
+                </button>
               </div>
-            </>
+            </AnimatedSection>
           )}
 
           {/* Upcoming Plugins Grid */}

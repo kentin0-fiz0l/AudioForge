@@ -14,11 +14,14 @@ export interface PluginParameter {
   description: string;
 }
 
+export type PluginCategory = 'utility' | 'creative' | 'mixing' | 'synthesis';
+
 export interface Plugin {
   id: string;
   name: string;
   version: string;
   status: 'released' | 'in-development' | 'planned';
+  category: PluginCategory;
   tagline: string;
   description: string;
   features: PluginFeature[];
@@ -41,6 +44,7 @@ export const plugins: Plugin[] = [
     name: 'SimpleGain',
     version: '1.0.0',
     status: 'released',
+    category: 'utility',
     tagline: 'Clean gain/volume control with metering',
     description: 'A basic gain/volume control plugin with smooth parameter changes and real-time level metering. Perfect for learning audio buffer processing and JUCE fundamentals.',
     features: [
@@ -89,6 +93,7 @@ export const plugins: Plugin[] = [
     name: 'PanUtil',
     version: '1.0.0',
     status: 'released',
+    category: 'utility',
     tagline: 'Stereo panning utility with balance and width controls',
     description: 'Professional stereo panning and width control with constant-power panning algorithm and dual metering. Features both Pan and Balance modes for different use cases.',
     features: [
@@ -177,6 +182,7 @@ R = mid - side;`
     name: 'BasicSynth',
     version: '0.1.0',
     status: 'released',
+    category: 'synthesis',
     tagline: 'Simple subtractive synthesizer for learning synthesis fundamentals',
     description: 'A polyphonic subtractive synthesizer with 3 oscillator waveforms, ADSR envelope, and resonant low-pass filter. Perfect for learning MIDI processing, voice management, and sound synthesis.',
     features: [
@@ -303,6 +309,7 @@ voice.noteOn(midiNote, velocity, sampleRate);`
     name: 'CleanDelay',
     version: '0.1.0',
     status: 'released',
+    category: 'mixing',
     tagline: 'Professional stereo delay with ping-pong mode',
     description: 'A versatile stereo delay effect for creating rhythmic echoes, ambient textures, and stereo width enhancement. Features clean circular buffer implementation with feedback control and ping-pong mode for alternating L/R delays.',
     features: [
@@ -406,6 +413,7 @@ rightDelayBuffer[writePos] = rightInput + (rightFeedback * feedback);`
     name: 'SimpleEQ',
     version: '0.1.0',
     status: 'released',
+    category: 'mixing',
     tagline: '3-band parametric EQ with HPF/LPF',
     description: 'Professional 3-band parametric equalizer with optional high-pass and low-pass filters. Features shelf and peaking filters for precise tone shaping across the frequency spectrum.',
     features: [
@@ -543,6 +551,7 @@ b2 = (1.0 - alpha*A) / a0;`
     name: 'SimpleComp',
     version: '1.0.0',
     status: 'released',
+    category: 'mixing',
     tagline: 'Dynamic range compressor with automatic makeup gain',
     description: 'Professional-quality dynamic range compressor with envelope-based gain reduction, hard/soft knee modes, and real-time gain reduction metering. Features automatic makeup gain to maintain consistent output levels.',
     features: [
@@ -637,6 +646,7 @@ b2 = (1.0 - alpha*A) / a0;`
     name: 'WaveShaper',
     version: '1.0.0',
     status: 'released',
+    category: 'creative',
     tagline: 'Waveshaping distortion with 5 curve modes and tone control',
     description: 'Professional waveshaping distortion plugin with multiple saturation curves, drive control, and integrated tone filtering. Features real-time curve visualization to see how each mode shapes your audio.',
     features: [
@@ -767,6 +777,7 @@ else
   {
     id: 'saturation',
     name: 'Saturation',
+    category: 'creative',
     version: '1.0.0',
     status: 'released',
     tagline: 'Multi-mode analog saturation with harmonic enhancement',
@@ -929,6 +940,7 @@ oversampler->processSamplesDown(outputBlock);`
   {
     id: 'chorusflanger',
     name: 'Chorus/Flanger',
+    category: 'creative',
     version: '1.0.0',
     status: 'released',
     tagline: 'LFO-based modulation effects for movement and depth',
@@ -1099,6 +1111,7 @@ if (lfoPhaseRight >= 1.0f) lfoPhaseRight -= 1.0f;`
   {
     id: 'reverb',
     name: 'Reverb',
+    category: 'mixing',
     version: '1.0.0',
     status: 'released',
     tagline: 'Algorithmic reverb with Freeverb-inspired design',
@@ -1290,6 +1303,7 @@ if (freeze) {
   {
     id: 'freezefx',
     name: 'FreezeFX',
+    category: 'creative',
     version: '1.0.0',
     status: 'released',
     tagline: 'Spectral freezing plugin with phase evolution',
@@ -1341,6 +1355,7 @@ if (freeze) {
   {
     id: 'granularengine',
     name: 'GranularEngine',
+    category: 'creative',
     version: '1.2.0',
     status: 'released',
     tagline: 'Real-time granular synthesis with MIDI control',
@@ -1418,6 +1433,7 @@ if (freeze) {
   {
     id: 'spectralfreeze',
     name: 'SpectralFreeze',
+    category: 'creative',
     version: '1.2.0',
     status: 'released',
     tagline: 'Professional spectral manipulation with 5 advanced effects',
