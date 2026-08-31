@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     title: "AudioForge v1.3.0 - Professional DAW Plugins, Free Forever",
     description: "13 professional VST3 and AU plugins for music production. Free, open source, and professional-grade.",
     type: "website",
-    url: "https://audioforge.fluxstudio.art",
+    url: "https://audioforge-site.sfo3.cdn.digitaloceanspaces.com/index.html",
   },
   twitter: {
     card: "summary_large_image",

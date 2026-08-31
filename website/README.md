@@ -11,8 +11,8 @@ AudioForge is a collection of professional-quality audio plugins built with mode
 - **Framework**: Next.js 14 with App Router
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS
-- **Deployment**: Static site export to DigitalOcean
-- **Domain**: audioforge.fluxstudio.art
+- **Deployment**: Static site export to DigitalOcean Spaces
+- **URL**: https://audioforge-site.sfo3.cdn.digitaloceanspaces.com/index.html
 
 ## Features
 

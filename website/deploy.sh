@@ -37,6 +37,5 @@ aws s3 sync out/ s3://$BUCKET/ \
 
 echo ""
 echo "✅ Deployment complete!"
-echo "🌐 Site live at: https://audioforge.fluxstudio.art"
+echo "🌐 Site live at: https://audioforge-site.sfo3.cdn.digitaloceanspaces.com/index.html"
 echo ""
-echo "Note: DNS propagation may take a few minutes if this is your first deployment."

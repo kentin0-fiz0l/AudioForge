@@ -248,7 +248,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed contribution guidelines.
 
 - **Discussions**: [GitHub Discussions](https://github.com/kentin0-fiz0l/AudioForge/discussions) - Ask questions, share tips
 - **Issues**: [GitHub Issues](https://github.com/kentin0-fiz0l/AudioForge/issues) - Report bugs, request features
-- **Website**: [audioforge.fluxstudio.art](https://audioforge.fluxstudio.art) - Downloads and documentation
+- **Website**: [AudioForge Website](https://audioforge-site.sfo3.cdn.digitaloceanspaces.com/index.html) - Downloads and documentation
 
 ## License
 
