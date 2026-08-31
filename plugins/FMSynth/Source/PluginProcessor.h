@@ -70,6 +70,7 @@ public:
 
     // Parameters
     juce::AudioProcessorValueTreeState& getAPVTS() { return apvts; }
+    AudioForge::PresetManager& getPresetManager() { return presetManager; }
 
 private:
     juce::AudioProcessorValueTreeState apvts;

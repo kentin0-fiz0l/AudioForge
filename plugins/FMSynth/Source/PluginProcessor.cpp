@@ -1,5 +1,6 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
+#include "FactoryPresets.h"
 
 //==============================================================================
 PluginProcessor::PluginProcessor()
@@ -8,6 +9,8 @@ PluginProcessor::PluginProcessor()
     , apvts(*this, nullptr, "Parameters", createParameterLayout())
     , presetManager("FMSynth", *this)
 {
+    // Load factory presets
+    presetManager.setFactoryPresets(FMSynthPresets::getFactoryPresets());
     presetManager.scanPresets();
 }
 
