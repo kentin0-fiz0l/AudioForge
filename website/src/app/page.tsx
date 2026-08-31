@@ -9,6 +9,8 @@ import { StickyDownload } from '@/components/StickyDownload';
 import { ScrollToTop } from '@/components/ScrollToTop';
 import { AnimatedSection } from '@/components/AnimatedSection';
 import { FAQ } from '@/components/FAQ';
+import { Newsletter } from '@/components/Newsletter';
+import { DocsPreview } from '@/components/DocsPreview';
 import { plugins, getCurrentPhase, roadmap } from '@/lib/plugins';
 
 export default function Home() {
@@ -81,6 +83,9 @@ export default function Home() {
 
       {/* Value Propositions */}
       <FeatureGrid />
+
+      {/* Documentation Preview */}
+      <DocsPreview />
 
       {/* Roadmap Teaser */}
       <section className="py-16 md:py-24 bg-background-light">
@@ -298,6 +303,9 @@ export default function Home() {
 
       {/* FAQ Section */}
       <FAQ />
+
+      {/* Newsletter Signup */}
+      <Newsletter />
 
       <Footer />
     </main>
