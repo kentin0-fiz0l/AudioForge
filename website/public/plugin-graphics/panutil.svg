@@ -1,0 +1,47 @@
+<svg width="400" height="300" viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="400" height="300" fill="#0a0e14"/>
+
+  <!-- Gradient Definitions -->
+  <defs>
+    <linearGradient id="panGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#f59e0b;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#06b6d4;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f59e0b;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Stereo Field Circle -->
+  <circle cx="200" cy="150" r="80" fill="none" stroke="#374151" stroke-width="2"/>
+  <circle cx="200" cy="150" r="60" fill="none" stroke="#374151" stroke-width="1" stroke-dasharray="4 4"/>
+  <circle cx="200" cy="150" r="40" fill="none" stroke="#374151" stroke-width="1" stroke-dasharray="4 4"/>
+
+  <!-- Center Line -->
+  <line x1="200" y1="70" x2="200" y2="230" stroke="#6b7280" stroke-width="1" stroke-dasharray="4 4"/>
+
+  <!-- L and R Labels -->
+  <text x="100" y="155" fill="#f59e0b" font-size="16" font-weight="bold">L</text>
+  <text x="290" y="155" fill="#f59e0b" font-size="16" font-weight="bold">R</text>
+
+  <!-- Pan Position Indicator -->
+  <g filter="drop-shadow(0 4px 12px rgba(6, 182, 212, 0.5))">
+    <circle cx="230" cy="150" r="15" fill="url(#panGradient)"/>
+    <circle cx="230" cy="150" r="8" fill="#0a0e14"/>
+  </g>
+
+  <!-- Waveform Visualization L -->
+  <path d="M 120 140 Q 130 120 140 140 Q 150 160 160 140" stroke="#f59e0b" stroke-width="2" fill="none" opacity="0.6"/>
+
+  <!-- Waveform Visualization R -->
+  <path d="M 240 140 Q 250 120 260 140 Q 270 160 280 140" stroke="#f59e0b" stroke-width="2" fill="none" opacity="0.8"/>
+
+  <!-- Width Arc -->
+  <path d="M 150 200 Q 200 180 250 200" stroke="#06b6d4" stroke-width="3" fill="none" opacity="0.5"/>
+  <text x="200" y="220" fill="#06b6d4" font-size="12" text-anchor="middle">Width</text>
+
+  <!-- Title -->
+  <text x="200" y="35" fill="#e4e7eb" font-size="20" font-weight="bold" text-anchor="middle">PanUtil</text>
+
+  <!-- Glow Effect -->
+  <circle cx="200" cy="150" r="100" fill="#06b6d4" opacity="0.05"/>
+</svg>

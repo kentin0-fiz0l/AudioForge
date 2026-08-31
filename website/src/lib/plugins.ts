@@ -36,6 +36,7 @@ export interface Plugin {
   screenshots?: string[];
   downloadUrl?: string;
   docsUrl?: string;
+  graphic?: string;
 }
 
 export const plugins: Plugin[] = [
@@ -86,7 +87,8 @@ export const plugins: Plugin[] = [
     ],
     screenshots: [],
     downloadUrl: '/downloads/SimpleGain-v1.0.0',
-    docsUrl: '/docs/plugins/simplegain'
+    docsUrl: '/docs/plugins/simplegain',
+    graphic: '/plugin-graphics/simplegain.svg'
   },
   {
     id: 'panutil',
@@ -175,7 +177,8 @@ R = mid - side;`
     ],
     screenshots: [],
     downloadUrl: '/downloads/PanUtil-v1.0.0',
-    docsUrl: '/docs/plugins/panutil'
+    docsUrl: '/docs/plugins/panutil',
+    graphic: '/plugin-graphics/panutil.svg'
   },
   {
     id: 'basicsynth',
@@ -302,7 +305,8 @@ voice.noteOn(midiNote, velocity, sampleRate);`
     ],
     screenshots: [],
     downloadUrl: '/downloads/BasicSynth-v0.1.0',
-    docsUrl: '/docs/plugins/basicsynth'
+    docsUrl: '/docs/plugins/basicsynth',
+    graphic: '/plugin-graphics/basicsynth.svg'
   },
   {
     id: 'cleandelay',
@@ -406,7 +410,8 @@ rightDelayBuffer[writePos] = rightInput + (rightFeedback * feedback);`
     ],
     screenshots: [],
     downloadUrl: '/downloads/CleanDelay-v0.1.0',
-    docsUrl: '/docs/plugins/cleandelay'
+    docsUrl: '/docs/plugins/cleandelay',
+    graphic: '/plugin-graphics/cleandelay.svg'
   },
   {
     id: 'simpleeq',
@@ -544,7 +549,8 @@ b2 = (1.0 - alpha*A) / a0;`
     ],
     screenshots: [],
     downloadUrl: '/downloads/SimpleEQ-v0.1.0',
-    docsUrl: '/docs/plugins/simpleeq'
+    docsUrl: '/docs/plugins/simpleeq',
+    graphic: '/plugin-graphics/simpleeq.svg'
   },
   {
     id: 'simplecomp',
@@ -639,7 +645,8 @@ b2 = (1.0 - alpha*A) / a0;`
     ],
     screenshots: [],
     downloadUrl: '/downloads/SimpleComp-v1.0.0',
-    docsUrl: '/docs/plugins/simplecomp'
+    docsUrl: '/docs/plugins/simplecomp',
+    graphic: '/plugin-graphics/simplecomp.svg'
   },
   {
     id: 'waveshaper',
@@ -772,7 +779,8 @@ else
     ],
     screenshots: [],
     downloadUrl: '/downloads/WaveShaper-v1.0.0',
-    docsUrl: '/docs/plugins/waveshaper'
+    docsUrl: '/docs/plugins/waveshaper',
+    graphic: '/plugin-graphics/waveshaper.svg'
   },
   {
     id: 'saturation',
@@ -935,7 +943,8 @@ oversampler->processSamplesDown(outputBlock);`
     ],
     screenshots: [],
     downloadUrl: '/downloads/Saturation-v1.0.0',
-    docsUrl: '/docs/plugins/saturation'
+    docsUrl: '/docs/plugins/saturation',
+    graphic: '/plugin-graphics/saturation.svg'
   },
   {
     id: 'chorusflanger',
@@ -1106,7 +1115,8 @@ if (lfoPhaseRight >= 1.0f) lfoPhaseRight -= 1.0f;`
     ],
     screenshots: [],
     downloadUrl: '/downloads/ChorusFlanger-v1.0.0',
-    docsUrl: '/docs/plugins/chorusflanger'
+    docsUrl: '/docs/plugins/chorusflanger',
+    graphic: '/plugin-graphics/chorusflanger.svg'
   },
   {
     id: 'reverb',
@@ -1298,7 +1308,8 @@ if (freeze) {
     ],
     screenshots: [],
     downloadUrl: '/downloads/Reverb-v1.0.0',
-    docsUrl: '/docs/plugins/reverb'
+    docsUrl: '/docs/plugins/reverb',
+    graphic: '/plugin-graphics/reverb.svg'
   },
   {
     id: 'freezefx',
@@ -1350,7 +1361,8 @@ if (freeze) {
     ],
     screenshots: [],
     downloadUrl: '/downloads/FreezeFX-v1.0.0',
-    docsUrl: '/docs/plugins/freezefx'
+    docsUrl: '/docs/plugins/freezefx',
+    graphic: '/plugin-graphics/freezefx.svg'
   },
   {
     id: 'granularengine',
@@ -1428,7 +1440,8 @@ if (freeze) {
     ],
     screenshots: [],
     downloadUrl: '/downloads/GranularEngine-v1.2.0',
-    docsUrl: '/docs/plugins/granularengine'
+    docsUrl: '/docs/plugins/granularengine',
+    graphic: '/plugin-graphics/granularengine.svg'
   },
   {
     id: 'spectralfreeze',
@@ -1511,7 +1524,8 @@ if (freeze) {
     ],
     screenshots: [],
     downloadUrl: '/downloads/SpectralFreeze-v1.2.0',
-    docsUrl: '/docs/plugins/spectralfreeze'
+    docsUrl: '/docs/plugins/spectralfreeze',
+    graphic: '/plugin-graphics/spectralfreeze.svg'
   }
 ];
 

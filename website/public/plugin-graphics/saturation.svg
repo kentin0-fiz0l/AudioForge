@@ -1,0 +1,55 @@
+<svg width="400" height="300" viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="400" height="300" fill="#0a0e14"/>
+
+  <!-- Gradient Definitions -->
+  <defs>
+    <linearGradient id="satGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#f59e0b;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ef4444;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="harmonicGradient" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" style="stop-color:#f59e0b;stop-opacity:0.2" />
+      <stop offset="100%" style="stop-color:#f59e0b;stop-opacity:0.8" />
+    </linearGradient>
+  </defs>
+
+  <!-- Harmonic Content Visualization -->
+  <rect x="80" y="80" width="240" height="140" rx="8" fill="#1f2937" stroke="#374151" stroke-width="2"/>
+
+  <!-- Fundamental -->
+  <rect x="100" y="180" width="30" height="30" rx="4" fill="url(#satGradient)" opacity="0.9"/>
+  <text x="115" y="220" fill="#9ca3af" font-size="9" text-anchor="middle">F</text>
+
+  <!-- 2nd Harmonic -->
+  <rect x="145" y="160" width="30" height="50" rx="4" fill="url(#satGradient)" opacity="0.75"/>
+  <text x="160" y="220" fill="#9ca3af" font-size="9" text-anchor="middle">2F</text>
+
+  <!-- 3rd Harmonic -->
+  <rect x="190" y="140" width="30" height="70" rx="4" fill="url(#satGradient)" opacity="0.6"/>
+  <text x="205" y="220" fill="#9ca3af" font-size="9" text-anchor="middle">3F</text>
+
+  <!-- 4th Harmonic -->
+  <rect x="235" y="155" width="30" height="55" rx="4" fill="url(#satGradient)" opacity="0.5"/>
+  <text x="250" y="220" fill="#9ca3af" font-size="9" text-anchor="middle">4F</text>
+
+  <!-- 5th Harmonic -->
+  <rect x="280" y="170" width="30" height="40" rx="4" fill="url(#satGradient)" opacity="0.4"/>
+  <text x="295" y="220" fill="#9ca3af" font-size="9" text-anchor="middle">5F</text>
+
+  <!-- Warmth Indicator -->
+  <circle cx="200" cy="110" r="25" fill="none" stroke="#f59e0b" stroke-width="2"/>
+  <circle cx="200" cy="110" r="20" fill="none" stroke="#f59e0b" stroke-width="1" opacity="0.5"/>
+  <circle cx="200" cy="110" r="15" fill="none" stroke="#f59e0b" stroke-width="1" opacity="0.3"/>
+  <text x="200" y="115" fill="#f59e0b" font-size="12" font-weight="bold" text-anchor="middle">♨️</text>
+
+  <!-- Drive Control -->
+  <rect x="150" y="240" width="100" height="30" rx="8" fill="#1f2937" stroke="#374151" stroke-width="2"/>
+  <text x="200" y="260" fill="#e4e7eb" font-size="12" text-anchor="middle" font-weight="bold">DRIVE</text>
+
+  <!-- Title -->
+  <text x="200" y="35" fill="#e4e7eb" font-size="20" font-weight="bold" text-anchor="middle">Saturation</text>
+
+  <!-- Glow Effect -->
+  <circle cx="200" cy="150" r="130" fill="#ef4444" opacity="0.05"/>
+</svg>

@@ -27,9 +27,17 @@ export const PluginCard: React.FC<PluginCardProps> = ({ plugin, className = '' }
       {/* Ambient glow effect */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-      {/* Screenshot/Placeholder */}
+      {/* Graphic/Screenshot/Placeholder */}
       <div className="relative h-48 bg-gradient-to-br from-background to-background-light flex items-center justify-center overflow-hidden border-b border-primary/10">
-        {plugin.screenshots && plugin.screenshots.length > 0 ? (
+        {plugin.graphic ? (
+          <Image
+            src={plugin.graphic}
+            alt={`${plugin.name} visual`}
+            width={400}
+            height={300}
+            className="object-contain w-full h-full opacity-90 group-hover:opacity-100 group-hover:scale-105 transition-all duration-300"
+          />
+        ) : plugin.screenshots && plugin.screenshots.length > 0 ? (
           <Image
             src={plugin.screenshots[0]}
             alt={`${plugin.name} screenshot`}

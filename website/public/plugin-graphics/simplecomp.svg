@@ -1,0 +1,52 @@
+<svg width="400" height="300" viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="400" height="300" fill="#0a0e14"/>
+
+  <!-- Gradient Definitions -->
+  <defs>
+    <linearGradient id="compGradient" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#10b981;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#f59e0b;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ef4444;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Compression Curve Graph -->
+  <rect x="60" y="60" width="280" height="180" rx="8" fill="#1f2937" stroke="#374151" stroke-width="2"/>
+
+  <!-- Grid -->
+  <line x1="60" y1="150" x2="340" y2="150" stroke="#374151" stroke-width="1" stroke-dasharray="2 2"/>
+  <line x1="200" y1="60" x2="200" y2="240" stroke="#374151" stroke-width="1" stroke-dasharray="2 2"/>
+
+  <!-- Linear (No Compression) Line -->
+  <line x1="60" y1="240" x2="340" y2="60" stroke="#6b7280" stroke-width="2" opacity="0.3" stroke-dasharray="4 4"/>
+
+  <!-- Compression Curve -->
+  <path d="M 60 240 L 200 100 Q 230 90 340 60"
+        stroke="url(#compGradient)" stroke-width="3" fill="none"/>
+
+  <!-- Knee Point -->
+  <circle cx="200" cy="100" r="8" fill="#f59e0b" filter="drop-shadow(0 2px 6px rgba(245, 158, 11, 0.6))"/>
+
+  <!-- Threshold Line -->
+  <line x1="60" y1="100" x2="340" y2="100" stroke="#f59e0b" stroke-width="1" stroke-dasharray="4 4" opacity="0.5"/>
+  <text x="345" y="105" fill="#f59e0b" font-size="10">Threshold</text>
+
+  <!-- Ratio Indicator -->
+  <text x="270" y="80" fill="#06b6d4" font-size="12" font-weight="bold">4:1</text>
+
+  <!-- Gain Reduction Meter -->
+  <rect x="70" y="255" width="260" height="20" rx="10" fill="#1f2937" stroke="#374151" stroke-width="1"/>
+  <rect x="70" y="255" width="160" height="20" rx="10" fill="url(#compGradient)" opacity="0.6"/>
+  <text x="200" y="268" fill="#e4e7eb" font-size="10" text-anchor="middle">GR: -6dB</text>
+
+  <!-- Axis Labels -->
+  <text x="200" y="255" fill="#9ca3af" font-size="9" text-anchor="middle">INPUT</text>
+  <text x="30" y="150" fill="#9ca3af" font-size="9" transform="rotate(-90 30 150)">OUTPUT</text>
+
+  <!-- Title -->
+  <text x="200" y="35" fill="#e4e7eb" font-size="20" font-weight="bold" text-anchor="middle">SimpleComp</text>
+
+  <!-- Glow Effect -->
+  <circle cx="200" cy="150" r="120" fill="#f59e0b" opacity="0.05"/>
+</svg>

@@ -1,0 +1,50 @@
+<svg width="400" height="300" viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="400" height="300" fill="#0a0e14"/>
+
+  <!-- Gradient Definitions -->
+  <defs>
+    <linearGradient id="delayGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#06b6d4;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#06b6d4;stop-opacity:0.5" />
+      <stop offset="100%" style="stop-color:#06b6d4;stop-opacity:0.2" />
+    </linearGradient>
+  </defs>
+
+  <!-- Signal Path -->
+  <circle cx="80" cy="150" r="20" fill="#06b6d4" opacity="0.8"/>
+  <circle cx="160" cy="150" r="18" fill="#06b6d4" opacity="0.6"/>
+  <circle cx="240" cy="150" r="16" fill="#06b6d4" opacity="0.4"/>
+  <circle cx="320" cy="150" r="14" fill="#06b6d4" opacity="0.2"/>
+
+  <!-- Connecting Lines -->
+  <line x1="100" y1="150" x2="142" y2="150" stroke="#06b6d4" stroke-width="2" opacity="0.6" stroke-dasharray="4 4"/>
+  <line x1="178" y1="150" x2="224" y2="150" stroke="#06b6d4" stroke-width="2" opacity="0.4" stroke-dasharray="4 4"/>
+  <line x1="256" y1="150" x2="306" y2="150" stroke="#06b6d4" stroke-width="2" opacity="0.3" stroke-dasharray="4 4"/>
+
+  <!-- Feedback Arc -->
+  <path d="M 320 135 Q 350 80 80 80 L 80 130" stroke="#f59e0b" stroke-width="2" fill="none" opacity="0.6"/>
+  <polygon points="80,130 75,120 85,120" fill="#f59e0b" opacity="0.6"/>
+
+  <!-- Time Labels -->
+  <text x="80" y="190" fill="#9ca3af" font-size="11" text-anchor="middle">0ms</text>
+  <text x="160" y="190" fill="#9ca3af" font-size="11" text-anchor="middle">500ms</text>
+  <text x="240" y="190" fill="#9ca3af" font-size="11" text-anchor="middle">1000ms</text>
+  <text x="320" y="190" fill="#9ca3af" font-size="11" text-anchor="middle">1500ms</text>
+
+  <!-- Ping Pong Indicators -->
+  <text x="80" y="210" fill="#06b6d4" font-size="10" text-anchor="middle">L</text>
+  <text x="160" y="210" fill="#f59e0b" font-size="10" text-anchor="middle">R</text>
+  <text x="240" y="210" fill="#06b6d4" font-size="10" text-anchor="middle">L</text>
+  <text x="320" y="210" fill="#f59e0b" font-size="10" text-anchor="middle">R</text>
+
+  <!-- Control Panel -->
+  <rect x="140" y="230" width="120" height="40" rx="8" fill="#1f2937" stroke="#374151" stroke-width="2"/>
+  <text x="200" y="253" fill="#e4e7eb" font-size="12" text-anchor="middle" font-weight="bold">PING-PONG</text>
+
+  <!-- Title -->
+  <text x="200" y="35" fill="#e4e7eb" font-size="20" font-weight="bold" text-anchor="middle">CleanDelay</text>
+
+  <!-- Glow Effect -->
+  <circle cx="200" cy="150" r="140" fill="#06b6d4" opacity="0.05"/>
+</svg>
