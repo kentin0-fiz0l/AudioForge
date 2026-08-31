@@ -4,7 +4,7 @@ set -e
 # AudioForge Linux Package Builder
 # Builds .deb (Debian/Ubuntu), .rpm (Fedora/RHEL), and AppImage packages
 
-VERSION="1.1.0"
+VERSION="1.3.0"
 ARCH="amd64"
 PROJECT_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 STAGING_DIR="$PROJECT_ROOT/releases/staging"
@@ -62,20 +62,27 @@ Architecture: ${ARCH}
 Maintainer: AudioForge <contact@audioforge.art>
 Homepage: https://audioforge.fluxstudio.art
 Description: Professional audio plugins (VST3)
- AudioForge is a collection of 10 professional-quality audio plugins
+ AudioForge is a collection of 13 professional-quality audio plugins
  for music production, including:
- - SimpleGain: Gain/volume control
- - PanUtil: Stereo panning and width
- - BasicSynth: Subtractive synthesizer
- - CleanDelay: Stereo delay effect
- - SimpleEQ: 3-band parametric EQ
- - SimpleComp: Compressor
- - WaveShaper: Distortion effect
- - Saturation: Analog-style saturation
- - ChorusFlanger: Modulation effects
- - Reverb: Algorithmic reverb
  .
- All plugins are free and open source (GPL-3.0).
+ Core Processing Suite (11 plugins):
+ - SimpleGain: Gain/volume control with metering
+ - PanUtil: Stereo panning and width control
+ - BasicSynth: Subtractive synthesizer
+ - CleanDelay: Tempo-synced stereo delay
+ - SimpleEQ: 3-band parametric equalizer
+ - SimpleComp: Compressor with auto makeup gain
+ - WaveShaper: Waveshaping distortion
+ - Saturation: Multi-mode analog saturation
+ - ChorusFlanger: LFO-based modulation effects
+ - Reverb: Freeverb-inspired algorithmic reverb
+ - FreezeFX: Spectral freezing plugin
+ .
+ Advanced Effects Suite (2 plugins):
+ - GranularEngine: Real-time granular synthesis
+ - SpectralFreeze: Professional spectral manipulation
+ .
+ All plugins are free and open source (MIT License).
 EOF
 
     # Create postinst script (run after installation)
@@ -138,11 +145,17 @@ BuildArch:      x86_64
 Requires:       glibc
 
 %description
-AudioForge is a collection of 10 professional-quality audio plugins
-for music production, including gain control, EQ, compression, delay,
-reverb, saturation, and synthesis tools.
+AudioForge is a collection of 13 professional-quality audio plugins
+for music production, including:
 
-All plugins are free and open source (GPL-3.0).
+Core Processing Suite (11 plugins): SimpleGain, PanUtil, BasicSynth,
+CleanDelay, SimpleEQ, SimpleComp, WaveShaper, Saturation, ChorusFlanger,
+Reverb, FreezeFX
+
+Advanced Effects Suite (2 plugins): GranularEngine (real-time granular
+synthesis), SpectralFreeze (professional spectral manipulation)
+
+All plugins are free and open source (MIT License).
 
 %prep
 %setup -q
@@ -166,8 +179,10 @@ echo "Please rescan plugins in your DAW."
 
 %changelog
 * $(date "+%a %b %d %Y") AudioForge <contact@audioforge.art> - ${VERSION}-1
-- Initial release of AudioForge v1.1.0
-- 10 professional audio plugins
+- Release of AudioForge v1.3.0
+- 13 professional audio plugins (11 core + 2 advanced)
+- Added GranularEngine: Real-time granular synthesis
+- Added SpectralFreeze: Professional spectral manipulation
 EOF
 
     # Build RPM
