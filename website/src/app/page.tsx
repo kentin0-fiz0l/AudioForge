@@ -8,6 +8,7 @@ import { Stats } from '@/components/Stats';
 import { StickyDownload } from '@/components/StickyDownload';
 import { ScrollToTop } from '@/components/ScrollToTop';
 import { AnimatedSection } from '@/components/AnimatedSection';
+import { FAQ } from '@/components/FAQ';
 import { plugins, getCurrentPhase, roadmap } from '@/lib/plugins';
 
 export default function Home() {
@@ -294,6 +295,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* FAQ Section */}
+      <FAQ />
 
       <Footer />
     </main>
