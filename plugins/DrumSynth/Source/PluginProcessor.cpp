@@ -1,5 +1,6 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
+#include "FactoryPresets.h"
 
 PluginProcessor::PluginProcessor()
     : AudioProcessor(BusesProperties()
@@ -7,8 +8,7 @@ PluginProcessor::PluginProcessor()
     , apvts(*this, nullptr, "Parameters", createParameterLayout())
     , presetManager("DrumSynth", *this)
 {
-    // TODO: Load factory presets when ready
-    // presetManager.setFactoryPresets(DrumSynthPresets::getFactoryPresets());
+    presetManager.setFactoryPresets(DrumSynthPresets::getFactoryPresets());
 }
 
 PluginProcessor::~PluginProcessor()
