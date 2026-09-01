@@ -1,0 +1,13 @@
+AudioForge PluginVal Validation Summary
+Timestamp: Tue Sep  1 16:45:50 PDT 2026
+PluginVal version: ./scripts/validate-plugins.sh: line 62: "/Users/kentino/Applications/pluginval.app/Contents/MacOS/pluginval": No such file or directory
+========================================
+
+PASS: BasicSynth.vst3
+PASS: ChorusFlanger.vst3
+PASS: CleanDelay.vst3
+PASS: DrumSynth.vst3
+PASS: FMSynth.vst3
+FAIL: FreezeFX.vst3 (exit code 9, see /Users/kentino/Projects/Active/AudioForge/docs/validation/FreezeFX_20260901_164550.log)
+PASS: GranularEngine.vst3
+PASS: OrganEmulator.vst3

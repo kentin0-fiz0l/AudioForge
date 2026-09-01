@@ -1,0 +1,25 @@
+# .clang-format-ignore
+# Files and directories to exclude from clang-format
+
+# JUCE framework (external dependency)
+JUCE/
+
+# Build directories
+build/
+builds/
+**/build/
+**/*_artefacts/
+
+# Generated files
+**/JuceLibraryCode/
+
+# Test output
+coverage/
+*.profdata
+*.profraw
+
+# IDE files
+.vscode/
+.idea/
+*.xcodeproj/
+*.xcworkspace/

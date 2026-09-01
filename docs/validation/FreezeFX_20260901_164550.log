@@ -1,0 +1,38 @@
+Started validating: /Users/kentino/Library/Audio/Plug-Ins/VST3/FreezeFX.vst3
+Random seed: 0x4240742
+Validation started
+Strictness level: 10
+-----------------------------------------------------------------
+Starting tests in: pluginval / Scan for plugins located in: /Users/kentino/Library/Audio/Plug-Ins/VST3/FreezeFX.vst3...
+Num plugins found: 1
+
+Testing plugin: VST3-FreezeFX-53e2c566-8040fc3f
+AudioForge: FreezeFX v1.0.0
+Completed tests in pluginval / Scan for plugins located in: /Users/kentino/Library/Audio/Plug-Ins/VST3/FreezeFX.vst3
+-----------------------------------------------------------------
+Starting tests in: pluginval / Open plugin (cold)...
+Completed tests in pluginval / Open plugin (cold)
+-----------------------------------------------------------------
+Starting tests in: pluginval / Open plugin (warm)...
+Running tests 1 times
+Completed tests in pluginval / Open plugin (warm)
+-----------------------------------------------------------------
+Starting tests in: pluginval / Plugin info...
+
+Plugin name: FreezeFX
+Alternative names: FreezeFX
+SupportsDoublePrecision: no
+Reported latency: 0
+Reported taillength: 0
+Completed tests in pluginval / Plugin info
+-----------------------------------------------------------------
+Starting tests in: pluginval / Plugin programs...
+Num programs: 0
+All program names checked
+Completed tests in pluginval / Plugin programs
+-----------------------------------------------------------------
+Starting tests in: pluginval / Editor...
+Completed tests in pluginval / Editor
+-----------------------------------------------------------------
+Starting tests in: pluginval / Open editor whilst processing...
+pluginval received Segmentation fault: 11, exiting immediately
