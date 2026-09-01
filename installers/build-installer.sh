@@ -12,7 +12,7 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Version
-VERSION="${1:-1.4.0}"
+VERSION="${1:-1.5.0}"
 
 PROJECT_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 STAGING_DIR="$PROJECT_ROOT/releases/staging"
@@ -50,6 +50,7 @@ INSTRUMENTS=(
     "PadSynth"
     "DrumSynth"
     "OrganEmulator"
+    "SamplerPlugin"
 )
 
 ALL_PLUGINS=("${EFFECTS[@]}" "${ADVANCED_EFFECTS[@]}" "${INSTRUMENTS[@]}")
@@ -90,7 +91,7 @@ for plugin in "${ALL_PLUGINS[@]}"; do
     # Configure if build directory doesn't exist
     if [ ! -d "build" ]; then
         echo -e "${YELLOW}  Configuring...${NC}"
-        cmake -B build -DCMAKE_BUILD_TYPE=Release > /dev/null 2>&1
+        cmake -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF > /dev/null 2>&1
     fi
 
     # Build
@@ -98,21 +99,33 @@ for plugin in "${ALL_PLUGINS[@]}"; do
     if cmake --build build --config Release > /dev/null 2>&1; then
         echo -e "${GREEN}  ✓ Build successful${NC}"
 
-        # Copy VST3
-        if [ -d "build/${plugin}_artefacts/Release/VST3/${plugin}.vst3" ]; then
-            cp -R "build/${plugin}_artefacts/Release/VST3/${plugin}.vst3" \
-                "$STAGING_DIR/AudioForge Plugins/VST3/"
-            echo -e "${GREEN}  ✓ VST3 copied${NC}"
-        else
+        # Copy VST3 (try both plugin name and directory name)
+        VST3_FOUND=false
+        if [ -d "build/${plugin}_artefacts/Release/VST3" ]; then
+            # Find any .vst3 bundle in the directory
+            VST3_FILE=$(find "build/${plugin}_artefacts/Release/VST3" -name "*.vst3" -type d | head -1)
+            if [ -n "$VST3_FILE" ]; then
+                cp -R "$VST3_FILE" "$STAGING_DIR/AudioForge Plugins/VST3/"
+                echo -e "${GREEN}  ✓ VST3 copied${NC}"
+                VST3_FOUND=true
+            fi
+        fi
+        if [ "$VST3_FOUND" = false ]; then
             echo -e "${YELLOW}  ⚠ VST3 not found${NC}"
         fi
 
-        # Copy AU
-        if [ -d "build/${plugin}_artefacts/Release/AU/${plugin}.component" ]; then
-            cp -R "build/${plugin}_artefacts/Release/AU/${plugin}.component" \
-                "$STAGING_DIR/AudioForge Plugins/AU/"
-            echo -e "${GREEN}  ✓ AU copied${NC}"
-        else
+        # Copy AU (try both plugin name and directory name)
+        AU_FOUND=false
+        if [ -d "build/${plugin}_artefacts/Release/AU" ]; then
+            # Find any .component bundle in the directory
+            AU_FILE=$(find "build/${plugin}_artefacts/Release/AU" -name "*.component" -type d | head -1)
+            if [ -n "$AU_FILE" ]; then
+                cp -R "$AU_FILE" "$STAGING_DIR/AudioForge Plugins/AU/"
+                echo -e "${GREEN}  ✓ AU copied${NC}"
+                AU_FOUND=true
+            fi
+        fi
+        if [ "$AU_FOUND" = false ]; then
             echo -e "${YELLOW}  ⚠ AU not found${NC}"
         fi
 
@@ -131,14 +144,14 @@ cd "$PROJECT_ROOT"
 echo -e "${BLUE}→ Creating documentation...${NC}"
 
 cat > "$STAGING_DIR/README.txt" << 'EOF'
-AudioForge v1.4.0
+AudioForge v1.5.0
 =================
 
 Thank you for choosing AudioForge!
 
 CONTENTS
 --------
-This package includes 18 professional audio plugins:
+This package includes 19 professional audio plugins:
 
 EFFECTS (11):
 • SimpleGain - Clean gain/trim utility
@@ -153,17 +166,17 @@ EFFECTS (11):
 • FreezeFX - Audio freeze effect
 • GranularEngine - Granular synthesis
 
-ADVANCED EFFECTS (2):
+ADVANCED EFFECTS (1):
 • SpectralFreeze - Spectral freezing and processing
-• GranularEngine - Advanced granular processing
 
-INSTRUMENTS (6):
+INSTRUMENTS (7):
 • BasicSynth - 8-voice subtractive synthesizer
 • FM Synth - 2-operator FM synthesis
 • Wavetable Synth - Digital wavetable synthesis
 • Pad Synth - Lush unison pad synthesizer
 • Drum Synth - 3-drum percussion synthesizer
 • Organ Emulator - Hammond-style organ with Leslie
+• Sampler - Professional multi-sample instrument (NEW!)
 
 INSTALLATION
 ------------
@@ -327,7 +340,7 @@ PLUGINS=(
     "SimpleGain" "SimpleEQ" "SimpleComp" "Saturation" "Reverb"
     "CleanDelay" "ChorusFlanger" "PanUtil" "WaveShaper" "FreezeFX"
     "GranularEngine" "SpectralFreeze" "BasicSynth" "FMSynth"
-    "WavetableSynth" "PadSynth" "DrumSynth" "OrganEmulator"
+    "WavetableSynth" "PadSynth" "DrumSynth" "OrganEmulator" "SamplerPlugin"
 )
 
 echo -e "${YELLOW}This will remove all AudioForge plugins from your system.${NC}"

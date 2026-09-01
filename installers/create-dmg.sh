@@ -12,7 +12,7 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Version (update this with each release)
-VERSION="${1:-1.1.0}"
+VERSION="${1:-1.5.0}"
 
 PROJECT_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 STAGING_DIR="$PROJECT_ROOT/releases/staging"
