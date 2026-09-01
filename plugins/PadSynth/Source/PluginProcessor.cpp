@@ -1,5 +1,6 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
+#include "FactoryPresets.h"
 
 PluginProcessor::PluginProcessor()
     : AudioProcessor(BusesProperties()
@@ -7,8 +8,8 @@ PluginProcessor::PluginProcessor()
     , apvts(*this, nullptr, "Parameters", createParameterLayout())
     , presetManager("PadSynth", *this)
 {
-    // TODO: Load factory presets when ready
-    // presetManager.setFactoryPresets(PadSynthPresets::getFactoryPresets());
+    // Load factory presets
+    presetManager.setFactoryPresets(PadSynthPresets::getFactoryPresets());
 }
 
 PluginProcessor::~PluginProcessor()
