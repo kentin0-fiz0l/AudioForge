@@ -1,0 +1,120 @@
+name: Build Linux Packages
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to build (e.g., 1.8.1)'
+        required: true
+        default: '1.8.1'
+  push:
+    tags:
+      - 'v*.*.*'
+
+env:
+  BUILD_TYPE: Release
+  CMAKE_VERSION: 3.15.x
+
+jobs:
+  build-linux-packages:
+    name: Build Linux Packages
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            cmake \
+            pkg-config \
+            libasound2-dev \
+            libfreetype6-dev \
+            libx11-dev \
+            libxinerama-dev \
+            libxrandr-dev \
+            libxcursor-dev \
+            libgl1-mesa-dev \
+            libglu1-mesa-dev \
+            fakeroot \
+            dpkg-dev \
+            rpm \
+            wget \
+            fuse
+
+      - name: Setup CMake
+        uses: jwlawson/actions-setup-cmake@v2
+        with:
+          cmake-version: ${{ env.CMAKE_VERSION }}
+
+      - name: Extract version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "VERSION=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build staging directory
+        run: |
+          chmod +x installers/build-installer.sh
+          ./installers/build-installer.sh ${{ steps.version.outputs.VERSION }}
+
+      - name: Remove broken plugins from staging
+        run: |
+          cd releases/staging/AudioForge\ Plugins
+          # Remove plugins that don't pass validation
+          rm -rf VST3/FreezeFX.vst3 || true
+          rm -rf VST3/SpectralFreeze.vst3 || true
+          rm -rf VST3/Sampler.vst3 || true
+          echo "Remaining plugins:"
+          ls VST3/ | wc -l
+
+      - name: Build Linux packages
+        run: |
+          cd installers/linux
+          chmod +x build-packages.sh
+          ./build-packages.sh
+
+      - name: List built packages
+        run: |
+          ls -lh releases/installers/
+
+      - name: Upload .deb package
+        uses: actions/upload-artifact@v4
+        with:
+          name: audioforge-deb-${{ steps.version.outputs.VERSION }}
+          path: releases/installers/*.deb
+          retention-days: 30
+
+      - name: Upload .rpm package
+        uses: actions/upload-artifact@v4
+        with:
+          name: audioforge-rpm-${{ steps.version.outputs.VERSION }}
+          path: releases/installers/*.rpm
+          retention-days: 30
+
+      - name: Upload AppImage
+        uses: actions/upload-artifact@v4
+        with:
+          name: audioforge-appimage-${{ steps.version.outputs.VERSION }}
+          path: releases/installers/*.AppImage
+          retention-days: 30
+
+      - name: Create release assets (if tag push)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            releases/installers/*.deb
+            releases/installers/*.rpm
+            releases/installers/*.AppImage
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

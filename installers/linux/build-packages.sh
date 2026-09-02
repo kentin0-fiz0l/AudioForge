@@ -4,7 +4,7 @@ set -e
 # AudioForge Linux Package Builder
 # Builds .deb (Debian/Ubuntu), .rpm (Fedora/RHEL), and AppImage packages
 
-VERSION="1.5.0"
+VERSION="1.8.1"
 ARCH="amd64"
 PROJECT_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 STAGING_DIR="$PROJECT_ROOT/releases/staging"
@@ -65,22 +65,30 @@ Description: Professional audio plugins (VST3)
  AudioForge is a collection of 19 professional-quality audio plugins
  for music production, including:
  .
- Core Processing Suite (11 plugins):
+ Mixing & Mastering Suite (9 plugins):
  - SimpleGain: Gain/volume control with metering
  - PanUtil: Stereo panning and width control
- - BasicSynth: Subtractive synthesizer
- - CleanDelay: Tempo-synced stereo delay
  - SimpleEQ: 3-band parametric equalizer
  - SimpleComp: Compressor with auto makeup gain
- - WaveShaper: Waveshaping distortion
- - Saturation: Multi-mode analog saturation
- - ChorusFlanger: LFO-based modulation effects
+ - Gate: Professional noise gate/expander with sidechain
+ - Limiter: True peak mastering limiter with lookahead
+ - MultibandCompressor: 4-band mastering compressor
  - Reverb: Freeverb-inspired algorithmic reverb
- - FreezeFX: Spectral freezing plugin
+ - CleanDelay: Tempo-synced stereo delay
  .
- Advanced Effects Suite (2 plugins):
+ Creative Effects (3 plugins):
+ - Saturation: Multi-mode analog saturation
+ - WaveShaper: Waveshaping distortion
+ - ChorusFlanger: LFO-based modulation effects
+ .
+ Synthesizers (7 plugins):
+ - BasicSynth: Subtractive synthesizer
+ - FMSynth: 4-operator FM synthesis
+ - WavetableSynth: Wavetable synthesis
+ - PadSynth: Lush pad synthesis
+ - DrumSynth: Drum synthesis engine
+ - OrganEmulator: Hammond-style organ
  - GranularEngine: Real-time granular synthesis
- - SpectralFreeze: Professional spectral manipulation
  .
  All plugins are free and open source (MIT License).
 EOF
@@ -145,15 +153,16 @@ BuildArch:      x86_64
 Requires:       glibc
 
 %description
-AudioForge is a collection of 13 professional-quality audio plugins
+AudioForge is a collection of 19 professional-quality audio plugins
 for music production, including:
 
-Core Processing Suite (11 plugins): SimpleGain, PanUtil, BasicSynth,
-CleanDelay, SimpleEQ, SimpleComp, WaveShaper, Saturation, ChorusFlanger,
-Reverb, FreezeFX
+Mixing & Mastering Suite (9 plugins): SimpleGain, PanUtil, SimpleEQ,
+SimpleComp, Gate, Limiter, MultibandCompressor, Reverb, CleanDelay
 
-Advanced Effects Suite (2 plugins): GranularEngine (real-time granular
-synthesis), SpectralFreeze (professional spectral manipulation)
+Creative Effects (3 plugins): Saturation, WaveShaper, ChorusFlanger
+
+Synthesizers (7 plugins): BasicSynth, FMSynth, WavetableSynth, PadSynth,
+DrumSynth, OrganEmulator, GranularEngine
 
 All plugins are free and open source (MIT License).
 
@@ -179,10 +188,13 @@ echo "Please rescan plugins in your DAW."
 
 %changelog
 * $(date "+%a %b %d %Y") AudioForge <contact@audioforge.art> - ${VERSION}-1
-- Release of AudioForge v1.3.0
-- 13 professional audio plugins (11 core + 2 advanced)
-- Added GranularEngine: Real-time granular synthesis
-- Added SpectralFreeze: Professional spectral manipulation
+- Release of AudioForge v1.8.1
+- 19 professional audio plugins (9 mixing/mastering + 3 creative + 7 synths)
+- Added Gate v1.7.0: Professional noise gate/expander
+- Added Limiter v1.6.0: True peak mastering limiter
+- Added MultibandCompressor v1.8.0: 4-band mastering compressor
+- Fixed Gate NaN/Inf bugs
+- PluginVal integration for quality assurance
 EOF
 
     # Build RPM

@@ -12,7 +12,7 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Version
-VERSION="${1:-1.5.0}"
+VERSION="${1:-1.8.1}"
 
 PROJECT_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 STAGING_DIR="$PROJECT_ROOT/releases/staging"
@@ -35,7 +35,9 @@ EFFECTS=(
     "ChorusFlanger"
     "PanUtil"
     "WaveShaper"
-    "FreezeFX"
+    "Gate"
+    "Limiter"
+    "MultibandCompressor"
     "GranularEngine"
 )
 
@@ -144,7 +146,7 @@ cd "$PROJECT_ROOT"
 echo -e "${BLUE}→ Creating documentation...${NC}"
 
 cat > "$STAGING_DIR/README.txt" << 'EOF'
-AudioForge v1.5.0
+AudioForge v1.8.1
 =================
 
 Thank you for choosing AudioForge!
