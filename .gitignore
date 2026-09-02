@@ -51,3 +51,5 @@ releases/
 
 # Generated PDFs (optional - uncomment if you don't want to commit PDFs)
 # docs/manuals/*.pdf
+validation-results/
+dist/
