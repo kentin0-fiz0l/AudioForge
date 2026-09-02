@@ -1,0 +1,9 @@
+# Test audio files for screenshot capture
+
+This directory contains test audio files used during screenshot capture:
+
+- `pink-noise-10s.wav` - Pink noise for effects testing
+- `full-mix-loop.wav` - 4-bar instrumental loop for mixing effects
+- `midi-test-pattern.mid` - C-E-G triad for instrument testing
+
+See SCREENSHOT_GUIDE.md for generation instructions.
