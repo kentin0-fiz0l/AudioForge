@@ -28,12 +28,25 @@ echo "   Bucket: $BUCKET"
 echo "   Region: $REGION"
 echo ""
 
-# Upload to Spaces using AWS CLI
+# Upload HTML files with no-cache to force CDN refresh
+echo "📤 Uploading HTML files (no-cache)..."
 aws s3 sync out/ s3://$BUCKET/ \
   --endpoint-url=$ENDPOINT \
   --profile=digitalocean \
   --acl public-read \
+  --exclude "*" \
+  --include "*.html" \
+  --cache-control "max-age=0, must-revalidate" \
   --delete
+
+# Upload static assets with longer cache
+echo "📤 Uploading static assets (1 hour cache)..."
+aws s3 sync out/ s3://$BUCKET/ \
+  --endpoint-url=$ENDPOINT \
+  --profile=digitalocean \
+  --acl public-read \
+  --exclude "*.html" \
+  --cache-control "max-age=3600, public"
 
 echo ""
 echo "✅ Deployment complete!"
