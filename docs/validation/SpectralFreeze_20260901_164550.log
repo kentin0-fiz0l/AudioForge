@@ -1,0 +1,35 @@
+Started validating: /Users/kentino/Library/Audio/Plug-Ins/VST3/SpectralFreeze.vst3
+Random seed: 0x7038f41
+Validation started
+Strictness level: 10
+-----------------------------------------------------------------
+Starting tests in: pluginval / Scan for plugins located in: /Users/kentino/Library/Audio/Plug-Ins/VST3/SpectralFreeze.vst3...
+Num plugins found: 1
+
+Testing plugin: VST3-SpectralFreeze-33363d74-8d3efd3f
+AudioForge: SpectralFreeze v1.0.0
+Completed tests in pluginval / Scan for plugins located in: /Users/kentino/Library/Audio/Plug-Ins/VST3/SpectralFreeze.vst3
+-----------------------------------------------------------------
+Starting tests in: pluginval / Open plugin (cold)...
+Completed tests in pluginval / Open plugin (cold)
+-----------------------------------------------------------------
+Starting tests in: pluginval / Open plugin (warm)...
+Running tests 1 times
+Completed tests in pluginval / Open plugin (warm)
+-----------------------------------------------------------------
+Starting tests in: pluginval / Plugin info...
+
+Plugin name: SpectralFreeze
+Alternative names: SpectralFreeze
+SupportsDoublePrecision: no
+Reported latency: 0
+Reported taillength: 0
+Completed tests in pluginval / Plugin info
+-----------------------------------------------------------------
+Starting tests in: pluginval / Plugin programs...
+Num programs: 0
+All program names checked
+Completed tests in pluginval / Plugin programs
+-----------------------------------------------------------------
+Starting tests in: pluginval / Editor...
+pluginval received Segmentation fault: 11, exiting immediately

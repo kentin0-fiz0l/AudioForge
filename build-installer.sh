@@ -32,6 +32,7 @@ PLUGINS=(
     "FreezeFX"
     "GranularEngine"
     "SpectralFreeze"
+    "Limiter"
 )
 
 # Paths

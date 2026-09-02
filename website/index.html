@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AudioForge - Professional audio plugins for music production. Free, open-source VST3/AU plugins for mixing and mastering.">
+    <meta name="keywords" content="audio plugins, VST3, AU, free plugins, mixing, mastering, EQ, compressor, reverb">
+    <title>AudioForge - Professional Audio Plugins</title>
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --bg-elevated: #1a1a1a;
+            --bg-card: #2d2d2d;
+            --accent: #4a9eff;
+            --accent-hover: #67acff;
+            --text: #e0e0e0;
+            --text-muted: #999999;
+            --border: #3a3a3a;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        /* Header */
+        header {
+            background: var(--bg-elevated);
+            border-bottom: 1px solid var(--border);
+            padding: 2rem 0;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent) 0%, #67acff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+
+        header p {
+            font-size: 1.25rem;
+            color: var(--text-muted);
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        /* Stats Bar */
+        .stats {
+            background: var(--bg-card);
+            padding: 2rem 0;
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            flex-wrap: wrap;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--accent);
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 3rem 1rem;
+        }
+
+        /* Section Headings */
+        h2 {
+            font-size: 2rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            color: var(--text);
+        }
+
+        h2 span {
+            color: var(--accent);
+        }
+
+        /* Plugin Grid */
+        .plugin-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 4rem;
+        }
+
+        .plugin-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .plugin-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--accent);
+        }
+
+        .plugin-card h3 {
+            font-size: 1.5rem;
+            padding: 1.5rem;
+            background: var(--bg-elevated);
+            border-bottom: 1px solid var(--border);
+            color: var(--accent);
+        }
+
+        .screenshot-carousel {
+            position: relative;
+            height: 300px;
+            overflow: hidden;
+        }
+
+        .screenshot-carousel img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            background: var(--bg);
+        }
+
+        .plugin-description {
+            padding: 1.5rem;
+            color: var(--text-muted);
+            font-size: 0.9375rem;
+        }
+
+        /* Download Section */
+        .download-section {
+            background: var(--bg-elevated);
+            border: 2px solid var(--accent);
+            border-radius: 16px;
+            padding: 3rem;
+            text-align: center;
+            margin: 4rem 0;
+        }
+
+        .download-section h2 {
+            margin-bottom: 1rem;
+        }
+
+        .download-section p {
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+            font-size: 1.125rem;
+        }
+
+        .download-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+            transform: scale(1.05);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--accent);
+            border: 2px solid var(--accent);
+        }
+
+        .btn-secondary:hover {
+            background: var(--accent);
+            color: white;
+        }
+
+        /* Footer */
+        footer {
+            background: var(--bg-elevated);
+            border-top: 1px solid var(--border);
+            padding: 2rem 0;
+            text-align: center;
+            color: var(--text-muted);
+            margin-top: 4rem;
+        }
+
+        footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 2rem;
+            }
+
+            .stats {
+                gap: 1.5rem;
+            }
+
+            .stat-number {
+                font-size: 2rem;
+            }
+
+            .plugin-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .download-section {
+                padding: 2rem 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>AudioForge</h1>
+        <p>Professional audio plugins for music production. Free, open-source, and built with JUCE.</p>
+    </header>
+
+    <div class="stats">
+        <div class="stat">
+            <span class="stat-number">19</span>
+            <span class="stat-label">Plugins</span>
+        </div>
+        <div class="stat">
+            <span class="stat-number">84%</span>
+            <span class="stat-label">PluginVal Pass</span>
+        </div>
+        <div class="stat">
+            <span class="stat-number">100%</span>
+            <span class="stat-label">Free & Open Source</span>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>Core <span>Processing Suite</span></h2>
+
+        <div class="plugin-grid">
+            <div class="plugin-card">
+                <h3>SimpleGain</h3>
+                <div class="screenshot-carousel">
+                    <img src="public/screenshots/SimpleGain-02-active.svg" alt="SimpleGain Active Processing">
+                </div>
+                <div class="plugin-description">
+                    Professional gain/volume control with precision metering and clean signal path. Essential utility for every mix.
+                </div>
+            </div>
+
+            <div class="plugin-card">
+                <h3>SimpleEQ</h3>
+                <div class="screenshot-carousel">
+                    <img src="public/screenshots/SimpleEQ-02-active.svg" alt="SimpleEQ Active Processing">
+                </div>
+                <div class="plugin-description">
+                    3-band parametric equalizer with visual feedback. Sculpt your frequencies with precision and clarity.
+                </div>
+            </div>
+
+            <div class="plugin-card">
+                <h3>SimpleComp</h3>
+                <div class="screenshot-carousel">
+                    <img src="public/screenshots/SimpleComp-02-active.svg" alt="SimpleComp Active Processing">
+                </div>
+                <div class="plugin-description">
+                    Clean compressor with auto makeup gain. Control dynamics transparently with visual gain reduction metering.
+                </div>
+            </div>
+
+            <div class="plugin-card">
+                <h3>CleanDelay</h3>
+                <div class="screenshot-carousel">
+                    <img src="public/screenshots/CleanDelay-02-active.svg" alt="CleanDelay Active Processing">
+                </div>
+                <div class="plugin-description">
+                    Tempo-synced stereo delay with filtering. Create depth and space with pristine delay tails.
+                </div>
+            </div>
+
+            <div class="plugin-card">
+                <h3>Saturation</h3>
+                <div class="screenshot-carousel">
+                    <img src="public/screenshots/Saturation-02-active.svg" alt="Saturation Active Processing">
+                </div>
+                <div class="plugin-description">
+                    Multi-mode analog saturation. Add warmth, presence, and harmonic richness to your tracks.
+                </div>
+            </div>
+
+            <div class="plugin-card">
+                <h3>Reverb</h3>
+                <div class="screenshot-carousel">
+                    <img src="public/screenshots/Reverb-02-active.svg" alt="Reverb Active Processing">
+                </div>
+                <div class="plugin-description">
+                    Freeverb-inspired algorithmic reverb. From tight rooms to expansive halls, add dimension to your mix.
+                </div>
+            </div>
+        </div>
+
+        <div class="download-section">
+            <h2>Download AudioForge</h2>
+            <p>Available for macOS (VST3/AU) and Linux (.deb, .rpm, AppImage). Free forever.</p>
+            <div class="download-buttons">
+                <a href="https://github.com/kentin0-fiz0l/AudioForge/releases/latest" class="btn btn-primary">
+                    Download Latest Release
+                </a>
+                <a href="https://github.com/kentin0-fiz0l/AudioForge" class="btn btn-secondary">
+                    View on GitHub
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>AudioForge &copy; 2026 | MIT License | Built with <a href="https://juce.com">JUCE</a></p>
+        <p style="margin-top: 0.5rem; font-size: 0.875rem;">
+            <a href="https://github.com/kentin0-fiz0l/AudioForge">GitHub</a> ·
+            <a href="https://github.com/kentin0-fiz0l/AudioForge/issues">Report Issue</a> ·
+            <a href="docs/screenshots/SCREENSHOT_GUIDE.md">Contribute</a>
+        </p>
+    </footer>
+</body>
+</html>

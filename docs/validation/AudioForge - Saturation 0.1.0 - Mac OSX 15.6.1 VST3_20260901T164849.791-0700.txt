@@ -1,14 +1,13 @@
-Started validating: /Users/kentino/Library/Audio/Plug-Ins/VST3/PadSynth.vst3
-Random seed: 0x7ee3a9e
+Random seed: 0x56493b7
 Validation started
 Strictness level: 10
 -----------------------------------------------------------------
-Starting tests in: pluginval / Scan for plugins located in: /Users/kentino/Library/Audio/Plug-Ins/VST3/PadSynth.vst3...
+Starting tests in: pluginval / Scan for plugins located in: /Users/kentino/Library/Audio/Plug-Ins/VST3/Saturation.vst3...
 Num plugins found: 1
 
-Testing plugin: VST3-PadSynth-f78b8a6-86515056
-AudioForge: PadSynth v1.0.0
-Completed tests in pluginval / Scan for plugins located in: /Users/kentino/Library/Audio/Plug-Ins/VST3/PadSynth.vst3
+Testing plugin: VST3-Saturation-5a71279d-8d316078
+AudioForge: Saturation v0.1.0
+Completed tests in pluginval / Scan for plugins located in: /Users/kentino/Library/Audio/Plug-Ins/VST3/Saturation.vst3
 -----------------------------------------------------------------
 Starting tests in: pluginval / Open plugin (cold)...
 Completed tests in pluginval / Open plugin (cold)
@@ -19,8 +18,8 @@ Completed tests in pluginval / Open plugin (warm)
 -----------------------------------------------------------------
 Starting tests in: pluginval / Plugin info...
 
-Plugin name: PadSynth
-Alternative names: PadSynth
+Plugin name: Saturation
+Alternative names: Saturation
 SupportsDoublePrecision: no
 Reported latency: 0
 Reported taillength: 0
@@ -124,12 +123,12 @@ Completed tests in pluginval / Basic bus
 -----------------------------------------------------------------
 Starting tests in: pluginval / Listing available buses...
 Inputs:
-	Named layouts: None
-	Discrete layouts: None
+	Named layouts: Mono, Stereo, LCR, Quadraphonic, 5.0 Surround, 5.1 Surround, 7.0 Surround, 7.1 Surround
+	Discrete layouts: Discrete #1
 Outputs:
 	Named layouts: Stereo
 	Discrete layouts: None
-Main bus num input channels: 0
+Main bus num input channels: 2
 Main bus num output channels: 2
 Completed tests in pluginval / Listing available buses
 -----------------------------------------------------------------
@@ -140,7 +139,7 @@ Starting tests in: pluginval / Disabling non-main busses...
 Completed tests in pluginval / Disabling non-main busses
 -----------------------------------------------------------------
 Starting tests in: pluginval / Restoring default layout...
-Main bus num input channels: 0
+Main bus num input channels: 2
 Main bus num output channels: 2
 Completed tests in pluginval / Restoring default layout
 -----------------------------------------------------------------

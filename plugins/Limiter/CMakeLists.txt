@@ -6,7 +6,7 @@ cmake_minimum_required(VERSION 3.15)
 project(Limiter VERSION 1.0.0)
 
 # Add JUCE
-add_subdirectory(${CMAKE_SOURCE_DIR}/JUCE ${CMAKE_BINARY_DIR}/JUCE)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../JUCE ${CMAKE_CURRENT_BINARY_DIR}/JUCE)
 
 # Plugin configuration
 juce_add_plugin(Limiter
