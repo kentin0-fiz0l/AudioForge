@@ -37,8 +37,9 @@ public:
 
     //==============================================================================
     // Spectral Data Access (for freezing/visualization)
-    const std::vector<float>& getMagnitudeSpectrum() const { return magnitudeSpectrum; }
-    const std::vector<float>& getPhaseSpectrum() const { return phaseSpectrum; }
+    // Returns a COPY for thread-safety (called from UI thread, modified by audio thread)
+    std::vector<float> getMagnitudeSpectrum() const { return magnitudeSpectrum; }
+    std::vector<float> getPhaseSpectrum() const { return phaseSpectrum; }
 
     void setMagnitudeSpectrum(const std::vector<float>& magnitude);
     void setPhaseSpectrum(const std::vector<float>& phase);

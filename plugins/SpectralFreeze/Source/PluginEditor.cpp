@@ -12,8 +12,10 @@ SpectralFreezeEditor::SpectralFreezeEditor(SpectralFreezeProcessor& p)
     freezeButton.setToggleState(false, juce::dontSendNotification);
     freezeButton.setTooltip("Capture and hold the current spectrum indefinitely");
     freezeButton.onClick = [this]() {
-        auto* param = audioProcessor.getParameters()[0];
-        param->setValueNotifyingHost(freezeButton.getToggleState() ? 1.0f : 0.0f);
+        if (audioProcessor.getParameters().size() > 0) {
+            auto* param = audioProcessor.getParameters()[0];
+            if (param) param->setValueNotifyingHost(freezeButton.getToggleState() ? 1.0f : 0.0f);
+        }
     };
     addAndMakeVisible(freezeButton);
 
@@ -28,8 +30,10 @@ SpectralFreezeEditor::SpectralFreezeEditor(SpectralFreezeProcessor& p)
     blurSlider.setValue(0.0);
     blurSlider.setTooltip("Gaussian smoothing across frequency bins (0-100%)");
     blurSlider.onValueChange = [this]() {
-        auto* param = audioProcessor.getParameters()[1];
-        param->setValueNotifyingHost(blurSlider.getValue() / 100.0f);
+        if (audioProcessor.getParameters().size() > 1) {
+            auto* param = audioProcessor.getParameters()[1];
+            if (param) param->setValueNotifyingHost(blurSlider.getValue() / 100.0f);
+        }
     };
     addAndMakeVisible(blurSlider);
 
@@ -45,8 +49,10 @@ SpectralFreezeEditor::SpectralFreezeEditor(SpectralFreezeProcessor& p)
     lowCutSlider.setValue(20.0);
     lowCutSlider.setTooltip("High-pass filter frequency (20-20000 Hz)");
     lowCutSlider.onValueChange = [this]() {
-        auto* param = audioProcessor.getParameters()[2];
-        param->setValueNotifyingHost((lowCutSlider.getValue() - 20.0) / 19980.0);
+        if (audioProcessor.getParameters().size() > 2) {
+            auto* param = audioProcessor.getParameters()[2];
+            if (param) param->setValueNotifyingHost((lowCutSlider.getValue() - 20.0) / 19980.0);
+        }
     };
     addAndMakeVisible(lowCutSlider);
 
@@ -62,8 +68,10 @@ SpectralFreezeEditor::SpectralFreezeEditor(SpectralFreezeProcessor& p)
     highCutSlider.setValue(20000.0);
     highCutSlider.setTooltip("Low-pass filter frequency (20-20000 Hz)");
     highCutSlider.onValueChange = [this]() {
-        auto* param = audioProcessor.getParameters()[3];
-        param->setValueNotifyingHost((highCutSlider.getValue() - 20.0) / 19980.0);
+        if (audioProcessor.getParameters().size() > 3) {
+            auto* param = audioProcessor.getParameters()[3];
+            if (param) param->setValueNotifyingHost((highCutSlider.getValue() - 20.0) / 19980.0);
+        }
     };
     addAndMakeVisible(highCutSlider);
 
@@ -78,8 +86,10 @@ SpectralFreezeEditor::SpectralFreezeEditor(SpectralFreezeProcessor& p)
     dryWetSlider.setValue(100.0);
     dryWetSlider.setTooltip("Blend between dry (0%) and wet (100%) signal");
     dryWetSlider.onValueChange = [this]() {
-        auto* param = audioProcessor.getParameters()[4];
-        param->setValueNotifyingHost(dryWetSlider.getValue() / 100.0f);
+        if (audioProcessor.getParameters().size() > 4) {
+            auto* param = audioProcessor.getParameters()[4];
+            if (param) param->setValueNotifyingHost(dryWetSlider.getValue() / 100.0f);
+        }
     };
     addAndMakeVisible(dryWetSlider);
 
@@ -96,8 +106,10 @@ SpectralFreezeEditor::SpectralFreezeEditor(SpectralFreezeProcessor& p)
     stretchSlider.setValue(0.0);
     stretchSlider.setTooltip("Time-stretch the frozen spectrum (1x to 5x slower)");
     stretchSlider.onValueChange = [this]() {
-        auto* param = audioProcessor.getParameters()[5];
-        param->setValueNotifyingHost(stretchSlider.getValue() / 100.0f);
+        if (audioProcessor.getParameters().size() > 5) {
+            auto* param = audioProcessor.getParameters()[5];
+            if (param) param->setValueNotifyingHost(stretchSlider.getValue() / 100.0f);
+        }
     };
     addAndMakeVisible(stretchSlider);
 
@@ -112,8 +124,10 @@ SpectralFreezeEditor::SpectralFreezeEditor(SpectralFreezeProcessor& p)
     shiftSlider.setValue(0.0);
     shiftSlider.setTooltip("Shift frequencies up/down (±100 bins, ~2 octaves)");
     shiftSlider.onValueChange = [this]() {
-        auto* param = audioProcessor.getParameters()[6];
-        param->setValueNotifyingHost((shiftSlider.getValue() + 100.0) / 200.0);
+        if (audioProcessor.getParameters().size() > 6) {
+            auto* param = audioProcessor.getParameters()[6];
+            if (param) param->setValueNotifyingHost((shiftSlider.getValue() + 100.0) / 200.0);
+        }
     };
     addAndMakeVisible(shiftSlider);
 
@@ -128,8 +142,10 @@ SpectralFreezeEditor::SpectralFreezeEditor(SpectralFreezeProcessor& p)
     morphSlider.setValue(0.0);
     morphSlider.setTooltip("Blend between live and frozen spectrum (0-100%)");
     morphSlider.onValueChange = [this]() {
-        auto* param = audioProcessor.getParameters()[7];
-        param->setValueNotifyingHost(morphSlider.getValue() / 100.0f);
+        if (audioProcessor.getParameters().size() > 7) {
+            auto* param = audioProcessor.getParameters()[7];
+            if (param) param->setValueNotifyingHost(morphSlider.getValue() / 100.0f);
+        }
     };
     addAndMakeVisible(morphSlider);
 
@@ -144,8 +160,10 @@ SpectralFreezeEditor::SpectralFreezeEditor(SpectralFreezeProcessor& p)
     gateSlider.setValue(0.0);
     gateSlider.setTooltip("Silence bins below threshold (relative to max)");
     gateSlider.onValueChange = [this]() {
-        auto* param = audioProcessor.getParameters()[8];
-        param->setValueNotifyingHost(gateSlider.getValue() / 100.0f);
+        if (audioProcessor.getParameters().size() > 8) {
+            auto* param = audioProcessor.getParameters()[8];
+            if (param) param->setValueNotifyingHost(gateSlider.getValue() / 100.0f);
+        }
     };
     addAndMakeVisible(gateSlider);
 
@@ -160,8 +178,10 @@ SpectralFreezeEditor::SpectralFreezeEditor(SpectralFreezeProcessor& p)
     randomizeSlider.setValue(0.0);
     randomizeSlider.setTooltip("Randomize phase for granular texture (0-100%)");
     randomizeSlider.onValueChange = [this]() {
-        auto* param = audioProcessor.getParameters()[9];
-        param->setValueNotifyingHost(randomizeSlider.getValue() / 100.0f);
+        if (audioProcessor.getParameters().size() > 9) {
+            auto* param = audioProcessor.getParameters()[9];
+            if (param) param->setValueNotifyingHost(randomizeSlider.getValue() / 100.0f);
+        }
     };
     addAndMakeVisible(randomizeSlider);
 
@@ -169,8 +189,14 @@ SpectralFreezeEditor::SpectralFreezeEditor(SpectralFreezeProcessor& p)
     randomizeLabel.setJustificationType(juce::Justification::centred);
     addAndMakeVisible(randomizeLabel);
 
-    // Initialize spectrogram history buffer
-    int fftSize = audioProcessor.spectralProcessor.getFFTSize();
+    // Initialize spectrogram history buffer (use safe default if processor not ready)
+    int fftSize = 2048;  // Default FFT size
+    try {
+        fftSize = audioProcessor.spectralProcessor.getFFTSize();
+        if (fftSize <= 0) fftSize = 2048;  // Fallback to default
+    } catch (...) {
+        // Processor not initialized yet, use default
+    }
     spectrogramHistory.resize(SPECTROGRAM_HISTORY_SIZE);
     for (auto& spectrum : spectrogramHistory)
         spectrum.resize(fftSize / 2 + 1, 0.0f);

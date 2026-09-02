@@ -261,9 +261,14 @@ void FreezeFXEditor::paintSpectrum(juce::Graphics& g, juce::Rectangle<int> bound
     g.setColour(juce::Colours::white.withAlpha(0.3f));
     g.drawRect(bounds, 1);
 
-    // Get spectrum data
-    const auto& spectralProc = audioProcessor.getSpectralProcessor();
-    const auto& magnitude = spectralProc.getMagnitudeSpectrum();
+    // Get spectrum data with exception safety (thread-safe copy)
+    std::vector<float> magnitude;
+    try {
+        const auto& spectralProc = audioProcessor.getSpectralProcessor();
+        magnitude = spectralProc.getMagnitudeSpectrum();  // Copy, not reference!
+    } catch (...) {
+        return;  // Silently fail if spectrum data unavailable
+    }
 
     if (magnitude.empty())
         return;
@@ -299,8 +304,15 @@ void FreezeFXEditor::paintSpectrum(juce::Graphics& g, juce::Rectangle<int> bound
     spectrumPath.lineTo(x + width, y + height);
     spectrumPath.closeSubPath();
 
-    // Fill spectrum
-    if (audioProcessor.isCurrentlyFrozen())
+    // Fill spectrum (with safe freeze state check)
+    bool isFrozen = false;
+    try {
+        isFrozen = audioProcessor.isCurrentlyFrozen();
+    } catch (...) {
+        // Ignore if processor not ready
+    }
+
+    if (isFrozen)
     {
         g.setColour(juce::Colours::cyan.withAlpha(0.3f));
         g.fillPath(spectrumPath);

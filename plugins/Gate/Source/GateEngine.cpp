@@ -193,6 +193,12 @@ void GateEngine::process(juce::AudioBuffer<float>& buffer,
         if (rightChannel != nullptr)
             rightChannel[i] = delayedRight * smoothedGain;
 
+        // Sanitize output to prevent NaN/Inf propagation
+        if (!std::isfinite(leftChannel[i]))
+            leftChannel[i] = 0.0f;
+        if (rightChannel != nullptr && !std::isfinite(rightChannel[i]))
+            rightChannel[i] = 0.0f;
+
         // Update output metering
         float outputSample = std::abs(leftChannel[i]);
         if (rightChannel != nullptr)
@@ -207,8 +213,11 @@ void GateEngine::process(juce::AudioBuffer<float>& buffer,
         lookaheadWritePosition = (lookaheadWritePosition + 1) % bufferSize;
     }
 
-    // Store current gain reduction for metering
-    currentGainReduction = 1.0f - (currentGainReduction / range);  // Convert to 0-1 for metering
+    // Store current gain reduction for metering (guard against division by zero)
+    if (range > 0.00001f)
+        currentGainReduction = 1.0f - (currentGainReduction / range);  // Convert to 0-1 for metering
+    else
+        currentGainReduction = 1.0f;  // Fully open if range is effectively zero
 }
 
 float GateEngine::calculateGainReduction(float inputLevel)
@@ -242,11 +251,13 @@ float GateEngine::calculateGainReduction(float inputLevel)
         else
         {
             // Below threshold: calculate expansion
-            // Formula: outputLevel = inputLevel^ratio (in linear domain)
-            // Or in dB: outputDb = inputDb + (thresholdDb - inputDb) * (ratio - 1)
+            // Guard against very small values to prevent NaN from dB conversion
+            const float minLevel = 0.00001f;  // -100 dB
+            float safeInputLevel = juce::jmax(inputLevel, minLevel);
+            float safeThreshold = juce::jmax(threshold, minLevel);
 
-            float inputDb = juce::Decibels::gainToDecibels(inputLevel);
-            float thresholdDb = juce::Decibels::gainToDecibels(threshold);
+            float inputDb = juce::Decibels::gainToDecibels(safeInputLevel);
+            float thresholdDb = juce::Decibels::gainToDecibels(safeThreshold);
 
             // How far below threshold?
             float excessDb = thresholdDb - inputDb;
@@ -313,6 +324,10 @@ float GateEngine::updateEnvelope(float targetGain)
         else if (currentGainReduction <= range * 1.01f)
             currentState = Closed;
     }
+
+    // Sanitize before returning (prevent NaN/Inf propagation)
+    if (!std::isfinite(currentGainReduction))
+        currentGainReduction = range;  // Failsafe: close gate if NaN detected
 
     return currentGainReduction;
 }
