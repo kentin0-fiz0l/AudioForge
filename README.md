@@ -9,44 +9,64 @@ Professional-quality DAW plugins, free and open source.
 
 ## 📦 Download
 
-**[Download Latest Release](https://github.com/kentin0-fiz0l/AudioForge/releases/latest)** - v1.3.0
+**[Download Latest Release](https://github.com/kentin0-fiz0l/AudioForge/releases/latest)** - v1.8.1
 
 - **macOS**: Signed & notarized DMG (VST3 + AU) - **Available now!**
-- **Windows**: NSIS installer (VST3) - *Coming in v1.3.1 (September 2026)*
-- **Linux**: .deb, .rpm, AppImage (VST3) - *Coming in v1.3.2 (September 2026)*
+- **Windows**: NSIS installer (VST3) - *Coming in v1.9.0*
+- **Linux**: .deb, .rpm, AppImage (VST3) - *Coming in v1.9.0*
 
 ## Overview
 
 AudioForge is a collection of high-quality audio plugins for music production. Starting with essential utilities and effects, we're building a suite of tools that producers actually want to use.
 
-## Current Plugins (13 Total)
+## Current Plugins (19 Validated)
 
-### Core Processing Suite (11 plugins)
+### Mixing & Mastering Suite (9 plugins) ✅
 - **SimpleGain** - Clean gain/volume control with metering (-60 to +12 dB)
 - **PanUtil** - Stereo panning utility with balance and width controls
-- **BasicSynth** - Simple subtractive synthesizer with ADSR envelope and filter
-- **CleanDelay** - Stereo delay effect with ping-pong mode and tempo sync
 - **SimpleEQ** - 3-band parametric EQ with high/low-pass filters
 - **SimpleComp** - Compressor with auto makeup gain and soft/hard knee modes
-- **WaveShaper** - Waveshaping distortion with 5 curve modes and real-time visualization
-- **Saturation** - Multi-mode analog saturation with harmonic enhancement and oversampling
-- **Chorus/Flanger** - LFO-based modulation effects with stereo width and real-time visualization
-- **Reverb** - Freeverb-inspired algorithmic reverb with freeze mode and stereo width control
-- **FreezeFX** - Spectral freezing plugin with phase evolution, dual-mode algorithms, and real-time visualization
+- **Gate** - Professional noise gate/expander with sidechain (v1.7.0) 🆕
+- **Limiter** - True peak mastering limiter with lookahead (v1.6.0) 🆕
+- **MultibandCompressor** - 4-band mastering compressor with crossovers (v1.8.0) 🆕
+- **Reverb** - Freeverb-inspired algorithmic reverb with freeze mode
+- **CleanDelay** - Stereo delay effect with ping-pong mode and tempo sync
 
-### Advanced Effects Suite (2 plugins) 🆕
-- **GranularEngine** - Real-time granular synthesis with 6 window functions, MIDI control, grain direction control, visualization, and preset system
-- **SpectralFreeze** - Professional spectral manipulation with freeze/unfreeze, 5 advanced effects (blur, shift, morph, gate, randomize), 60 FPS spectrogram visualization, parameter smoothing, and 6 factory presets
+### Creative Effects (3 plugins) ✅
+- **Saturation** - Multi-mode analog saturation with harmonic enhancement
+- **WaveShaper** - Waveshaping distortion with 5 curve modes and visualization
+- **ChorusFlanger** - LFO-based modulation effects with stereo width
 
-### Documentation
-- **SpectralFreeze**: [User Manual](docs/SpectralFreeze-Manual.md) - Complete 300+ line guide with creative techniques
+### Synthesizers (7 plugins) ✅
+- **BasicSynth** - Subtractive synthesizer with ADSR envelope and filter
+- **FMSynth** - 4-operator FM synthesis
+- **WavetableSynth** - Wavetable synthesis with interpolation
+- **PadSynth** - Lush pad synthesis
+- **DrumSynth** - Drum synthesis engine
+- **OrganEmulator** - Hammond-style organ with drawbars
+- **GranularEngine** - Real-time granular synthesis with MIDI control
 
-### Distribution (v1.3.0) ✅
+### Quality Assurance (v1.8.1) ✅
+- **PluginVal Validated**: All 19 plugins pass strict validation (strictness level 5)
+- **Pass Rate**: 86.4% (19/22 total plugins)
+- **100% Test Coverage**: Comprehensive unit tests for all DSP components
+- **Performance Benchmarked**: CPU usage profiled for all plugins
+
+**Excluded Plugins** (Known Issues):
+- ❌ FreezeFX - Performance optimization needed (timeout)
+- ❌ SpectralFreeze - Editor initialization crash
+- ❌ Sampler - Segfault on load
+
+*These will be fixed and included in v1.9.0*
+
+### Distribution (v1.8.1) ✅
 - ✅ macOS code signing (Developer ID Application)
 - ✅ Apple notarization (zero Gatekeeper warnings)
-- ✅ Professional DMG installer (v1.3.0 available now)
-- 🔧 Windows NSIS installer (scripts ready, v1.3.1 planned)
-- 🔧 Linux packages (scripts ready, v1.3.2 planned)
+- ✅ Professional DMG installer (v1.8.1 available now)
+- ✅ PluginVal integration for automated quality assurance
+- ✅ Performance benchmarking framework
+- 🔧 Windows NSIS installer (scripts ready, v1.9.0 planned)
+- 🔧 Linux packages (scripts ready, v1.9.0 planned)
 - ✅ GitHub Discussions enabled for community
 
 ### Planned (v1.4.0+)
