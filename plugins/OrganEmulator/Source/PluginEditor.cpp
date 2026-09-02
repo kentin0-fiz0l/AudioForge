@@ -1,5 +1,6 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
+#include "../../shared/ui/AudioForgeTheme.h"
 
 PluginEditor::PluginEditor(PluginProcessor& p)
     : AudioProcessorEditor(&p), audioProcessor(p)
@@ -69,13 +70,13 @@ void PluginEditor::setupKnob(juce::Slider& slider, juce::Label& label,
 
 void PluginEditor::paint(juce::Graphics& g)
 {
-    // Dark background
-    g.fillAll(juce::Colour(0xff1a1a1a));
+    using namespace AudioForge;
 
-    // Title
-    g.setColour(juce::Colours::white);
-    g.setFont(28.0f);
-    g.drawFittedText("Organ Emulator", 10, 10, getWidth() - 20, 40, juce::Justification::centred, 1);
+    // Background
+    g.fillAll(Colors::Background);
+
+    // Title bar (standardized)
+    Layout::drawTitleBar(g, "AudioForge Organ Emulator", Categories::Synthesizer, getWidth());
 
     // Section backgrounds
     auto drawbarsArea = juce::Rectangle<int>(30, 70, 600, 400);

@@ -1,4 +1,5 @@
 #include "PluginEditor.h"
+#include "../../shared/ui/AudioForgeTheme.h"
 
 GranularEngineEditor::GranularEngineEditor(GranularEngineProcessor& p)
     : AudioProcessorEditor(&p), audioProcessor(p)
@@ -223,18 +224,13 @@ GranularEngineEditor::~GranularEngineEditor()
 
 void GranularEngineEditor::paint(juce::Graphics& g)
 {
+    using namespace AudioForge;
+
     // Background
-    g.fillAll(juce::Colours::darkslategrey);
+    g.fillAll(Colors::Background);
 
-    // Title
-    g.setColour(juce::Colours::white);
-    g.setFont(28.0f);
-    g.drawText("GranularEngine", 0, 10, getWidth(), 40, juce::Justification::centred);
-
-    // Subtitle
-    g.setFont(14.0f);
-    g.setColour(juce::Colours::lightgrey);
-    g.drawText("Phase 5: UI & Visualization", 0, 45, getWidth(), 20, juce::Justification::centred);
+    // Title bar (standardized)
+    Layout::drawTitleBar(g, "AudioForge Granular Engine", Categories::Synthesizer, getWidth());
 
     // Paint visualizations
     paintWaveform(g, waveformBounds);

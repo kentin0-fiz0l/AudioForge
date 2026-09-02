@@ -1,5 +1,6 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
+#include "../../shared/ui/AudioForgeTheme.h"
 
 PluginEditor::PluginEditor(PluginProcessor& p)
     : AudioProcessorEditor(&p), audioProcessor(p)
@@ -46,17 +47,17 @@ void PluginEditor::setupSlider(juce::Slider& slider, juce::Label& label, const j
 
 void PluginEditor::paint(juce::Graphics& g)
 {
-    // Background
-    g.fillAll(juce::Colour(0xff1a1a1a));
+    using namespace AudioForge;
 
-    // Title
-    g.setColour(juce::Colours::white);
-    g.setFont(juce::Font(28.0f, juce::Font::bold));
-    g.drawFittedText("FM Synth", 0, 15, getWidth(), 30, juce::Justification::centred, 1);
+    // Background
+    g.fillAll(Colors::Background);
+
+    // Title bar (standardized)
+    Layout::drawTitleBar(g, "AudioForge FM Synth", Categories::Synthesizer, getWidth());
 
     // Section headers
-    g.setFont(juce::Font(16.0f, juce::Font::bold));
-    g.setColour(juce::Colour(0xff4a9eff));
+    g.setFont(juce::Font(Typography::Heading, Typography::Bold));
+    g.setColour(Colors::Primary);
 
     g.drawText("Modulation", 20, 60, 200, 20, juce::Justification::left);
     g.drawText("Carrier Envelope", 20, 220, 200, 20, juce::Justification::left);

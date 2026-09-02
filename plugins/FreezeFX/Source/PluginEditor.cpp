@@ -1,4 +1,5 @@
 #include "PluginEditor.h"
+#include "../../shared/ui/AudioForgeTheme.h"
 #include <cmath>
 
 FreezeFXEditor::FreezeFXEditor(FreezeFXProcessor& p)
@@ -165,16 +166,17 @@ FreezeFXEditor::~FreezeFXEditor()
 
 void FreezeFXEditor::paint(juce::Graphics& g)
 {
-    // Background
-    g.fillAll(juce::Colours::darkgrey);
+    using namespace AudioForge;
 
-    // Title
-    g.setColour(juce::Colours::white);
-    g.setFont(24.0f);
-    g.drawText("FreezeFX", 0, 10, getWidth(), 30, juce::Justification::centred);
+    // Background
+    g.fillAll(Colors::Background);
+
+    // Title bar (standardized)
+    Layout::drawTitleBar(g, "AudioForge FreezeFX", Categories::Synthesizer, getWidth());
 
     // Section headers
-    g.setFont(14.0f);
+    g.setFont(Typography::Subtitle);
+    g.setColour(Colors::TextSecondary);
     g.drawText("FREEZE CONTROL", 20, 50, 200, 20, juce::Justification::centredLeft);
     g.drawText("PHASE EVOLUTION", 20, 200, 200, 20, juce::Justification::centredLeft);
     g.drawText("SPECTRAL PROCESSING", 20, 350, 200, 20, juce::Justification::centredLeft);

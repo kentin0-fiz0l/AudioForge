@@ -1,5 +1,6 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
+#include "../../shared/ui/AudioForgeTheme.h"
 
 PluginEditor::PluginEditor(PluginProcessor& p)
     : AudioProcessorEditor(&p), audioProcessor(p)
@@ -70,13 +71,13 @@ void PluginEditor::setupSlider(juce::Slider& slider, juce::Label& label,
 
 void PluginEditor::paint(juce::Graphics& g)
 {
-    // Dark background
-    g.fillAll(juce::Colour(0xff1a1a1a));
+    using namespace AudioForge;
 
-    // Title
-    g.setColour(juce::Colours::white);
-    g.setFont(28.0f);
-    g.drawFittedText("Pad Synth", 10, 10, getWidth() - 20, 40, juce::Justification::centred, 1);
+    // Background
+    g.fillAll(Colors::Background);
+
+    // Title bar (standardized)
+    Layout::drawTitleBar(g, "AudioForge PadSynth", Categories::Synthesizer, getWidth());
 
     // Section backgrounds
     auto oscArea = juce::Rectangle<int>(20, 70, 420, 180);

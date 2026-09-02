@@ -1,5 +1,6 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
+#include "../../shared/ui/AudioForgeTheme.h"
 
 BasicSynthEditor::BasicSynthEditor(BasicSynthProcessor& p)
     : AudioProcessorEditor(&p), audioProcessor(p)
@@ -310,27 +311,16 @@ BasicSynthEditor::~BasicSynthEditor()
 
 void BasicSynthEditor::paint(juce::Graphics& g)
 {
-    // Gradient background
-    juce::ColourGradient gradient(juce::Colour(0xff2d3748), 0, 0,
-                                 juce::Colour(0xff1a202c), 0, static_cast<float>(getHeight()),
-                                 false);
-    g.setGradientFill(gradient);
-    g.fillAll();
+    using namespace AudioForge;
 
-    // Title area with rounded rectangle
-    g.setColour(juce::Colour(0xff4a5568).withAlpha(0.3f));
-    g.fillRoundedRectangle(10, 10, getWidth() - 20, 40, 8.0f);
+    // Background
+    g.fillAll(Colors::Background);
 
-    // Title text with shadow
-    g.setColour(juce::Colours::black.withAlpha(0.5f));
-    g.setFont(juce::Font(26.0f, juce::Font::bold));
-    g.drawText("BasicSynth", 21, 11, getWidth() - 40, 40, juce::Justification::centred);
+    // Title bar (standardized)
+    Layout::drawTitleBar(g, "AudioForge BasicSynth", Categories::Synthesizer, getWidth());
 
-    g.setColour(juce::Colour(0xff63b3ed));
-    g.drawText("BasicSynth", 20, 10, getWidth() - 40, 40, juce::Justification::centred);
-
-    // Section labels with better styling
-    g.setColour(juce::Colour(0xffa0aec0));
+    // Section labels
+    g.setColour(Colors::TextSecondary);
     g.setFont(juce::Font(14.0f, juce::Font::bold));
     g.drawText("ENVELOPE", 100, 115, 200, 20, juce::Justification::left);
     g.drawText("FILTER", 100, 335, 200, 20, juce::Justification::left);

@@ -1,4 +1,5 @@
 #include "PluginEditor.h"
+#include "../../shared/ui/AudioForgeTheme.h"
 
 SamplerPluginEditor::SamplerPluginEditor(SamplerPluginProcessor& p)
     : AudioProcessorEditor(&p), processor(p)
@@ -221,15 +222,24 @@ SamplerPluginEditor::~SamplerPluginEditor()
 
 void SamplerPluginEditor::paint(juce::Graphics& g)
 {
-    g.fillAll(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId));
+    using namespace AudioForge;
+
+    // Background
+    g.fillAll(Colors::Background);
+
+    // Title bar (only if not dragging)
+    if (!isDraggingFile)
+    {
+        Layout::drawTitleBar(g, "AudioForge Sampler", Categories::Synthesizer, getWidth());
+    }
 
     // Drag and drop overlay
     if (isDraggingFile)
     {
-        g.setColour(juce::Colours::blue.withAlpha(0.3f));
+        g.setColour(Colors::Primary.withAlpha(0.3f));
         g.fillAll();
-        g.setColour(juce::Colours::white);
-        g.setFont(24.0f);
+        g.setColour(Colors::Text);
+        g.setFont(Typography::Title);
         g.drawText("Drop audio file to load",
                   getLocalBounds(), juce::Justification::centred, true);
     }

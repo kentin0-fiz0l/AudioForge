@@ -1,4 +1,5 @@
 #include "PluginEditor.h"
+#include "../../shared/ui/AudioForgeTheme.h"
 
 SpectralFreezeEditor::SpectralFreezeEditor(SpectralFreezeProcessor& p)
     : AudioProcessorEditor(&p), audioProcessor(p)
@@ -223,18 +224,13 @@ SpectralFreezeEditor::~SpectralFreezeEditor()
 
 void SpectralFreezeEditor::paint(juce::Graphics& g)
 {
+    using namespace AudioForge;
+
     // Background
-    g.fillAll(juce::Colours::darkslategrey);
+    g.fillAll(Colors::Background);
 
-    // Title
-    g.setColour(juce::Colours::white);
-    g.setFont(28.0f);
-    g.drawText("SpectralFreeze", 0, 10, getWidth(), 40, juce::Justification::centred);
-
-    // Subtitle
-    g.setFont(14.0f);
-    g.setColour(juce::Colours::lightgrey);
-    g.drawText("Production-Ready Spectral Manipulation", 0, 45, getWidth(), 20, juce::Justification::centred);
+    // Title bar (standardized)
+    Layout::drawTitleBar(g, "AudioForge Spectral Freeze", Categories::Synthesizer, getWidth());
 
     // Spectrogram visualization area
     juce::Rectangle<int> spectrogramBounds(10, 70, getWidth() - 20, 80);
