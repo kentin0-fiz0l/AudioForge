@@ -173,7 +173,7 @@ void SimpleCompEditor::paint(juce::Graphics& g)
 
     if (meterFill > 0.0f)
     {
-        g.setColour(Colors::MeterWarn);
+        g.setColour(Colors::MeterMid);
         g.fillRoundedRectangle(meterX, meterY, meterWidth * meterFill, meterHeight, 4.0f);
     }
 
