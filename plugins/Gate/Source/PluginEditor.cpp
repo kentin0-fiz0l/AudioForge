@@ -10,6 +10,7 @@
 
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
+#include "../../shared/ui/AudioForgeTheme.h"
 
 //==============================================================================
 GateAudioProcessorEditor::GateAudioProcessorEditor(GateAudioProcessor& p)
@@ -135,64 +136,55 @@ GateAudioProcessorEditor::~GateAudioProcessorEditor()
 //==============================================================================
 void GateAudioProcessorEditor::paint(juce::Graphics& g)
 {
+    using namespace AudioForge;
+
     // Background
-    g.fillAll(juce::Colour(0xff1e1e1e));
+    g.fillAll(Colors::Background);
 
-    // Title
-    g.setColour(juce::Colours::white);
-    g.setFont(24.0f);
-    g.drawFittedText("AudioForge Gate", 0, 10, getWidth(), 30, juce::Justification::centred, 1);
-
-    g.setFont(14.0f);
-    g.drawFittedText("Dynamic Noise Control", 0, 40, getWidth(), 20, juce::Justification::centred, 1);
+    // Title bar (standardized)
+    Layout::drawTitleBar(g, "AudioForge Gate", Categories::Dynamics, getWidth());
 
     // Sidechain section background
-    g.setColour(juce::Colour(0xff2a2a2a));
+    g.setColour(Colors::Surface);
     g.fillRect(10, 330, getWidth() - 20, 90);
 
-    g.setColour(juce::Colours::white);
-    g.setFont(16.0f);
+    g.setColour(Colors::Text);
+    g.setFont(juce::Font(Typography::Heading, Typography::Bold));
     g.drawText("Sidechain", 20, 335, 100, 20, juce::Justification::left);
 
     // Metering section
-    g.setFont(12.0f);
+    g.setFont(Typography::Body);
     int meterY = 430;
 
     // Input meter
+    g.setColour(Colors::TextSecondary);
     g.drawText("Input:", 10, meterY, 50, 20, juce::Justification::left);
-    g.setColour(juce::Colour(0xff2a2a2a));
-    g.fillRect(70, meterY + 5, 180, 10);
+    float inputNorm = juce::jmap(inputLevel, -60.0f, 0.0f, 0.0f, 1.0f);
+    Layout::drawMeter(g, 70, meterY + 5, 180, 10, inputNorm);
 
-    float inputWidth = juce::jmap(inputLevel, -60.0f, 0.0f, 0.0f, 180.0f);
-    g.setColour(juce::Colours::green);
-    g.fillRect(70, meterY + 5, static_cast<int>(inputWidth), 10);
-
-    g.setColour(juce::Colours::white);
+    g.setColour(Colors::Text);
     g.drawText(juce::String(inputLevel, 1) + " dB", 260, meterY, 80, 20, juce::Justification::left);
 
     // GR meter
+    g.setColour(Colors::TextSecondary);
     g.drawText("GR:", 360, meterY, 40, 20, juce::Justification::left);
-    g.setColour(juce::Colour(0xff2a2a2a));
-    g.fillRect(410, meterY + 5, 100, 10);
-
     float grWidth = juce::jmap(gainReduction, 0.0f, -60.0f, 0.0f, 100.0f);
-    g.setColour(juce::Colours::yellow);
+    g.setColour(Colors::MeterBackground);
+    g.fillRect(410, meterY + 5, 100, 10);
+    g.setColour(Colors::MeterWarn);
     g.fillRect(410, meterY + 5, static_cast<int>(grWidth), 10);
 
-    g.setColour(juce::Colours::white);
+    g.setColour(Colors::Text);
     g.drawText(juce::String(gainReduction, 1) + " dB", 520, meterY, 80, 20, juce::Justification::left);
 
     // Output meter
     meterY += 25;
+    g.setColour(Colors::TextSecondary);
     g.drawText("Output:", 10, meterY, 50, 20, juce::Justification::left);
-    g.setColour(juce::Colour(0xff2a2a2a));
-    g.fillRect(70, meterY + 5, 180, 10);
+    float outputNorm = juce::jmap(outputLevel, -60.0f, 0.0f, 0.0f, 1.0f);
+    Layout::drawMeter(g, 70, meterY + 5, 180, 10, outputNorm);
 
-    float outputWidth = juce::jmap(outputLevel, -60.0f, 0.0f, 0.0f, 180.0f);
-    g.setColour(juce::Colours::green);
-    g.fillRect(70, meterY + 5, static_cast<int>(outputWidth), 10);
-
-    g.setColour(juce::Colours::white);
+    g.setColour(Colors::Text);
     g.drawText(juce::String(outputLevel, 1) + " dB", 260, meterY, 80, 20, juce::Justification::left);
 }
 

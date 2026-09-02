@@ -1,4 +1,5 @@
 #include "PluginEditor.h"
+#include "../../shared/ui/AudioForgeTheme.h"
 
 SimpleGainEditor::SimpleGainEditor(SimpleGainProcessor& p)
     : AudioProcessorEditor(&p), processor(p)
@@ -47,53 +48,23 @@ SimpleGainEditor::~SimpleGainEditor()
 
 void SimpleGainEditor::paint(juce::Graphics& g)
 {
+    using namespace AudioForge;
+
     // Background
-    g.fillAll(juce::Colour(0xff1a1a1a));
+    g.fillAll(Colors::Background);
 
-    // Title bar
-    g.setColour(juce::Colour(0xff2a2a2a));
-    g.fillRect(0, 0, getWidth(), 50);
+    // Title bar (standardized)
+    Layout::drawTitleBar(g, "AudioForge SimpleGain", Categories::Utility, getWidth());
 
-    // Title text
-    g.setColour(juce::Colours::white);
-    g.setFont(juce::Font(24.0f, juce::Font::bold));
-    g.drawText("SimpleGain", 0, 10, getWidth(), 30, juce::Justification::centred);
-
-    // Subtitle
-    g.setFont(juce::Font(12.0f));
-    g.setColour(juce::Colour(0xff888888));
-    g.drawText("AudioForge • Learning Plugin #1", 0, 35, getWidth(), 15,
-               juce::Justification::centred);
-
-    // Draw level meter
+    // Draw level meter using theme helper
     const int meterX = 50;
     const int meterY = 230;
-    const int meterWidth = 300;
-    const int meterHeight = 20;
 
-    // Meter background
-    g.setColour(juce::Colour(0xff333333));
-    g.fillRect(meterX, meterY, meterWidth, meterHeight);
-
-    // Meter fill (green to yellow to red)
-    if (meterLevel > 0.0f)
-    {
-        float meterWidthFilled = meterWidth * meterLevel;
-        juce::Colour meterColour = juce::Colours::green;
-
-        if (meterLevel > 0.7f)
-            meterColour = juce::Colours::orange;
-        if (meterLevel > 0.9f)
-            meterColour = juce::Colours::red;
-
-        g.setColour(meterColour);
-        g.fillRect(static_cast<float>(meterX), static_cast<float>(meterY),
-                   meterWidthFilled, static_cast<float>(meterHeight));
-    }
+    Layout::drawMeter(g, meterX, meterY, 300, Dimensions::MeterHeight, meterLevel);
 
     // Meter border
-    g.setColour(juce::Colour(0xff666666));
-    g.drawRect(meterX, meterY, meterWidth, meterHeight, 1);
+    g.setColour(Colors::Border);
+    g.drawRect(meterX, meterY, 300, Dimensions::MeterHeight, 1);
 }
 
 void SimpleGainEditor::resized()

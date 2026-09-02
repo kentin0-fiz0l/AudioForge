@@ -10,6 +10,7 @@
 
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
+#include "../../shared/ui/AudioForgeTheme.h"
 
 //==============================================================================
 MultibandCompressorAudioProcessorEditor::MultibandCompressorAudioProcessorEditor(
@@ -176,58 +177,61 @@ MultibandCompressorAudioProcessorEditor::~MultibandCompressorAudioProcessorEdito
 
 void MultibandCompressorAudioProcessorEditor::paint(juce::Graphics& g)
 {
-    g.fillAll(juce::Colour(0xff1e1e1e));
+    using namespace AudioForge;
 
-    g.setColour(juce::Colours::white);
-    g.setFont(24.0f);
-    g.drawFittedText("AudioForge Multiband Compressor", 0, 10, getWidth(), 30,
-                     juce::Justification::centred, 1);
+    // Background
+    g.fillAll(Colors::Background);
+
+    // Title bar (standardized)
+    Layout::drawTitleBar(g, "AudioForge Multiband Compressor", Categories::Mastering, getWidth());
 
     // Band labels
-    g.setFont(14.0f);
+    g.setColour(Colors::TextSecondary);
+    g.setFont(Typography::Subtitle);
     g.drawText("Band 1\nLow", 20, 100, 200, 40, juce::Justification::centred);
     g.drawText("Band 2\nLow-Mid", 230, 100, 200, 40, juce::Justification::centred);
     g.drawText("Band 3\nHigh-Mid", 440, 100, 200, 40, juce::Justification::centred);
     g.drawText("Band 4\nHigh", 650, 100, 200, 40, juce::Justification::centred);
 
-    // Meters
+    // Gain reduction meters
     int meterY = 540;
-    g.setFont(12.0f);
+    g.setFont(Typography::Body);
 
     // Band 1 GR
+    g.setColour(Colors::TextSecondary);
     g.drawText("GR:", 20, meterY, 30, 20, juce::Justification::left);
-    g.setColour(juce::Colour(0xff2a2a2a));
+    float gr1Norm = juce::jmap(band1GR, -20.0f, 0.0f, 0.0f, 1.0f);
+    g.setColour(Colors::MeterBackground);
     g.fillRect(55, meterY + 5, 150, 10);
-    float gr1Width = juce::jmap(band1GR, -20.0f, 0.0f, 0.0f, 150.0f);
-    g.setColour(juce::Colours::yellow);
-    g.fillRect(55, meterY + 5, static_cast<int>(gr1Width), 10);
+    g.setColour(Colors::MeterWarn);
+    g.fillRect(55, meterY + 5, static_cast<int>(150 * gr1Norm), 10);
 
     // Band 2 GR
-    g.setColour(juce::Colours::white);
+    g.setColour(Colors::TextSecondary);
     g.drawText("GR:", 230, meterY, 30, 20, juce::Justification::left);
-    g.setColour(juce::Colour(0xff2a2a2a));
+    float gr2Norm = juce::jmap(band2GR, -20.0f, 0.0f, 0.0f, 1.0f);
+    g.setColour(Colors::MeterBackground);
     g.fillRect(265, meterY + 5, 150, 10);
-    float gr2Width = juce::jmap(band2GR, -20.0f, 0.0f, 0.0f, 150.0f);
-    g.setColour(juce::Colours::yellow);
-    g.fillRect(265, meterY + 5, static_cast<int>(gr2Width), 10);
+    g.setColour(Colors::MeterWarn);
+    g.fillRect(265, meterY + 5, static_cast<int>(150 * gr2Norm), 10);
 
     // Band 3 GR
-    g.setColour(juce::Colours::white);
+    g.setColour(Colors::TextSecondary);
     g.drawText("GR:", 440, meterY, 30, 20, juce::Justification::left);
-    g.setColour(juce::Colour(0xff2a2a2a));
+    float gr3Norm = juce::jmap(band3GR, -20.0f, 0.0f, 0.0f, 1.0f);
+    g.setColour(Colors::MeterBackground);
     g.fillRect(475, meterY + 5, 150, 10);
-    float gr3Width = juce::jmap(band3GR, -20.0f, 0.0f, 0.0f, 150.0f);
-    g.setColour(juce::Colours::yellow);
-    g.fillRect(475, meterY + 5, static_cast<int>(gr3Width), 10);
+    g.setColour(Colors::MeterWarn);
+    g.fillRect(475, meterY + 5, static_cast<int>(150 * gr3Norm), 10);
 
     // Band 4 GR
-    g.setColour(juce::Colours::white);
+    g.setColour(Colors::TextSecondary);
     g.drawText("GR:", 650, meterY, 30, 20, juce::Justification::left);
-    g.setColour(juce::Colour(0xff2a2a2a));
+    float gr4Norm = juce::jmap(band4GR, -20.0f, 0.0f, 0.0f, 1.0f);
+    g.setColour(Colors::MeterBackground);
     g.fillRect(685, meterY + 5, 150, 10);
-    float gr4Width = juce::jmap(band4GR, -20.0f, 0.0f, 0.0f, 150.0f);
-    g.setColour(juce::Colours::yellow);
-    g.fillRect(685, meterY + 5, static_cast<int>(gr4Width), 10);
+    g.setColour(Colors::MeterWarn);
+    g.fillRect(685, meterY + 5, static_cast<int>(150 * gr4Norm), 10);
 }
 
 void MultibandCompressorAudioProcessorEditor::resized()

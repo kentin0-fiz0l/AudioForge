@@ -10,6 +10,7 @@
 
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
+#include "../../shared/ui/AudioForgeTheme.h"
 
 //==============================================================================
 LimiterAudioProcessorEditor::LimiterAudioProcessorEditor (LimiterAudioProcessor& p)
@@ -74,64 +75,52 @@ LimiterAudioProcessorEditor::~LimiterAudioProcessorEditor()
 //==============================================================================
 void LimiterAudioProcessorEditor::paint (juce::Graphics& g)
 {
+    using namespace AudioForge;
+
     // Background
-    g.fillAll(juce::Colour(0xff1a1a1a));
+    g.fillAll(Colors::Background);
 
-    // Title
-    g.setColour(juce::Colours::white);
-    g.setFont(juce::Font(24.0f, juce::Font::bold));
-    g.drawText("AudioForge Limiter", 0, 10, getWidth(), 40, juce::Justification::centred);
-
-    // Subtitle
-    g.setFont(juce::Font(14.0f));
-    g.setColour(juce::Colour(0xff4a9eff));
-    g.drawText("True Peak Limiting", 0, 35, getWidth(), 20, juce::Justification::centred);
+    // Title bar (standardized)
+    Layout::drawTitleBar(g, "AudioForge Limiter", Categories::Mastering, getWidth());
 
     // Metering section background
-    g.setColour(juce::Colour(0xff2d2d2d));
+    g.setColour(Colors::SurfaceVariant);
     g.fillRect(20, 300, getWidth() - 40, 80);
 
-    // Draw meters
+    // Draw meters (using theme meter helper)
     int meterX = 40;
     int meterY = 320;
-    int meterWidth = 150;
-    int meterHeight = 20;
 
     // Input meter
-    g.setColour(juce::Colours::grey);
+    g.setColour(Colors::TextSecondary);
+    g.setFont(Typography::Body);
     g.drawText("Input:", meterX, meterY - 20, 100, 20, juce::Justification::left);
-    g.fillRect(meterX, meterY, meterWidth, meterHeight);
-
-    float inputNorm = juce::jlimit(0.0f, 1.0f, inputLevel);
-    g.setColour(juce::Colour(0xff4a9eff));
-    g.fillRect(meterX, meterY, static_cast<int>(meterWidth * inputNorm), meterHeight);
+    Layout::drawMeter(g, meterX, meterY, Dimensions::MeterWidth, Dimensions::MeterHeight, inputLevel);
 
     // Output meter
     meterY += 40;
-    g.setColour(juce::Colours::grey);
+    g.setColour(Colors::TextSecondary);
     g.drawText("Output:", meterX, meterY - 20, 100, 20, juce::Justification::left);
-    g.fillRect(meterX, meterY, meterWidth, meterHeight);
-
-    float outputNorm = juce::jlimit(0.0f, 1.0f, outputLevel);
-    g.setColour(juce::Colour(0xff4a9eff));
-    g.fillRect(meterX, meterY, static_cast<int>(meterWidth * outputNorm), meterHeight);
+    Layout::drawMeter(g, meterX, meterY, Dimensions::MeterWidth, Dimensions::MeterHeight, outputLevel);
 
     // Gain reduction meter
     meterX = getWidth() - 220;
     meterY = 320;
-    g.setColour(juce::Colours::grey);
+    g.setColour(Colors::TextSecondary);
     g.drawText("GR:", meterX, meterY - 20, 100, 20, juce::Justification::left);
-    g.fillRect(meterX, meterY, meterWidth, meterHeight);
 
-    float grNorm = juce::jlimit(0.0f, 1.0f, gainReduction / 20.0f); // 0-20 dB range
-    g.setColour(juce::Colours::red);
-    g.fillRect(meterX, meterY, static_cast<int>(meterWidth * grNorm), meterHeight);
+    // GR meter (inverted - more GR = more fill)
+    float grNorm = juce::jlimit(0.0f, 1.0f, gainReduction / 20.0f);
+    g.setColour(Colors::MeterBackground);
+    g.fillRect(meterX, meterY, Dimensions::MeterWidth, Dimensions::MeterHeight);
+    g.setColour(Colors::MeterWarn); // Yellow for gain reduction
+    g.fillRect(meterX, meterY, static_cast<int>(Dimensions::MeterWidth * grNorm), Dimensions::MeterHeight);
 
     // True peak indicator
     meterY += 40;
-    g.setColour(truePeakClipping ? juce::Colours::red : juce::Colours::grey);
+    g.setColour(truePeakClipping ? Colors::MeterHigh : Colors::ControlFill);
     g.fillEllipse(static_cast<float>(meterX), static_cast<float>(meterY), 20.0f, 20.0f);
-    g.setColour(juce::Colours::white);
+    g.setColour(Colors::Text);
     g.drawText("TP", meterX + 25, meterY, 100, 20, juce::Justification::left);
 }
 
