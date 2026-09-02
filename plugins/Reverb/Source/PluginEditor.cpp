@@ -4,6 +4,7 @@
 
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
+#include "../../shared/ui/AudioForgeTheme.h"
 
 //==============================================================================
 ReverbAudioProcessorEditor::ReverbAudioProcessorEditor(ReverbAudioProcessor& p)
@@ -108,16 +109,16 @@ ReverbAudioProcessorEditor::~ReverbAudioProcessorEditor()
 //==============================================================================
 void ReverbAudioProcessorEditor::paint(juce::Graphics& g)
 {
-    // Background
-    g.fillAll(juce::Colour(0xff2a2a2a));
+    using namespace AudioForge;
 
-    // Title
-    g.setColour(juce::Colours::white);
-    g.setFont(28.0f);
-    g.drawText("Reverb", getLocalBounds().removeFromTop(60), juce::Justification::centred);
+    // Background
+    g.fillAll(Colors::Background);
+
+    // Title bar (standardized)
+    Layout::drawTitleBar(g, "AudioForge Reverb", Categories::Reverb, getWidth());
 
     // Draw level meters
-    g.setColour(juce::Colour(0xff3a3a3a));
+    g.setColour(Colors::Surface);
     g.fillRect(inputMeterBounds);
     g.fillRect(outputMeterBounds);
 

@@ -1,4 +1,5 @@
 #include "PluginEditor.h"
+#include "../../shared/ui/AudioForgeTheme.h"
 
 SimpleCompEditor::SimpleCompEditor(SimpleCompProcessor& p)
     : AudioProcessorEditor(&p), audioProcessor(p)
@@ -148,26 +149,13 @@ void SimpleCompEditor::timerCallback()
 
 void SimpleCompEditor::paint(juce::Graphics& g)
 {
-    // Background gradient
-    g.fillAll(juce::Colour(0xff1a1a1a));
-    auto bounds = getLocalBounds();
+    using namespace AudioForge;
 
-    juce::ColourGradient gradient(
-        juce::Colour(0xff2a2a2a), bounds.getX(), bounds.getY(),
-        juce::Colour(0xff1a1a1a), bounds.getX(), bounds.getBottom(),
-        false);
-    g.setGradientFill(gradient);
-    g.fillRect(bounds);
+    // Background
+    g.fillAll(Colors::Background);
 
-    // Title
-    g.setColour(juce::Colours::white);
-    g.setFont(juce::FontOptions(26.0f, juce::Font::bold));
-    g.drawText("SimpleComp", 0, 10, getWidth(), 40, juce::Justification::centred);
-
-    // Subtitle
-    g.setFont(juce::FontOptions(14.0f));
-    g.setColour(juce::Colours::lightgrey);
-    g.drawText("Dynamic Range Compressor", 0, 45, getWidth(), 20, juce::Justification::centred);
+    // Title bar (standardized)
+    Layout::drawTitleBar(g, "AudioForge SimpleComp", Categories::Dynamics, getWidth());
 
     // Gain reduction meter
     int meterX = 20;
@@ -176,7 +164,7 @@ void SimpleCompEditor::paint(juce::Graphics& g)
     int meterHeight = 40;
 
     // Meter background
-    g.setColour(juce::Colour(0xff333333));
+    g.setColour(Colors::MeterBackground);
     g.fillRoundedRectangle(meterX, meterY, meterWidth, meterHeight, 4.0f);
 
     // Meter fill (0 to -20dB range)
@@ -185,12 +173,7 @@ void SimpleCompEditor::paint(juce::Graphics& g)
 
     if (meterFill > 0.0f)
     {
-        // Gradient from yellow to red
-        juce::ColourGradient meterGradient(
-            juce::Colours::orange, meterX, meterY,
-            juce::Colours::red, meterX + meterWidth, meterY,
-            false);
-        g.setGradientFill(meterGradient);
+        g.setColour(Colors::MeterWarn);
         g.fillRoundedRectangle(meterX, meterY, meterWidth * meterFill, meterHeight, 4.0f);
     }
 

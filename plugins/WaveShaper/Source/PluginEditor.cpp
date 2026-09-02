@@ -1,5 +1,6 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
+#include "../../shared/ui/AudioForgeTheme.h"
 
 WaveShaperAudioProcessorEditor::WaveShaperAudioProcessorEditor (WaveShaperAudioProcessor& p)
     : AudioProcessorEditor (&p), audioProcessor (p)
@@ -90,16 +91,13 @@ WaveShaperAudioProcessorEditor::~WaveShaperAudioProcessorEditor()
 
 void WaveShaperAudioProcessorEditor::paint (juce::Graphics& g)
 {
-    g.fillAll (juce::Colour (0xff1a1a1a));
+    using namespace AudioForge;
 
-    g.setColour (juce::Colours::white);
-    g.setFont (juce::Font(24.0f, juce::Font::bold));
-    g.drawText ("WaveShaper", getLocalBounds().removeFromTop(50),
-                juce::Justification::centred, true);
+    // Background
+    g.fillAll(Colors::Background);
 
-    g.setFont (juce::Font(12.0f));
-    g.drawText ("Waveshaping Distortion", getLocalBounds().removeFromTop(70).removeFromBottom(20),
-                juce::Justification::centred, true);
+    // Title bar (standardized)
+    Layout::drawTitleBar(g, "AudioForge WaveShaper", Categories::Distortion, getWidth());
 }
 
 void WaveShaperAudioProcessorEditor::resized()

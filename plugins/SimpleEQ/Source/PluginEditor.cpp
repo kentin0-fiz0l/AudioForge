@@ -1,5 +1,6 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
+#include "../../shared/ui/AudioForgeTheme.h"
 
 SimpleEQEditor::SimpleEQEditor(SimpleEQProcessor& p)
     : AudioProcessorEditor(&p), audioProcessor(p)
@@ -194,28 +195,17 @@ SimpleEQEditor::~SimpleEQEditor()
 
 void SimpleEQEditor::paint(juce::Graphics& g)
 {
-    // Gradient background
-    juce::ColourGradient gradient(juce::Colour(0xff2d3748), 0, 0,
-                                 juce::Colour(0xff1a202c), 0, static_cast<float>(getHeight()),
-                                 false);
-    g.setGradientFill(gradient);
-    g.fillAll();
+    using namespace AudioForge;
 
-    // Title area
-    g.setColour(juce::Colour(0xff4a5568).withAlpha(0.3f));
-    g.fillRoundedRectangle(10, 10, getWidth() - 20, 40, 8.0f);
+    // Background
+    g.fillAll(Colors::Background);
 
-    // Title text with shadow
-    g.setColour(juce::Colours::black.withAlpha(0.5f));
-    g.setFont(juce::Font(26.0f, juce::Font::bold));
-    g.drawText("SimpleEQ", 21, 11, getWidth() - 40, 40, juce::Justification::centred);
-
-    g.setColour(juce::Colour(0xff68d391));
-    g.drawText("SimpleEQ", 20, 10, getWidth() - 40, 40, juce::Justification::centred);
+    // Title bar (standardized)
+    Layout::drawTitleBar(g, "AudioForge SimpleEQ", Categories::EQ, getWidth());
 
     // Section labels
-    g.setColour(juce::Colour(0xffa0aec0));
-    g.setFont(12.0f);
+    g.setColour(Colors::TextSecondary);
+    g.setFont(Typography::Body);
     g.drawText("LOW", 40, 60, 100, 20, juce::Justification::centred);
     g.drawText("MID", 220, 60, 100, 20, juce::Justification::centred);
     g.drawText("HIGH", 400, 60, 100, 20, juce::Justification::centred);
