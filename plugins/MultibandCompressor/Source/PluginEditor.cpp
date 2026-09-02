@@ -203,7 +203,7 @@ void MultibandCompressorAudioProcessorEditor::paint(juce::Graphics& g)
     float gr1Norm = juce::jmap(band1GR, -20.0f, 0.0f, 0.0f, 1.0f);
     g.setColour(Colors::MeterBackground);
     g.fillRect(55, meterY + 5, 150, 10);
-    g.setColour(Colors::MeterWarn);
+    g.setColour(Colors::MeterMid);
     g.fillRect(55, meterY + 5, static_cast<int>(150 * gr1Norm), 10);
 
     // Band 2 GR
@@ -212,7 +212,7 @@ void MultibandCompressorAudioProcessorEditor::paint(juce::Graphics& g)
     float gr2Norm = juce::jmap(band2GR, -20.0f, 0.0f, 0.0f, 1.0f);
     g.setColour(Colors::MeterBackground);
     g.fillRect(265, meterY + 5, 150, 10);
-    g.setColour(Colors::MeterWarn);
+    g.setColour(Colors::MeterMid);
     g.fillRect(265, meterY + 5, static_cast<int>(150 * gr2Norm), 10);
 
     // Band 3 GR
@@ -221,7 +221,7 @@ void MultibandCompressorAudioProcessorEditor::paint(juce::Graphics& g)
     float gr3Norm = juce::jmap(band3GR, -20.0f, 0.0f, 0.0f, 1.0f);
     g.setColour(Colors::MeterBackground);
     g.fillRect(475, meterY + 5, 150, 10);
-    g.setColour(Colors::MeterWarn);
+    g.setColour(Colors::MeterMid);
     g.fillRect(475, meterY + 5, static_cast<int>(150 * gr3Norm), 10);
 
     // Band 4 GR
@@ -230,7 +230,7 @@ void MultibandCompressorAudioProcessorEditor::paint(juce::Graphics& g)
     float gr4Norm = juce::jmap(band4GR, -20.0f, 0.0f, 0.0f, 1.0f);
     g.setColour(Colors::MeterBackground);
     g.fillRect(685, meterY + 5, 150, 10);
-    g.setColour(Colors::MeterWarn);
+    g.setColour(Colors::MeterMid);
     g.fillRect(685, meterY + 5, static_cast<int>(150 * gr4Norm), 10);
 }
 

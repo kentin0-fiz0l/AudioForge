@@ -171,7 +171,7 @@ void GateAudioProcessorEditor::paint(juce::Graphics& g)
     float grWidth = juce::jmap(gainReduction, 0.0f, -60.0f, 0.0f, 100.0f);
     g.setColour(Colors::MeterBackground);
     g.fillRect(410, meterY + 5, 100, 10);
-    g.setColour(Colors::MeterWarn);
+    g.setColour(Colors::MeterMid);
     g.fillRect(410, meterY + 5, static_cast<int>(grWidth), 10);
 
     g.setColour(Colors::Text);

@@ -113,7 +113,7 @@ void LimiterAudioProcessorEditor::paint (juce::Graphics& g)
     float grNorm = juce::jlimit(0.0f, 1.0f, gainReduction / 20.0f);
     g.setColour(Colors::MeterBackground);
     g.fillRect(meterX, meterY, Dimensions::MeterWidth, Dimensions::MeterHeight);
-    g.setColour(Colors::MeterWarn); // Yellow for gain reduction
+    g.setColour(Colors::MeterMid); // Yellow for gain reduction
     g.fillRect(meterX, meterY, static_cast<int>(Dimensions::MeterWidth * grNorm), Dimensions::MeterHeight);
 
     // True peak indicator
