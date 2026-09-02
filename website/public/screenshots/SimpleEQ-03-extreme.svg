@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1280" height="720" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="1280" height="720" fill="#1a1a1a"/>
+
+  <!-- Plugin window mockup -->
+  <rect x="100" y="80" width="1080" height="560" rx="8" fill="#2d2d2d" stroke="#4a9eff" stroke-width="2"/>
+
+  <!-- Header bar -->
+  <rect x="100" y="80" width="1080" height="50" rx="8" fill="#4a9eff"/>
+  <text x="640" y="112" font-family="system-ui, -apple-system, sans-serif" font-size="24" font-weight="bold" fill="white" text-anchor="middle">
+    AudioForge - SimpleEQ
+  </text>
+
+  <!-- Type badge -->
+  <rect x="140" y="160" width="280" height="40" rx="20" fill="#4a9eff" opacity="0.3"/>
+  <text x="280" y="187" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="600" fill="#4a9eff" text-anchor="middle">
+    Screenshot 03: Uextreme
+  </text>
+
+  <!-- Description -->
+  <text x="640" y="250" font-family="system-ui, -apple-system, sans-serif" font-size="20" fill="#e0e0e0" text-anchor="middle">
+    Extreme Settings - Creative/aggressive parameters
+  </text>
+
+  <!-- Placeholder content area -->
+  <rect x="180" y="300" width="920" height="260" rx="4" fill="#1a1a1a" stroke="#999999" stroke-width="1" stroke-dasharray="5,5"/>
+
+  <!-- Placeholder text -->
+  <text x="640" y="410" font-family="system-ui, -apple-system, sans-serif" font-size="16" fill="#999999" text-anchor="middle">
+    Plugin UI Mockup
+  </text>
+  <text x="640" y="440" font-family="system-ui, -apple-system, sans-serif" font-size="14" fill="#999999" text-anchor="middle">
+    Replace with actual screenshot from DAW
+  </text>
+  <text x="640" y="470" font-family="system-ui, -apple-system, sans-serif" font-size="14" fill="#999999" text-anchor="middle">
+    (Cmd+Shift+4 → Space → Click plugin window)
+  </text>
+
+  <!-- Footer -->
+  <text x="640" y="620" font-family="system-ui, -apple-system, sans-serif" font-size="12" fill="#999999" text-anchor="middle">
+    AudioForge Plugin Suite • Professional Audio Processing • MIT License
+  </text>
+
+  <!-- Watermark -->
+  <text x="1170" y="700" font-family="system-ui, -apple-system, sans-serif" font-size="10" fill="#999999" text-anchor="end" opacity="0.5">
+    MOCKUP - Replace with real screenshot
+  </text>
+</svg>
