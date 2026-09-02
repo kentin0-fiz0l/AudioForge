@@ -1526,6 +1526,677 @@ if (freeze) {
     downloadUrl: '/downloads/SpectralFreeze-v1.2.0',
     docsUrl: '/docs/plugins/spectralfreeze',
     graphic: '/plugin-graphics/spectralfreeze.svg'
+  },
+  {
+    id: 'limiter',
+    name: 'Limiter',
+    version: '1.6.0',
+    status: 'released',
+    category: 'mixing',
+    tagline: 'True peak limiting for professional mastering',
+    description: 'Professional mastering limiter with true peak detection, intelligent lookahead, and 4x oversampling. Prevents intersample peaks and ensures broadcast-safe output with ITU-R BS.1770-4 compliance. Features automatic makeup gain, variable release time, and comprehensive metering.',
+    features: [
+      {
+        name: 'True Peak Limiting',
+        description: 'ITU-R BS.1770-4 compliant peak detection prevents intersample peaks'
+      },
+      {
+        name: 'Intelligent Lookahead',
+        description: 'Configurable lookahead buffer (0-10ms) for transparent limiting'
+      },
+      {
+        name: '4x Oversampling',
+        description: 'High-quality oversampling prevents aliasing and intersample peaks'
+      },
+      {
+        name: 'Auto Makeup Gain',
+        description: 'Automatically compensates for threshold reduction to maintain perceived loudness'
+      },
+      {
+        name: 'Variable Release',
+        description: 'Adjustable release time (10-1000ms) for different material types'
+      },
+      {
+        name: 'Comprehensive Metering',
+        description: 'Input/output meters with gain reduction display and peak hold'
+      }
+    ],
+    parameters: [
+      {
+        name: 'Ceiling',
+        range: '-12 dB to 0 dB',
+        description: 'Maximum output level (true peak ceiling)'
+      },
+      {
+        name: 'Threshold',
+        range: '-30 dB to 0 dB',
+        description: 'Level at which limiting begins'
+      },
+      {
+        name: 'Release',
+        range: '10ms to 1000ms',
+        description: 'Time for gain reduction to return to zero'
+      },
+      {
+        name: 'Lookahead',
+        range: '0ms to 10ms',
+        description: 'Lookahead buffer for transparent limiting'
+      },
+      {
+        name: 'Output Trim',
+        range: '-12 dB to +12 dB',
+        description: 'Final output gain adjustment'
+      }
+    ],
+    useCases: [
+      'Final mastering stage to prevent clipping',
+      'Streaming-optimized masters (-14 LUFS target)',
+      'Broadcast-safe output with no intersample peaks',
+      'Maximum loudness without distortion',
+      'Protect downstream equipment from excessive levels'
+    ],
+    screenshots: [],
+    downloadUrl: '/downloads/Limiter-v1.6.0',
+    docsUrl: '/docs/plugins/limiter',
+    graphic: '/plugin-graphics/limiter.svg'
+  },
+  {
+    id: 'gate',
+    name: 'Gate',
+    version: '1.7.0',
+    status: 'released',
+    category: 'mixing',
+    tagline: 'Professional noise gate with sidechain filtering',
+    description: 'Advanced noise gate and expander with sidechain input, sidechain filtering, and comprehensive envelope controls. Features hard/soft knee modes, lookahead for transient preservation, and peak/RMS detection for precise gating of drums, vocals, and other dynamic sources.',
+    features: [
+      {
+        name: 'Gate and Expander Modes',
+        description: 'Hard/soft knee operation for different gating characteristics'
+      },
+      {
+        name: 'Sidechain Input',
+        description: 'External key input for frequency-conscious gating'
+      },
+      {
+        name: 'Sidechain Filtering',
+        description: 'Integrated HP/LP filters to isolate trigger frequencies'
+      },
+      {
+        name: 'Lookahead Buffer',
+        description: 'Configurable lookahead (0-10ms) preserves transients'
+      },
+      {
+        name: 'Flexible Envelope',
+        description: 'Attack/hold/release controls (0.1-1000ms) for precise gating'
+      },
+      {
+        name: 'Peak/RMS Detection',
+        description: 'Choose detection method for different source material'
+      },
+      {
+        name: 'Real-time Metering',
+        description: 'Input/output meters with gain reduction display'
+      }
+    ],
+    parameters: [
+      {
+        name: 'Threshold',
+        range: '-60 dB to 0 dB',
+        description: 'Level at which gate opens'
+      },
+      {
+        name: 'Ratio',
+        range: '1:1 to 100:1',
+        description: 'Expansion ratio (100:1 = hard gate)'
+      },
+      {
+        name: 'Range',
+        range: '0 dB to -80 dB',
+        description: 'Maximum attenuation when gate is closed'
+      },
+      {
+        name: 'Attack',
+        range: '0.1ms to 100ms',
+        description: 'Time for gate to fully open'
+      },
+      {
+        name: 'Hold',
+        range: '0ms to 2000ms',
+        description: 'Time gate stays open after signal drops below threshold'
+      },
+      {
+        name: 'Release',
+        range: '10ms to 1000ms',
+        description: 'Time for gate to fully close'
+      },
+      {
+        name: 'Lookahead',
+        range: '0ms to 10ms',
+        description: 'Lookahead time for transient preservation'
+      },
+      {
+        name: 'SC High Pass',
+        range: '20 Hz to 2000 Hz',
+        description: 'Sidechain high-pass filter cutoff'
+      },
+      {
+        name: 'SC Low Pass',
+        range: '2 kHz to 20 kHz',
+        description: 'Sidechain low-pass filter cutoff'
+      }
+    ],
+    useCases: [
+      'Remove drum bleed - Gate kick/snare to remove cymbal bleed',
+      'Clean up noisy guitar tracks - Gate amp noise between phrases',
+      'Tighten bass - Gate low-frequency rumble and string noise',
+      'Remove vocal breath noise - Gentle expansion between phrases',
+      'Frequency-selective gating - Use sidechain filters to trigger on specific frequencies',
+      'Creative ducking - Invert gate for reverse ducking effects'
+    ],
+    screenshots: [],
+    downloadUrl: '/downloads/Gate-v1.7.0',
+    docsUrl: '/docs/plugins/gate',
+    graphic: '/plugin-graphics/gate.svg'
+  },
+  {
+    id: 'multibandcompressor',
+    name: 'Multiband Compressor',
+    version: '1.8.0',
+    status: 'released',
+    category: 'mixing',
+    tagline: '4-band mastering compressor with M/S processing',
+    description: 'Professional 4-band dynamics processor with Linkwitz-Riley crossovers, per-band compression controls, M/S processing, and real-time FFT visualization. Essential mastering tool for transparent multiband dynamics control with independent band solo/bypass and comprehensive metering.',
+    features: [
+      {
+        name: '4-Band Processing',
+        description: 'Independent compression on four frequency bands with visual crossover editor'
+      },
+      {
+        name: 'Linkwitz-Riley Crossovers',
+        description: 'Phase-coherent 24 dB/octave crossovers for transparent band splitting'
+      },
+      {
+        name: 'Per-Band Compression',
+        description: 'Independent threshold, ratio, attack, release, and makeup gain for each band'
+      },
+      {
+        name: 'M/S Processing',
+        description: 'Mid/Side processing per band for stereo image control'
+      },
+      {
+        name: 'Solo/Bypass Controls',
+        description: 'Solo and bypass individual bands for precise adjustments'
+      },
+      {
+        name: 'FFT Analyzer',
+        description: 'Real-time frequency analyzer showing band splits and gain reduction'
+      },
+      {
+        name: 'Comprehensive Metering',
+        description: 'Per-band gain reduction meters with input/output level display'
+      }
+    ],
+    parameters: [
+      {
+        name: 'Crossover 1',
+        range: '20 Hz to 500 Hz',
+        description: 'Low/low-mid band split frequency'
+      },
+      {
+        name: 'Crossover 2',
+        range: '200 Hz to 5 kHz',
+        description: 'Low-mid/high-mid band split frequency'
+      },
+      {
+        name: 'Crossover 3',
+        range: '2 kHz to 20 kHz',
+        description: 'High-mid/high band split frequency'
+      },
+      {
+        name: 'Band 1-4 Threshold',
+        range: '-60 dB to 0 dB',
+        description: 'Per-band compression threshold'
+      },
+      {
+        name: 'Band 1-4 Ratio',
+        range: '1:1 to 20:1',
+        description: 'Per-band compression ratio'
+      },
+      {
+        name: 'Band 1-4 Attack',
+        range: '0.1ms to 100ms',
+        description: 'Per-band attack time'
+      },
+      {
+        name: 'Band 1-4 Release',
+        range: '10ms to 1000ms',
+        description: 'Per-band release time'
+      },
+      {
+        name: 'Band 1-4 Makeup',
+        range: '-12 dB to +12 dB',
+        description: 'Per-band makeup gain'
+      }
+    ],
+    useCases: [
+      'Mastering - Transparent dynamics control across frequency spectrum',
+      'Tame harsh highs - Compress only high frequencies without dulling mix',
+      'Tighten bass - Control low-end dynamics without affecting mids/highs',
+      'Vocal de-essing - Compress sibilant frequencies (4-8 kHz) separately',
+      'Mix bus glue - Gentle multiband compression for cohesion',
+      'Stereo widening - Use M/S mode to compress side differently from mid'
+    ],
+    screenshots: [],
+    downloadUrl: '/downloads/MultibandCompressor-v1.8.0',
+    docsUrl: '/docs/plugins/multibandcompressor',
+    graphic: '/plugin-graphics/multibandcompressor.svg'
+  },
+  {
+    id: 'fmsynth',
+    name: 'FM Synth',
+    version: '0.2.0',
+    status: 'released',
+    category: 'synthesis',
+    tagline: '4-operator FM synthesis engine',
+    description: 'Classic 4-operator FM synthesizer with multiple algorithms, ratio/detune controls, and operator envelopes. Create everything from electric pianos and bells to bass and aggressive leads with this versatile frequency modulation engine.',
+    features: [
+      {
+        name: '4 Operators',
+        description: 'Four independent sine wave oscillators with frequency modulation'
+      },
+      {
+        name: 'Multiple Algorithms',
+        description: '8 FM algorithms covering common carrier/modulator configurations'
+      },
+      {
+        name: 'Ratio/Detune Controls',
+        description: 'Per-operator frequency ratio and fine detune for harmonic/inharmonic tones'
+      },
+      {
+        name: 'Operator Envelopes',
+        description: 'Independent ADSR envelopes for each operator'
+      },
+      {
+        name: 'Velocity Sensitivity',
+        description: 'Per-operator velocity scaling for expressive playing'
+      },
+      {
+        name: '8-Voice Polyphony',
+        description: 'Play chords with voice stealing for complex FM patches'
+      }
+    ],
+    parameters: [
+      {
+        name: 'Algorithm',
+        range: '1 to 8',
+        description: 'FM algorithm (carrier/modulator routing)'
+      },
+      {
+        name: 'Op 1-4 Level',
+        range: '0.0 to 1.0',
+        description: 'Operator output level'
+      },
+      {
+        name: 'Op 1-4 Ratio',
+        range: '0.5 to 16.0',
+        description: 'Frequency ratio relative to note pitch'
+      },
+      {
+        name: 'Op 1-4 Detune',
+        range: '-50 to +50 cents',
+        description: 'Fine frequency detuning'
+      }
+    ],
+    useCases: [
+      'Electric piano sounds - Classic DX7-style EP tones',
+      'Bell tones - Inharmonic FM for metallic bells',
+      'Bass sounds - Low-ratio operators for deep bass',
+      'Aggressive leads - High modulation depth for screaming leads'
+    ],
+    screenshots: [],
+    downloadUrl: '/downloads/FMSynth-v0.2.0',
+    docsUrl: '/docs/plugins/fmsynth',
+    graphic: '/plugin-graphics/fmsynth.svg'
+  },
+  {
+    id: 'wavetablesynth',
+    name: 'Wavetable Synth',
+    version: '0.3.0',
+    status: 'released',
+    category: 'synthesis',
+    tagline: 'Modern wavetable synthesis with morphing',
+    description: 'Wavetable synthesizer with 10 built-in wavetables, position/morph controls, and multi-mode filter. Create evolving pads, aggressive leads, and complex timbres with wavetable scanning and real-time morphing.',
+    features: [
+      {
+        name: '10 Built-in Wavetables',
+        description: 'Diverse wavetable collection from basic waves to complex spectra'
+      },
+      {
+        name: 'Wavetable Position',
+        description: 'Scan through wavetable frames for evolving timbres'
+      },
+      {
+        name: 'Wavetable Morphing',
+        description: 'Smooth interpolation between adjacent frames'
+      },
+      {
+        name: 'Multi-Mode Filter',
+        description: 'Low-pass, high-pass, band-pass, and notch filter modes'
+      },
+      {
+        name: 'Modulation Matrix',
+        description: 'LFOs and envelopes can modulate wavetable position and filter'
+      },
+      {
+        name: '8-Voice Polyphony',
+        description: 'Play complex wavetable chords'
+      }
+    ],
+    parameters: [
+      {
+        name: 'Wavetable',
+        range: '10 wavetables',
+        description: 'Select wavetable'
+      },
+      {
+        name: 'Position',
+        range: '0% to 100%',
+        description: 'Wavetable scan position'
+      },
+      {
+        name: 'Filter Cutoff',
+        range: '20 Hz to 20 kHz',
+        description: 'Filter cutoff frequency'
+      },
+      {
+        name: 'Filter Resonance',
+        range: '0.5 to 10.0',
+        description: 'Filter resonance/Q'
+      }
+    ],
+    useCases: [
+      'Evolving pads - Modulate wavetable position with slow LFO',
+      'Aggressive leads - High-harmonic wavetables with resonant filter',
+      'Bass sounds - Low-position wavetables with filter sweep',
+      'Cinematic textures - Long attack with wavetable morphing'
+    ],
+    screenshots: [],
+    downloadUrl: '/downloads/WavetableSynth-v0.3.0',
+    docsUrl: '/docs/plugins/wavetablesynth',
+    graphic: '/plugin-graphics/wavetablesynth.svg'
+  },
+  {
+    id: 'padsynth',
+    name: 'Pad Synth',
+    version: '0.2.0',
+    status: 'released',
+    category: 'synthesis',
+    tagline: 'Lush pad synthesis with spectral smoothing',
+    description: 'Specialized pad synthesizer using spectral synthesis techniques to create ultra-smooth, evolving textures. Features bandwidth control, harmonic distribution, and built-in chorus/reverb for instant lush pads.',
+    features: [
+      {
+        name: 'Spectral Synthesis',
+        description: 'FFT-based synthesis for ultra-smooth tones without aliasing'
+      },
+      {
+        name: 'Bandwidth Control',
+        description: 'Adjust harmonic bandwidth for wide, lush tones'
+      },
+      {
+        name: 'Harmonic Distribution',
+        description: 'Control overtone series for different pad characters'
+      },
+      {
+        name: 'Built-in Effects',
+        description: 'Integrated chorus and reverb optimized for pads'
+      },
+      {
+        name: 'Slow Attack Envelope',
+        description: 'Optimized envelope for pad swells and drones'
+      },
+      {
+        name: '8-Voice Polyphony',
+        description: 'Layer multiple pad voices for thick textures'
+      }
+    ],
+    parameters: [
+      {
+        name: 'Bandwidth',
+        range: '0% to 100%',
+        description: 'Harmonic bandwidth width'
+      },
+      {
+        name: 'Harmonics',
+        range: '1 to 16',
+        description: 'Number of harmonics in overtone series'
+      },
+      {
+        name: 'Attack',
+        range: '100ms to 10s',
+        description: 'Attack time optimized for pads'
+      },
+      {
+        name: 'Chorus Depth',
+        range: '0% to 100%',
+        description: 'Built-in chorus intensity'
+      }
+    ],
+    useCases: [
+      'Ambient pads - Slow attack, wide bandwidth, long release',
+      'String pads - Medium bandwidth, many harmonics',
+      'Drone textures - Infinite sustain with evolving harmonics',
+      'Cinematic soundscapes - Layer multiple instances'
+    ],
+    screenshots: [],
+    downloadUrl: '/downloads/PadSynth-v0.2.0',
+    docsUrl: '/docs/plugins/padsynth',
+    graphic: '/plugin-graphics/padsynth.svg'
+  },
+  {
+    id: 'drumsynth',
+    name: 'Drum Synth',
+    version: '0.2.0',
+    status: 'released',
+    category: 'synthesis',
+    tagline: 'Synthesis-based drum machine',
+    description: 'Drum synthesizer with dedicated kick, snare, hi-hat, and tom synthesis engines. Create electronic drum kits from scratch with individual tuning, decay, and tone controls for each drum voice.',
+    features: [
+      {
+        name: 'Kick Synthesis',
+        description: 'Pitch envelope and click control for punchy kicks'
+      },
+      {
+        name: 'Snare Synthesis',
+        description: 'Tone + noise blend for realistic snare drums'
+      },
+      {
+        name: 'Hi-Hat Synthesis',
+        description: 'Filtered noise with decay control for hats and cymbals'
+      },
+      {
+        name: 'Tom Synthesis',
+        description: 'Tunable tom drums with pitch envelope'
+      },
+      {
+        name: 'MIDI Mapping',
+        description: 'Standard GM drum mapping for easy integration'
+      },
+      {
+        name: 'Individual Outputs',
+        description: 'Route each drum to separate DAW tracks'
+      }
+    ],
+    parameters: [
+      {
+        name: 'Kick Pitch',
+        range: '20 Hz to 200 Hz',
+        description: 'Kick drum fundamental pitch'
+      },
+      {
+        name: 'Kick Decay',
+        range: '50ms to 2000ms',
+        description: 'Kick drum decay time'
+      },
+      {
+        name: 'Snare Tone',
+        range: '100 Hz to 400 Hz',
+        description: 'Snare tonal component frequency'
+      },
+      {
+        name: 'Snare Noise',
+        range: '0% to 100%',
+        description: 'Snare noise blend amount'
+      }
+    ],
+    useCases: [
+      'Electronic drum kits - Build complete 808/909-style kits',
+      'Layering acoustic drums - Add punch to weak drum samples',
+      'Sound design - Create unique percussion sounds',
+      'Live performance - Trigger drums via MIDI controller'
+    ],
+    screenshots: [],
+    downloadUrl: '/downloads/DrumSynth-v0.2.0',
+    docsUrl: '/docs/plugins/drumsynth',
+    graphic: '/plugin-graphics/drumsynth.svg'
+  },
+  {
+    id: 'organemulator',
+    name: 'Organ Emulator',
+    version: '0.2.0',
+    status: 'released',
+    category: 'synthesis',
+    tagline: 'Hammond-style tonewheel organ emulation',
+    description: 'Classic tonewheel organ emulator with 9 drawbars, Leslie speaker simulation, and percussion. Recreate vintage Hammond B3 tones with authentic drawbar mixing and rotary speaker effects.',
+    features: [
+      {
+        name: '9 Drawbars',
+        description: 'Authentic drawbar system for harmonic mixing (16\', 5⅓\', 8\', 4\', 2⅔\', 2\', 1⅗\', 1⅓\', 1\')'
+      },
+      {
+        name: 'Leslie Speaker Simulation',
+        description: 'Rotary speaker effect with variable speed and depth'
+      },
+      {
+        name: 'Percussion Effect',
+        description: 'Classic organ percussion with adjustable click and decay'
+      },
+      {
+        name: 'Sine Wave Tonewheels',
+        description: 'Pure sine waves for authentic tonewheel timbre'
+      },
+      {
+        name: 'Key Click',
+        description: 'Authentic mechanical key click for realism'
+      },
+      {
+        name: '8-Voice Polyphony',
+        description: 'Play realistic organ chords'
+      }
+    ],
+    parameters: [
+      {
+        name: 'Drawbar 16\'',
+        range: '0 to 8',
+        description: 'Sub-octave harmonic level'
+      },
+      {
+        name: 'Drawbar 8\'',
+        range: '0 to 8',
+        description: 'Fundamental harmonic level'
+      },
+      {
+        name: 'Leslie Speed',
+        range: 'Slow / Fast',
+        description: 'Rotary speaker speed'
+      },
+      {
+        name: 'Percussion Click',
+        range: '0% to 100%',
+        description: 'Percussion effect intensity'
+      }
+    ],
+    useCases: [
+      'Gospel organ - Classic B3 drawbar settings with Leslie',
+      'Jazz organ - Mellow drawbar settings, slow Leslie',
+      'Rock organ - Aggressive drawbars with fast Leslie',
+      'Blues organ - Warm drawbar blend with percussion'
+    ],
+    screenshots: [],
+    downloadUrl: '/downloads/OrganEmulator-v0.2.0',
+    docsUrl: '/docs/plugins/organemulator',
+    graphic: '/plugin-graphics/organemulator.svg'
+  },
+  {
+    id: 'samplerplugin',
+    name: 'Sampler',
+    version: '0.3.0',
+    status: 'released',
+    category: 'synthesis',
+    tagline: 'Multi-sample instrument player with ADSR',
+    description: 'Professional sampler plugin with drag-and-drop sample loading, ADSR envelope, multi-mode filter, and pitch/loop controls. Load WAV files and create custom instruments with velocity layers and key mapping.',
+    features: [
+      {
+        name: 'Sample Loading',
+        description: 'Drag-and-drop WAV file loading with multi-sample support'
+      },
+      {
+        name: 'ADSR Envelope',
+        description: 'Shape amplitude over time with Attack, Decay, Sustain, Release'
+      },
+      {
+        name: 'Multi-Mode Filter',
+        description: 'Low-pass, high-pass, band-pass filter with resonance'
+      },
+      {
+        name: 'Pitch Controls',
+        description: 'Transpose and fine-tune loaded samples'
+      },
+      {
+        name: 'Loop Controls',
+        description: 'Loop points and modes for sustained sounds'
+      },
+      {
+        name: 'Velocity Layers',
+        description: 'Map multiple samples to velocity ranges for realistic instruments'
+      }
+    ],
+    parameters: [
+      {
+        name: 'Attack',
+        range: '1ms to 2000ms',
+        description: 'Envelope attack time'
+      },
+      {
+        name: 'Decay',
+        range: '1ms to 2000ms',
+        description: 'Envelope decay time'
+      },
+      {
+        name: 'Sustain',
+        range: '0% to 100%',
+        description: 'Envelope sustain level'
+      },
+      {
+        name: 'Release',
+        range: '1ms to 5000ms',
+        description: 'Envelope release time'
+      },
+      {
+        name: 'Filter Cutoff',
+        range: '20 Hz to 20 kHz',
+        description: 'Filter cutoff frequency'
+      }
+    ],
+    useCases: [
+      'Custom instruments - Load your own samples and create playable instruments',
+      'Drum sample playback - Map drum samples to MIDI notes',
+      'Melodic sampling - Create pitched instruments from single samples',
+      'Sound design - Process samples with filter and envelope'
+    ],
+    screenshots: [],
+    downloadUrl: '/downloads/Sampler-v0.3.0',
+    docsUrl: '/docs/plugins/samplerplugin',
+    graphic: '/plugin-graphics/samplerplugin.svg'
   }
 ];
 

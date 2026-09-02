@@ -12,7 +12,7 @@ interface Stat {
 
 const stats: Stat[] = [
   {
-    value: '13',
+    value: '22',
     label: 'Plugins',
     description: 'VST3 & AU formats',
     icon: (
