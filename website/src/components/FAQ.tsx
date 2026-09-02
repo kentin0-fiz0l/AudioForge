@@ -47,7 +47,7 @@ const faqs: FAQItem[] = [
   },
   {
     question: 'How stable are the plugins?',
-    answer: 'Very stable! All 13 plugins have 100% test coverage with 136 passing tests. They undergo continuous integration testing on macOS, Windows, and Linux before each release. Our code signing ensures integrity.',
+    answer: 'Very stable! All 22 plugins have 100% test coverage with 136 passing tests. They undergo continuous integration testing on macOS, Windows, and Linux before each release. Our code signing ensures integrity.',
   },
 ];
 

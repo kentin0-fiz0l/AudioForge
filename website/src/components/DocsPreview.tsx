@@ -25,7 +25,7 @@ const docCards: DocCard[] = [
   },
   {
     title: 'Plugin Reference',
-    description: 'Complete documentation for all 13 plugins. Parameters, controls, use cases, and audio examples.',
+    description: 'Complete documentation for all 22 plugins. Parameters, controls, use cases, and audio examples.',
     category: 'Reference',
     link: '/docs',
     icon: (

@@ -4,7 +4,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "AudioForge - Professional VST3 Plugins",
-  description: "13 professional VST3 and AU plugins for music production. Free, open source, and professional-grade.",
+  description: "22 professional VST3 and AU plugins for music production. Free, open source, and professional-grade.",
   metadataBase: new URL('https://audioforge-site.sfo3.cdn.digitaloceanspaces.com'),
   icons: {
     icon: '/favicon.svg',
@@ -18,13 +18,13 @@ export const metadata: Metadata = {
     locale: 'en_US',
     url: 'https://audioforge-site.sfo3.cdn.digitaloceanspaces.com/index.html',
     title: 'AudioForge - Professional VST3 & AU Plugins',
-    description: '13 professional audio plugins for music production. Built with JUCE, free and open source.',
+    description: '22 professional audio plugins for music production. Built with JUCE, free and open source.',
     siteName: 'AudioForge',
   },
   twitter: {
     card: 'summary_large_image',
     title: 'AudioForge - Professional VST3 & AU Plugins',
-    description: '13 professional audio plugins for music production. Built with JUCE, free and open source.',
+    description: '22 professional audio plugins for music production. Built with JUCE, free and open source.',
   },
 };
 
@@ -52,7 +52,7 @@ const softwareSchema = {
     "price": "0",
     "priceCurrency": "USD"
   },
-  "description": "13 professional VST3 and AU plugins for music production. Built with JUCE and modern C++17."
+  "description": "22 professional VST3 and AU plugins for music production. Built with JUCE and modern C++17."
 };
 
 export default function RootLayout({

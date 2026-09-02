@@ -56,7 +56,7 @@ export const Hero: React.FC<HeroProps> = ({ className = '' }) => {
 
           {/* Subheadline */}
           <p className="text-lg md:text-xl text-foreground-muted mb-8 max-w-2xl mx-auto leading-relaxed">
-            13 professional VST3 and AU plugins for music production. From essential utilities to advanced spectral effects, built with JUCE and modern C++.
+            22 professional VST3 and AU plugins for music production. From essential utilities to advanced spectral effects, built with JUCE and modern C++.
           </p>
 
           {/* CTA Buttons */}
@@ -73,7 +73,7 @@ export const Hero: React.FC<HeroProps> = ({ className = '' }) => {
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                 </svg>
-                Download v1.3.0
+                Download v1.8.0
               </span>
             </a>
             <a
