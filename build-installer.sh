@@ -33,6 +33,7 @@ PLUGINS=(
     "GranularEngine"
     "SpectralFreeze"
     "Limiter"
+    "Gate"
 )
 
 # Paths
