@@ -4,7 +4,7 @@ set -e
 # AudioForge Linux Package Builder
 # Builds .deb (Debian/Ubuntu), .rpm (Fedora/RHEL), and AppImage packages
 
-VERSION="1.3.0"
+VERSION="1.5.0"
 ARCH="amd64"
 PROJECT_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 STAGING_DIR="$PROJECT_ROOT/releases/staging"
@@ -62,7 +62,7 @@ Architecture: ${ARCH}
 Maintainer: AudioForge <contact@audioforge.art>
 Homepage: https://audioforge.fluxstudio.art
 Description: Professional audio plugins (VST3)
- AudioForge is a collection of 13 professional-quality audio plugins
+ AudioForge is a collection of 19 professional-quality audio plugins
  for music production, including:
  .
  Core Processing Suite (11 plugins):
