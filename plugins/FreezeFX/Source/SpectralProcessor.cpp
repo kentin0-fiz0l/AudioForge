@@ -54,8 +54,13 @@ void SpectralProcessor::setFFTSize(int size)
     // Allocate buffers
     fftBuffer.resize(fftSize * 2, 0.0f);         // Complex data (real + imaginary)
     windowBuffer.resize(fftSize, 0.0f);
-    magnitudeSpectrum.resize(fftSize / 2 + 1, 0.0f);
-    phaseSpectrum.resize(fftSize / 2 + 1, 0.0f);
+
+    // Allocate both double buffers for lock-free access
+    int numBins = fftSize / 2 + 1;
+    magnitudeSpectrum[0].resize(numBins, 0.0f);
+    magnitudeSpectrum[1].resize(numBins, 0.0f);
+    phaseSpectrum[0].resize(numBins, 0.0f);
+    phaseSpectrum[1].resize(numBins, 0.0f);
 
     // Create window function
     createHannWindow();
@@ -142,9 +147,11 @@ void SpectralProcessor::processFFTFrame(const float* input, float* output)
     computeMagnitudePhase(fftBuffer.data(), getNumBins());
 
     // 4. Spectral processing callback (freezing, phase evolution, etc.)
+    // Callback operates on the buffer we just wrote to
     if (spectralCallback)
     {
-        spectralCallback(magnitudeSpectrum, phaseSpectrum);
+        int currentWriteIdx = activeWriteBuffer.load(std::memory_order_acquire);
+        spectralCallback(magnitudeSpectrum[currentWriteIdx], phaseSpectrum[currentWriteIdx]);
     }
 
     // 5. Reconstruct complex spectrum from magnitude and phase
@@ -164,22 +171,32 @@ void SpectralProcessor::processFFTFrame(const float* input, float* output)
 
 void SpectralProcessor::computeMagnitudePhase(const float* complexData, int numBins)
 {
+    // Lock-free: Swap to new write buffer FIRST, then write
+    // This ensures UI reads from the previous buffer (which is stable)
+    int oldWriteIdx = activeWriteBuffer.load(std::memory_order_acquire);
+    int newWriteIdx = 1 - oldWriteIdx;
+    activeWriteBuffer.store(newWriteIdx, std::memory_order_release);
+
+    // Now write to the new buffer (UI is reading from the old one)
     for (int i = 0; i < numBins; ++i)
     {
         float real = complexData[i * 2];
         float imag = complexData[i * 2 + 1];
 
-        magnitudeSpectrum[i] = std::sqrt(real * real + imag * imag);
-        phaseSpectrum[i] = std::atan2(imag, real);
+        magnitudeSpectrum[newWriteIdx][i] = std::sqrt(real * real + imag * imag);
+        phaseSpectrum[newWriteIdx][i] = std::atan2(imag, real);
     }
 }
 
 void SpectralProcessor::reconstructComplex(float* complexData, int numBins)
 {
+    // Lock-free: Read from the current write buffer (the one we just wrote to)
+    int currentWriteIdx = activeWriteBuffer.load(std::memory_order_acquire);
+
     for (int i = 0; i < numBins; ++i)
     {
-        float magnitude = magnitudeSpectrum[i];
-        float phase = phaseSpectrum[i];
+        float magnitude = magnitudeSpectrum[currentWriteIdx][i];
+        float phase = phaseSpectrum[currentWriteIdx][i];
 
         complexData[i * 2] = magnitude * std::cos(phase);      // Real
         complexData[i * 2 + 1] = magnitude * std::sin(phase);  // Imaginary
@@ -202,18 +219,47 @@ void SpectralProcessor::applyWindow(float* data, int length)
     }
 }
 
+// Thread-safe getters using lock-free double buffering
+// UI thread reads from the buffer that audio thread is NOT writing to
+std::vector<float> SpectralProcessor::getMagnitudeSpectrum() const
+{
+    // Read the current write index atomically
+    int writeIdx = activeWriteBuffer.load(std::memory_order_acquire);
+    // Read from the OTHER buffer (the one audio thread just finished writing)
+    int readIdx = 1 - writeIdx;
+    return magnitudeSpectrum[readIdx];  // Return copy of read buffer
+}
+
+std::vector<float> SpectralProcessor::getPhaseSpectrum() const
+{
+    // Read the current write index atomically
+    int writeIdx = activeWriteBuffer.load(std::memory_order_acquire);
+    // Read from the OTHER buffer (the one audio thread just finished writing)
+    int readIdx = 1 - writeIdx;
+    return phaseSpectrum[readIdx];  // Return copy of read buffer
+}
+
 void SpectralProcessor::setMagnitudeSpectrum(const std::vector<float>& magnitude)
 {
-    if (magnitude.size() == magnitudeSpectrum.size())
+    // Write to the read buffer (the one UI is currently displaying)
+    // This way the freeze feature can update what's shown
+    int writeIdx = activeWriteBuffer.load(std::memory_order_acquire);
+    int readIdx = 1 - writeIdx;
+
+    if (magnitude.size() == magnitudeSpectrum[readIdx].size())
     {
-        magnitudeSpectrum = magnitude;
+        magnitudeSpectrum[readIdx] = magnitude;
     }
 }
 
 void SpectralProcessor::setPhaseSpectrum(const std::vector<float>& phase)
 {
-    if (phase.size() == phaseSpectrum.size())
+    // Write to the read buffer (the one UI is currently displaying)
+    int writeIdx = activeWriteBuffer.load(std::memory_order_acquire);
+    int readIdx = 1 - writeIdx;
+
+    if (phase.size() == phaseSpectrum[readIdx].size())
     {
-        phaseSpectrum = phase;
+        phaseSpectrum[readIdx] = phase;
     }
 }

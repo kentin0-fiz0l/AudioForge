@@ -13,7 +13,7 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-PLUGINVAL="$HOME/Applications/pluginval.app/Contents/MacOS/pluginval"
+PLUGINVAL="/private/tmp/pluginval.app/Contents/MacOS/pluginval"
 VST3_DIR="$HOME/Library/Audio/Plug-Ins/VST3"
 RESULTS_DIR="$(cd "$(dirname "$0")/.." && pwd)/docs/validation"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
@@ -35,7 +35,10 @@ PLUGINS=(
     "DrumSynth.vst3"
     "FMSynth.vst3"
     "FreezeFX.vst3"
+    "Gate.vst3"
     "GranularEngine.vst3"
+    "Limiter.vst3"
+    "Multiband Compressor.vst3"
     "OrganEmulator.vst3"
     "PadSynth.vst3"
     "PanUtil.vst3"

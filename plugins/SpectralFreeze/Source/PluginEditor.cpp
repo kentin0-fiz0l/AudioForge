@@ -270,8 +270,9 @@ void SpectralFreezeEditor::paint(juce::Graphics& g)
     paintFrozenSpectrumOverlay(g, spectrogramBounds);
     paintFrequencyAxis(g, spectrogramBounds);
 
-    // Freeze status indicator
-    if (audioProcessor.spectralProcessor.isFrozen())
+    // Freeze status indicator (only if processor is prepared)
+    if (audioProcessor.spectralProcessor.isProcessorPrepared() &&
+        audioProcessor.spectralProcessor.isFrozen())
     {
         g.setColour(juce::Colours::red.withAlpha(0.3f));
         g.fillRect(spectrogramBounds);
@@ -338,6 +339,13 @@ void SpectralFreezeEditor::resized()
 
 void SpectralFreezeEditor::timerCallback()
 {
+    // Only update visualization if processor is prepared
+    if (!audioProcessor.spectralProcessor.isProcessorPrepared())
+    {
+        repaint();  // Still repaint UI, just don't access spectrum data
+        return;
+    }
+
     // Update spectrogram history with current spectrum
     const auto& currentSpectrum = audioProcessor.spectralProcessor.getCurrentMagnitudeSpectrum();
     if (!currentSpectrum.empty())
@@ -352,6 +360,10 @@ void SpectralFreezeEditor::timerCallback()
 
 void SpectralFreezeEditor::paintSpectrogram(juce::Graphics& g, juce::Rectangle<int> bounds)
 {
+    // Safety check: ensure spectrogram history is valid
+    if (spectrogramHistory.empty() || spectrogramHistory[0].empty())
+        return;
+
     // Draw spectrogram as rolling waterfall (time vs. frequency)
     int numBins = spectrogramHistory[0].size();
     int width = bounds.getWidth();
@@ -361,7 +373,8 @@ void SpectralFreezeEditor::paintSpectrogram(juce::Graphics& g, juce::Rectangle<i
     for (int x = 0; x < width; ++x)
     {
         // Map x to history buffer index (newest on right)
-        int historyIndex = (spectrogramWriteIndex - (width - x) + SPECTROGRAM_HISTORY_SIZE) % SPECTROGRAM_HISTORY_SIZE;
+        // Use correct modulo to ensure positive result
+        int historyIndex = ((spectrogramWriteIndex - (width - x)) % SPECTROGRAM_HISTORY_SIZE + SPECTROGRAM_HISTORY_SIZE) % SPECTROGRAM_HISTORY_SIZE;
         const auto& spectrum = spectrogramHistory[historyIndex];
 
         // Draw frequency bins as pixels in this vertical line
@@ -396,8 +409,9 @@ void SpectralFreezeEditor::paintSpectrogram(juce::Graphics& g, juce::Rectangle<i
 
 void SpectralFreezeEditor::paintFrozenSpectrumOverlay(juce::Graphics& g, juce::Rectangle<int> bounds)
 {
-    // Draw frozen spectrum as overlay line
-    if (!audioProcessor.spectralProcessor.isFrozen())
+    // Draw frozen spectrum as overlay line (only if processor is prepared and frozen)
+    if (!audioProcessor.spectralProcessor.isProcessorPrepared() ||
+        !audioProcessor.spectralProcessor.isFrozen())
         return;
 
     const auto& frozenSpectrum = audioProcessor.spectralProcessor.getFrozenMagnitudeSpectrum();

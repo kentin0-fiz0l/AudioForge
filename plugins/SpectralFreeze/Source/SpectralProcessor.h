@@ -55,6 +55,7 @@ public:
     const std::vector<float>& getCurrentMagnitudeSpectrum() const { return currentMagnitude; }
     const std::vector<float>& getFrozenMagnitudeSpectrum() const { return frozenMagnitude; }
     int getFFTSize() const { return FFT_SIZE; }
+    bool isProcessorPrepared() const { return isPrepared; }
 
 private:
     //==============================================================================
@@ -98,6 +99,7 @@ private:
     std::vector<float> frozenMagnitude;
     std::vector<float> frozenPhase;
     bool frozen = false;
+    bool isPrepared = false;  // Track if prepare() has been called
 
     //==============================================================================
     // Parameters

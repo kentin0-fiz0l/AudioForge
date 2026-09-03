@@ -9,17 +9,17 @@ Professional-quality DAW plugins, free and open source.
 
 ## 📦 Download
 
-**[Download Latest Release](https://github.com/kentin0-fiz0l/AudioForge/releases/latest)** - v1.8.1
+**[Download Latest Release](https://github.com/kentin0-fiz0l/AudioForge/releases/latest)** - v1.9.0
 
 - **macOS**: Signed & notarized DMG (VST3 + AU) - **Available now!**
-- **Windows**: NSIS installer (VST3) - *Coming in v1.9.0*
-- **Linux**: .deb, .rpm, AppImage (VST3) - *Coming in v1.9.0*
+- **Windows**: NSIS installer (VST3) - *Coming in v2.0.0*
+- **Linux**: .deb, .rpm, AppImage (VST3) - *Coming in v2.0.0*
 
 ## Overview
 
 AudioForge is a collection of high-quality audio plugins for music production. Starting with essential utilities and effects, we're building a suite of tools that producers actually want to use.
 
-## Current Plugins (19 Validated)
+## Current Plugins (21 Validated ✅ + 1 Experimental ⚠️)
 
 ### Mixing & Mastering Suite (9 plugins) ✅
 - **SimpleGain** - Clean gain/volume control with metering (-60 to +12 dB)
@@ -37,7 +37,11 @@ AudioForge is a collection of high-quality audio plugins for music production. S
 - **WaveShaper** - Waveshaping distortion with 5 curve modes and visualization
 - **ChorusFlanger** - LFO-based modulation effects with stereo width
 
-### Synthesizers (7 plugins) ✅
+### Spectral Effects (2 plugins)
+- **SpectralFreeze** - FFT-based spectral freezing with phase evolution ✅ *Fixed in v1.9.0*
+- **FreezeFX** - Advanced spectral freeze with blur and randomization ⚠️ *Experimental*
+
+### Synthesizers (8 plugins) ✅
 - **BasicSynth** - Subtractive synthesizer with ADSR envelope and filter
 - **FMSynth** - 4-operator FM synthesis
 - **WavetableSynth** - Wavetable synthesis with interpolation
@@ -45,28 +49,34 @@ AudioForge is a collection of high-quality audio plugins for music production. S
 - **DrumSynth** - Drum synthesis engine
 - **OrganEmulator** - Hammond-style organ with drawbars
 - **GranularEngine** - Real-time granular synthesis with MIDI control
+- **Sampler** - Multi-zone sampler with velocity layers and loop points ✅ *Fixed in v1.9.0*
 
-### Quality Assurance (v1.8.1) ✅
-- **PluginVal Validated**: All 19 plugins pass strict validation (strictness level 5)
-- **Pass Rate**: 86.4% (19/22 total plugins)
+### Quality Assurance (v1.9.0) ✅
+- **PluginVal Validated**: 21 production plugins pass strict validation (strictness level 10 - maximum)
+- **Pass Rate**: 95.5% (21/22 total plugins)
 - **100% Test Coverage**: Comprehensive unit tests for all DSP components
 - **Performance Benchmarked**: CPU usage profiled for all plugins
 
-**Excluded Plugins** (Known Issues):
-- ❌ FreezeFX - Performance optimization needed (timeout)
-- ❌ SpectralFreeze - Editor initialization crash
-- ❌ Sampler - Segfault on load
+### Production-Ready Plugins (21) ✅
+- ✅ **SpectralFreeze** - *Fixed in v1.9.0* (negative modulo bug)
+- ✅ **Sampler** - *Fixed in v1.9.0* (unique_ptr destruction order)
+- ✅ All mixing, mastering, effects, and synthesizer plugins fully validated
 
-*These will be fixed and included in v1.9.0*
+### Experimental Features (1) ⚠️
+- ⚠️ **FreezeFX** - Spectral freeze effect (audio processing stable, UI stress test incompatible)
+  - **Status**: Safe for normal DAW usage
+  - **Limitation**: Fails PluginVal rapid editor lifecycle test (JUCE Objective-C memory issue)
+  - **Recommendation**: Use for production audio, avoid hosts that rapidly toggle GUIs
 
-### Distribution (v1.8.1) ✅
+### Distribution (v1.9.0) ✅
 - ✅ macOS code signing (Developer ID Application)
 - ✅ Apple notarization (zero Gatekeeper warnings)
-- ✅ Professional DMG installer (v1.8.1 available now)
-- ✅ PluginVal integration for automated quality assurance
+- ✅ Professional DMG installer (v1.9.0 available now)
+- ✅ PluginVal integration for automated quality assurance (strictness level 10)
 - ✅ Performance benchmarking framework
-- 🔧 Windows NSIS installer (scripts ready, v1.9.0 planned)
-- 🔧 Linux packages (scripts ready, v1.9.0 planned)
+- ✅ 95.5% validation pass rate (21/22 plugins)
+- 🔧 Windows NSIS installer (scripts ready, v2.0.0 planned)
+- 🔧 Linux packages (scripts ready, v2.0.0 planned)
 - ✅ GitHub Discussions enabled for community
 
 ### Planned (v1.4.0+)

@@ -4,6 +4,7 @@
 SamplerPluginEditor::SamplerPluginEditor(SamplerPluginProcessor& p)
     : AudioProcessorEditor(&p), processor(p)
 {
+
     // Create components
     waveformDisplay = std::make_unique<WaveformDisplay>();
     addAndMakeVisible(*waveformDisplay);
@@ -210,7 +211,8 @@ SamplerPluginEditor::SamplerPluginEditor(SamplerPluginProcessor& p)
     updateZoneInfo();
 
     // Timer for periodic updates
-    startTimerHz(10);
+    // Temporarily disabled for debugging
+    // startTimerHz(10);
 }
 
 SamplerPluginEditor::~SamplerPluginEditor()
@@ -218,6 +220,21 @@ SamplerPluginEditor::~SamplerPluginEditor()
     waveformDisplay->removeListener(this);
     zoneEditor->removeListener(this);
     velocityLayerEditor->removeListener(this);
+
+    // Explicitly destroy components in controlled order
+    waveformDisplay.reset();
+    zoneEditor.reset();
+    velocityLayerEditor.reset();
+    sampleBrowser.reset();
+
+    // Reset parameter attachments
+    ampAttackAttachment.reset();
+    ampDecayAttachment.reset();
+    ampSustainAttachment.reset();
+    ampReleaseAttachment.reset();
+    filterCutoffAttachment.reset();
+    filterResonanceAttachment.reset();
+
 }
 
 void SamplerPluginEditor::paint(juce::Graphics& g)

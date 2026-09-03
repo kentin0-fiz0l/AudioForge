@@ -4,6 +4,12 @@
 
 SpectralProcessor::SpectralProcessor()
 {
+    // Initialize spectrum vectors with safe defaults (FFT_SIZE/2 + 1 bins)
+    // This prevents crashes if editor accesses spectrum before prepare() is called
+    frozenMagnitude.resize(FFT_SIZE / 2 + 1, 0.0f);
+    frozenPhase.resize(FFT_SIZE / 2 + 1, 0.0f);
+    currentMagnitude.resize(FFT_SIZE / 2 + 1, 0.0f);
+    currentPhase.resize(FFT_SIZE / 2 + 1, 0.0f);
 }
 
 void SpectralProcessor::prepare(double newSampleRate, int samplesPerBlock, int numChannels)
@@ -40,6 +46,9 @@ void SpectralProcessor::prepare(double newSampleRate, int samplesPerBlock, int n
     windowTable.resize(FFT_SIZE);
     juce::dsp::WindowingFunction<float> windowFunction(FFT_SIZE, juce::dsp::WindowingFunction<float>::hann);
     windowFunction.fillWindowingTables(windowTable.data(), FFT_SIZE, juce::dsp::WindowingFunction<float>::hann);
+
+    // Mark processor as prepared
+    isPrepared = true;
 }
 
 void SpectralProcessor::reset()

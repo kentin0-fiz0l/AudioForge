@@ -3,6 +3,7 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <juce_dsp/juce_dsp.h>
 #include <functional>
+#include <atomic>
 
 /**
  * SpectralProcessor
@@ -37,9 +38,9 @@ public:
 
     //==============================================================================
     // Spectral Data Access (for freezing/visualization)
-    // Returns a COPY for thread-safety (called from UI thread, modified by audio thread)
-    std::vector<float> getMagnitudeSpectrum() const { return magnitudeSpectrum; }
-    std::vector<float> getPhaseSpectrum() const { return phaseSpectrum; }
+    // Returns a COPY for thread-safety (protected by mutex)
+    std::vector<float> getMagnitudeSpectrum() const;
+    std::vector<float> getPhaseSpectrum() const;
 
     void setMagnitudeSpectrum(const std::vector<float>& magnitude);
     void setPhaseSpectrum(const std::vector<float>& phase);
@@ -74,8 +75,12 @@ private:
     // Buffers
     std::vector<float> fftBuffer;           // Complex FFT data (size = fftSize * 2)
     std::vector<float> windowBuffer;        // Hann window (size = fftSize)
-    std::vector<float> magnitudeSpectrum;   // Magnitude spectrum (size = fftSize/2 + 1)
-    std::vector<float> phaseSpectrum;       // Phase spectrum (size = fftSize/2 + 1)
+
+    // Lock-free double buffering for spectrum data
+    // Audio thread writes to buffer[writeIndex], UI reads from buffer[1-writeIndex]
+    std::vector<float> magnitudeSpectrum[2]; // Two magnitude buffers
+    std::vector<float> phaseSpectrum[2];     // Two phase buffers
+    std::atomic<int> activeWriteBuffer{0};   // Which buffer audio thread writes to (0 or 1)
 
     //==============================================================================
     // Overlap-Add Buffers (per channel)

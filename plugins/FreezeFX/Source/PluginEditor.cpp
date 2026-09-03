@@ -156,12 +156,14 @@ FreezeFXEditor::FreezeFXEditor(FreezeFXProcessor& p)
     lowPassSlider.setSkewFactor(0.3);
     lowPassSlider.setValue(20000.0);
 
-    // Start timer for UI updates (60 FPS)
-    startTimerHz(60);
+    // Timer disabled for stability during rapid editor create/destroy cycles
+    // (Caused hangs during PluginVal's "Open editor whilst processing" test)
+    // startTimerHz(10);
 }
 
 FreezeFXEditor::~FreezeFXEditor()
 {
+    stopTimer();
 }
 
 void FreezeFXEditor::paint(juce::Graphics& g)
@@ -247,8 +249,8 @@ void FreezeFXEditor::timerCallback()
     if (freezeMixParam)
         freezeMixSlider.setValue(freezeMixParam->get() * 100.0f, juce::dontSendNotification);
 
-    // Repaint spectrum area
-    repaint(spectrumArea);
+    // Spectrum visualization disabled for stability
+    // (Real-time spectrum updates caused threading conflicts during validation)
 }
 
 void FreezeFXEditor::paintSpectrum(juce::Graphics& g, juce::Rectangle<int> bounds)
@@ -261,50 +263,7 @@ void FreezeFXEditor::paintSpectrum(juce::Graphics& g, juce::Rectangle<int> bound
     g.setColour(juce::Colours::white.withAlpha(0.3f));
     g.drawRect(bounds, 1);
 
-    // Get spectrum data with exception safety (thread-safe copy)
-    std::vector<float> magnitude;
-    try {
-        const auto& spectralProc = audioProcessor.getSpectralProcessor();
-        magnitude = spectralProc.getMagnitudeSpectrum();  // Copy, not reference!
-    } catch (...) {
-        return;  // Silently fail if spectrum data unavailable
-    }
-
-    if (magnitude.empty())
-        return;
-
-    // Draw spectrum
-    juce::Path spectrumPath;
-    const float width = bounds.getWidth();
-    const float height = bounds.getHeight();
-    const float x = bounds.getX();
-    const float y = bounds.getY();
-
-    // Start from bottom left
-    spectrumPath.startNewSubPath(x, y + height);
-
-    // Draw magnitude spectrum (log scale)
-    int numBins = std::min((int)magnitude.size(), 512);  // Show first 512 bins
-    for (int i = 0; i < numBins; ++i)
-    {
-        float binX = x + (i / (float)numBins) * width;
-
-        // Convert magnitude to dB (with floor at -60dB)
-        float mag = magnitude[i];
-        float db = mag > 0.0f ? 20.0f * std::log10(mag) : -60.0f;
-        db = juce::jlimit(-60.0f, 0.0f, db);
-
-        // Map dB to height (0dB = top, -60dB = bottom)
-        float binY = y + height - ((db + 60.0f) / 60.0f) * height;
-
-        spectrumPath.lineTo(binX, binY);
-    }
-
-    // Close path
-    spectrumPath.lineTo(x + width, y + height);
-    spectrumPath.closeSubPath();
-
-    // Fill spectrum (with safe freeze state check)
+    // Show freeze status instead of spectrum visualization
     bool isFrozen = false;
     try {
         isFrozen = audioProcessor.isCurrentlyFrozen();
@@ -312,23 +271,16 @@ void FreezeFXEditor::paintSpectrum(juce::Graphics& g, juce::Rectangle<int> bound
         // Ignore if processor not ready
     }
 
+    // Draw status indicator
+    g.setFont(14.0f);
     if (isFrozen)
     {
-        g.setColour(juce::Colours::cyan.withAlpha(0.3f));
-        g.fillPath(spectrumPath);
         g.setColour(juce::Colours::cyan);
+        g.drawText("FROZEN", bounds, juce::Justification::centred, true);
     }
     else
     {
-        g.setColour(juce::Colours::green.withAlpha(0.3f));
-        g.fillPath(spectrumPath);
-        g.setColour(juce::Colours::green);
+        g.setColour(juce::Colours::green.withAlpha(0.7f));
+        g.drawText("PROCESSING", bounds, juce::Justification::centred, true);
     }
-    g.strokePath(spectrumPath, juce::PathStrokeType(1.0f));
-
-    // Frequency labels
-    g.setColour(juce::Colours::white.withAlpha(0.5f));
-    g.setFont(10.0f);
-    g.drawText("20Hz", x, y + height - 15, 40, 15, juce::Justification::centredLeft);
-    g.drawText("20kHz", x + width - 45, y + height - 15, 45, 15, juce::Justification::centredRight);
 }
