@@ -1,0 +1,193 @@
+name: Build and Sign Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to build (e.g., 1.8.1)'
+        required: true
+        default: '1.8.1'
+
+env:
+  BUILD_TYPE: Release
+
+jobs:
+  build-sign-notarize-macos:
+    name: Build, Sign, and Notarize macOS Release
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Extract version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "VERSION=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Import Code Signing Certificate
+        env:
+          CERTIFICATE_BASE64: ${{ secrets.MACOS_CERTIFICATE }}
+          CERTIFICATE_PWD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
+        run: |
+          # Create temporary keychain
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+          KEYCHAIN_PWD=$(uuidgen)
+
+          security create-keychain -p "$KEYCHAIN_PWD" $KEYCHAIN_PATH
+          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+          security unlock-keychain -p "$KEYCHAIN_PWD" $KEYCHAIN_PATH
+
+          # Import certificate
+          echo "$CERTIFICATE_BASE64" | base64 --decode > $RUNNER_TEMP/certificate.p12
+          security import $RUNNER_TEMP/certificate.p12 \
+            -k $KEYCHAIN_PATH \
+            -P "$CERTIFICATE_PWD" \
+            -T /usr/bin/codesign \
+            -T /usr/bin/productsign
+
+          # Set keychain as default
+          security list-keychain -d user -s $KEYCHAIN_PATH login.keychain
+
+          # Allow codesign to access certificate without prompting
+          security set-key-partition-list -S apple-tool:,apple: \
+            -s -k "$KEYCHAIN_PWD" $KEYCHAIN_PATH
+
+          # Verify certificate imported
+          security find-identity -v -p codesigning
+
+          # Export signing identity for build scripts
+          CODESIGN_IDENTITY=$(security find-identity -v -p codesigning | \
+            grep "Developer ID Application" | \
+            head -1 | \
+            sed -n 's/.*"\(.*\)".*/\1/p')
+          echo "CODESIGN_IDENTITY=$CODESIGN_IDENTITY" >> $GITHUB_ENV
+          echo "Using identity: $CODESIGN_IDENTITY"
+
+      - name: Build staging directory with signing
+        run: |
+          chmod +x installers/build-installer.sh
+          ./installers/build-installer.sh ${{ steps.version.outputs.VERSION }}
+
+      - name: Remove broken plugins from staging
+        run: |
+          cd releases/staging/AudioForge\ Plugins
+          rm -rf VST3/FreezeFX.vst3 AU/FreezeFX.component || true
+          rm -rf VST3/SpectralFreeze.vst3 AU/SpectralFreeze.component || true
+          rm -rf VST3/Sampler.vst3 AU/Sampler.component || true
+          echo "Plugins remaining:"
+          ls VST3/ | wc -l
+
+      - name: Verify plugin signatures
+        run: |
+          for plugin in releases/staging/AudioForge\ Plugins/VST3/*.vst3; do
+            echo "Verifying: $(basename "$plugin")"
+            codesign --verify --deep --strict --verbose=2 "$plugin"
+          done
+
+      - name: Create and sign DMG
+        run: |
+          chmod +x installers/create-dmg.sh
+          ./installers/create-dmg.sh ${{ steps.version.outputs.VERSION }}
+
+      - name: Verify DMG signature
+        run: |
+          DMG_PATH="releases/installers/AudioForge-v${{ steps.version.outputs.VERSION }}-macOS.dmg"
+          echo "Verifying DMG signature..."
+          codesign --verify --deep --strict --verbose=2 "$DMG_PATH"
+
+      - name: Notarize DMG
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+        run: |
+          DMG_PATH="releases/installers/AudioForge-v${{ steps.version.outputs.VERSION }}-macOS.dmg"
+
+          echo "Submitting DMG for notarization..."
+          xcrun notarytool submit "$DMG_PATH" \
+            --apple-id "$APPLE_ID" \
+            --team-id "$APPLE_TEAM_ID" \
+            --password "$APPLE_APP_PASSWORD" \
+            --wait \
+            --timeout 1h
+
+          echo "Stapling notarization ticket to DMG..."
+          xcrun stapler staple "$DMG_PATH"
+
+          echo "Verifying notarization..."
+          xcrun stapler validate "$DMG_PATH"
+
+          echo "Verifying Gatekeeper acceptance..."
+          spctl -a -t open --context context:primary-signature -v "$DMG_PATH"
+
+      - name: Calculate DMG checksum
+        id: checksum
+        run: |
+          DMG_PATH="releases/installers/AudioForge-v${{ steps.version.outputs.VERSION }}-macOS.dmg"
+          SHA256=$(shasum -a 256 "$DMG_PATH" | awk '{print $1}')
+          echo "sha256=$SHA256" >> $GITHUB_OUTPUT
+          echo "SHA256: $SHA256"
+
+      - name: Upload DMG artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: audioforge-macos-dmg-${{ steps.version.outputs.VERSION }}
+          path: releases/installers/*.dmg
+          retention-days: 90
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: releases/installers/*.dmg
+          body: |
+            ## AudioForge v${{ steps.version.outputs.VERSION }}
+
+            **macOS Installer** (Signed & Notarized)
+            - Universal Binary (Intel + Apple Silicon)
+            - VST3 + AU formats
+            - 19 validated plugins
+
+            **SHA256 Checksum:**
+            ```
+            ${{ steps.checksum.outputs.sha256 }}
+            ```
+
+            **Installation:**
+            1. Download `AudioForge-v${{ steps.version.outputs.VERSION }}-macOS.dmg`
+            2. Open the DMG
+            3. Run "Install AudioForge Plugins.command"
+            4. Rescan plugins in your DAW
+
+            **Plugins Install To:**
+            - VST3: `~/Library/Audio/Plug-Ins/VST3/`
+            - AU: `~/Library/Audio/Plug-Ins/Components/`
+
+            ---
+
+            🤖 Generated with [Claude Code](https://claude.com/claude-code)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Cleanup
+        if: always()
+        run: |
+          # Delete temporary keychain
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+          if [ -f "$KEYCHAIN_PATH" ]; then
+            security delete-keychain $KEYCHAIN_PATH || true
+          fi
+
+          # Delete certificate file
+          rm -f $RUNNER_TEMP/certificate.p12
