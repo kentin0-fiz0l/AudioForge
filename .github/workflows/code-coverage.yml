@@ -100,7 +100,7 @@ jobs:
             --ignore-errors inconsistent,corrupt,format
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v7
         with:
           files: tests/coverage/coverage_filtered.info
           flags: unittests
