@@ -44,6 +44,8 @@ jobs:
             libxext-dev \
             libgl1-mesa-dev \
             libglu1-mesa-dev \
+            libcurl4-openssl-dev \
+            libwebkit2gtk-4.0-dev \
             fakeroot \
             dpkg-dev \
             rpm \
