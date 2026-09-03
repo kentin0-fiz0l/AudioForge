@@ -93,12 +93,21 @@ for plugin in "${ALL_PLUGINS[@]}"; do
     # Configure if build directory doesn't exist
     if [ ! -d "build" ]; then
         echo -e "${YELLOW}  Configuring...${NC}"
-        cmake -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF > /dev/null 2>&1
+        if [ -n "$VERBOSE" ]; then
+            cmake -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF
+        else
+            cmake -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF > /dev/null 2>&1
+        fi
     fi
 
     # Build
     echo -e "${YELLOW}  Compiling...${NC}"
-    if cmake --build build --config Release > /dev/null 2>&1; then
+    if [ -n "$VERBOSE" ]; then
+        cmake --build build --config Release
+    else
+        cmake --build build --config Release > /dev/null 2>&1
+    fi
+    if [ $? -eq 0 ]; then
         echo -e "${GREEN}  ✓ Build successful${NC}"
 
         # Copy VST3 (try both plugin name and directory name)

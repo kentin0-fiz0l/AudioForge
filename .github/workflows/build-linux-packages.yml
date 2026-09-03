@@ -65,7 +65,8 @@ jobs:
       - name: Build staging directory
         run: |
           chmod +x installers/build-installer.sh
-          ./installers/build-installer.sh ${{ steps.version.outputs.VERSION }}
+          # Set VERBOSE=1 to see full CMake output in CI
+          VERBOSE=1 ./installers/build-installer.sh ${{ steps.version.outputs.VERSION }}
 
       - name: Remove broken plugins from staging
         run: |
