@@ -40,6 +40,8 @@ jobs:
             libxinerama-dev \
             libxrandr-dev \
             libxcursor-dev \
+            libxi-dev \
+            libxext-dev \
             libgl1-mesa-dev \
             libglu1-mesa-dev \
             fakeroot \
