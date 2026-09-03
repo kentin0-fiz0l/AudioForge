@@ -93,21 +93,21 @@ jobs:
           ls -lh releases/installers/
 
       - name: Upload .deb package
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: audioforge-deb-${{ steps.version.outputs.VERSION }}
           path: releases/installers/*.deb
           retention-days: 30
 
       - name: Upload .rpm package
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: audioforge-rpm-${{ steps.version.outputs.VERSION }}
           path: releases/installers/*.rpm
           retention-days: 30
 
       - name: Upload AppImage
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: audioforge-appimage-${{ steps.version.outputs.VERSION }}
           path: releases/installers/*.AppImage
