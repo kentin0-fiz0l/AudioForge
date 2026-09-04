@@ -92,69 +92,45 @@ FreezeFXEditor::FreezeFXEditor(FreezeFXProcessor& p)
     lowPassLabel.setJustificationType(juce::Justification::centredLeft);
     addAndMakeVisible(lowPassLabel);
 
-    // Connect sliders to parameters using lambda listeners
-    freezeButton.onClick = [this]() {
-        auto* param = audioProcessor.getParameters()[0];
-        param->setValueNotifyingHost(freezeButton.getToggleState() ? 1.0f : 0.0f);
-    };
-
-    freezeMixSlider.onValueChange = [this]() {
-        auto* param = audioProcessor.getParameters()[1];
-        param->setValueNotifyingHost(freezeMixSlider.getValue() / 100.0f);
-    };
+    // Configure slider ranges
     freezeMixSlider.setRange(0.0, 100.0, 1.0);
-    freezeMixSlider.setValue(100.0);
-
-    fftSizeSelector.onChange = [this]() {
-        auto* param = audioProcessor.getParameters()[2];
-        param->setValueNotifyingHost((fftSizeSelector.getSelectedId() - 1) / 3.0f);
-    };
-
-    overlapSelector.onChange = [this]() {
-        auto* param = audioProcessor.getParameters()[3];
-        param->setValueNotifyingHost((overlapSelector.getSelectedId() - 1) / 2.0f);
-    };
-
-    phaseRandomSlider.onValueChange = [this]() {
-        auto* param = audioProcessor.getParameters()[4];
-        param->setValueNotifyingHost(phaseRandomSlider.getValue() / 100.0f);
-    };
     phaseRandomSlider.setRange(0.0, 100.0, 1.0);
-    phaseRandomSlider.setValue(50.0);
-
-    phaseSpeedSlider.onValueChange = [this]() {
-        auto* param = audioProcessor.getParameters()[5];
-        param->setValueNotifyingHost((phaseSpeedSlider.getValue() - 0.1f) / 9.9f);
-    };
     phaseSpeedSlider.setRange(0.1, 10.0, 0.1);
-    phaseSpeedSlider.setValue(1.0);
-
-    spectralBlurSlider.onValueChange = [this]() {
-        auto* param = audioProcessor.getParameters()[6];
-        param->setValueNotifyingHost(spectralBlurSlider.getValue() / 100.0f);
-    };
     spectralBlurSlider.setRange(0.0, 100.0, 1.0);
-    spectralBlurSlider.setValue(0.0);
-
-    highPassSlider.onValueChange = [this]() {
-        auto* param = audioProcessor.getParameters()[7];
-        // Log scale for frequency: 20Hz to 20kHz
-        float value = highPassSlider.getValue();
-        param->setValueNotifyingHost((std::log(value / 20.0f) / std::log(1000.0f)));
-    };
     highPassSlider.setRange(20.0, 20000.0, 1.0);
     highPassSlider.setSkewFactor(0.3);
-    highPassSlider.setValue(20.0);
-
-    lowPassSlider.onValueChange = [this]() {
-        auto* param = audioProcessor.getParameters()[8];
-        // Log scale for frequency: 20Hz to 20kHz
-        float value = lowPassSlider.getValue();
-        param->setValueNotifyingHost((std::log(value / 20.0f) / std::log(1000.0f)));
-    };
     lowPassSlider.setRange(20.0, 20000.0, 1.0);
     lowPassSlider.setSkewFactor(0.3);
-    lowPassSlider.setValue(20000.0);
+
+    // Create THREAD-SAFE parameter attachments (this fixes the crash!)
+    auto& apvts = audioProcessor.getAPVTS();
+
+    freezeAttachment.reset(new juce::AudioProcessorValueTreeState::ButtonAttachment(
+        apvts, FreezeFXProcessor::PARAM_FREEZE, freezeButton));
+
+    freezeMixAttachment.reset(new juce::AudioProcessorValueTreeState::SliderAttachment(
+        apvts, FreezeFXProcessor::PARAM_FREEZE_MIX, freezeMixSlider));
+
+    fftSizeAttachment.reset(new juce::AudioProcessorValueTreeState::ComboBoxAttachment(
+        apvts, FreezeFXProcessor::PARAM_FFT_SIZE, fftSizeSelector));
+
+    overlapAttachment.reset(new juce::AudioProcessorValueTreeState::ComboBoxAttachment(
+        apvts, FreezeFXProcessor::PARAM_OVERLAP, overlapSelector));
+
+    phaseRandomAttachment.reset(new juce::AudioProcessorValueTreeState::SliderAttachment(
+        apvts, FreezeFXProcessor::PARAM_PHASE_RANDOM, phaseRandomSlider));
+
+    phaseSpeedAttachment.reset(new juce::AudioProcessorValueTreeState::SliderAttachment(
+        apvts, FreezeFXProcessor::PARAM_PHASE_SPEED, phaseSpeedSlider));
+
+    spectralBlurAttachment.reset(new juce::AudioProcessorValueTreeState::SliderAttachment(
+        apvts, FreezeFXProcessor::PARAM_SPECTRAL_BLUR, spectralBlurSlider));
+
+    highPassAttachment.reset(new juce::AudioProcessorValueTreeState::SliderAttachment(
+        apvts, FreezeFXProcessor::PARAM_HIGH_PASS, highPassSlider));
+
+    lowPassAttachment.reset(new juce::AudioProcessorValueTreeState::SliderAttachment(
+        apvts, FreezeFXProcessor::PARAM_LOW_PASS, lowPassSlider));
 
     // Timer disabled for stability during rapid editor create/destroy cycles
     // (Caused hangs during PluginVal's "Open editor whilst processing" test)
@@ -163,7 +139,7 @@ FreezeFXEditor::FreezeFXEditor(FreezeFXProcessor& p)
 
 FreezeFXEditor::~FreezeFXEditor()
 {
-    stopTimer();
+    // No timer to stop (startTimerHz is disabled above)
 }
 
 void FreezeFXEditor::paint(juce::Graphics& g)
@@ -236,21 +212,13 @@ void FreezeFXEditor::resized()
 
 void FreezeFXEditor::timerCallback()
 {
-    // Update UI from parameters
-    auto& params = audioProcessor.getParameters();
-
-    // Update freeze button
-    auto* freezeParam = dynamic_cast<juce::AudioParameterBool*>(params[0]);
-    if (freezeParam && freezeButton.getToggleState() != freezeParam->get())
-        freezeButton.setToggleState(freezeParam->get(), juce::dontSendNotification);
-
-    // Update sliders from parameters
-    auto* freezeMixParam = dynamic_cast<juce::AudioParameterFloat*>(params[1]);
-    if (freezeMixParam)
-        freezeMixSlider.setValue(freezeMixParam->get() * 100.0f, juce::dontSendNotification);
-
-    // Spectrum visualization disabled for stability
-    // (Real-time spectrum updates caused threading conflicts during validation)
+    // REMOVED: All UI updates now handled automatically by APVTS parameter attachments
+    // (Unsafe parameter access via getParameters()[index] caused race conditions)
+    //
+    // Parameter attachments provide automatic, thread-safe UI ↔ processor synchronization:
+    // - freezeAttachment syncs freezeButton ↔ PARAM_FREEZE
+    // - freezeMixAttachment syncs freezeMixSlider ↔ PARAM_FREEZE_MIX
+    // - etc. for all 9 parameters
 }
 
 void FreezeFXEditor::paintSpectrum(juce::Graphics& g, juce::Rectangle<int> bounds)

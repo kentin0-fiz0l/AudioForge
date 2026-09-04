@@ -19,7 +19,7 @@ Professional-quality DAW plugins, free and open source.
 
 AudioForge is a collection of high-quality audio plugins for music production. Starting with essential utilities and effects, we're building a suite of tools that producers actually want to use.
 
-## Current Plugins (21 Validated ✅ + 1 Experimental ⚠️)
+## Current Plugins (22 Validated ✅)
 
 ### Mixing & Mastering Suite (9 plugins) ✅
 - **SimpleGain** - Clean gain/volume control with metering (-60 to +12 dB)
@@ -28,7 +28,7 @@ AudioForge is a collection of high-quality audio plugins for music production. S
 - **SimpleComp** - Compressor with auto makeup gain and soft/hard knee modes
 - **Gate** - Professional noise gate/expander with sidechain (v1.7.0) 🆕
 - **Limiter** - True peak mastering limiter with lookahead (v1.6.0) 🆕
-- **MultibandCompressor** - 4-band mastering compressor with crossovers (v1.8.0) 🆕
+- **MultibandCompressor** - 4-band mastering compressor with crossovers (v1.9.0) 🆕
 - **Reverb** - Freeverb-inspired algorithmic reverb with freeze mode
 - **CleanDelay** - Stereo delay effect with ping-pong mode and tempo sync
 
@@ -37,9 +37,9 @@ AudioForge is a collection of high-quality audio plugins for music production. S
 - **WaveShaper** - Waveshaping distortion with 5 curve modes and visualization
 - **ChorusFlanger** - LFO-based modulation effects with stereo width
 
-### Spectral Effects (2 plugins)
-- **SpectralFreeze** - FFT-based spectral freezing with phase evolution ✅ *Fixed in v1.9.0*
-- **FreezeFX** - Advanced spectral freeze with blur and randomization ⚠️ *Experimental*
+### Spectral Effects (2 plugins) ✅
+- **SpectralFreeze** - FFT-based spectral freezing with phase evolution
+- **FreezeFX** - Advanced spectral freeze with blur and randomization 🆕 *Fixed in v1.9.0*
 
 ### Synthesizers (8 plugins) ✅
 - **BasicSynth** - Subtractive synthesizer with ADSR envelope and filter
@@ -52,21 +52,16 @@ AudioForge is a collection of high-quality audio plugins for music production. S
 - **Sampler** - Multi-zone sampler with velocity layers and loop points ✅ *Fixed in v1.9.0*
 
 ### Quality Assurance (v1.9.0) ✅
-- **PluginVal Validated**: 21 production plugins pass strict validation (strictness level 10 - maximum)
-- **Pass Rate**: 95.5% (21/22 total plugins)
+- **PluginVal Validated**: **22 production plugins pass strict validation** (strictness level 10 - maximum)
+- **Pass Rate**: **100%** (22/22 total plugins) 🎉
 - **100% Test Coverage**: Comprehensive unit tests for all DSP components
 - **Performance Benchmarked**: CPU usage profiled for all plugins
 
-### Production-Ready Plugins (21) ✅
+### Production-Ready Plugins (22) ✅
+- ✅ **FreezeFX** - *Fixed in v1.9.0* (thread-safe APVTS refactoring + performance optimization)
 - ✅ **SpectralFreeze** - *Fixed in v1.9.0* (negative modulo bug)
 - ✅ **Sampler** - *Fixed in v1.9.0* (unique_ptr destruction order)
 - ✅ All mixing, mastering, effects, and synthesizer plugins fully validated
-
-### Experimental Features (1) ⚠️
-- ⚠️ **FreezeFX** - Spectral freeze effect (audio processing stable, UI stress test incompatible)
-  - **Status**: Safe for normal DAW usage
-  - **Limitation**: Fails PluginVal rapid editor lifecycle test (JUCE Objective-C memory issue)
-  - **Recommendation**: Use for production audio, avoid hosts that rapidly toggle GUIs
 
 ### Distribution (v1.9.0) ✅
 - ✅ macOS code signing (Developer ID Application)
@@ -74,15 +69,28 @@ AudioForge is a collection of high-quality audio plugins for music production. S
 - ✅ Professional DMG installer (v1.9.0 available now)
 - ✅ PluginVal integration for automated quality assurance (strictness level 10)
 - ✅ Performance benchmarking framework
-- ✅ 95.5% validation pass rate (21/22 plugins)
+- ✅ **100% validation pass rate (22/22 plugins)** 🎉
 - 🔧 Windows NSIS installer (scripts ready, v2.0.0 planned)
 - 🔧 Linux packages (scripts ready, v2.0.0 planned)
 - ✅ GitHub Discussions enabled for community
 
-### Planned (v1.4.0+)
-- Video tutorial series (5 videos scripted)
-- Plugin screenshot gallery
+### Website (v1.9.0) 🌐
+- ✅ **Professional landing page** with Next.js 14 + Tailwind CSS
+- ✅ **Badge system** (Fixed, New, Experimental, Validated, Popular)
+- ✅ **Real plugin screenshots** (4 plugins with optimized PNGs)
+- ✅ **95.5% validation badge** prominently displayed on hero
+- ✅ **Dismissible release banner** for v1.9.0 announcement
+- ✅ **Responsive design** - Mobile, tablet, desktop optimized
+- ✅ **Stats section** highlighting validation achievement
+- ✅ **Live deployment** on DigitalOcean Spaces with CDN
+- 🔗 [Visit Website](https://audioforge-site.sfo3.cdn.digitaloceanspaces.com/index.html)
+
+### Planned (v2.0.0+)
+- Video tutorial series (5 videos scripted, ready to record)
+- Complete plugin screenshot gallery (18 remaining plugins)
 - AAX format for Pro Tools
+- Linux packages (.deb, .rpm, AppImage)
+- Windows installer (NSIS)
 - Additional creative effects
 
 ## Tech Stack

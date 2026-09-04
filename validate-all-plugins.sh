@@ -38,6 +38,7 @@ PLUGINS=(
     "PadSynth.vst3"
     "PanUtil.vst3"
     "Reverb.vst3"
+    "Sampler.vst3"
     "Saturation.vst3"
     "SimpleComp.vst3"
     "SimpleEQ.vst3"

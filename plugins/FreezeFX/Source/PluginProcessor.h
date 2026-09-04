@@ -58,6 +58,9 @@ public:
     static constexpr const char* PARAM_LOW_PASS = "lowPass";
 
     //==============================================================================
+    // Parameter access (for UI)
+    juce::AudioProcessorValueTreeState& getAPVTS() { return apvts; }
+
     // Access to spectral data (for visualization)
     const SpectralProcessor& getSpectralProcessor() const { return spectralProcessor; }
     bool isCurrentlyFrozen() const { return frozenSpectrum.isFrozen(); }
@@ -74,16 +77,17 @@ private:
     PhaseEvolver phaseEvolver;
 
     //==============================================================================
-    // Parameters
-    juce::AudioParameterBool* freezeParam;
-    juce::AudioParameterFloat* freezeMixParam;
-    juce::AudioParameterChoice* fftSizeParam;
-    juce::AudioParameterChoice* overlapParam;
-    juce::AudioParameterFloat* phaseRandomParam;
-    juce::AudioParameterFloat* phaseSpeedParam;
-    juce::AudioParameterFloat* spectralBlurParam;
-    juce::AudioParameterFloat* highPassParam;
-    juce::AudioParameterFloat* lowPassParam;
+    // Parameters (managed by AudioProcessorValueTreeState)
+    juce::AudioProcessorValueTreeState apvts;
+
+    //==============================================================================
+    // State
+    bool wasFrozen = false;  // Track previous freeze state for edge detection
+
+    //==============================================================================
+    // Performance: Pre-allocated buffers for spectral blending (avoid per-frame allocation)
+    std::vector<float> tempFrozenMagnitude;
+    std::vector<float> tempFrozenPhase;
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FreezeFXProcessor)

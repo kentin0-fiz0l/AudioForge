@@ -4,69 +4,90 @@
 FreezeFXProcessor::FreezeFXProcessor()
     : AudioProcessor(BusesProperties()
                      .withInput("Input", juce::AudioChannelSet::stereo(), true)
-                     .withOutput("Output", juce::AudioChannelSet::stereo(), true))
+                     .withOutput("Output", juce::AudioChannelSet::stereo(), true)),
+      apvts(*this, nullptr, juce::Identifier("FreezeFXParameters"),
+            {
+                // Freeze toggle
+                std::make_unique<juce::AudioParameterBool>(
+                    PARAM_FREEZE,
+                    "Freeze",
+                    false),  // Default: not frozen
+
+                // Freeze Mix (0-100%)
+                std::make_unique<juce::AudioParameterFloat>(
+                    PARAM_FREEZE_MIX,
+                    "Freeze Mix",
+                    juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f),
+                    1.0f,  // Default: 100% frozen when active
+                    juce::String(),
+                    juce::AudioProcessorParameter::genericParameter,
+                    [](float value, int) { return juce::String((int)(value * 100.0f)) + "%"; }),
+
+                // FFT Size (1024, 2048, 4096, 8192)
+                std::make_unique<juce::AudioParameterChoice>(
+                    PARAM_FFT_SIZE,
+                    "FFT Size",
+                    juce::StringArray{"1024", "2048", "4096", "8192"},
+                    1),  // Default: 2048
+
+                // Overlap Factor (2x, 4x, 8x)
+                std::make_unique<juce::AudioParameterChoice>(
+                    PARAM_OVERLAP,
+                    "Overlap",
+                    juce::StringArray{"2x", "4x", "8x"},
+                    1),  // Default: 4x
+
+                // Phase Randomization (0-100%)
+                std::make_unique<juce::AudioParameterFloat>(
+                    PARAM_PHASE_RANDOM,
+                    "Phase Random",
+                    juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f),
+                    0.5f,  // Default: 50%
+                    juce::String(),
+                    juce::AudioProcessorParameter::genericParameter,
+                    [](float value, int) { return juce::String((int)(value * 100.0f)) + "%"; }),
+
+                // Phase Speed (0.1-10 Hz)
+                std::make_unique<juce::AudioParameterFloat>(
+                    PARAM_PHASE_SPEED,
+                    "Phase Speed",
+                    juce::NormalisableRange<float>(0.1f, 10.0f, 0.1f, 0.3f),
+                    1.0f,  // Default: 1 Hz
+                    juce::String(),
+                    juce::AudioProcessorParameter::genericParameter,
+                    [](float value, int) { return juce::String(value, 1) + " Hz"; }),
+
+                // Spectral Blur (0-100%)
+                std::make_unique<juce::AudioParameterFloat>(
+                    PARAM_SPECTRAL_BLUR,
+                    "Spectral Blur",
+                    juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f),
+                    0.0f,  // Default: no blur
+                    juce::String(),
+                    juce::AudioProcessorParameter::genericParameter,
+                    [](float value, int) { return juce::String((int)(value * 100.0f)) + "%"; }),
+
+                // High-Pass Frequency (20-20000 Hz)
+                std::make_unique<juce::AudioParameterFloat>(
+                    PARAM_HIGH_PASS,
+                    "High Pass",
+                    juce::NormalisableRange<float>(20.0f, 20000.0f, 1.0f, 0.3f),
+                    20.0f,  // Default: 20 Hz (full range)
+                    juce::String(),
+                    juce::AudioProcessorParameter::genericParameter,
+                    [](float value, int) { return juce::String((int)value) + " Hz"; }),
+
+                // Low-Pass Frequency (20-20000 Hz)
+                std::make_unique<juce::AudioParameterFloat>(
+                    PARAM_LOW_PASS,
+                    "Low Pass",
+                    juce::NormalisableRange<float>(20.0f, 20000.0f, 1.0f, 0.3f),
+                    20000.0f,  // Default: 20 kHz (full range)
+                    juce::String(),
+                    juce::AudioProcessorParameter::genericParameter,
+                    [](float value, int) { return juce::String((int)value) + " Hz"; })
+            })
 {
-    // Freeze toggle
-    addParameter(freezeParam = new juce::AudioParameterBool(
-        PARAM_FREEZE,
-        "Freeze",
-        false));  // Default: not frozen
-
-    // Freeze Mix (0-100%)
-    addParameter(freezeMixParam = new juce::AudioParameterFloat(
-        PARAM_FREEZE_MIX,
-        "Freeze Mix",
-        juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f),
-        1.0f));  // Default: 100% frozen when active
-
-    // FFT Size (1024, 2048, 4096, 8192)
-    addParameter(fftSizeParam = new juce::AudioParameterChoice(
-        PARAM_FFT_SIZE,
-        "FFT Size",
-        juce::StringArray{"1024", "2048", "4096", "8192"},
-        1));  // Default: 2048
-
-    // Overlap Factor (2x, 4x, 8x)
-    addParameter(overlapParam = new juce::AudioParameterChoice(
-        PARAM_OVERLAP,
-        "Overlap",
-        juce::StringArray{"2x", "4x", "8x"},
-        1));  // Default: 4x
-
-    // Phase Randomization (0-100%)
-    addParameter(phaseRandomParam = new juce::AudioParameterFloat(
-        PARAM_PHASE_RANDOM,
-        "Phase Random",
-        juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f),
-        0.5f));  // Default: 50%
-
-    // Phase Speed (0.1-10 Hz)
-    addParameter(phaseSpeedParam = new juce::AudioParameterFloat(
-        PARAM_PHASE_SPEED,
-        "Phase Speed",
-        juce::NormalisableRange<float>(0.1f, 10.0f, 0.1f, 0.3f),
-        1.0f));  // Default: 1 Hz
-
-    // Spectral Blur (0-100%)
-    addParameter(spectralBlurParam = new juce::AudioParameterFloat(
-        PARAM_SPECTRAL_BLUR,
-        "Spectral Blur",
-        juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f),
-        0.0f));  // Default: no blur
-
-    // High-Pass Frequency (20-20000 Hz)
-    addParameter(highPassParam = new juce::AudioParameterFloat(
-        PARAM_HIGH_PASS,
-        "High Pass",
-        juce::NormalisableRange<float>(20.0f, 20000.0f, 1.0f, 0.3f),
-        20.0f));  // Default: 20 Hz (full range)
-
-    // Low-Pass Frequency (20-20000 Hz)
-    addParameter(lowPassParam = new juce::AudioParameterFloat(
-        PARAM_LOW_PASS,
-        "Low Pass",
-        juce::NormalisableRange<float>(20.0f, 20000.0f, 1.0f, 0.3f),
-        20000.0f));  // Default: 20 kHz (full range)
 }
 
 FreezeFXProcessor::~FreezeFXProcessor()
@@ -76,11 +97,13 @@ FreezeFXProcessor::~FreezeFXProcessor()
 void FreezeFXProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
     // Get FFT size from parameter
-    int fftSizeIndex = fftSizeParam->getIndex();
+    auto* fftParam = dynamic_cast<juce::AudioParameterChoice*>(apvts.getParameter(PARAM_FFT_SIZE));
+    int fftSizeIndex = fftParam ? fftParam->getIndex() : 1;
     int fftSize = 1024 << fftSizeIndex;  // 1024, 2048, 4096, 8192
 
     // Get overlap factor
-    int overlapIndex = overlapParam->getIndex();
+    auto* overlapParam = dynamic_cast<juce::AudioParameterChoice*>(apvts.getParameter(PARAM_OVERLAP));
+    int overlapIndex = overlapParam ? overlapParam->getIndex() : 1;
     int overlap = 2 << overlapIndex;  // 2, 4, 8
 
     // Prepare spectral processor
@@ -89,16 +112,21 @@ void FreezeFXProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
     spectralProcessor.prepare(sampleRate, samplesPerBlock, getTotalNumOutputChannels());
 
     // Configure phase evolver
-    phaseEvolver.setRandomizationAmount(phaseRandomParam->get());
-    phaseEvolver.setEvolutionSpeed(phaseSpeedParam->get());
+    phaseEvolver.setRandomizationAmount(apvts.getRawParameterValue(PARAM_PHASE_RANDOM)->load());
+    phaseEvolver.setEvolutionSpeed(apvts.getRawParameterValue(PARAM_PHASE_SPEED)->load());
 
     // Configure frozen spectrum
-    frozenSpectrum.setBlurAmount(spectralBlurParam->get());
+    frozenSpectrum.setBlurAmount(apvts.getRawParameterValue(PARAM_SPECTRAL_BLUR)->load());
     frozenSpectrum.setFrequencyRange(
-        highPassParam->get(),
-        lowPassParam->get(),
+        apvts.getRawParameterValue(PARAM_HIGH_PASS)->load(),
+        apvts.getRawParameterValue(PARAM_LOW_PASS)->load(),
         sampleRate,
         fftSize);
+
+    // Pre-allocate spectral blending buffers (avoid per-frame allocation)
+    int numBins = fftSize / 2 + 1;
+    tempFrozenMagnitude.resize(numBins);
+    tempFrozenPhase.resize(numBins);
 
     // Set up spectral processing callback
     spectralProcessor.setSpectralCallback(
@@ -124,21 +152,29 @@ void FreezeFXProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::Mid
     juce::ScopedNoDenormals noDenormals;
 
     // Get parameters
-    bool freeze = freezeParam->get();
-    float freezeMix = freezeMixParam->get();
+    bool freeze = apvts.getRawParameterValue(PARAM_FREEZE)->load() > 0.5f;
+
+    // *** PERFORMANCE OPTIMIZATION: Bypass all FFT processing when freeze is off ***
+    // This eliminates 100% of spectral processing overhead when the effect is inactive
+    if (!freeze && !wasFrozen)
+    {
+        // Freeze is off and was off - complete bypass (no FFT!)
+        return;
+    }
+
+    float freezeMix = apvts.getRawParameterValue(PARAM_FREEZE_MIX)->load();
 
     // Update phase evolver parameters
-    phaseEvolver.setRandomizationAmount(phaseRandomParam->get());
-    phaseEvolver.setEvolutionSpeed(phaseSpeedParam->get());
+    phaseEvolver.setRandomizationAmount(apvts.getRawParameterValue(PARAM_PHASE_RANDOM)->load());
+    phaseEvolver.setEvolutionSpeed(apvts.getRawParameterValue(PARAM_PHASE_SPEED)->load());
 
     // Update frozen spectrum parameters
-    frozenSpectrum.setBlurAmount(spectralBlurParam->get());
+    frozenSpectrum.setBlurAmount(apvts.getRawParameterValue(PARAM_SPECTRAL_BLUR)->load());
 
-    // Check for freeze trigger
-    static bool wasFrozen = false;
+    // Check for freeze trigger (edge detection)
     if (freeze && !wasFrozen)
     {
-        // Capture current spectrum
+        // Capture current spectrum on freeze toggle
         frozenSpectrum.captureSpectrum(
             spectralProcessor.getMagnitudeSpectrum(),
             spectralProcessor.getPhaseSpectrum());
@@ -147,22 +183,16 @@ void FreezeFXProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::Mid
     else if (!freeze && wasFrozen)
     {
         frozenSpectrum.unfreeze();
+        wasFrozen = false;  // Reset state
+        return;  // Exit early - no processing needed when transitioning to bypass
     }
-    wasFrozen = freeze;
+    wasFrozen = freeze;  // Update state for next block
 
-    // Process through spectral processor
-    // TODO: Implement freeze mixing in spectral domain (Phase 2)
+    // Process through spectral processor (only when freeze is active)
     spectralProcessor.processBlock(buffer);
 
-    // For now, just apply dry/wet mix at audio level (temporary)
-    if (!freeze)
-    {
-        // Not frozen - normal pass-through
-        return;
-    }
-
-    // Frozen - apply mix
-    // (This is a placeholder - proper spectral mixing happens in Phase 2)
+    // TODO: Implement freeze mixing in spectral domain (Phase 2)
+    // For now, the frozen effect is applied via spectral callback in processSpectrum()
 }
 
 juce::AudioProcessorEditor* FreezeFXProcessor::createEditor()
@@ -172,34 +202,19 @@ juce::AudioProcessorEditor* FreezeFXProcessor::createEditor()
 
 void FreezeFXProcessor::getStateInformation(juce::MemoryBlock& destData)
 {
-    // Save plugin state
-    juce::MemoryOutputStream stream(destData, true);
-
-    stream.writeBool(freezeParam->get());
-    stream.writeFloat(freezeMixParam->get());
-    stream.writeInt(fftSizeParam->getIndex());
-    stream.writeInt(overlapParam->getIndex());
-    stream.writeFloat(phaseRandomParam->get());
-    stream.writeFloat(phaseSpeedParam->get());
-    stream.writeFloat(spectralBlurParam->get());
-    stream.writeFloat(highPassParam->get());
-    stream.writeFloat(lowPassParam->get());
+    // APVTS handles state serialization automatically
+    auto state = apvts.copyState();
+    std::unique_ptr<juce::XmlElement> xml(state.createXml());
+    copyXmlToBinary(*xml, destData);
 }
 
 void FreezeFXProcessor::setStateInformation(const void* data, int sizeInBytes)
 {
-    // Restore plugin state
-    juce::MemoryInputStream stream(data, static_cast<size_t>(sizeInBytes), false);
-
-    freezeParam->setValueNotifyingHost(stream.readBool() ? 1.0f : 0.0f);
-    freezeMixParam->setValueNotifyingHost(freezeMixParam->convertTo0to1(stream.readFloat()));
-    fftSizeParam->setValueNotifyingHost(static_cast<float>(stream.readInt()) / (fftSizeParam->choices.size() - 1));
-    overlapParam->setValueNotifyingHost(static_cast<float>(stream.readInt()) / (overlapParam->choices.size() - 1));
-    phaseRandomParam->setValueNotifyingHost(phaseRandomParam->convertTo0to1(stream.readFloat()));
-    phaseSpeedParam->setValueNotifyingHost(phaseSpeedParam->convertTo0to1(stream.readFloat()));
-    spectralBlurParam->setValueNotifyingHost(spectralBlurParam->convertTo0to1(stream.readFloat()));
-    highPassParam->setValueNotifyingHost(highPassParam->convertTo0to1(stream.readFloat()));
-    lowPassParam->setValueNotifyingHost(lowPassParam->convertTo0to1(stream.readFloat()));
+    // APVTS handles state deserialization automatically
+    std::unique_ptr<juce::XmlElement> xmlState(getXmlFromBinary(data, sizeInBytes));
+    if (xmlState.get() != nullptr)
+        if (xmlState->hasTagName(apvts.state.getType()))
+            apvts.replaceState(juce::ValueTree::fromXml(*xmlState));
 }
 
 //==============================================================================
@@ -208,26 +223,24 @@ void FreezeFXProcessor::setStateInformation(const void* data, int sizeInBytes)
 void FreezeFXProcessor::processSpectrum(std::vector<float>& magnitude, std::vector<float>& phase)
 {
     // Get current parameters
-    float freezeMix = freezeMixParam->get();
+    float freezeMix = apvts.getRawParameterValue(PARAM_FREEZE_MIX)->load();
     float deltaTime = 1.0f / getSampleRate() * spectralProcessor.getHopSize();
 
     // If frozen, blend with frozen spectrum
     if (frozenSpectrum.isFrozen() && freezeMix > 0.0f)
     {
-        std::vector<float> frozenMagnitude(magnitude.size());
-        std::vector<float> frozenPhase(phase.size());
-
-        // Get frozen spectrum
-        frozenSpectrum.getSpectrum(frozenMagnitude, frozenPhase);
+        // Use pre-allocated buffers (no per-frame allocation!)
+        // Get frozen spectrum into temp buffers
+        frozenSpectrum.getSpectrum(tempFrozenMagnitude, tempFrozenPhase);
 
         // Blend magnitude: live → frozen based on mix
         for (size_t i = 0; i < magnitude.size(); ++i)
         {
-            magnitude[i] = magnitude[i] * (1.0f - freezeMix) + frozenMagnitude[i] * freezeMix;
+            magnitude[i] = magnitude[i] * (1.0f - freezeMix) + tempFrozenMagnitude[i] * freezeMix;
         }
 
         // Evolve phase if randomization is enabled
-        float phaseRandom = phaseRandomParam->get();
+        float phaseRandom = apvts.getRawParameterValue(PARAM_PHASE_RANDOM)->load();
         if (phaseRandom > 0.0f)
         {
             phaseEvolver.evolvePhase(phase, deltaTime);
@@ -237,7 +250,7 @@ void FreezeFXProcessor::processSpectrum(std::vector<float>& magnitude, std::vect
             // Use frozen phase
             for (size_t i = 0; i < phase.size(); ++i)
             {
-                phase[i] = phase[i] * (1.0f - freezeMix) + frozenPhase[i] * freezeMix;
+                phase[i] = phase[i] * (1.0f - freezeMix) + tempFrozenPhase[i] * freezeMix;
             }
         }
     }
