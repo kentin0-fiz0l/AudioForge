@@ -43,6 +43,7 @@ EFFECTS=(
 
 ADVANCED_EFFECTS=(
     "SpectralFreeze"
+    "FreezeFX"
 )
 
 INSTRUMENTS=(
