@@ -15,6 +15,7 @@ export interface PluginParameter {
 }
 
 export type PluginCategory = 'utility' | 'creative' | 'mixing' | 'synthesis';
+export type BadgeType = 'fixed' | 'experimental' | 'new' | 'validated' | 'popular';
 
 export interface Plugin {
   id: string;
@@ -37,6 +38,7 @@ export interface Plugin {
   downloadUrl?: string;
   docsUrl?: string;
   graphic?: string;
+  badges?: BadgeType[];
 }
 
 export const plugins: Plugin[] = [
@@ -85,7 +87,7 @@ export const plugins: Plugin[] = [
       'Timer-based UI updates',
       'Thread-safe communication (atomics)'
     ],
-    screenshots: [],
+    screenshots: ['/screenshots/plugins/SimpleGain/simplegain-main.png'],
     downloadUrl: '/downloads/SimpleGain-v1.0.0',
     docsUrl: '/docs/plugins/simplegain',
     graphic: '/plugin-graphics/simplegain.svg'
@@ -1362,7 +1364,8 @@ if (freeze) {
     screenshots: [],
     downloadUrl: '/downloads/FreezeFX-v1.0.0',
     docsUrl: '/docs/plugins/freezefx',
-    graphic: '/plugin-graphics/freezefx.svg'
+    graphic: '/plugin-graphics/freezefx.svg',
+    badges: ['experimental']
   },
   {
     id: 'granularengine',
@@ -1525,7 +1528,8 @@ if (freeze) {
     screenshots: [],
     downloadUrl: '/downloads/SpectralFreeze-v1.2.0',
     docsUrl: '/docs/plugins/spectralfreeze',
-    graphic: '/plugin-graphics/spectralfreeze.svg'
+    graphic: '/plugin-graphics/spectralfreeze.svg',
+    badges: ['fixed']
   },
   {
     id: 'limiter',
@@ -1595,10 +1599,11 @@ if (freeze) {
       'Maximum loudness without distortion',
       'Protect downstream equipment from excessive levels'
     ],
-    screenshots: [],
+    screenshots: ['/screenshots/plugins/Limiter/limiter-main.png'],
     downloadUrl: '/downloads/Limiter-v1.6.0',
     docsUrl: '/docs/plugins/limiter',
-    graphic: '/plugin-graphics/limiter.svg'
+    graphic: '/plugin-graphics/limiter.svg',
+    badges: ['new']
   },
   {
     id: 'gate',
@@ -1693,15 +1698,16 @@ if (freeze) {
       'Frequency-selective gating - Use sidechain filters to trigger on specific frequencies',
       'Creative ducking - Invert gate for reverse ducking effects'
     ],
-    screenshots: [],
+    screenshots: ['/screenshots/plugins/Gate/gate-main.png'],
     downloadUrl: '/downloads/Gate-v1.7.0',
     docsUrl: '/docs/plugins/gate',
-    graphic: '/plugin-graphics/gate.svg'
+    graphic: '/plugin-graphics/gate.svg',
+    badges: ['new']
   },
   {
     id: 'multibandcompressor',
     name: 'Multiband Compressor',
-    version: '1.8.0',
+    version: '1.9.0',
     status: 'released',
     category: 'mixing',
     tagline: '4-band mastering compressor with M/S processing',
@@ -1786,10 +1792,11 @@ if (freeze) {
       'Mix bus glue - Gentle multiband compression for cohesion',
       'Stereo widening - Use M/S mode to compress side differently from mid'
     ],
-    screenshots: [],
-    downloadUrl: '/downloads/MultibandCompressor-v1.8.0',
+    screenshots: ['/screenshots/plugins/MultibandCompressor/multiband-main.png'],
+    downloadUrl: '/downloads/MultibandCompressor-v1.9.0',
     docsUrl: '/docs/plugins/multibandcompressor',
-    graphic: '/plugin-graphics/multibandcompressor.svg'
+    graphic: '/plugin-graphics/multibandcompressor.svg',
+    badges: ['new']
   },
   {
     id: 'fmsynth',
@@ -2196,7 +2203,8 @@ if (freeze) {
     screenshots: [],
     downloadUrl: '/downloads/Sampler-v0.3.0',
     docsUrl: '/docs/plugins/samplerplugin',
-    graphic: '/plugin-graphics/samplerplugin.svg'
+    graphic: '/plugin-graphics/samplerplugin.svg',
+    badges: ['fixed']
   }
 ];
 

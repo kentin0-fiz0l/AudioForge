@@ -1,6 +1,7 @@
 import React from 'react';
 import Image from 'next/image';
 import type { Plugin } from '@/lib/plugins';
+import { Badge } from '@/components/Badge';
 
 interface PluginCardProps {
   plugin: Plugin;
@@ -85,6 +86,15 @@ export const PluginCard: React.FC<PluginCardProps> = ({ plugin, className = '' }
           <p className="text-accent text-sm font-medium">
             {plugin.tagline}
           </p>
+
+          {/* Badges */}
+          {plugin.badges && plugin.badges.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-3">
+              {plugin.badges.map((badge, idx) => (
+                <Badge key={idx} type={badge} />
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Description */}

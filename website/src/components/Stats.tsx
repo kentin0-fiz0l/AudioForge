@@ -32,12 +32,12 @@ const stats: Stat[] = [
     ),
   },
   {
-    value: '3',
-    label: 'Platforms',
-    description: 'macOS, Windows, Linux',
+    value: '100%',
+    label: 'Validated',
+    description: '22/22 at strictness 10 🎉',
     icon: (
       <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0121 12a11.955 11.955 0 01-2.382 7.016m-4.846 1.966A7.955 7.955 0 0112 21a7.955 7.955 0 01-1.772-.203m2.5-8.333V5" />
       </svg>
     ),
   },

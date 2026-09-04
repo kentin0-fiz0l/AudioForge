@@ -54,6 +54,16 @@ export const Hero: React.FC<HeroProps> = ({ className = '' }) => {
             </span>
           </h1>
 
+          {/* Validation Badge */}
+          <div className="inline-flex items-center gap-2 px-6 py-3 mb-6 bg-green-500/10 border border-green-500/30 rounded-full">
+            <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span className="text-green-400 font-semibold text-sm md:text-base">
+              🎉 100% Validated (22/22 at Maximum Strictness)
+            </span>
+          </div>
+
           {/* Subheadline */}
           <p className="text-lg md:text-xl text-foreground-muted mb-8 max-w-2xl mx-auto leading-relaxed">
             22 professional VST3 and AU plugins for music production. From essential utilities to advanced spectral effects, built with JUCE and modern C++.
@@ -73,7 +83,7 @@ export const Hero: React.FC<HeroProps> = ({ className = '' }) => {
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                 </svg>
-                Download v1.8.0
+                Download v1.9.0
               </span>
             </a>
             <a
