@@ -156,14 +156,15 @@ cd "$PROJECT_ROOT"
 echo -e "${BLUE}→ Creating documentation...${NC}"
 
 cat > "$STAGING_DIR/README.txt" << 'EOF'
-AudioForge v1.9.0
+AudioForge v1.9.1
 =================
 
 Thank you for choosing AudioForge!
 
 CONTENTS
 --------
-This package includes 22 professional audio plugins (100% PluginVal validated):
+This package includes 22 professional audio plugins (100% PluginVal validated)
++ 121 FACTORY PRESETS for instant creativity!
 
 MIXING & MASTERING (9):
 • SimpleGain - Clean gain/volume control
@@ -185,13 +186,13 @@ SPECTRAL EFFECTS (2):
 • SpectralFreeze - FFT-based spectral freezing
 • FreezeFX - Advanced spectral freeze with blur and randomization (NEW in v1.9.0!)
 
-SYNTHESIZERS (8):
+SYNTHESIZERS (8) + 121 FACTORY PRESETS:
 • BasicSynth - Subtractive synthesizer with ADSR
-• FMSynth - 4-operator FM synthesis
-• WavetableSynth - Wavetable synthesis with interpolation
-• PadSynth - Lush pad synthesis
-• DrumSynth - Drum synthesis engine
-• OrganEmulator - Hammond-style organ with drawbars
+• FMSynth - 4-operator FM synthesis [20 presets]
+• WavetableSynth - Wavetable synthesis with interpolation [26 presets]
+• PadSynth - Lush pad synthesis [20 presets]
+• DrumSynth - Drum synthesis engine [30 presets]
+• OrganEmulator - Hammond-style organ with drawbars [25 presets]
 • GranularEngine - Real-time granular synthesis
 • Sampler - Multi-zone sampler with velocity layers
 
@@ -210,6 +211,15 @@ SYSTEM REQUIREMENTS
 • macOS 10.13 or later
 • Intel or Apple Silicon (universal binaries)
 • Compatible DAW (Logic Pro, Ableton Live, Reaper, etc.)
+
+WHAT'S NEW IN v1.9.1
+--------------------
+• 121 FACTORY PRESETS across 5 synthesizers - instant creativity!
+• DrumSynth: 30 presets (Kick, Snare, Hat, Percussion)
+• WavetableSynth: 26 presets (EDM Lead, Bass, Pad, Digital, Pluck)
+• OrganEmulator: 25 presets (Jazz, Rock, Gospel, Blues)
+• FMSynth: 20 presets (E.Piano, Bells, Bass, Lead)
+• PadSynth: 20 presets (Warm, Bright, Dark, Ethereal)
 
 WHAT'S NEW IN v1.9.0
 --------------------

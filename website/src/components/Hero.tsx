@@ -66,7 +66,7 @@ export const Hero: React.FC<HeroProps> = ({ className = '' }) => {
 
           {/* Subheadline */}
           <p className="text-lg md:text-xl text-foreground-muted mb-8 max-w-2xl mx-auto leading-relaxed">
-            22 professional VST3 and AU plugins for music production. From essential utilities to advanced spectral effects, built with JUCE and modern C++.
+            22 professional VST3 and AU plugins + 121 factory presets. From essential utilities to advanced spectral effects, built with JUCE and modern C++.
           </p>
 
           {/* CTA Buttons */}
