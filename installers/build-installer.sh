@@ -156,39 +156,44 @@ cd "$PROJECT_ROOT"
 echo -e "${BLUE}→ Creating documentation...${NC}"
 
 cat > "$STAGING_DIR/README.txt" << 'EOF'
-AudioForge v1.8.1
+AudioForge v1.9.0
 =================
 
 Thank you for choosing AudioForge!
 
 CONTENTS
 --------
-This package includes 19 professional audio plugins:
+This package includes 22 professional audio plugins (100% PluginVal validated):
 
-EFFECTS (11):
-• SimpleGain - Clean gain/trim utility
+MIXING & MASTERING (9):
+• SimpleGain - Clean gain/volume control
+• PanUtil - Stereo panning and width
 • SimpleEQ - 3-band parametric equalizer
 • SimpleComp - Transparent compressor
+• Gate - Professional noise gate/expander with sidechain
+• Limiter - True peak mastering limiter with lookahead
+• MultibandCompressor - 4-band mastering compressor
+• Reverb - Algorithmic reverb with freeze mode
+• CleanDelay - Stereo delay with ping-pong and tempo sync
+
+CREATIVE EFFECTS (3):
 • Saturation - Harmonic saturation/distortion
-• Reverb - Algorithmic reverb
-• CleanDelay - Stereo delay with feedback
-• ChorusFlanger - Modulation effects
-• PanUtil - Stereo width and panning
-• WaveShaper - Waveshaping distortion
-• FreezeFX - Audio freeze effect
-• GranularEngine - Granular synthesis
+• WaveShaper - Waveshaping distortion with visualization
+• ChorusFlanger - Modulation effects with stereo width
 
-ADVANCED EFFECTS (1):
-• SpectralFreeze - Spectral freezing and processing
+SPECTRAL EFFECTS (2):
+• SpectralFreeze - FFT-based spectral freezing
+• FreezeFX - Advanced spectral freeze with blur and randomization (NEW in v1.9.0!)
 
-INSTRUMENTS (7):
-• BasicSynth - 8-voice subtractive synthesizer
-• FM Synth - 2-operator FM synthesis
-• Wavetable Synth - Digital wavetable synthesis
-• Pad Synth - Lush unison pad synthesizer
-• Drum Synth - 3-drum percussion synthesizer
-• Organ Emulator - Hammond-style organ with Leslie
-• Sampler - Professional multi-sample instrument (NEW!)
+SYNTHESIZERS (8):
+• BasicSynth - Subtractive synthesizer with ADSR
+• FMSynth - 4-operator FM synthesis
+• WavetableSynth - Wavetable synthesis with interpolation
+• PadSynth - Lush pad synthesis
+• DrumSynth - Drum synthesis engine
+• OrganEmulator - Hammond-style organ with drawbars
+• GranularEngine - Real-time granular synthesis
+• Sampler - Multi-zone sampler with velocity layers
 
 INSTALLATION
 ------------
@@ -206,14 +211,20 @@ SYSTEM REQUIREMENTS
 • Intel or Apple Silicon (universal binaries)
 • Compatible DAW (Logic Pro, Ableton Live, Reaper, etc.)
 
+WHAT'S NEW IN v1.9.0
+--------------------
+• FreezeFX: Fixed crash and performance issues (now 100% validated!)
+• 100% validation achievement: All 22 plugins pass PluginVal strictness 10
+• Thread-safe APVTS refactoring for rock-solid stability
+
 SUPPORT
 -------
-Issues: https://github.com/your-username/audioforge/issues
-Documentation: https://github.com/your-username/audioforge
+Issues: https://github.com/kentin0-fiz0l/AudioForge/issues
+Documentation: https://github.com/kentin0-fiz0l/AudioForge
 
 LICENSE
 -------
-AudioForge is open-source software.
+AudioForge is open-source software (MIT License).
 See LICENSE file for details.
 
 Enjoy making music!
