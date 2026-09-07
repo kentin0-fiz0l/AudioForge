@@ -1,0 +1,44 @@
+Started validating: /Users/kentino/Library/Audio/Plug-Ins/VST3/FreezeFX.vst3
+Random seed: 0x5523bff
+Validation started
+Strictness level: 10
+-----------------------------------------------------------------
+Starting tests in: pluginval / Scan for plugins located in: /Users/kentino/Library/Audio/Plug-Ins/VST3/FreezeFX.vst3...
+Num plugins found: 1
+
+Testing plugin: VST3-FreezeFX-53e2c566-8040fc3f
+AudioForge: FreezeFX v1.0.0
+Completed tests in pluginval / Scan for plugins located in: /Users/kentino/Library/Audio/Plug-Ins/VST3/FreezeFX.vst3
+-----------------------------------------------------------------
+Starting tests in: pluginval / Open plugin (cold)...
+Completed tests in pluginval / Open plugin (cold)
+-----------------------------------------------------------------
+Starting tests in: pluginval / Open plugin (warm)...
+Running tests 1 times
+Completed tests in pluginval / Open plugin (warm)
+-----------------------------------------------------------------
+Starting tests in: pluginval / Plugin info...
+
+Plugin name: FreezeFX
+Alternative names: FreezeFX
+SupportsDoublePrecision: no
+Reported latency: 0
+Reported taillength: 0
+Completed tests in pluginval / Plugin info
+-----------------------------------------------------------------
+Starting tests in: pluginval / Plugin programs...
+Num programs: 0
+All program names checked
+Completed tests in pluginval / Plugin programs
+-----------------------------------------------------------------
+Starting tests in: pluginval / Editor...
+Completed tests in pluginval / Editor
+-----------------------------------------------------------------
+Starting tests in: pluginval / Open editor whilst processing...
+objc[71553]: Method cache corrupted. This may be a message to an invalid object, or a memory error somewhere else.
+objc[71553]: receiver 0x600002284240, SEL 0x20c8f50cf, isa 0x1ffd186e8, cache 0x1ffd186f8, buckets and mask 0x3f0001398a3000, occupied 0x26
+objc[71553]: receiver 48 bytes, buckets 1024 bytes
+objc[71553]: selector 'autorelease'
+objc[71553]: isa '__NSCFString'
+objc[71553]: Method cache corrupted. This may be a message to an invalid object, or a memory error somewhere else.
+pluginval received Abort trap: 6, exiting immediately

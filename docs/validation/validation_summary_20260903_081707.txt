@@ -1,0 +1,5 @@
+AudioForge PluginVal Validation Summary
+Timestamp: Thu Sep  3 08:17:07 PDT 2026
+PluginVal version: scripts/validate-plugins.sh: line 62: "/Users/kentino/Applications/pluginval.app/Contents/MacOS/pluginval": No such file or directory
+========================================
+

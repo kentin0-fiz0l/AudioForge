@@ -1,0 +1,35 @@
+AudioForge PluginVal Validation Summary
+Timestamp: Thu Sep  3 11:52:29 PDT 2026
+PluginVal version: scripts/validate-plugins.sh: line 65: "/private/tmp/pluginval.app/Contents/MacOS/pluginval": No such file or directory
+========================================
+
+PASS: BasicSynth.vst3
+PASS: ChorusFlanger.vst3
+PASS: CleanDelay.vst3
+PASS: DrumSynth.vst3
+PASS: FMSynth.vst3
+FAIL: FreezeFX.vst3 (exit code 9, see /Users/kentino/Projects/Active/AudioForge/docs/validation/FreezeFX_20260903_115229.log)
+PASS: Gate.vst3
+PASS: GranularEngine.vst3
+PASS: Limiter.vst3
+PASS: Multiband Compressor.vst3
+PASS: OrganEmulator.vst3
+PASS: PadSynth.vst3
+PASS: PanUtil.vst3
+PASS: Reverb.vst3
+PASS: Sampler.vst3
+PASS: Saturation.vst3
+PASS: SimpleComp.vst3
+PASS: SimpleEQ.vst3
+PASS: SimpleGain.vst3
+PASS: SpectralFreeze.vst3
+PASS: WaveShaper.vst3
+PASS: WavetableSynth.vst3
+
+========================================
+SUMMARY:
+  Total plugins: 22
+  Passed: 21
+  Warnings: 0
+  Failed: 1
+
