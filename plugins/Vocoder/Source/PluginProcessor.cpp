@@ -20,7 +20,8 @@ VocoderProcessor::VocoderProcessor()
     : AudioProcessor(BusesProperties()
                      .withInput("Input", juce::AudioChannelSet::stereo(), true)
                      .withOutput("Output", juce::AudioChannelSet::stereo(), true)),
-      apvts_(*this, nullptr, "PARAMETERS", createParameterLayout()) {}
+      apvts_(*this, nullptr, "PARAMETERS", createParameterLayout()),
+      midiLearnManager_(apvts_) {}
 
 VocoderProcessor::~VocoderProcessor() {}
 
@@ -31,6 +32,13 @@ void VocoderProcessor::prepareToPlay(double sr, int sb) {
 
 void VocoderProcessor::processBlock(juce::AudioBuffer<float>& buf, juce::MidiBuffer& midi) {
     juce::ScopedNoDenormals noDenormals;
+
+    // Process MIDI messages through MIDI Learn Manager
+    for (const auto metadata : midi) {
+        auto message = metadata.getMessage();
+        midiLearnManager_.processMidiMessage(message);
+    }
+
     updateEngineParameters();
     engine_.processBlock(buf, midi);
 }
@@ -48,15 +56,24 @@ void VocoderProcessor::updateEngineParameters() {
 juce::AudioProcessorEditor* VocoderProcessor::createEditor() { return new VocoderEditor(*this); }
 
 void VocoderProcessor::getStateInformation(juce::MemoryBlock& d) {
-    auto s = apvts_.copyState(); 
-    std::unique_ptr<juce::XmlElement> x(s.createXml()); 
+    auto s = apvts_.copyState();
+    std::unique_ptr<juce::XmlElement> x(s.createXml());
+
+    // Add MIDI mappings to state
+    x->addChildElement(midiLearnManager_.saveToXml().release());
+
     copyXmlToBinary(*x, d);
 }
 
 void VocoderProcessor::setStateInformation(const void* d, int sz) {
     std::unique_ptr<juce::XmlElement> x(getXmlFromBinary(d, sz));
-    if (x && x->hasTagName(apvts_.state.getType())) 
+    if (x && x->hasTagName(apvts_.state.getType())) {
         apvts_.replaceState(juce::ValueTree::fromXml(*x));
+
+        // Load MIDI mappings from state
+        if (auto* midiMappingsXml = x->getChildByName("MIDILearnMappings"))
+            midiLearnManager_.loadFromXml(*midiMappingsXml);
+    }
 }
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter() { return new VocoderProcessor(); }
