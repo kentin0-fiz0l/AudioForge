@@ -1,0 +1,62 @@
+#include "PluginProcessor.h"
+#include "PluginEditor.h"
+
+static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout() {
+    std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("size", "Size", 0.0f, 1.0f, 0.5f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("damping", "Damping", 0.0f, 1.0f, 0.5f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("width", "Width", 0.0f, 1.0f, 1.0f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("predelay", "PreDelay", juce::NormalisableRange<float>(0.0f, 100.0f, 1.0f), 0.0f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("mix", "Mix", 0.0f, 1.0f, 0.3f));
+    return {params.begin(), params.end()};
+}
+
+ReverbProcessor::ReverbProcessor()
+    : AudioProcessor(BusesProperties().withInput("Input", juce::AudioChannelSet::stereo(), true)
+                                      .withOutput("Output", juce::AudioChannelSet::stereo(), true)),
+      apvts_(*this, nullptr, "PARAMETERS", createParameterLayout()) {}
+
+ReverbProcessor::~ReverbProcessor() {}
+
+void ReverbProcessor::prepareToPlay(double sr, int sb) {
+    juce::dsp::ProcessSpec spec{sr, static_cast<juce::uint32>(sb), 2};
+    reverb_.prepare(spec);
+}
+
+void ReverbProcessor::processBlock(juce::AudioBuffer<float>& buf, juce::MidiBuffer&) {
+    juce::ScopedNoDenormals noDenormals;
+    updateReverbParameters();
+    juce::dsp::AudioBlock<float> block(buf);
+    juce::dsp::ProcessContextReplacing<float> context(block);
+    reverb_.process(context);
+}
+
+void ReverbProcessor::updateReverbParameters() {
+    juce::dsp::Reverb::Parameters params;
+    params.roomSize = apvts_.getRawParameterValue("size")->load();
+    params.damping = apvts_.getRawParameterValue("damping")->load();
+    params.width = apvts_.getRawParameterValue("width")->load();
+    params.wetLevel = apvts_.getRawParameterValue("mix")->load();
+    params.dryLevel = 1.0f - params.wetLevel;
+    reverb_.setParameters(params);
+}
+
+juce::AudioProcessorEditor* ReverbProcessor::createEditor() {
+    return new ReverbEditor(*this);
+}
+
+void ReverbProcessor::getStateInformation(juce::MemoryBlock& d) {
+    auto s = apvts_.copyState();
+    std::unique_ptr<juce::XmlElement> x(s.createXml());
+    copyXmlToBinary(*x, d);
+}
+
+void ReverbProcessor::setStateInformation(const void* d, int sz) {
+    std::unique_ptr<juce::XmlElement> x(getXmlFromBinary(d, sz));
+    if (x && x->hasTagName(apvts_.state.getType()))
+        apvts_.replaceState(juce::ValueTree::fromXml(*x));
+}
+
+juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter() {
+    return new ReverbProcessor();
+}
