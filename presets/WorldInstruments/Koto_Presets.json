@@ -1,0 +1,31 @@
+{
+  "plugin": "Koto",
+  "version": "1.0.0",
+  "presets": [
+    {
+      "name": "In-sen Scale",
+      "description": "Traditional Japanese in-sen tuning",
+      "parameters": {"pluckPosition": 0.15, "bodyResonance": 0.7, "tremolo": 0.0, "scale": 0, "damping": 0.5, "brightness": 0.6}
+    },
+    {
+      "name": "Hirajoshi Bright",
+      "description": "Bright hirajoshi scale with tremolo",
+      "parameters": {"pluckPosition": 0.12, "bodyResonance": 0.6, "tremolo": 0.4, "scale": 1, "damping": 0.4, "brightness": 0.75}
+    },
+    {
+      "name": "Iwato Dark",
+      "description": "Dark, mysterious iwato scale",
+      "parameters": {"pluckPosition": 0.2, "bodyResonance": 0.8, "tremolo": 0.2, "scale": 2, "damping": 0.6, "brightness": 0.35}
+    },
+    {
+      "name": "Tremolo Waves",
+      "description": "Heavy tremolo for atmospheric textures",
+      "parameters": {"pluckPosition": 0.18, "bodyResonance": 0.75, "tremolo": 0.8, "scale": 0, "damping": 0.45, "brightness": 0.55}
+    },
+    {
+      "name": "Percussive Attack",
+      "description": "Sharp attack for rhythmic playing",
+      "parameters": {"pluckPosition": 0.08, "bodyResonance": 0.5, "tremolo": 0.0, "scale": 4, "damping": 0.3, "brightness": 0.8}
+    }
+  ]
+}

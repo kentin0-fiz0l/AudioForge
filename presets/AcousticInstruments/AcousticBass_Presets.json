@@ -1,0 +1,11 @@
+{
+  "plugin": "AcousticBass",
+  "version": "1.0.0",
+  "presets": [
+    {"name": "Upright Jazz", "description": "Classic walking bass tone", "parameters": {"type": 0, "style": 0, "attack": 0.015, "decay": 0.4, "brightness": 0.45, "fretNoise": 0.2}},
+    {"name": "Slap Funk", "description": "Aggressive slap technique", "parameters": {"type": 1, "style": 2, "attack": 0.005, "decay": 0.25, "brightness": 0.75, "fretNoise": 0.4}},
+    {"name": "Picked Electric", "description": "Bright picked bass", "parameters": {"type": 1, "style": 1, "attack": 0.008, "decay": 0.35, "brightness": 0.7, "fretNoise": 0.3}},
+    {"name": "Smooth Fingerstyle", "description": "Warm fingered bass", "parameters": {"type": 1, "style": 0, "attack": 0.02, "decay": 0.45, "brightness": 0.5, "fretNoise": 0.15}},
+    {"name": "Upright Sustain", "description": "Long sustaining upright", "parameters": {"type": 0, "style": 0, "attack": 0.025, "decay": 0.6, "brightness": 0.4, "fretNoise": 0.1}}
+  ]
+}

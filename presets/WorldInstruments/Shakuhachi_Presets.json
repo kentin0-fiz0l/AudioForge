@@ -1,0 +1,31 @@
+{
+  "plugin": "Shakuhachi",
+  "version": "1.0.0",
+  "presets": [
+    {
+      "name": "Gentle Breath",
+      "description": "Soft, airy flute tone",
+      "parameters": {"breathPressure": 0.4, "breathNoise": 0.5, "attack": 0.3, "vibrato": 0.2, "meriKari": 0.5, "brightness": 0.5}
+    },
+    {
+      "name": "Powerful Blow",
+      "description": "Strong, focused tone",
+      "parameters": {"breathPressure": 0.8, "breathNoise": 0.3, "attack": 0.15, "vibrato": 0.35, "meriKari": 0.5, "brightness": 0.7}
+    },
+    {
+      "name": "Meri Bend Down",
+      "description": "Lowered pitch embouchure technique",
+      "parameters": {"breathPressure": 0.6, "breathNoise": 0.4, "attack": 0.25, "vibrato": 0.3, "meriKari": 0.2, "brightness": 0.45}
+    },
+    {
+      "name": "Kari Bend Up",
+      "description": "Raised pitch embouchure technique",
+      "parameters": {"breathPressure": 0.65, "breathNoise": 0.35, "attack": 0.2, "vibrato": 0.25, "meriKari": 0.8, "brightness": 0.65}
+    },
+    {
+      "name": "Breathy Meditation",
+      "description": "Maximum breath noise for zen atmosphere",
+      "parameters": {"breathPressure": 0.5, "breathNoise": 0.85, "attack": 0.4, "vibrato": 0.15, "meriKari": 0.5, "brightness": 0.4}
+    }
+  ]
+}

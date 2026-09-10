@@ -1,0 +1,110 @@
+{
+  "plugin": "AnalogKick",
+  "version": "1.0.0",
+  "presets": [
+    {
+      "name": "808 Classic",
+      "description": "Iconic TR-808 kick drum",
+      "parameters": {
+        "pitch": 55.0,
+        "pitchEnvAmount": 2.5,
+        "pitchEnvDecay": 0.05,
+        "decay": 0.4,
+        "click": 0.2,
+        "drive": 1.2,
+        "tone": 0.5
+      }
+    },
+    {
+      "name": "909 Punch",
+      "description": "TR-909 style punchy kick",
+      "parameters": {
+        "pitch": 60.0,
+        "pitchEnvAmount": 2.0,
+        "pitchEnvDecay": 0.04,
+        "decay": 0.25,
+        "click": 0.4,
+        "drive": 1.8,
+        "tone": 0.6
+      }
+    },
+    {
+      "name": "Deep Sub",
+      "description": "Low-frequency sub kick",
+      "parameters": {
+        "pitch": 45.0,
+        "pitchEnvAmount": 1.5,
+        "pitchEnvDecay": 0.08,
+        "decay": 0.6,
+        "click": 0.1,
+        "drive": 1.0,
+        "tone": 0.3
+      }
+    },
+    {
+      "name": "Hard Techno",
+      "description": "Distorted techno kick",
+      "parameters": {
+        "pitch": 65.0,
+        "pitchEnvAmount": 3.0,
+        "pitchEnvDecay": 0.03,
+        "decay": 0.2,
+        "click": 0.5,
+        "drive": 3.5,
+        "tone": 0.7
+      }
+    },
+    {
+      "name": "Boom",
+      "description": "Long, boomy kick",
+      "parameters": {
+        "pitch": 50.0,
+        "pitchEnvAmount": 2.8,
+        "pitchEnvDecay": 0.06,
+        "decay": 0.8,
+        "click": 0.15,
+        "drive": 1.3,
+        "tone": 0.4
+      }
+    },
+    {
+      "name": "Tight & Punchy",
+      "description": "Short, tight kick for fast music",
+      "parameters": {
+        "pitch": 70.0,
+        "pitchEnvAmount": 2.2,
+        "pitchEnvDecay": 0.025,
+        "decay": 0.15,
+        "click": 0.45,
+        "drive": 2.0,
+        "tone": 0.65
+      }
+    },
+    {
+      "name": "Vinyl Kick",
+      "description": "Warm, lo-fi kick",
+      "parameters": {
+        "pitch": 52.0,
+        "pitchEnvAmount": 1.8,
+        "pitchEnvDecay": 0.055,
+        "decay": 0.5,
+        "click": 0.25,
+        "drive": 1.5,
+        "tone": 0.35
+      }
+    },
+    {
+      "name": "Clicky Beater",
+      "description": "Emphasized beater attack",
+      "parameters": {
+        "pitch": 58.0,
+        "pitchEnvAmount": 2.3,
+        "pitchEnvDecay": 0.045,
+        "decay": 0.3,
+        "click": 0.7,
+        "drive": 1.6,
+        "tone": 0.75
+      }
+    }
+  ]
+}

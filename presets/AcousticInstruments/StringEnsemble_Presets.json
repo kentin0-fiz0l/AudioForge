@@ -1,0 +1,11 @@
+{
+  "plugin": "StringEnsemble",
+  "version": "1.0.0",
+  "presets": [
+    {"name": "Lush Strings", "description": "Rich orchestral string section", "parameters": {"attack": 0.3, "decay": 0.5, "sustain": 0.9, "release": 0.8, "brightness": 0.6, "vibrato": 0.4, "ensemble": 0.7}},
+    {"name": "Pizzicato", "description": "Plucked string articulation", "parameters": {"attack": 0.001, "decay": 0.15, "sustain": 0.0, "release": 0.1, "brightness": 0.75, "vibrato": 0.0, "ensemble": 0.6}},
+    {"name": "Slow Swell", "description": "Gradual string crescendo", "parameters": {"attack": 1.5, "decay": 0.6, "sustain": 0.95, "release": 1.2, "brightness": 0.55, "vibrato": 0.5, "ensemble": 0.8}},
+    {"name": "Tremolo Strings", "description": "Fast bowing tremolo effect", "parameters": {"attack": 0.2, "decay": 0.4, "sustain": 0.85, "release": 0.6, "brightness": 0.7, "vibrato": 0.8, "ensemble": 0.75}},
+    {"name": "Chamber Quartet", "description": "Intimate small ensemble", "parameters": {"attack": 0.25, "decay": 0.5, "sustain": 0.8, "release": 0.7, "brightness": 0.65, "vibrato": 0.35, "ensemble": 0.4}}
+  ]
+}

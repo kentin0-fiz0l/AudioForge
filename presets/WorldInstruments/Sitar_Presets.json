@@ -1,0 +1,31 @@
+{
+  "plugin": "Sitar",
+  "version": "1.0.0",
+  "presets": [
+    {
+      "name": "Raga Bhairavi",
+      "description": "Classic Indian raga with sympathetic strings",
+      "parameters": {"mainDecay": 0.7, "sympatheticLevel": 0.8, "jawariAmount": 0.6, "droneLevel": 0.4, "scale": 1, "brightness": 0.55}
+    },
+    {
+      "name": "Bright Yaman",
+      "description": "Bright, shimmering sitar tone",
+      "parameters": {"mainDecay": 0.6, "sympatheticLevel": 0.9, "jawariAmount": 0.7, "droneLevel": 0.3, "scale": 2, "brightness": 0.75}
+    },
+    {
+      "name": "Minimal Chromatic",
+      "description": "Western chromatic scale, minimal sympathetic",
+      "parameters": {"mainDecay": 0.5, "sympatheticLevel": 0.3, "jawariAmount": 0.5, "droneLevel": 0.2, "scale": 0, "brightness": 0.6}
+    },
+    {
+      "name": "Heavy Buzz",
+      "description": "Maximum jawari bridge buzz",
+      "parameters": {"mainDecay": 0.65, "sympatheticLevel": 0.7, "jawariAmount": 0.95, "droneLevel": 0.5, "scale": 1, "brightness": 0.5}
+    },
+    {
+      "name": "Drone Meditation",
+      "description": "Strong tanpura drone background",
+      "parameters": {"mainDecay": 0.8, "sympatheticLevel": 0.6, "jawariAmount": 0.4, "droneLevel": 0.8, "scale": 3, "brightness": 0.45}
+    }
+  ]
+}

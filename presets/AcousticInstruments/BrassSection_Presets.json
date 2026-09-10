@@ -1,0 +1,11 @@
+{
+  "plugin": "BrassSection",
+  "version": "1.0.0",
+  "presets": [
+    {"name": "Big Band Stab", "description": "Punchy big band brass hit", "parameters": {"attack": 0.02, "decay": 0.4, "sustain": 0.6, "release": 0.3, "brightness": 0.75, "ensemble": 0.7}},
+    {"name": "Smooth Jazz", "description": "Warm, mellow brass ensemble", "parameters": {"attack": 0.15, "decay": 0.5, "sustain": 0.8, "release": 0.5, "brightness": 0.45, "ensemble": 0.5}},
+    {"name": "Fanfare", "description": "Bright, celebratory brass", "parameters": {"attack": 0.01, "decay": 0.3, "sustain": 0.9, "release": 0.4, "brightness": 0.9, "ensemble": 0.8}},
+    {"name": "Soft Section", "description": "Gentle brass pad", "parameters": {"attack": 0.4, "decay": 0.6, "sustain": 0.7, "release": 0.7, "brightness": 0.35, "ensemble": 0.4}},
+    {"name": "Film Score", "description": "Cinematic brass ensemble", "parameters": {"attack": 0.25, "decay": 0.5, "sustain": 0.85, "release": 0.6, "brightness": 0.6, "ensemble": 0.75}}
+  ]
+}

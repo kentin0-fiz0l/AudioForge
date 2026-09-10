@@ -1,0 +1,12 @@
+{
+  "plugin": "HiHat",
+  "version": "1.0.0",
+  "presets": [
+    {"name": "808 Closed", "description": "TR-808 closed hi-hat", "parameters": {"tone": 0.5, "decay": 0.06, "metallic": 0.7, "openness": 0.1}},
+    {"name": "808 Open", "description": "TR-808 open hi-hat", "parameters": {"tone": 0.5, "decay": 0.25, "metallic": 0.7, "openness": 0.85}},
+    {"name": "909 Closed", "description": "TR-909 closed hi-hat", "parameters": {"tone": 0.65, "decay": 0.05, "metallic": 0.85, "openness": 0.05}},
+    {"name": "909 Open", "description": "TR-909 open hi-hat", "parameters": {"tone": 0.6, "decay": 0.35, "metallic": 0.8, "openness": 0.9}},
+    {"name": "Tight Sizzle", "description": "Bright, short sizzle", "parameters": {"tone": 0.8, "decay": 0.04, "metallic": 0.95, "openness": 0.0}},
+    {"name": "Washy", "description": "Long, washy open hat", "parameters": {"tone": 0.4, "decay": 0.45, "metallic": 0.6, "openness": 1.0}}
+  ]
+}

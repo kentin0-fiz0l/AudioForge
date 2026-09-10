@@ -1,0 +1,94 @@
+{
+  "plugin": "ElectricPiano",
+  "version": "1.0.0",
+  "presets": [
+    {
+      "name": "Classic Rhodes",
+      "description": "Warm, vintage electric piano tone",
+      "parameters": {
+        "tone": 0.45,
+        "tremolo": 0.3,
+        "decay": 0.6,
+        "brightness": 0.55,
+        "chorus": 0.4
+      }
+    },
+    {
+      "name": "Bell Piano",
+      "description": "Bright, bell-like tone with long decay",
+      "parameters": {
+        "tone": 0.7,
+        "tremolo": 0.15,
+        "decay": 0.85,
+        "brightness": 0.75,
+        "chorus": 0.2
+      }
+    },
+    {
+      "name": "Dark Lounge",
+      "description": "Mellow, dark jazz piano",
+      "parameters": {
+        "tone": 0.25,
+        "tremolo": 0.5,
+        "decay": 0.5,
+        "brightness": 0.3,
+        "chorus": 0.6
+      }
+    },
+    {
+      "name": "Tremolo Heaven",
+      "description": "Heavy tremolo for psychedelic vibes",
+      "parameters": {
+        "tone": 0.5,
+        "tremolo": 0.8,
+        "decay": 0.55,
+        "brightness": 0.6,
+        "chorus": 0.35
+      }
+    },
+    {
+      "name": "Percussive Attack",
+      "description": "Short, punchy tone for rhythmic parts",
+      "parameters": {
+        "tone": 0.6,
+        "tremolo": 0.1,
+        "decay": 0.25,
+        "brightness": 0.7,
+        "chorus": 0.15
+      }
+    },
+    {
+      "name": "Dreamy Pad",
+      "description": "Long sustain with heavy chorus",
+      "parameters": {
+        "tone": 0.4,
+        "tremolo": 0.4,
+        "decay": 0.9,
+        "brightness": 0.45,
+        "chorus": 0.8
+      }
+    },
+    {
+      "name": "Vintage Suitcase",
+      "description": "Classic suitcase EP sound",
+      "parameters": {
+        "tone": 0.55,
+        "tremolo": 0.65,
+        "decay": 0.5,
+        "brightness": 0.65,
+        "chorus": 0.25
+      }
+    },
+    {
+      "name": "Clean & Bright",
+      "description": "Crisp, modern electric piano",
+      "parameters": {
+        "tone": 0.65,
+        "tremolo": 0.0,
+        "decay": 0.7,
+        "brightness": 0.8,
+        "chorus": 0.3
+      }
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "plugin": "Polysynth",
+  "version": "1.0.0",
+  "presets": [
+    {"name": "Supersaw Lead", "description": "Classic trance supersaw", "parameters": {"oscMix": 0.5, "detune": 0.15, "unisonVoices": 6, "unisonDetune": 0.35, "filterCutoff": 0.7, "filterResonance": 0.4, "filterMix": 0.2, "attack": 0.01, "decay": 0.3, "sustain": 0.7, "release": 0.4, "chorusDepth": 0.4, "chorusRate": 0.5}},
+    {"name": "Warm Pad", "description": "Lush ambient pad", "parameters": {"oscMix": 0.6, "detune": 0.25, "unisonVoices": 4, "unisonDetune": 0.25, "filterCutoff": 0.5, "filterResonance": 0.2, "filterMix": 0.3, "attack": 0.6, "decay": 0.5, "sustain": 0.85, "release": 1.0, "chorusDepth": 0.6, "chorusRate": 0.3}},
+    {"name": "Pluck Synth", "description": "Percussive plucked tone", "parameters": {"oscMix": 0.7, "detune": 0.08, "unisonVoices": 2, "unisonDetune": 0.15, "filterCutoff": 0.8, "filterResonance": 0.5, "filterMix": 0.1, "attack": 0.001, "decay": 0.2, "sustain": 0.0, "release": 0.15, "chorusDepth": 0.25, "chorusRate": 0.6}},
+    {"name": "Vintage String", "description": "Analog string machine", "parameters": {"oscMix": 0.4, "detune": 0.2, "unisonVoices": 3, "unisonDetune": 0.3, "filterCutoff": 0.55, "filterResonance": 0.15, "filterMix": 0.5, "attack": 0.4, "decay": 0.4, "sustain": 0.9, "release": 0.8, "chorusDepth": 0.7, "chorusRate": 0.4}},
+    {"name": "Mono Unison", "description": "Single note supersaw", "parameters": {"oscMix": 0.5, "detune": 0.1, "unisonVoices": 6, "unisonDetune": 0.4, "filterCutoff": 0.65, "filterResonance": 0.6, "filterMix": 0.15, "attack": 0.005, "decay": 0.4, "sustain": 0.6, "release": 0.2, "chorusDepth": 0.3, "chorusRate": 0.5}}
+  ]
+}

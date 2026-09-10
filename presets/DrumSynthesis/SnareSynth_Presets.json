@@ -1,0 +1,12 @@
+{
+  "plugin": "SnareSynth",
+  "version": "1.0.0",
+  "presets": [
+    {"name": "808 Snare", "description": "Classic TR-808 snare", "parameters": {"tone": 180.0, "snappy": 0.6, "decay": 0.12, "snareDecay": 0.1, "pitchEnv": 0.7, "snap": 0.4}},
+    {"name": "909 Snare", "description": "TR-909 punchy snare", "parameters": {"tone": 200.0, "snappy": 0.75, "decay": 0.15, "snareDecay": 0.12, "pitchEnv": 0.8, "snap": 0.6}},
+    {"name": "Tight Pop", "description": "Short, tight pop snare", "parameters": {"tone": 220.0, "snappy": 0.8, "decay": 0.08, "snareDecay": 0.08, "pitchEnv": 0.9, "snap": 0.7}},
+    {"name": "Fat Crack", "description": "Big, fat snare hit", "parameters": {"tone": 160.0, "snappy": 0.85, "decay": 0.2, "snareDecay": 0.15, "pitchEnv": 0.6, "snap": 0.8}},
+    {"name": "Lo-Fi Snare", "description": "Gritty, degraded snare", "parameters": {"tone": 150.0, "snappy": 0.5, "decay": 0.18, "snareDecay": 0.14, "pitchEnv": 0.5, "snap": 0.3}},
+    {"name": "Rim Shot", "description": "Emphasis on attack snap", "parameters": {"tone": 240.0, "snappy": 0.3, "decay": 0.06, "snareDecay": 0.05, "pitchEnv": 1.0, "snap": 0.95}}
+  ]
+}
