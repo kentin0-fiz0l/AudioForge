@@ -30,6 +30,7 @@ target_sources(FMSynth PRIVATE
     Source/PluginEditor.cpp
     Source/FMEngine.cpp
     Source/FMVoice.cpp
+    ../../midi/MIDILearnManager.cpp
 )
 
 # Include directories

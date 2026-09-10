@@ -24,7 +24,8 @@ static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout
 
 FMProcessor::FMProcessor()
     : AudioProcessor(BusesProperties().withOutput("Output", juce::AudioChannelSet::stereo(), true)),
-      apvts_(*this, nullptr, "PARAMETERS", createParameterLayout())
+      apvts_(*this, nullptr, "PARAMETERS", createParameterLayout()),
+      midiLearnManager_(apvts_)
 {
     for (int i = 0; i < 6; ++i)
         synth_.addVoice(new FMVoice());
@@ -43,6 +44,10 @@ void FMProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 
 void FMProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
+    // Process MIDI learn
+    for (const auto metadata : midiMessages)
+        midiLearnManager_.processMidiMessage(metadata.getMessage());
+
     buffer.clear();
     updateVoiceParameters();
     synth_.renderNextBlock(buffer, midiMessages, 0, buffer.getNumSamples());
@@ -83,14 +88,18 @@ void FMProcessor::getStateInformation(juce::MemoryBlock& destData)
 {
     auto state = apvts_.copyState();
     std::unique_ptr<juce::XmlElement> xml(state.createXml());
+    xml->addChildElement(midiLearnManager_.saveToXml().release());
     copyXmlToBinary(*xml, destData);
 }
 
 void FMProcessor::setStateInformation(const void* data, int sizeInBytes)
 {
     std::unique_ptr<juce::XmlElement> xml(getXmlFromBinary(data, sizeInBytes));
-    if (xml && xml->hasTagName(apvts_.state.getType()))
+    if (xml && xml->hasTagName(apvts_.state.getType())) {
         apvts_.replaceState(juce::ValueTree::fromXml(*xml));
+        if (auto* midiMappingsXml = xml->getChildByName("MIDILearnMappings"))
+            midiLearnManager_.loadFromXml(*midiMappingsXml);
+    }
 }
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()

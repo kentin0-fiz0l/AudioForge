@@ -2,6 +2,7 @@
 
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "FMVoice.h"
+#include "../../../midi/MIDILearnManager.h"
 
 class FMProcessor : public juce::AudioProcessor
 {
@@ -31,10 +32,12 @@ public:
     void setStateInformation(const void*, int) override;
 
     juce::AudioProcessorValueTreeState& getValueTreeState() { return apvts_; }
+    AudioForge::MIDILearnManager& getMidiLearnManager() { return midiLearnManager_; }
 
 private:
     juce::AudioProcessorValueTreeState apvts_;
     juce::Synthesiser synth_;
+    AudioForge::MIDILearnManager midiLearnManager_;
 
     void updateVoiceParameters();
 
