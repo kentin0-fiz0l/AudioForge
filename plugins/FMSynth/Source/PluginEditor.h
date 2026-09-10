@@ -3,67 +3,29 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "PluginProcessor.h"
 
-/**
- * FM Synth Plugin Editor
- */
-class PluginEditor : public juce::AudioProcessorEditor
+class FMEditor : public juce::AudioProcessorEditor
 {
 public:
-    PluginEditor(PluginProcessor&);
-    ~PluginEditor() override;
+    FMEditor(FMProcessor&);
+    ~FMEditor() override;
 
     void paint(juce::Graphics&) override;
     void resized() override;
 
 private:
-    PluginProcessor& audioProcessor;
+    FMProcessor& processor_;
 
-    // Modulator section
-    juce::Slider modRatioSlider;
-    juce::Label modRatioLabel;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> modRatioAttachment;
+    juce::Label algorithmLabel_, feedbackLabel_;
+    juce::Slider algorithmSlider_, feedbackSlider_;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> algorithmAttachment_, feedbackAttachment_;
 
-    juce::Slider modDepthSlider;
-    juce::Label modDepthLabel;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> modDepthAttachment;
+    juce::Label opLabel_[4];
+    juce::Label levelLabel_[4], ratioLabel_[4], attackLabel_[4], decayLabel_[4], sustainLabel_[4], releaseLabel_[4];
+    juce::Slider levelSlider_[4], ratioSlider_[4], attackSlider_[4], decaySlider_[4], sustainSlider_[4], releaseSlider_[4];
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> levelAttachment_[4], ratioAttachment_[4],
+        attackAttachment_[4], decayAttachment_[4], sustainAttachment_[4], releaseAttachment_[4];
 
-    // Carrier ADSR
-    juce::Slider carrierAttackSlider;
-    juce::Label carrierAttackLabel;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> carrierAttackAttachment;
+    void setupRotarySlider(juce::Slider&);
 
-    juce::Slider carrierDecaySlider;
-    juce::Label carrierDecayLabel;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> carrierDecayAttachment;
-
-    juce::Slider carrierSustainSlider;
-    juce::Label carrierSustainLabel;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> carrierSustainAttachment;
-
-    juce::Slider carrierReleaseSlider;
-    juce::Label carrierReleaseLabel;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> carrierReleaseAttachment;
-
-    // Modulator ADSR
-    juce::Slider modAttackSlider;
-    juce::Label modAttackLabel;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> modAttackAttachment;
-
-    juce::Slider modDecaySlider;
-    juce::Label modDecayLabel;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> modDecayAttachment;
-
-    juce::Slider modSustainSlider;
-    juce::Label modSustainLabel;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> modSustainAttachment;
-
-    juce::Slider modReleaseSlider;
-    juce::Label modReleaseLabel;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> modReleaseAttachment;
-
-    void setupSlider(juce::Slider& slider, juce::Label& label, const juce::String& labelText,
-                    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment>& attachment,
-                    const juce::String& parameterID);
-
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PluginEditor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FMEditor)
 };

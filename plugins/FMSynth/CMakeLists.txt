@@ -28,8 +28,8 @@ juce_add_plugin(FMSynth
 target_sources(FMSynth PRIVATE
     Source/PluginProcessor.cpp
     Source/PluginEditor.cpp
-    Source/FMOperator.cpp
-    Source/Voice.cpp
+    Source/FMEngine.cpp
+    Source/FMVoice.cpp
 )
 
 # Include directories

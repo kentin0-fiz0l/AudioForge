@@ -1,83 +1,42 @@
 #pragma once
 
 #include <juce_audio_processors/juce_audio_processors.h>
-#include <synth/VoiceManager.h>
-#include <presets/PresetManager.h>
-#include <dsp/WaveformGenerators.h>
-#include "FMOperator.h"
+#include "FMVoice.h"
 
-/**
- * FM Synthesis Voice
- * 2-operator FM: Modulator → Carrier → Output
- */
-class Voice
+class FMProcessor : public juce::AudioProcessor
 {
 public:
-    Voice();
-
-    void noteOn(int midiNote, float velocity, double sampleRate);
-    void noteOff();
-    bool isActive() const;
-    int getMidiNote() const { return currentNote; }
-    float getLevel() const;
-    void reset();
-
-    float processSample(double sampleRate, float modulatorRatio, float modulatorDepth);
-
-    void updateEnvelopes(float carrierAttack, float carrierDecay, float carrierSustain, float carrierRelease,
-                        float modAttack, float modDecay, float modSustain, float modRelease);
-
-private:
-    bool active = false;
-    int currentNote = -1;
-    float velocity = 0.0f;
-
-    FMOperator modulator;
-    FMOperator carrier;
-};
-
-/**
- * Plugin Processor
- */
-class PluginProcessor : public juce::AudioProcessor
-{
-public:
-    PluginProcessor();
-    ~PluginProcessor() override;
+    FMProcessor();
+    ~FMProcessor() override;
 
     void prepareToPlay(double sampleRate, int samplesPerBlock) override;
-    void releaseResources() override;
-    bool isBusesLayoutSupported(const BusesLayout& layouts) const override;
+    void releaseResources() override {}
     void processBlock(juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
 
     juce::AudioProcessorEditor* createEditor() override;
-    bool hasEditor() const override;
+    bool hasEditor() const override { return true; }
 
-    const juce::String getName() const override;
-    bool acceptsMidi() const override;
-    bool producesMidi() const override;
-    bool isMidiEffect() const override;
-    double getTailLengthSeconds() const override;
+    const juce::String getName() const override { return "FMSynth"; }
+    bool acceptsMidi() const override { return true; }
+    bool producesMidi() const override { return false; }
+    double getTailLengthSeconds() const override { return 2.0; }
 
-    int getNumPrograms() override;
-    int getCurrentProgram() override;
-    void setCurrentProgram(int index) override;
-    const juce::String getProgramName(int index) override;
-    void changeProgramName(int index, const juce::String& newName) override;
+    int getNumPrograms() override { return 1; }
+    int getCurrentProgram() override { return 0; }
+    void setCurrentProgram(int) override {}
+    const juce::String getProgramName(int) override { return {}; }
+    void changeProgramName(int, const juce::String&) override {}
 
-    void getStateInformation(juce::MemoryBlock& destData) override;
-    void setStateInformation(const void* data, int sizeInBytes) override;
+    void getStateInformation(juce::MemoryBlock&) override;
+    void setStateInformation(const void*, int) override;
 
-    // Parameters
-    juce::AudioProcessorValueTreeState& getAPVTS() { return apvts; }
-    AudioForge::PresetManager& getPresetManager() { return presetManager; }
+    juce::AudioProcessorValueTreeState& getValueTreeState() { return apvts_; }
 
 private:
-    juce::AudioProcessorValueTreeState apvts;
-    AudioForge::VoiceManager<Voice, 8> voiceManager;
-    AudioForge::PresetManager presetManager;
+    juce::AudioProcessorValueTreeState apvts_;
+    juce::Synthesiser synth_;
 
-    static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
+    void updateVoiceParameters();
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PluginProcessor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FMProcessor)
 };
