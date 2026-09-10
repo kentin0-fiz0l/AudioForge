@@ -17,8 +17,8 @@ static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout
 
 SnareProcessor::SnareProcessor()
     : AudioProcessor(BusesProperties().withOutput("Output", juce::AudioChannelSet::stereo(), true)),
-      apvts_(*this, nullptr, "PARAMETERS", createParameterLayout())
-{
+      apvts_(*this, nullptr, "PARAMETERS", createParameterLayout()),
+      midiLearnManager_(apvts_) {
     for (int i = 0; i < 4; ++i)
         synth_.addVoice(new SnareVoice());
     synth_.addSound(new SnareSound());
@@ -36,6 +36,8 @@ void SnareProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 
 void SnareProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
+    for (const auto metadata : midiMessages)
+        midiLearnManager_.processMidiMessage(metadata.getMessage());
     buffer.clear();
     updateVoiceParameters();
     synth_.renderNextBlock(buffer, midiMessages, 0, buffer.getNumSamples());
@@ -73,6 +75,7 @@ void SnareProcessor::getStateInformation(juce::MemoryBlock& destData)
 {
     auto state = apvts_.copyState();
     std::unique_ptr<juce::XmlElement> xml(state.createXml());
+    xml->addChildElement(midiLearnManager_.saveToXml().release());
     copyXmlToBinary(*xml, destData);
 }
 
@@ -81,6 +84,8 @@ void SnareProcessor::setStateInformation(const void* data, int sizeInBytes)
     std::unique_ptr<juce::XmlElement> xml(getXmlFromBinary(data, sizeInBytes));
     if (xml && xml->hasTagName(apvts_.state.getType()))
         apvts_.replaceState(juce::ValueTree::fromXml(*xml));
+        if (auto* midiXml = xml->getChildByName("MIDILearnMappings"))
+            midiLearnManager_.loadFromXml(*midiXml);
 }
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()

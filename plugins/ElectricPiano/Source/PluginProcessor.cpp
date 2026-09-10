@@ -4,8 +4,8 @@
 ElectricPianoProcessor::ElectricPianoProcessor()
     : AudioProcessor(BusesProperties()
                          .withOutput("Output", juce::AudioChannelSet::stereo(), true)),
-      apvts_(*this, nullptr, "Parameters", createParameterLayout())
-{
+      apvts_(*this, nullptr, "Parameters", createParameterLayout()),
+      midiLearnManager_(apvts_) {
     // Add 16 voices for polyphony
     for (int i = 0; i < 16; ++i)
     {
@@ -88,6 +88,8 @@ bool ElectricPianoProcessor::isBusesLayoutSupported(const BusesLayout& layouts) 
 void ElectricPianoProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     juce::ScopedNoDenormals noDenormals;
+    for (const auto metadata : midiMessages)
+        midiLearnManager_.processMidiMessage(metadata.getMessage());
 
     // Clear the buffer
     buffer.clear();
@@ -202,6 +204,7 @@ void ElectricPianoProcessor::getStateInformation(juce::MemoryBlock& destData)
 {
     auto state = apvts_.copyState();
     std::unique_ptr<juce::XmlElement> xml(state.createXml());
+    xml->addChildElement(midiLearnManager_.saveToXml().release());
     copyXmlToBinary(*xml, destData);
 }
 
@@ -212,6 +215,8 @@ void ElectricPianoProcessor::setStateInformation(const void* data, int sizeInByt
     if (xmlState.get() != nullptr)
         if (xmlState->hasTagName(apvts_.state.getType()))
             apvts_.replaceState(juce::ValueTree::fromXml(*xmlState));
+        if (auto* midiXml = xmlState->getChildByName("MIDILearnMappings"))
+            midiLearnManager_.loadFromXml(*midiXml);
 }
 
 // This creates new instances of the plugin

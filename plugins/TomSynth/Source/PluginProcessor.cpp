@@ -10,7 +10,8 @@ static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout
     return {params.begin(), params.end()};
 }
 TomProcessor::TomProcessor() : AudioProcessor(BusesProperties().withOutput("Output", juce::AudioChannelSet::stereo(), true)),
-      apvts_(*this, nullptr, "PARAMETERS", createParameterLayout()) {
+      apvts_(*this, nullptr, "PARAMETERS", createParameterLayout()),
+      midiLearnManager_(apvts_) {
     for (int i = 0; i < 4; ++i) synth_.addVoice(new TomVoice());
     synth_.addSound(new TomSound());
 }
@@ -21,6 +22,8 @@ void TomProcessor::prepareToPlay(double sr, int sb) {
         if (auto* v = dynamic_cast<TomVoice*>(synth_.getVoice(i))) v->prepareToPlay(sr, sb);
 }
 void TomProcessor::processBlock(juce::AudioBuffer<float>& buf, juce::MidiBuffer& midi) {
+    for (const auto metadata : midi)
+        midiLearnManager_.processMidiMessage(metadata.getMessage());
     buf.clear(); updateVoiceParameters(); synth_.renderNextBlock(buf, midi, 0, buf.getNumSamples());
 }
 void TomProcessor::updateVoiceParameters() {
@@ -40,5 +43,7 @@ void TomProcessor::getStateInformation(juce::MemoryBlock& d) {
 void TomProcessor::setStateInformation(const void* d, int sz) {
     std::unique_ptr<juce::XmlElement> x(getXmlFromBinary(d, sz));
     if (x && x->hasTagName(apvts_.state.getType())) apvts_.replaceState(juce::ValueTree::fromXml(*x));
+        if (auto* midiXml = x->getChildByName("MIDILearnMappings"))
+            midiLearnManager_.loadFromXml(*midiXml);
 }
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter() { return new TomProcessor(); }

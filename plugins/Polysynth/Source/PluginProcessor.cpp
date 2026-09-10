@@ -3,8 +3,8 @@
 
 PolysynthProcessor::PolysynthProcessor()
     : AudioProcessor(BusesProperties().withOutput("Output", juce::AudioChannelSet::stereo(), true)),
-      apvts_(*this, nullptr, "Parameters", createParameterLayout())
-{
+      apvts_(*this, nullptr, "Parameters", createParameterLayout()),
+      midiLearnManager_(apvts_) {
     for (int i = 0; i < 6; ++i) // 6-voice polyphony
         synth_.addVoice(new PolysynthVoice());
     synth_.addSound(new PolysynthSound());
@@ -52,6 +52,8 @@ bool PolysynthProcessor::isBusesLayoutSupported(const BusesLayout& layouts) cons
 void PolysynthProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     juce::ScopedNoDenormals noDenormals;
+    for (const auto metadata : midiMessages)
+        midiLearnManager_.processMidiMessage(metadata.getMessage());
     buffer.clear();
     updateVoiceParameters();
     synth_.renderNextBlock(buffer, midiMessages, 0, buffer.getNumSamples());
@@ -97,6 +99,7 @@ void PolysynthProcessor::getStateInformation(juce::MemoryBlock& destData)
 {
     auto state = apvts_.copyState();
     std::unique_ptr<juce::XmlElement> xml(state.createXml());
+    xml->addChildElement(midiLearnManager_.saveToXml().release());
     copyXmlToBinary(*xml, destData);
 }
 
@@ -106,6 +109,8 @@ void PolysynthProcessor::setStateInformation(const void* data, int sizeInBytes)
     if (xmlState.get() != nullptr)
         if (xmlState->hasTagName(apvts_.state.getType()))
             apvts_.replaceState(juce::ValueTree::fromXml(*xmlState));
+        if (auto* midiXml = xmlState->getChildByName("MIDILearnMappings"))
+            midiLearnManager_.loadFromXml(*midiXml);
 }
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()

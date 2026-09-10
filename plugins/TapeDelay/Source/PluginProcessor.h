@@ -1,6 +1,7 @@
 #pragma once
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "DelayEngine.h"
+#include "../../../midi/MIDILearnManager.h"
 class DelayProcessor : public juce::AudioProcessor {
 public:
     DelayProcessor(); ~DelayProcessor() override;
@@ -21,9 +22,13 @@ public:
     void getStateInformation(juce::MemoryBlock&) override;
     void setStateInformation(const void*, int) override;
     juce::AudioProcessorValueTreeState& getValueTreeState() { return apvts_; }
+    AudioForge::MIDILearnManager& getMidiLearnManager() { return midiLearnManager_; }
+
 private:
     juce::AudioProcessorValueTreeState apvts_;
     DelayEngine engine_;
     void updateEngineParameters();
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(DelayProcessor)
+    AudioForge::MIDILearnManager midiLearnManager_;
+
+JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(DelayProcessor)
 };

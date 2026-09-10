@@ -13,6 +13,7 @@ target_sources(PhaserFlanger PRIVATE
     Source/PluginProcessor.cpp
     Source/PluginEditor.cpp
     Source/ModulationEngine.cpp
+    ../../midi/MIDILearnManager.cpp
 )
 target_compile_definitions(PhaserFlanger PUBLIC
     JUCE_WEB_BROWSER=0

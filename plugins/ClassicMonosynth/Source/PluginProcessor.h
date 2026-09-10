@@ -2,6 +2,7 @@
 
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "MonosynthVoice.h"
+#include "../../../midi/MIDILearnManager.h"
 
 class ClassicMonosynthProcessor : public juce::AudioProcessor
 {
@@ -32,6 +33,8 @@ public:
     void setStateInformation(const void*, int) override;
 
     juce::AudioProcessorValueTreeState& getValueTreeState() { return apvts_; }
+
+    AudioForge::MIDILearnManager& getMidiLearnManager() { return midiLearnManager_; }
 
 private:
     juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
@@ -75,5 +78,7 @@ private:
     // Glide
     static constexpr const char* PARAM_GLIDE_TIME = "glideTime";
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ClassicMonosynthProcessor)
+    AudioForge::MIDILearnManager midiLearnManager_;
+
+JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ClassicMonosynthProcessor)
 };

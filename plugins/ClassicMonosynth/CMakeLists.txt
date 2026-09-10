@@ -26,6 +26,7 @@ target_sources(ClassicMonosynth PRIVATE
     Source/PluginEditor.cpp
     Source/MonosynthEngine.cpp
     Source/MonosynthVoice.cpp
+    ../../midi/MIDILearnManager.cpp
 )
 
 target_compile_definitions(ClassicMonosynth PUBLIC

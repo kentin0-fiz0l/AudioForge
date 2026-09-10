@@ -2,6 +2,7 @@
 
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "KotoVoice.h"
+#include "../../../midi/MIDILearnManager.h"
 
 class KotoProcessor : public juce::AudioProcessor
 {
@@ -33,6 +34,8 @@ public:
 
     juce::AudioProcessorValueTreeState& getValueTreeState() { return apvts_; }
 
+    AudioForge::MIDILearnManager& getMidiLearnManager() { return midiLearnManager_; }
+
 private:
     juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
     void updateVoiceParameters();
@@ -49,5 +52,7 @@ private:
     static constexpr const char* PARAM_TREMOLO_RATE = "tremoloRate";
     static constexpr const char* PARAM_TONE = "tone";
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(KotoProcessor)
+    AudioForge::MIDILearnManager midiLearnManager_;
+
+JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(KotoProcessor)
 };

@@ -26,6 +26,7 @@ target_sources(Shakuhachi PRIVATE
     Source/PluginEditor.cpp
     Source/ShakuhachiEngine.cpp
     Source/ShakuhachiVoice.cpp
+    ../../midi/MIDILearnManager.cpp
 )
 
 target_compile_definitions(Shakuhachi PUBLIC

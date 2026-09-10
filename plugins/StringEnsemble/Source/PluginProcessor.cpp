@@ -4,8 +4,8 @@
 StringEnsembleProcessor::StringEnsembleProcessor()
     : AudioProcessor(BusesProperties()
                          .withOutput("Output", juce::AudioChannelSet::stereo(), true)),
-      apvts_(*this, nullptr, "Parameters", createParameterLayout())
-{
+      apvts_(*this, nullptr, "Parameters", createParameterLayout()),
+      midiLearnManager_(apvts_) {
     for (int i = 0; i < 12; ++i)
         synth_.addVoice(new StringVoice());
 
@@ -64,6 +64,8 @@ bool StringEnsembleProcessor::isBusesLayoutSupported(const BusesLayout& layouts)
 void StringEnsembleProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     juce::ScopedNoDenormals noDenormals;
+    for (const auto metadata : midiMessages)
+        midiLearnManager_.processMidiMessage(metadata.getMessage());
     buffer.clear();
 
     updateVoiceParameters();
@@ -127,6 +129,7 @@ void StringEnsembleProcessor::getStateInformation(juce::MemoryBlock& destData)
 {
     auto state = apvts_.copyState();
     std::unique_ptr<juce::XmlElement> xml(state.createXml());
+    xml->addChildElement(midiLearnManager_.saveToXml().release());
     copyXmlToBinary(*xml, destData);
 }
 
@@ -137,6 +140,8 @@ void StringEnsembleProcessor::setStateInformation(const void* data, int sizeInBy
     if (xmlState.get() != nullptr)
         if (xmlState->hasTagName(apvts_.state.getType()))
             apvts_.replaceState(juce::ValueTree::fromXml(*xmlState));
+        if (auto* midiXml = xmlState->getChildByName("MIDILearnMappings"))
+            midiLearnManager_.loadFromXml(*midiXml);
 }
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()

@@ -13,11 +13,14 @@ static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout
 ShimmerProcessor::ShimmerProcessor()
     : AudioProcessor(BusesProperties().withInput("Input", juce::AudioChannelSet::stereo(), true)
                                       .withOutput("Output", juce::AudioChannelSet::stereo(), true)),
-      apvts_(*this, nullptr, "PARAMETERS", createParameterLayout()) {}
+      apvts_(*this, nullptr, "PARAMETERS", createParameterLayout()),
+      midiLearnManager_(apvts_) {}
 ShimmerProcessor::~ShimmerProcessor() {}
 void ShimmerProcessor::prepareToPlay(double sr, int sb) { engine_.prepareToPlay(sr, sb); }
-void ShimmerProcessor::processBlock(juce::AudioBuffer<float>& buf, juce::MidiBuffer&) {
+void ShimmerProcessor::processBlock(juce::AudioBuffer<float>& buf, juce::MidiBuffer& midi) {
     juce::ScopedNoDenormals noDenormals;
+    for (const auto metadata : midi)
+        midiLearnManager_.processMidiMessage(metadata.getMessage());
     updateEngineParameters();
     engine_.processBlock(buf);
 }
@@ -31,10 +34,17 @@ void ShimmerProcessor::updateEngineParameters() {
 }
 juce::AudioProcessorEditor* ShimmerProcessor::createEditor() { return new ShimmerEditor(*this); }
 void ShimmerProcessor::getStateInformation(juce::MemoryBlock& d) {
-    auto s = apvts_.copyState(); std::unique_ptr<juce::XmlElement> x(s.createXml()); copyXmlToBinary(*x, d);
+    auto s = apvts_.copyState();
+    std::unique_ptr<juce::XmlElement> x(s.createXml());
+    x->addChildElement(midiLearnManager_.saveToXml().release());
+    copyXmlToBinary(*x, d);
 }
 void ShimmerProcessor::setStateInformation(const void* d, int sz) {
     std::unique_ptr<juce::XmlElement> x(getXmlFromBinary(d, sz));
-    if (x && x->hasTagName(apvts_.state.getType())) apvts_.replaceState(juce::ValueTree::fromXml(*x));
+    if (x && x->hasTagName(apvts_.state.getType())) {
+        apvts_.replaceState(juce::ValueTree::fromXml(*x));
+        if (auto* midiXml = x->getChildByName("MIDILearnMappings"))
+            midiLearnManager_.loadFromXml(*midiXml);
+    }
 }
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter() { return new ShimmerProcessor(); }

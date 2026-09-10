@@ -26,6 +26,7 @@ target_sources(Sitar PRIVATE
     Source/PluginEditor.cpp
     Source/SitarEngine.cpp
     Source/SitarVoice.cpp
+    ../../midi/MIDILearnManager.cpp
 )
 
 target_compile_definitions(Sitar PUBLIC

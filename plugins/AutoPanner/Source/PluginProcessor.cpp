@@ -14,14 +14,17 @@ static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout
 AutoPannerProcessor::AutoPannerProcessor()
     : AudioProcessor(BusesProperties().withInput("Input", juce::AudioChannelSet::stereo(), true)
                                       .withOutput("Output", juce::AudioChannelSet::stereo(), true)),
-      apvts_(*this, nullptr, "PARAMETERS", createParameterLayout()) {}
+      apvts_(*this, nullptr, "PARAMETERS", createParameterLayout()),
+      midiLearnManager_(apvts_) {}
 
 AutoPannerProcessor::~AutoPannerProcessor() {}
 
 void AutoPannerProcessor::prepareToPlay(double sr, int sb) { engine_.prepareToPlay(sr, sb); }
 
-void AutoPannerProcessor::processBlock(juce::AudioBuffer<float>& buf, juce::MidiBuffer&) {
+void AutoPannerProcessor::processBlock(juce::AudioBuffer<float>& buf, juce::MidiBuffer& midi) {
     juce::ScopedNoDenormals noDenormals;
+    for (const auto metadata : midi)
+        midiLearnManager_.processMidiMessage(metadata.getMessage());
     updateEngineParameters();
     engine_.processBlock(buf);
 }
@@ -43,6 +46,8 @@ void AutoPannerProcessor::getStateInformation(juce::MemoryBlock& d) {
 void AutoPannerProcessor::setStateInformation(const void* d, int sz) {
     std::unique_ptr<juce::XmlElement> x(getXmlFromBinary(d, sz));
     if (x && x->hasTagName(apvts_.state.getType())) apvts_.replaceState(juce::ValueTree::fromXml(*x));
+        if (auto* midiXml = x->getChildByName("MIDILearnMappings"))
+            midiLearnManager_.loadFromXml(*midiXml);
 }
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter() { return new AutoPannerProcessor(); }

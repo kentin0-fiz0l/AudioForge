@@ -26,6 +26,7 @@ target_sources(Polysynth PRIVATE
     Source/PluginEditor.cpp
     Source/PolysynthEngine.cpp
     Source/PolysynthVoice.cpp
+    ../../midi/MIDILearnManager.cpp
 )
 
 target_compile_definitions(Polysynth PUBLIC

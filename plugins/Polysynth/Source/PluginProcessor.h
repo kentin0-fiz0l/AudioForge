@@ -2,6 +2,7 @@
 
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "PolysynthVoice.h"
+#include "../../../midi/MIDILearnManager.h"
 
 class PolysynthProcessor : public juce::AudioProcessor
 {
@@ -33,6 +34,8 @@ public:
 
     juce::AudioProcessorValueTreeState& getValueTreeState() { return apvts_; }
 
+    AudioForge::MIDILearnManager& getMidiLearnManager() { return midiLearnManager_; }
+
 private:
     juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
     void updateVoiceParameters();
@@ -54,5 +57,7 @@ private:
     static constexpr const char* PARAM_CHORUS_DEPTH = "chorusDepth";
     static constexpr const char* PARAM_CHORUS_RATE = "chorusRate";
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PolysynthProcessor)
+    AudioForge::MIDILearnManager midiLearnManager_;
+
+JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PolysynthProcessor)
 };

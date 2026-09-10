@@ -30,7 +30,8 @@ target_sources(StringEnsemble PRIVATE
     Source/PluginProcessor.cpp
     Source/PluginEditor.cpp
     Source/StringVoice.cpp
-    Source/StringEngine.cpp)
+    Source/StringEngine.cpp
+    ../../midi/MIDILearnManager.cpp)
 
 # Compiler definitions
 target_compile_definitions(StringEnsemble PUBLIC

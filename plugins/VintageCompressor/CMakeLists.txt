@@ -21,6 +21,7 @@ target_sources(VintageCompressor PRIVATE
     Source/PluginProcessor.cpp
     Source/PluginEditor.cpp
     Source/CompressorEngine.cpp
+    ../../midi/MIDILearnManager.cpp
 )
 
 target_include_directories(VintageCompressor PRIVATE Source)

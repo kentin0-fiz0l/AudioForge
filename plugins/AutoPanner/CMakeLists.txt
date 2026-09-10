@@ -13,6 +13,7 @@ target_sources(AutoPanner PRIVATE
     Source/PluginProcessor.cpp
     Source/PluginEditor.cpp
     Source/PannerEngine.cpp
+    ../../midi/MIDILearnManager.cpp
 )
 target_compile_definitions(AutoPanner PUBLIC
     JUCE_WEB_BROWSER=0

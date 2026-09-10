@@ -3,6 +3,7 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "ElectricPianoVoice.h"
 #include "ElectricPianoEngine.h"
+#include "../../../midi/MIDILearnManager.h"
 
 /**
  * ElectricPianoProcessor - Main audio plugin processor
@@ -44,6 +45,8 @@ public:
     // Parameter access
     juce::AudioProcessorValueTreeState& getValueTreeState() { return apvts_; }
 
+    AudioForge::MIDILearnManager& getMidiLearnManager() { return midiLearnManager_; }
+
 private:
     // Create parameter layout
     juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
@@ -68,5 +71,7 @@ private:
     static constexpr const char* PARAM_CHORUS_DEPTH = "chorusDepth";
     static constexpr const char* PARAM_REVERB_MIX = "reverbMix";
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ElectricPianoProcessor)
+    AudioForge::MIDILearnManager midiLearnManager_;
+
+JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ElectricPianoProcessor)
 };

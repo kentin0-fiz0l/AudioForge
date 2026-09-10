@@ -2,6 +2,7 @@
 
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "SnareVoice.h"
+#include "../../../midi/MIDILearnManager.h"
 
 class SnareProcessor : public juce::AudioProcessor
 {
@@ -32,11 +33,15 @@ public:
 
     juce::AudioProcessorValueTreeState& getValueTreeState() { return apvts_; }
 
+    AudioForge::MIDILearnManager& getMidiLearnManager() { return midiLearnManager_; }
+
 private:
     juce::AudioProcessorValueTreeState apvts_;
     juce::Synthesiser synth_;
 
     void updateVoiceParameters();
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SnareProcessor)
+    AudioForge::MIDILearnManager midiLearnManager_;
+
+JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SnareProcessor)
 };

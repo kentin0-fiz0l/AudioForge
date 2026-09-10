@@ -22,6 +22,7 @@ target_sources(AnalogKick PRIVATE
     Source/PluginEditor.cpp
     Source/KickEngine.cpp
     Source/KickVoice.cpp
+    ../../midi/MIDILearnManager.cpp
 )
 
 target_include_directories(AnalogKick PRIVATE Source)

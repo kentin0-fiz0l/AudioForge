@@ -3,6 +3,7 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "StringVoice.h"
 #include "StringEngine.h"
+#include "../../../midi/MIDILearnManager.h"
 
 class StringEnsembleProcessor : public juce::AudioProcessor
 {
@@ -34,6 +35,8 @@ public:
 
     juce::AudioProcessorValueTreeState& getValueTreeState() { return apvts_; }
 
+    AudioForge::MIDILearnManager& getMidiLearnManager() { return midiLearnManager_; }
+
 private:
     juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
     void updateVoiceParameters();
@@ -49,5 +52,7 @@ private:
     static constexpr const char* PARAM_VIBRATO_RATE = "vibratoRate";
     static constexpr const char* PARAM_ENSEMBLE_SIZE = "ensembleSize";
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(StringEnsembleProcessor)
+    AudioForge::MIDILearnManager midiLearnManager_;
+
+JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(StringEnsembleProcessor)
 };

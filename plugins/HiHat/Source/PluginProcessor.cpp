@@ -9,7 +9,8 @@ static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout
     return {params.begin(), params.end()};
 }
 HiHatProcessor::HiHatProcessor() : AudioProcessor(BusesProperties().withOutput("Output", juce::AudioChannelSet::stereo(), true)),
-      apvts_(*this, nullptr, "PARAMETERS", createParameterLayout()) {
+      apvts_(*this, nullptr, "PARAMETERS", createParameterLayout()),
+      midiLearnManager_(apvts_) {
     for (int i = 0; i < 4; ++i) synth_.addVoice(new HiHatVoice());
     synth_.addSound(new HiHatSound());
 }
@@ -20,6 +21,8 @@ void HiHatProcessor::prepareToPlay(double sr, int sb) {
         if (auto* v = dynamic_cast<HiHatVoice*>(synth_.getVoice(i))) v->prepareToPlay(sr, sb);
 }
 void HiHatProcessor::processBlock(juce::AudioBuffer<float>& buf, juce::MidiBuffer& midi) {
+    for (const auto metadata : midi)
+        midiLearnManager_.processMidiMessage(metadata.getMessage());
     buf.clear(); updateVoiceParameters(); synth_.renderNextBlock(buf, midi, 0, buf.getNumSamples());
 }
 void HiHatProcessor::updateVoiceParameters() {
@@ -39,5 +42,7 @@ void HiHatProcessor::getStateInformation(juce::MemoryBlock& d) {
 void HiHatProcessor::setStateInformation(const void* d, int sz) {
     std::unique_ptr<juce::XmlElement> x(getXmlFromBinary(d, sz));
     if (x && x->hasTagName(apvts_.state.getType())) apvts_.replaceState(juce::ValueTree::fromXml(*x));
+        if (auto* midiXml = x->getChildByName("MIDILearnMappings"))
+            midiLearnManager_.loadFromXml(*midiXml);
 }
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter() { return new HiHatProcessor(); }

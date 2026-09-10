@@ -30,7 +30,8 @@ target_sources(ElectricPiano PRIVATE
     Source/PluginProcessor.cpp
     Source/PluginEditor.cpp
     Source/ElectricPianoVoice.cpp
-    Source/ElectricPianoEngine.cpp)
+    Source/ElectricPianoEngine.cpp
+    ../../midi/MIDILearnManager.cpp)
 
 # Compiler definitions
 target_compile_definitions(ElectricPiano PUBLIC

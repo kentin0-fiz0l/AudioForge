@@ -2,6 +2,7 @@
 
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "ShakuhachiVoice.h"
+#include "../../../midi/MIDILearnManager.h"
 
 class ShakuhachiProcessor : public juce::AudioProcessor
 {
@@ -33,6 +34,8 @@ public:
 
     juce::AudioProcessorValueTreeState& getValueTreeState() { return apvts_; }
 
+    AudioForge::MIDILearnManager& getMidiLearnManager() { return midiLearnManager_; }
+
 private:
     juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
     void updateVoiceParameters();
@@ -49,5 +52,7 @@ private:
     static constexpr const char* PARAM_VIBRATO_DEPTH = "vibratoDepth";
     static constexpr const char* PARAM_BRIGHTNESS = "brightness";
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ShakuhachiProcessor)
+    AudioForge::MIDILearnManager midiLearnManager_;
+
+JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ShakuhachiProcessor)
 };

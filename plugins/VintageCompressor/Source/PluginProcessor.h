@@ -1,6 +1,7 @@
 #pragma once
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "CompressorEngine.h"
+#include "../../../midi/MIDILearnManager.h"
 
 class CompressorProcessor : public juce::AudioProcessor {
 public:
@@ -24,9 +25,13 @@ public:
     void setStateInformation(const void*, int) override;
     juce::AudioProcessorValueTreeState& getValueTreeState() { return apvts_; }
     float getGainReduction() const { return engine_.getGainReduction(); }
+    AudioForge::MIDILearnManager& getMidiLearnManager() { return midiLearnManager_; }
+
 private:
     juce::AudioProcessorValueTreeState apvts_;
     CompressorEngine engine_;
     void updateEngineParameters();
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(CompressorProcessor)
+    AudioForge::MIDILearnManager midiLearnManager_;
+
+JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(CompressorProcessor)
 };

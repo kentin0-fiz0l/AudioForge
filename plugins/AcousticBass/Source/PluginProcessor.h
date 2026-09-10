@@ -2,6 +2,7 @@
 
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "BassVoice.h"
+#include "../../../midi/MIDILearnManager.h"
 
 class AcousticBassProcessor : public juce::AudioProcessor
 {
@@ -33,6 +34,8 @@ public:
 
     juce::AudioProcessorValueTreeState& getValueTreeState() { return apvts_; }
 
+    AudioForge::MIDILearnManager& getMidiLearnManager() { return midiLearnManager_; }
+
 private:
     juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
     void updateVoiceParameters();
@@ -47,5 +50,7 @@ private:
     static constexpr const char* PARAM_DECAY = "decay";
     static constexpr const char* PARAM_FRET_NOISE = "fretNoise";
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AcousticBassProcessor)
+    AudioForge::MIDILearnManager midiLearnManager_;
+
+JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AcousticBassProcessor)
 };

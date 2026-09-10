@@ -1,6 +1,7 @@
 #pragma once
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "ShimmerEngine.h"
+#include "../../../midi/MIDILearnManager.h"
 class ShimmerProcessor : public juce::AudioProcessor {
 public:
     ShimmerProcessor(); ~ShimmerProcessor() override;
@@ -21,9 +22,13 @@ public:
     void getStateInformation(juce::MemoryBlock&) override;
     void setStateInformation(const void*, int) override;
     juce::AudioProcessorValueTreeState& getValueTreeState() { return apvts_; }
+    AudioForge::MIDILearnManager& getMidiLearnManager() { return midiLearnManager_; }
+
 private:
     juce::AudioProcessorValueTreeState apvts_;
     ShimmerEngine engine_;
     void updateEngineParameters();
+    AudioForge::MIDILearnManager midiLearnManager_;
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ShimmerProcessor)
 };

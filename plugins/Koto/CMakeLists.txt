@@ -26,6 +26,7 @@ target_sources(Koto PRIVATE
     Source/PluginEditor.cpp
     Source/KotoEngine.cpp
     Source/KotoVoice.cpp
+    ../../midi/MIDILearnManager.cpp
 )
 
 target_compile_definitions(Koto PUBLIC

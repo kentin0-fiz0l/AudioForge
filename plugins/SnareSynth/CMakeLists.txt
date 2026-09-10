@@ -22,6 +22,7 @@ target_sources(SnareSynth PRIVATE
     Source/PluginEditor.cpp
     Source/SnareEngine.cpp
     Source/SnareVoice.cpp
+    ../../midi/MIDILearnManager.cpp
 )
 
 target_include_directories(SnareSynth PRIVATE Source)

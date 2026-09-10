@@ -25,7 +25,8 @@ target_sources(AcousticBass PRIVATE
     Source/PluginProcessor.cpp
     Source/PluginEditor.cpp
     Source/BassVoice.cpp
-    Source/BassEngine.cpp)
+    Source/BassEngine.cpp
+    ../../midi/MIDILearnManager.cpp)
 
 target_compile_definitions(AcousticBass PUBLIC
     JUCE_VST3_CAN_REPLACE_VST2=0

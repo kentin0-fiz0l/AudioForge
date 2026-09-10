@@ -1,6 +1,7 @@
 #pragma once
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "TremoloVibratoEngine.h"
+#include "../../../midi/MIDILearnManager.h"
 
 class TremoloVibratoProcessor : public juce::AudioProcessor {
 public:
@@ -23,9 +24,13 @@ public:
     void getStateInformation(juce::MemoryBlock&) override;
     void setStateInformation(const void*, int) override;
     juce::AudioProcessorValueTreeState& getValueTreeState() { return apvts_; }
+    AudioForge::MIDILearnManager& getMidiLearnManager() { return midiLearnManager_; }
+
 private:
     juce::AudioProcessorValueTreeState apvts_;
     TremoloVibratoEngine engine_;
     void updateEngineParameters();
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TremoloVibratoProcessor)
+    AudioForge::MIDILearnManager midiLearnManager_;
+
+JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TremoloVibratoProcessor)
 };

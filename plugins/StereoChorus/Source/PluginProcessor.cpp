@@ -14,7 +14,8 @@ static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout
 ChorusProcessor::ChorusProcessor()
     : AudioProcessor(BusesProperties().withInput("Input", juce::AudioChannelSet::stereo(), true)
                                       .withOutput("Output", juce::AudioChannelSet::stereo(), true)),
-      apvts_(*this, nullptr, "PARAMETERS", createParameterLayout()) {}
+      apvts_(*this, nullptr, "PARAMETERS", createParameterLayout()),
+      midiLearnManager_(apvts_) {}
 
 ChorusProcessor::~ChorusProcessor() {}
 
@@ -23,8 +24,10 @@ void ChorusProcessor::prepareToPlay(double sr, int sb) {
     chorus_.prepare(spec);
 }
 
-void ChorusProcessor::processBlock(juce::AudioBuffer<float>& buf, juce::MidiBuffer&) {
+void ChorusProcessor::processBlock(juce::AudioBuffer<float>& buf, juce::MidiBuffer& midi) {
     juce::ScopedNoDenormals noDenormals;
+    for (const auto metadata : midi)
+        midiLearnManager_.processMidiMessage(metadata.getMessage());
     updateChorusParameters();
     juce::dsp::AudioBlock<float> block(buf);
     juce::dsp::ProcessContextReplacing<float> context(block);
@@ -50,6 +53,8 @@ void ChorusProcessor::getStateInformation(juce::MemoryBlock& d) {
 void ChorusProcessor::setStateInformation(const void* d, int sz) {
     std::unique_ptr<juce::XmlElement> x(getXmlFromBinary(d, sz));
     if (x && x->hasTagName(apvts_.state.getType())) apvts_.replaceState(juce::ValueTree::fromXml(*x));
+        if (auto* midiXml = x->getChildByName("MIDILearnMappings"))
+            midiLearnManager_.loadFromXml(*midiXml);
 }
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter() {
