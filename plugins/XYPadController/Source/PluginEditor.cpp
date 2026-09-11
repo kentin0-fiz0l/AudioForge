@@ -2,6 +2,7 @@
 
 XYPadControllerEditor::XYPadControllerEditor(XYPadControllerProcessor& p)
     : AudioProcessorEditor(&p), processor_(p), xyPad_(p.getAPVTS()) {
+      presetBrowser_(processor_.getPresetManager()),
 
     setSize(500, 550);
 

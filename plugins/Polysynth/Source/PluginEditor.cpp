@@ -1,7 +1,8 @@
 #include "PluginEditor.h"
 
 PolysynthEditor::PolysynthEditor(PolysynthProcessor& p)
-    : AudioProcessorEditor(&p), processor_(p)
+    : AudioProcessorEditor(&p), processor_(p),
+      presetBrowser_(processor_.getPresetManager())
 {
     setSize(900, 550);
 

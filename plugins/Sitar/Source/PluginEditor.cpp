@@ -1,7 +1,8 @@
 #include "PluginEditor.h"
 
 SitarEditor::SitarEditor(SitarProcessor& p)
-    : AudioProcessorEditor(&p), processor_(p)
+    : AudioProcessorEditor(&p), processor_(p),
+      presetBrowser_(processor_.getPresetManager())
 {
     setSize(800, 550);
 

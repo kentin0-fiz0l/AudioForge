@@ -1,7 +1,8 @@
 #include "PluginEditor.h"
 
 SnareEditor::SnareEditor(SnareProcessor& p)
-    : AudioProcessorEditor(&p), processor_(p)
+    : AudioProcessorEditor(&p), processor_(p),
+      presetBrowser_(processor_.getPresetManager())
 {
     setSize(750, 400);
 

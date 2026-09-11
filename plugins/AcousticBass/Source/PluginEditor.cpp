@@ -1,7 +1,8 @@
 #include "PluginEditor.h"
 
 AcousticBassEditor::AcousticBassEditor(AcousticBassProcessor& p)
-    : AudioProcessorEditor(&p), processor_(p)
+    : AudioProcessorEditor(&p), processor_(p),
+      presetBrowser_(processor_.getPresetManager())
 {
     setSize(700, 450);
 

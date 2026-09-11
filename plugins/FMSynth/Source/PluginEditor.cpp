@@ -1,7 +1,8 @@
 #include "PluginEditor.h"
 
 FMEditor::FMEditor(FMProcessor& p)
-    : AudioProcessorEditor(&p), processor_(p)
+    : AudioProcessorEditor(&p), processor_(p),
+      presetBrowser_(processor_.getPresetManager())
 {
     setSize(1100, 550);
 

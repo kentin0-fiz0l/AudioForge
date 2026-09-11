@@ -3,7 +3,8 @@
 #include "../../shared/ui/AudioForgeTheme.h"
 
 PluginEditor::PluginEditor(PluginProcessor& p)
-    : AudioProcessorEditor(&p), audioProcessor(p)
+    : AudioProcessorEditor(&p), audioProcessor(p),
+      presetBrowser_(audioProcessor.getPresetManager())
 {
     // Setup all sliders - Kick section
     setupSlider(kickPitchSlider, kickPitchLabel, "Pitch", kickPitchAttachment, "kickPitch");

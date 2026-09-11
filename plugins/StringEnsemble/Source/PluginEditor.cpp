@@ -1,7 +1,8 @@
 #include "PluginEditor.h"
 
 StringEnsembleEditor::StringEnsembleEditor(StringEnsembleProcessor& p)
-    : AudioProcessorEditor(&p), processor_(p)
+    : AudioProcessorEditor(&p), processor_(p),
+      presetBrowser_(processor_.getPresetManager())
 {
     setSize(700, 480);
 

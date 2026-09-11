@@ -15,7 +15,8 @@
 //==============================================================================
 MultibandCompressorAudioProcessorEditor::MultibandCompressorAudioProcessorEditor(
     MultibandCompressorAudioProcessor& p)
-    : AudioProcessorEditor(&p), audioProcessor(p)
+    : AudioProcessorEditor(&p), audioProcessor(p),
+      presetBrowser_(audioProcessor.getPresetManager())
 {
     setSize(900, 600);
 

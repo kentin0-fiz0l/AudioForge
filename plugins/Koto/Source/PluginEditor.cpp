@@ -1,7 +1,8 @@
 #include "PluginEditor.h"
 
 KotoEditor::KotoEditor(KotoProcessor& p)
-    : AudioProcessorEditor(&p), processor_(p)
+    : AudioProcessorEditor(&p), processor_(p),
+      presetBrowser_(processor_.getPresetManager())
 {
     setSize(750, 500);
 

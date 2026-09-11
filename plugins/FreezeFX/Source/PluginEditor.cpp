@@ -3,7 +3,9 @@
 #include <cmath>
 
 FreezeFXEditor::FreezeFXEditor(FreezeFXProcessor& p)
-    : AudioProcessorEditor(&p), audioProcessor(p)
+    : AudioProcessorEditor(&p),
+      audioProcessor(p),
+      presetBrowser_(audioProcessor.getPresetManager())
 {
     // Set window size
     setSize(500, 600);

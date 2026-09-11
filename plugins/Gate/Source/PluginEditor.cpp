@@ -14,7 +14,9 @@
 
 //==============================================================================
 GateAudioProcessorEditor::GateAudioProcessorEditor(GateAudioProcessor& p)
-    : AudioProcessorEditor(&p), audioProcessor(p)
+    : AudioProcessorEditor(&p),
+      audioProcessor(p),
+      presetBrowser_(audioProcessor.getPresetManager())
 {
     setSize(700, 500);
 

@@ -2,7 +2,9 @@
 #include "../../shared/ui/AudioForgeTheme.h"
 
 SimpleGainEditor::SimpleGainEditor(SimpleGainProcessor& p)
-    : AudioProcessorEditor(&p), processor(p)
+    : AudioProcessorEditor(&p),
+      processor(p),
+      presetBrowser_(processor.getPresetManager())
 {
     // Configure gain slider
     gainSlider.setSliderStyle(juce::Slider::RotaryVerticalDrag);

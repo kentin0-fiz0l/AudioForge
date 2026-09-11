@@ -1,7 +1,8 @@
 #include "PluginEditor.h"
 
 ShakuhachiEditor::ShakuhachiEditor(ShakuhachiProcessor& p)
-    : AudioProcessorEditor(&p), processor_(p)
+    : AudioProcessorEditor(&p), processor_(p),
+      presetBrowser_(processor_.getPresetManager())
 {
     setSize(800, 500);
 

@@ -2,7 +2,9 @@
 #include "../../shared/ui/AudioForgeTheme.h"
 
 SamplerPluginEditor::SamplerPluginEditor(SamplerPluginProcessor& p)
-    : AudioProcessorEditor(&p), processor(p)
+    : AudioProcessorEditor(&p),
+      processor(p),
+      presetBrowser_(processor.getPresetManager())
 {
 
     // Create components
