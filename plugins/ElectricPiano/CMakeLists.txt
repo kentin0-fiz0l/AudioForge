@@ -31,9 +31,9 @@ target_sources(ElectricPiano PRIVATE
     Source/PluginEditor.cpp
     Source/ElectricPianoVoice.cpp
     Source/ElectricPianoEngine.cpp
-    ../../midi/MIDILearnManager.cpp)
+    ../../midi/MIDILearnManager.cpp
     ../../shared/preset/PresetManager.cpp
-    ../../shared/preset/PresetBrowser.cpp
+    ../../shared/preset/PresetBrowser.cpp)
 
 # Compiler definitions
 target_compile_definitions(ElectricPiano PUBLIC
