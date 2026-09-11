@@ -21,6 +21,8 @@ target_sources(MacroController PRIVATE
     Source/PluginEditor.cpp
     Source/MacroEngine.cpp
     ../../midi/MIDILearnManager.cpp
+    ../../shared/preset/PresetManager.cpp
+    ../../shared/preset/PresetBrowser.cpp
 )
 
 target_compile_definitions(MacroController PUBLIC

@@ -1,9 +1,14 @@
 #include "PluginEditor.h"
 
 MacroControllerEditor::MacroControllerEditor(MacroControllerProcessor& p)
-    : AudioProcessorEditor(&p), processor_(p) {
+    : AudioProcessorEditor(&p),
+      processor_(p),
+      presetBrowser_(processor_.getPresetManager()) {
 
-    setSize(400, 500);
+    setSize(400, 550);  // Increase height for preset browser
+
+    // Preset browser
+    addAndMakeVisible(presetBrowser_);
 
     // Macro knob
     macroLabel_.setText("Macro", juce::dontSendNotification);
@@ -74,7 +79,13 @@ void MacroControllerEditor::resized() {
     auto bounds = getLocalBounds().reduced(20);
     bounds.removeFromTop(50); // Title
 
-    bounds.removeFromTop(20);
+    bounds.removeFromTop(10);
+
+    // Preset browser at top
+    auto presetArea = bounds.removeFromTop(40);
+    presetBrowser_.setBounds(presetArea);
+
+    bounds.removeFromTop(10);
 
     // Large macro knob
     auto macroArea = bounds.removeFromTop(150);

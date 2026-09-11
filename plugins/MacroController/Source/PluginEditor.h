@@ -3,6 +3,7 @@
 #include <juce_gui_basics/juce_gui_basics.h>
 #include "PluginProcessor.h"
 #include "../../../midi/MIDILearnSlider.h"
+#include "../../../shared/preset/PresetBrowser.h"
 
 class MacroControllerEditor : public juce::AudioProcessorEditor, private juce::Timer {
 public:
@@ -15,6 +16,9 @@ public:
 
 private:
     MacroControllerProcessor& processor_;
+
+    // Preset browser
+    AudioForge::PresetBrowser presetBrowser_;
 
     // Main macro knob
     AudioForge::MIDILearnSlider macroSlider_;

@@ -2,6 +2,7 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "MacroEngine.h"
 #include "../../../midi/MIDILearnManager.h"
+#include "../../../shared/preset/PresetManager.h"
 
 class MacroControllerProcessor : public juce::AudioProcessor {
 public:
@@ -32,11 +33,13 @@ public:
 
     juce::AudioProcessorValueTreeState& getAPVTS() { return apvts_; }
     AudioForge::MIDILearnManager& getMidiLearnManager() { return midiLearnManager_; }
+    AudioForge::PresetManager& getPresetManager() { return presetManager_; }
     MacroEngine& getMacroEngine() { return engine_; }
 
 private:
     juce::AudioProcessorValueTreeState apvts_;
     AudioForge::MIDILearnManager midiLearnManager_;
+    AudioForge::PresetManager presetManager_;
     MacroEngine engine_;
 
     float lastMacroValue_ = -1.0f;  // Track changes
