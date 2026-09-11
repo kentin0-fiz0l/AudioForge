@@ -21,7 +21,11 @@ VocoderProcessor::VocoderProcessor()
                      .withInput("Input", juce::AudioChannelSet::stereo(), true)
                      .withOutput("Output", juce::AudioChannelSet::stereo(), true)),
       apvts_(*this, nullptr, "PARAMETERS", createParameterLayout()),
-      midiLearnManager_(apvts_) {}
+      presetManager_(apvts_, "Vocoder") {
+
+    // Scan for presets on startup
+    presetManager_.scanPresets();
+}
 
 VocoderProcessor::~VocoderProcessor() {}
 
@@ -61,6 +65,7 @@ void VocoderProcessor::getStateInformation(juce::MemoryBlock& d) {
 
     // Add MIDI mappings to state
     x->addChildElement(midiLearnManager_.saveToXml().release());
+    xml->addChildElement(presetManager_.saveToXml().release());
 
     copyXmlToBinary(*x, d);
 }
@@ -73,6 +78,8 @@ void VocoderProcessor::setStateInformation(const void* d, int sz) {
         // Load MIDI mappings from state
         if (auto* midiMappingsXml = x->getChildByName("MIDILearnMappings"))
             midiLearnManager_.loadFromXml(*midiMappingsXml);
+        if (auto* presetXml = xml->getChildByName("PresetManagerState"))
+            presetManager_.loadFromXml(*presetXml);
     }
 }
 

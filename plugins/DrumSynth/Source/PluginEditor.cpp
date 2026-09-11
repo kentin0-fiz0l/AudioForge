@@ -26,6 +26,9 @@ PluginEditor::PluginEditor(PluginProcessor& p)
     setupSlider(hihatClickSlider, hihatClickLabel, "Click", hihatClickAttachment, "hihatClick");
 
     setSize(900, 450);
+
+    // Preset browser
+    addAndMakeVisible(presetBrowser_);
 }
 
 PluginEditor::~PluginEditor()

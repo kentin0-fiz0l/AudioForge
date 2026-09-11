@@ -25,6 +25,9 @@ public:
 private:
     ElectricPianoProcessor& processor_;
 
+    // Preset browser
+    AudioForge::PresetBrowser presetBrowser_;
+
     // Model selection
     juce::Label modelLabel_;
     juce::ComboBox modelCombo_;

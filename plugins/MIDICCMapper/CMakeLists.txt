@@ -21,6 +21,8 @@ target_sources(MIDICCMapper PRIVATE
     Source/PluginEditor.cpp
     Source/MappingEngine.cpp
     ../../midi/MIDILearnManager.cpp
+    ../../shared/preset/PresetManager.cpp
+    ../../shared/preset/PresetBrowser.cpp
 )
 
 target_compile_definitions(MIDICCMapper PUBLIC

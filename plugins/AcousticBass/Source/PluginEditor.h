@@ -16,6 +16,9 @@ public:
 private:
     AcousticBassProcessor& processor_;
 
+    // Preset browser
+    AudioForge::PresetBrowser presetBrowser_;
+
     juce::Label bassTypeLabel_, playStyleLabel_;
     juce::ComboBox bassTypeCombo_, playStyleCombo_;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> bassTypeAttachment_, playStyleAttachment_;

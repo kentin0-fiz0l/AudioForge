@@ -5,6 +5,9 @@ ClassicMonosynthEditor::ClassicMonosynthEditor(ClassicMonosynthProcessor& p)
 {
     setSize(1000, 600);
 
+    // Preset browser
+    addAndMakeVisible(presetBrowser_);
+
     // Helper lambda for setup
     auto setupControl = [this](juce::Label& label, const char* text, juce::Slider& slider,
                                auto& attachment, const char* paramId, bool rotary = true) {

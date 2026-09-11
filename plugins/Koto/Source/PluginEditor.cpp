@@ -5,6 +5,9 @@ KotoEditor::KotoEditor(KotoProcessor& p)
 {
     setSize(750, 500);
 
+    // Preset browser
+    addAndMakeVisible(presetBrowser_);
+
     // Scale selector
     scaleLabel_.setText("Scale", juce::dontSendNotification);
     scaleLabel_.setJustificationType(juce::Justification::centred);

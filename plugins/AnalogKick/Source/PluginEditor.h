@@ -15,6 +15,9 @@ public:
 private:
     KickProcessor& processor_;
 
+    // Preset browser
+    AudioForge::PresetBrowser presetBrowser_;
+
     juce::Label pitchLabel_, pitchEnvAmountLabel_, pitchEnvDecayLabel_;
     juce::Label decayLabel_, clickLabel_, driveLabel_, toneLabel_;
 

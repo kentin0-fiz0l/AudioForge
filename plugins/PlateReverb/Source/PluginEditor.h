@@ -9,6 +9,9 @@ public:
     void resized() override;
 private:
     ReverbProcessor& processor_;
+
+    // Preset browser
+    AudioForge::PresetBrowser presetBrowser_;
     juce::Label sizeLabel_, dampingLabel_, widthLabel_, predelayLabel_, mixLabel_;
     juce::Slider sizeSlider_, dampingSlider_, widthSlider_, predelaySlider_, mixSlider_;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment>

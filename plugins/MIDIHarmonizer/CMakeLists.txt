@@ -21,6 +21,8 @@ target_sources(MIDIHarmonizer PRIVATE
     Source/PluginEditor.cpp
     Source/HarmonizerEngine.cpp
     ../../midi/MIDILearnManager.cpp
+    ../../shared/preset/PresetManager.cpp
+    ../../shared/preset/PresetBrowser.cpp
 )
 
 target_compile_definitions(MIDIHarmonizer PUBLIC

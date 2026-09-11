@@ -36,6 +36,9 @@ PluginEditor::PluginEditor(PluginProcessor& p)
     };
 
     setSize(900, 550);
+
+    // Preset browser
+    addAndMakeVisible(presetBrowser_);
 }
 
 PluginEditor::~PluginEditor()

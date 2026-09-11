@@ -5,6 +5,9 @@ BrassSectionEditor::BrassSectionEditor(BrassSectionProcessor& p)
 {
     setSize(700, 500);
 
+    // Preset browser
+    addAndMakeVisible(presetBrowser_);
+
     // Instrument selector
     instrumentLabel_.setText("Instrument", juce::dontSendNotification);
     instrumentLabel_.setJustificationType(juce::Justification::centred);

@@ -16,6 +16,9 @@ public:
 private:
     StringEnsembleProcessor& processor_;
 
+    // Preset browser
+    AudioForge::PresetBrowser presetBrowser_;
+
     juce::Label stringTypeLabel_;
     juce::ComboBox stringTypeCombo_;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> stringTypeAttachment_;

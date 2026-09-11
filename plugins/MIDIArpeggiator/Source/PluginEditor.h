@@ -3,6 +3,7 @@
 #include <juce_gui_basics/juce_gui_basics.h>
 #include "PluginProcessor.h"
 #include "../../../midi/MIDILearnSlider.h"
+#include "../../../shared/preset/PresetBrowser.h"
 
 class MIDIArpeggiatorEditor : public juce::AudioProcessorEditor {
 public:
@@ -14,6 +15,9 @@ public:
 
 private:
     MIDIArpeggiatorProcessor& processor_;
+
+    // Preset browser
+    AudioForge::PresetBrowser presetBrowser_;
 
     // Pattern & Rate
     juce::ComboBox patternCombo_;

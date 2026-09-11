@@ -18,6 +18,9 @@ GateAudioProcessorEditor::GateAudioProcessorEditor(GateAudioProcessor& p)
 {
     setSize(700, 500);
 
+    // Preset browser
+    addAndMakeVisible(presetBrowser_);
+
     // Configure sliders
     auto setupSlider = [](juce::Slider& slider)
     {

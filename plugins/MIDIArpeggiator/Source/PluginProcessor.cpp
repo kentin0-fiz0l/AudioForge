@@ -40,7 +40,11 @@ MIDIArpeggiatorProcessor::MIDIArpeggiatorProcessor()
                          .withInput("Input", juce::AudioChannelSet::stereo(), true)
                          .withOutput("Output", juce::AudioChannelSet::stereo(), true)),
       apvts_(*this, nullptr, "PARAMETERS", createParameterLayout()),
-      midiLearnManager_(apvts_) {}
+      presetManager_(apvts_, "MIDIArpeggiator") {
+
+    // Scan for presets on startup
+    presetManager_.scanPresets();
+}
 
 MIDIArpeggiatorProcessor::~MIDIArpeggiatorProcessor() {}
 
@@ -90,6 +94,7 @@ void MIDIArpeggiatorProcessor::getStateInformation(juce::MemoryBlock& destData) 
     auto state = apvts_.copyState();
     std::unique_ptr<juce::XmlElement> xml(state.createXml());
     xml->addChildElement(midiLearnManager_.saveToXml().release());
+    xml->addChildElement(presetManager_.saveToXml().release());
     copyXmlToBinary(*xml, destData);
 }
 
@@ -99,6 +104,8 @@ void MIDIArpeggiatorProcessor::setStateInformation(const void* data, int sizeInB
         apvts_.replaceState(juce::ValueTree::fromXml(*xml));
         if (auto* midiXml = xml->getChildByName("MIDILearnMappings"))
             midiLearnManager_.loadFromXml(*midiXml);
+        if (auto* presetXml = xml->getChildByName("PresetManagerState"))
+            presetManager_.loadFromXml(*presetXml);
     }
 }
 

@@ -206,6 +206,9 @@ SamplerPluginEditor::SamplerPluginEditor(SamplerPluginProcessor& p)
     // Set size
     setSize(950, 650);
 
+    // Preset browser
+    addAndMakeVisible(presetBrowser_);
+
     // Initial updates
     updateMemoryDisplay();
     updateZoneInfo();

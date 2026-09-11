@@ -5,6 +5,11 @@ SitarProcessor::SitarProcessor()
     : AudioProcessor(BusesProperties().withOutput("Output", juce::AudioChannelSet::stereo(), true)),
       apvts_(*this, nullptr, "Parameters", createParameterLayout()),
       midiLearnManager_(apvts_) {
+      presetManager_(apvts_, "Sitar") {
+
+    // Scan for presets on startup
+    presetManager_.scanPresets();
+}
     for (int i = 0; i < 6; ++i)
         synth_.addVoice(new SitarVoice());
 
@@ -117,6 +122,7 @@ void SitarProcessor::getStateInformation(juce::MemoryBlock& destData)
     auto state = apvts_.copyState();
     std::unique_ptr<juce::XmlElement> xml(state.createXml());
     xml->addChildElement(midiLearnManager_.saveToXml().release());
+    xml->addChildElement(presetManager_.saveToXml().release());
     copyXmlToBinary(*xml, destData);
 }
 
@@ -129,6 +135,8 @@ void SitarProcessor::setStateInformation(const void* data, int sizeInBytes)
             apvts_.replaceState(juce::ValueTree::fromXml(*xmlState));
         if (auto* midiXml = xmlState->getChildByName("MIDILearnMappings"))
             midiLearnManager_.loadFromXml(*midiXml);
+        if (auto* presetXml = xml->getChildByName("PresetManagerState"))
+            presetManager_.loadFromXml(*presetXml);
 }
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()

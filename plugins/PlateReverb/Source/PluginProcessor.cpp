@@ -15,7 +15,11 @@ ReverbProcessor::ReverbProcessor()
     : AudioProcessor(BusesProperties().withInput("Input", juce::AudioChannelSet::stereo(), true)
                                       .withOutput("Output", juce::AudioChannelSet::stereo(), true)),
       apvts_(*this, nullptr, "PARAMETERS", createParameterLayout()),
-      midiLearnManager_(apvts_) {}
+      presetManager_(apvts_, "PlateReverb") {
+
+    // Scan for presets on startup
+    presetManager_.scanPresets();
+}
 
 ReverbProcessor::~ReverbProcessor() {}
 
@@ -52,6 +56,7 @@ void ReverbProcessor::getStateInformation(juce::MemoryBlock& d) {
     auto s = apvts_.copyState();
     std::unique_ptr<juce::XmlElement> x(s.createXml());
     x->addChildElement(midiLearnManager_.saveToXml().release());
+    xml->addChildElement(presetManager_.saveToXml().release());
     copyXmlToBinary(*x, d);
 }
 
@@ -61,6 +66,8 @@ void ReverbProcessor::setStateInformation(const void* d, int sz) {
         apvts_.replaceState(juce::ValueTree::fromXml(*x));
         if (auto* midiXml = x->getChildByName("MIDILearnMappings"))
             midiLearnManager_.loadFromXml(*midiXml);
+        if (auto* presetXml = xml->getChildByName("PresetManagerState"))
+            presetManager_.loadFromXml(*presetXml);
 }
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter() {

@@ -26,6 +26,11 @@ FMProcessor::FMProcessor()
     : AudioProcessor(BusesProperties().withOutput("Output", juce::AudioChannelSet::stereo(), true)),
       apvts_(*this, nullptr, "PARAMETERS", createParameterLayout()),
       midiLearnManager_(apvts_)
+      presetManager_(apvts_, "FMSynth") {
+
+    // Scan for presets on startup
+    presetManager_.scanPresets();
+}
 {
     for (int i = 0; i < 6; ++i)
         synth_.addVoice(new FMVoice());
@@ -89,6 +94,7 @@ void FMProcessor::getStateInformation(juce::MemoryBlock& destData)
     auto state = apvts_.copyState();
     std::unique_ptr<juce::XmlElement> xml(state.createXml());
     xml->addChildElement(midiLearnManager_.saveToXml().release());
+    xml->addChildElement(presetManager_.saveToXml().release());
     copyXmlToBinary(*xml, destData);
 }
 
@@ -99,6 +105,8 @@ void FMProcessor::setStateInformation(const void* data, int sizeInBytes)
         apvts_.replaceState(juce::ValueTree::fromXml(*xml));
         if (auto* midiMappingsXml = xml->getChildByName("MIDILearnMappings"))
             midiLearnManager_.loadFromXml(*midiMappingsXml);
+        if (auto* presetXml = xml->getChildByName("PresetManagerState"))
+            presetManager_.loadFromXml(*presetXml);
     }
 }
 

@@ -16,6 +16,9 @@ public:
 private:
     ClassicMonosynthProcessor& processor_;
 
+    // Preset browser
+    AudioForge::PresetBrowser presetBrowser_;
+
     // Oscillator controls
     juce::Label osc1LevelLabel_, osc2LevelLabel_, osc3LevelLabel_;
     juce::Label osc2DetuneLabel_, osc3DetuneLabel_, pulseWidthLabel_;

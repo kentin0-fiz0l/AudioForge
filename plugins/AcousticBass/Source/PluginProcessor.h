@@ -3,6 +3,7 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "BassVoice.h"
 #include "../../../midi/MIDILearnManager.h"
+#include "../../../shared/preset/PresetManager.h"
 
 class AcousticBassProcessor : public juce::AudioProcessor
 {
@@ -35,6 +36,7 @@ public:
     juce::AudioProcessorValueTreeState& getValueTreeState() { return apvts_; }
 
     AudioForge::MIDILearnManager& getMidiLearnManager() { return midiLearnManager_; }
+    AudioForge::PresetManager& getPresetManager() { return presetManager_; }
 
 private:
     juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();

@@ -20,6 +20,11 @@ KickProcessor::KickProcessor()
     : AudioProcessor(BusesProperties().withOutput("Output", juce::AudioChannelSet::stereo(), true)),
       apvts_(*this, nullptr, "PARAMETERS", createParameterLayout()),
       midiLearnManager_(apvts_) {
+      presetManager_(apvts_, "AnalogKick") {
+
+    // Scan for presets on startup
+    presetManager_.scanPresets();
+}
     for (int i = 0; i < 4; ++i)
         synth_.addVoice(new KickVoice());
     synth_.addSound(new KickSound());
@@ -79,6 +84,7 @@ void KickProcessor::getStateInformation(juce::MemoryBlock& destData)
     auto state = apvts_.copyState();
     std::unique_ptr<juce::XmlElement> xml(state.createXml());
     xml->addChildElement(midiLearnManager_.saveToXml().release());
+    xml->addChildElement(presetManager_.saveToXml().release());
     copyXmlToBinary(*xml, destData);
 }
 
@@ -89,6 +95,8 @@ void KickProcessor::setStateInformation(const void* data, int sizeInBytes)
         apvts_.replaceState(juce::ValueTree::fromXml(*xml));
         if (auto* midiXml = xml->getChildByName("MIDILearnMappings"))
             midiLearnManager_.loadFromXml(*midiXml);
+        if (auto* presetXml = xml->getChildByName("PresetManagerState"))
+            presetManager_.loadFromXml(*presetXml);
 }
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()

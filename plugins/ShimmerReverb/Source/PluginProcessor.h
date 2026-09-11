@@ -2,6 +2,7 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "ShimmerEngine.h"
 #include "../../../midi/MIDILearnManager.h"
+#include "../../../shared/preset/PresetManager.h"
 class ShimmerProcessor : public juce::AudioProcessor {
 public:
     ShimmerProcessor(); ~ShimmerProcessor() override;
@@ -23,6 +24,7 @@ public:
     void setStateInformation(const void*, int) override;
     juce::AudioProcessorValueTreeState& getValueTreeState() { return apvts_; }
     AudioForge::MIDILearnManager& getMidiLearnManager() { return midiLearnManager_; }
+    AudioForge::PresetManager& getPresetManager() { return presetManager_; }
 
 private:
     juce::AudioProcessorValueTreeState apvts_;

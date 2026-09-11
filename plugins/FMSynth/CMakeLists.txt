@@ -31,6 +31,8 @@ target_sources(FMSynth PRIVATE
     Source/FMEngine.cpp
     Source/FMVoice.cpp
     ../../midi/MIDILearnManager.cpp
+    ../../shared/preset/PresetManager.cpp
+    ../../shared/preset/PresetBrowser.cpp
 )
 
 # Include directories

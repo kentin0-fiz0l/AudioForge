@@ -9,6 +9,9 @@ public:
     void resized() override;
 private:
     TomProcessor& processor_;
+
+    // Preset browser
+    AudioForge::PresetBrowser presetBrowser_;
     juce::Label pitchLabel_, pitchEnvLabel_, decayLabel_, bendLabel_, noiseLabel_;
     juce::Slider pitchSlider_, pitchEnvSlider_, decaySlider_, bendSlider_, noiseSlider_;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment>

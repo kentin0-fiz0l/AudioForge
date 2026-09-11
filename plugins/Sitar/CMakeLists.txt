@@ -27,6 +27,8 @@ target_sources(Sitar PRIVATE
     Source/SitarEngine.cpp
     Source/SitarVoice.cpp
     ../../midi/MIDILearnManager.cpp
+    ../../shared/preset/PresetManager.cpp
+    ../../shared/preset/PresetBrowser.cpp
 )
 
 target_compile_definitions(Sitar PUBLIC

@@ -1,7 +1,11 @@
 #include "PluginEditor.h"
 
-AutoPannerEditor::AutoPannerEditor(AutoPannerProcessor& p) : AudioProcessorEditor(&p), processor_(p) {
+AutoPannerEditor::AutoPannerEditor(AutoPannerProcessor& p) : AudioProcessorEditor(&p), processor_(p),
+      presetBrowser_(processor_.getPresetManager()) {
     setSize(700, 350);
+
+    // Preset browser
+    addAndMakeVisible(presetBrowser_);
     waveformBox_.addItem("Sine", 1); waveformBox_.addItem("Triangle", 2); waveformBox_.addItem("Square", 3);
     addAndMakeVisible(waveformBox_);
     waveformAttachment_ = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(

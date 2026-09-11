@@ -27,6 +27,8 @@ target_sources(ClassicMonosynth PRIVATE
     Source/MonosynthEngine.cpp
     Source/MonosynthVoice.cpp
     ../../midi/MIDILearnManager.cpp
+    ../../shared/preset/PresetManager.cpp
+    ../../shared/preset/PresetBrowser.cpp
 )
 
 target_compile_definitions(ClassicMonosynth PUBLIC

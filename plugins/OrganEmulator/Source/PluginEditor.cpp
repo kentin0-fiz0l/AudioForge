@@ -26,6 +26,9 @@ PluginEditor::PluginEditor(PluginProcessor& p)
     setupKnob(percussionDecaySlider, percussionDecayLabel, "Decay", percussionDecayAttachment, "percussionDecay");
 
     setSize(950, 500);
+
+    // Preset browser
+    addAndMakeVisible(presetBrowser_);
 }
 
 PluginEditor::~PluginEditor()

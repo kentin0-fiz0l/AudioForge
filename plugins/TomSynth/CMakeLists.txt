@@ -5,6 +5,8 @@ juce_add_plugin(TomSynth COMPANY_NAME "AudioForge" PLUGIN_MANUFACTURER_CODE AFrg
     EDITOR_WANTS_KEYBOARD_FOCUS FALSE COPY_PLUGIN_AFTER_BUILD TRUE PLUGIN_NAME "TomSynth" PRODUCT_NAME "TomSynth" FORMATS VST3 AU Standalone)
 target_sources(TomSynth PRIVATE Source/PluginProcessor.cpp Source/PluginEditor.cpp Source/TomEngine.cpp Source/TomVoice.cpp
     ../../midi/MIDILearnManager.cpp)
+    ../../shared/preset/PresetManager.cpp
+    ../../shared/preset/PresetBrowser.cpp
 target_include_directories(TomSynth PRIVATE Source)
 target_link_libraries(TomSynth PRIVATE juce::juce_audio_utils juce::juce_audio_processors juce::juce_dsp)
 target_compile_definitions(TomSynth PUBLIC JUCE_VST3_CAN_REPLACE_VST2=0 JUCE_WEB_BROWSER=0 JUCE_USE_CURL=0)

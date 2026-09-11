@@ -11,6 +11,9 @@ public:
     void timerCallback() override;
 private:
     CompressorProcessor& processor_;
+
+    // Preset browser
+    AudioForge::PresetBrowser presetBrowser_;
     juce::ComboBox modeBox_;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> modeAttachment_;
     juce::Label thresholdLabel_, ratioLabel_, attackLabel_, releaseLabel_, kneeLabel_, makeupLabel_, mixLabel_;

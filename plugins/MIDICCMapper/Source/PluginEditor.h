@@ -14,6 +14,9 @@ public:
 private:
     MIDICCMapperProcessor& processor_;
 
+    // Preset browser
+    AudioForge::PresetBrowser presetBrowser_;
+
     // Column headers
     juce::Label headerLabels_[6];
 

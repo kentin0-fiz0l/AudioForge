@@ -9,6 +9,9 @@ public:
     void resized() override;
 private:
     HiHatProcessor& processor_;
+
+    // Preset browser
+    AudioForge::PresetBrowser presetBrowser_;
     juce::Label toneLabel_, decayLabel_, metallicLabel_, opennessLabel_;
     juce::Slider toneSlider_, decaySlider_, metallicSlider_, opennessSlider_;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment>

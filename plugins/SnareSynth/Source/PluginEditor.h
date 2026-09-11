@@ -15,6 +15,9 @@ public:
 private:
     SnareProcessor& processor_;
 
+    // Preset browser
+    AudioForge::PresetBrowser presetBrowser_;
+
     juce::Label toneLabel_, snappyLabel_, decayLabel_, snareDecayLabel_, pitchEnvLabel_, snapLabel_;
     juce::Slider toneSlider_, snappySlider_, decaySlider_, snareDecaySlider_, pitchEnvSlider_, snapSlider_;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment>

@@ -2,6 +2,7 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "TremoloVibratoEngine.h"
 #include "../../../midi/MIDILearnManager.h"
+#include "../../../shared/preset/PresetManager.h"
 
 class TremoloVibratoProcessor : public juce::AudioProcessor {
 public:
@@ -25,6 +26,7 @@ public:
     void setStateInformation(const void*, int) override;
     juce::AudioProcessorValueTreeState& getValueTreeState() { return apvts_; }
     AudioForge::MIDILearnManager& getMidiLearnManager() { return midiLearnManager_; }
+    AudioForge::PresetManager& getPresetManager() { return presetManager_; }
 
 private:
     juce::AudioProcessorValueTreeState apvts_;

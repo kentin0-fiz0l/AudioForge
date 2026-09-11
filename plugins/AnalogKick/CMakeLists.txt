@@ -23,6 +23,8 @@ target_sources(AnalogKick PRIVATE
     Source/KickEngine.cpp
     Source/KickVoice.cpp
     ../../midi/MIDILearnManager.cpp
+    ../../shared/preset/PresetManager.cpp
+    ../../shared/preset/PresetBrowser.cpp
 )
 
 target_include_directories(AnalogKick PRIVATE Source)

@@ -38,7 +38,11 @@ MIDIChordGeneratorProcessor::MIDIChordGeneratorProcessor()
                          .withInput("Input", juce::AudioChannelSet::stereo(), true)
                          .withOutput("Output", juce::AudioChannelSet::stereo(), true)),
       apvts_(*this, nullptr, "PARAMETERS", createParameterLayout()),
-      midiLearnManager_(apvts_) {}
+      presetManager_(apvts_, "MIDIChordGenerator") {
+
+    // Scan for presets on startup
+    presetManager_.scanPresets();
+}
 
 MIDIChordGeneratorProcessor::~MIDIChordGeneratorProcessor() {}
 
@@ -102,6 +106,7 @@ void MIDIChordGeneratorProcessor::getStateInformation(juce::MemoryBlock& destDat
     auto state = apvts_.copyState();
     std::unique_ptr<juce::XmlElement> xml(state.createXml());
     xml->addChildElement(midiLearnManager_.saveToXml().release());
+    xml->addChildElement(presetManager_.saveToXml().release());
     copyXmlToBinary(*xml, destData);
 }
 
@@ -111,6 +116,8 @@ void MIDIChordGeneratorProcessor::setStateInformation(const void* data, int size
         apvts_.replaceState(juce::ValueTree::fromXml(*xml));
         if (auto* midiXml = xml->getChildByName("MIDILearnMappings"))
             midiLearnManager_.loadFromXml(*midiXml);
+        if (auto* presetXml = xml->getChildByName("PresetManagerState"))
+            presetManager_.loadFromXml(*presetXml);
     }
 }
 

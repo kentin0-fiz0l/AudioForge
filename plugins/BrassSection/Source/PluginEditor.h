@@ -16,6 +16,9 @@ public:
 private:
     BrassSectionProcessor& processor_;
 
+    // Preset browser
+    AudioForge::PresetBrowser presetBrowser_;
+
     // Instrument and articulation selection
     juce::Label instrumentLabel_;
     juce::ComboBox instrumentCombo_;

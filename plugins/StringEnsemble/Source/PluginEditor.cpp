@@ -5,6 +5,9 @@ StringEnsembleEditor::StringEnsembleEditor(StringEnsembleProcessor& p)
 {
     setSize(700, 480);
 
+    // Preset browser
+    addAndMakeVisible(presetBrowser_);
+
     // String type selector
     stringTypeLabel_.setText("String Type", juce::dontSendNotification);
     stringTypeLabel_.setJustificationType(juce::Justification::centred);

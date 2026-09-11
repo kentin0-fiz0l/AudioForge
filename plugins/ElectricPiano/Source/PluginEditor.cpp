@@ -6,6 +6,9 @@ ElectricPianoEditor::ElectricPianoEditor(ElectricPianoProcessor& p)
     // Window size
     setSize(700, 500);
 
+    // Preset browser
+    addAndMakeVisible(presetBrowser_);
+
     // Model selector
     modelLabel_.setText("Model", juce::dontSendNotification);
     modelLabel_.setJustificationType(juce::Justification::centred);

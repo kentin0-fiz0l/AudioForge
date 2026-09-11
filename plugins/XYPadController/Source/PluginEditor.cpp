@@ -5,6 +5,9 @@ XYPadControllerEditor::XYPadControllerEditor(XYPadControllerProcessor& p)
 
     setSize(500, 550);
 
+    // Preset browser
+    addAndMakeVisible(presetBrowser_);
+
     // XY Pad
     addAndMakeVisible(xyPad_);
 

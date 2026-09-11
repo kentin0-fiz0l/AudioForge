@@ -10,6 +10,9 @@ public:
     void resized() override;
 private:
     AutoPannerProcessor& processor_;
+
+    // Preset browser
+    AudioForge::PresetBrowser presetBrowser_;
     juce::ComboBox waveformBox_;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> waveformAttachment_;
     juce::Label rateLabel_, depthLabel_, phaseLabel_, widthLabel_;

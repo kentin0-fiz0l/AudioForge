@@ -23,6 +23,8 @@ target_sources(SnareSynth PRIVATE
     Source/SnareEngine.cpp
     Source/SnareVoice.cpp
     ../../midi/MIDILearnManager.cpp
+    ../../shared/preset/PresetManager.cpp
+    ../../shared/preset/PresetBrowser.cpp
 )
 
 target_include_directories(SnareSynth PRIVATE Source)

@@ -1,9 +1,13 @@
 #include "PluginEditor.h"
 
 MIDIArpeggiatorEditor::MIDIArpeggiatorEditor(MIDIArpeggiatorProcessor& p)
-    : AudioProcessorEditor(&p), processor_(p) {
+    : AudioProcessorEditor(&p), processor_(p),
+      presetBrowser_(processor_.getPresetManager()) {
 
     setSize(500, 400);
+
+    // Preset browser
+    addAndMakeVisible(presetBrowser_);
 
     // Pattern combo
     patternLabel_.setText("Pattern", juce::dontSendNotification);

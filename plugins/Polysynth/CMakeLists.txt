@@ -27,6 +27,8 @@ target_sources(Polysynth PRIVATE
     Source/PolysynthEngine.cpp
     Source/PolysynthVoice.cpp
     ../../midi/MIDILearnManager.cpp
+    ../../shared/preset/PresetManager.cpp
+    ../../shared/preset/PresetBrowser.cpp
 )
 
 target_compile_definitions(Polysynth PUBLIC

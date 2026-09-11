@@ -14,6 +14,8 @@ target_sources(PhaserFlanger PRIVATE
     Source/PluginEditor.cpp
     Source/ModulationEngine.cpp
     ../../midi/MIDILearnManager.cpp
+    ../../shared/preset/PresetManager.cpp
+    ../../shared/preset/PresetBrowser.cpp
 )
 target_compile_definitions(PhaserFlanger PUBLIC
     JUCE_WEB_BROWSER=0

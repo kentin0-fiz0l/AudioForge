@@ -21,6 +21,8 @@ target_sources(MIDIChordGenerator PRIVATE
     Source/PluginEditor.cpp
     Source/ChordEngine.cpp
     ../../midi/MIDILearnManager.cpp
+    ../../shared/preset/PresetManager.cpp
+    ../../shared/preset/PresetBrowser.cpp
 )
 
 target_compile_definitions(MIDIChordGenerator PUBLIC

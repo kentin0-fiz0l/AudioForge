@@ -15,6 +15,9 @@ public:
 private:
     FMProcessor& processor_;
 
+    // Preset browser
+    AudioForge::PresetBrowser presetBrowser_;
+
     juce::Label algorithmLabel_, feedbackLabel_;
     juce::Slider algorithmSlider_, feedbackSlider_;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> algorithmAttachment_, feedbackAttachment_;

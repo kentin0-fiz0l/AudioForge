@@ -4,6 +4,7 @@
 #include "ElectricPianoVoice.h"
 #include "ElectricPianoEngine.h"
 #include "../../../midi/MIDILearnManager.h"
+#include "../../../shared/preset/PresetManager.h"
 
 /**
  * ElectricPianoProcessor - Main audio plugin processor
@@ -46,6 +47,7 @@ public:
     juce::AudioProcessorValueTreeState& getValueTreeState() { return apvts_; }
 
     AudioForge::MIDILearnManager& getMidiLearnManager() { return midiLearnManager_; }
+    AudioForge::PresetManager& getPresetManager() { return presetManager_; }
 
 private:
     // Create parameter layout

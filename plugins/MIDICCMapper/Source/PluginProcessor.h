@@ -2,6 +2,7 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "MappingEngine.h"
 #include "../../../midi/MIDILearnManager.h"
+#include "../../../shared/preset/PresetManager.h"
 
 class MIDICCMapperProcessor : public juce::AudioProcessor {
 public:
@@ -32,6 +33,7 @@ public:
 
     juce::AudioProcessorValueTreeState& getAPVTS() { return apvts_; }
     AudioForge::MIDILearnManager& getMidiLearnManager() { return midiLearnManager_; }
+    AudioForge::PresetManager& getPresetManager() { return presetManager_; }
     MappingEngine& getMappingEngine() { return engine_; }
 
 private:

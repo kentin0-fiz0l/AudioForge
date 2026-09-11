@@ -15,6 +15,8 @@ target_sources(Vocoder PRIVATE
     Source/PluginEditor.cpp
     Source/VocoderEngine.cpp
     ../../midi/MIDILearnManager.cpp
+    ../../shared/preset/PresetManager.cpp
+    ../../shared/preset/PresetBrowser.cpp
 )
 target_compile_definitions(Vocoder PUBLIC
     JUCE_WEB_BROWSER=0

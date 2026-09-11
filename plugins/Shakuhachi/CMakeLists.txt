@@ -27,6 +27,8 @@ target_sources(Shakuhachi PRIVATE
     Source/ShakuhachiEngine.cpp
     Source/ShakuhachiVoice.cpp
     ../../midi/MIDILearnManager.cpp
+    ../../shared/preset/PresetManager.cpp
+    ../../shared/preset/PresetBrowser.cpp
 )
 
 target_compile_definitions(Shakuhachi PUBLIC

@@ -1,9 +1,13 @@
 #include "PluginEditor.h"
 
 MIDIGrooveQuantizerEditor::MIDIGrooveQuantizerEditor(MIDIGrooveQuantizerProcessor& p)
-    : AudioProcessorEditor(&p), processor_(p) {
+    : AudioProcessorEditor(&p), processor_(p),
+      presetBrowser_(processor_.getPresetManager()) {
 
     setSize(500, 350);
+
+    // Preset browser
+    addAndMakeVisible(presetBrowser_);
 
     // Grid resolution combo
     gridLabel_.setText("Grid", juce::dontSendNotification);

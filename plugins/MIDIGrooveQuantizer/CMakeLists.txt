@@ -21,6 +21,8 @@ target_sources(MIDIGrooveQuantizer PRIVATE
     Source/PluginEditor.cpp
     Source/QuantizerEngine.cpp
     ../../midi/MIDILearnManager.cpp
+    ../../shared/preset/PresetManager.cpp
+    ../../shared/preset/PresetBrowser.cpp
 )
 
 target_compile_definitions(MIDIGrooveQuantizer PUBLIC

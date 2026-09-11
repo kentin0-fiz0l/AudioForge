@@ -5,6 +5,9 @@ ShakuhachiEditor::ShakuhachiEditor(ShakuhachiProcessor& p)
 {
     setSize(800, 500);
 
+    // Preset browser
+    addAndMakeVisible(presetBrowser_);
+
     // Setup controls with bamboo/zen naming
     auto setupControl = [this](juce::Label& label, const char* text, juce::Slider& slider,
                                auto& attachment, const char* paramId) {

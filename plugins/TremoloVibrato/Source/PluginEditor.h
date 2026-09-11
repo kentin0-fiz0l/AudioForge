@@ -10,6 +10,9 @@ public:
     void resized() override;
 private:
     TremoloVibratoProcessor& processor_;
+
+    // Preset browser
+    AudioForge::PresetBrowser presetBrowser_;
     juce::ComboBox modeBox_, waveformBox_;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> modeAttachment_, waveformAttachment_;
     juce::Label rateLabel_, depthLabel_, mixLabel_;

@@ -16,6 +16,9 @@ public:
 private:
     ShakuhachiProcessor& processor_;
 
+    // Preset browser
+    AudioForge::PresetBrowser presetBrowser_;
+
     juce::Label breathPressureLabel_, embouchureLabel_, airNoiseLabel_, brightnessLabel_;
     juce::Label attackLabel_, releaseLabel_, vibratoRateLabel_, vibratoDepthLabel_;
 

@@ -32,6 +32,8 @@ target_sources(StringEnsemble PRIVATE
     Source/StringVoice.cpp
     Source/StringEngine.cpp
     ../../midi/MIDILearnManager.cpp)
+    ../../shared/preset/PresetManager.cpp
+    ../../shared/preset/PresetBrowser.cpp
 
 # Compiler definitions
 target_compile_definitions(StringEnsemble PUBLIC

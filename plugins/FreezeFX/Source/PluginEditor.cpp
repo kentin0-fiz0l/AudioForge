@@ -8,6 +8,9 @@ FreezeFXEditor::FreezeFXEditor(FreezeFXProcessor& p)
     // Set window size
     setSize(500, 600);
 
+    // Preset browser
+    addAndMakeVisible(presetBrowser_);
+
     // Freeze Button
     freezeButton.setButtonText("FREEZE");
     freezeButton.setToggleable(true);

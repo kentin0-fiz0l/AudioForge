@@ -14,6 +14,8 @@ target_sources(TremoloVibrato PRIVATE
     Source/PluginEditor.cpp
     Source/TremoloVibratoEngine.cpp
     ../../midi/MIDILearnManager.cpp
+    ../../shared/preset/PresetManager.cpp
+    ../../shared/preset/PresetBrowser.cpp
 )
 target_compile_definitions(TremoloVibrato PUBLIC
     JUCE_WEB_BROWSER=0

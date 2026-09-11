@@ -15,7 +15,11 @@ TremoloVibratoProcessor::TremoloVibratoProcessor()
     : AudioProcessor(BusesProperties().withInput("Input", juce::AudioChannelSet::stereo(), true)
                                       .withOutput("Output", juce::AudioChannelSet::stereo(), true)),
       apvts_(*this, nullptr, "PARAMETERS", createParameterLayout()),
-      midiLearnManager_(apvts_) {}
+      presetManager_(apvts_, "TremoloVibrato") {
+
+    // Scan for presets on startup
+    presetManager_.scanPresets();
+}
 
 TremoloVibratoProcessor::~TremoloVibratoProcessor() {}
 
@@ -49,6 +53,8 @@ void TremoloVibratoProcessor::setStateInformation(const void* d, int sz) {
     if (x && x->hasTagName(apvts_.state.getType())) apvts_.replaceState(juce::ValueTree::fromXml(*x));
         if (auto* midiXml = x->getChildByName("MIDILearnMappings"))
             midiLearnManager_.loadFromXml(*midiXml);
+        if (auto* presetXml = xml->getChildByName("PresetManagerState"))
+            presetManager_.loadFromXml(*presetXml);
 }
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter() { return new TremoloVibratoProcessor(); }

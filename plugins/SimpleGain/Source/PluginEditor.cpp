@@ -40,6 +40,9 @@ SimpleGainEditor::SimpleGainEditor(SimpleGainProcessor& p)
 
     // Set editor size
     setSize(400, 300);
+
+    // Preset browser
+    addAndMakeVisible(presetBrowser_);
 }
 
 SimpleGainEditor::~SimpleGainEditor()

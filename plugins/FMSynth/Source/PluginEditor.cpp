@@ -5,6 +5,9 @@ FMEditor::FMEditor(FMProcessor& p)
 {
     setSize(1100, 550);
 
+    // Preset browser
+    addAndMakeVisible(presetBrowser_);
+
     auto setupControl = [this](juce::Label& label, const char* text, juce::Slider& slider, auto& attachment, const char* paramId) {
         label.setText(text, juce::dontSendNotification);
         label.setJustificationType(juce::Justification::centred);

@@ -21,6 +21,8 @@ target_sources(MIDIArpeggiator PRIVATE
     Source/PluginEditor.cpp
     Source/ArpEngine.cpp
     ../../midi/MIDILearnManager.cpp
+    ../../shared/preset/PresetManager.cpp
+    ../../shared/preset/PresetBrowser.cpp
 )
 
 target_compile_definitions(MIDIArpeggiator PUBLIC

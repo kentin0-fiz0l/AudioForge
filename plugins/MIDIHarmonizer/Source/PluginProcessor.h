@@ -2,6 +2,7 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "HarmonizerEngine.h"
 #include "../../../midi/MIDILearnManager.h"
+#include "../../../shared/preset/PresetManager.h"
 
 class MIDIHarmonizerProcessor : public juce::AudioProcessor {
 public:
@@ -32,6 +33,7 @@ public:
 
     juce::AudioProcessorValueTreeState& getAPVTS() { return apvts_; }
     AudioForge::MIDILearnManager& getMidiLearnManager() { return midiLearnManager_; }
+    AudioForge::PresetManager& getPresetManager() { return presetManager_; }
 
 private:
     juce::AudioProcessorValueTreeState apvts_;

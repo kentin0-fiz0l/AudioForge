@@ -1,9 +1,13 @@
 #include "PluginEditor.h"
 
 MIDIHarmonizerEditor::MIDIHarmonizerEditor(MIDIHarmonizerProcessor& p)
-    : AudioProcessorEditor(&p), processor_(p) {
+    : AudioProcessorEditor(&p), processor_(p),
+      presetBrowser_(processor_.getPresetManager()) {
 
     setSize(550, 400);
+
+    // Preset browser
+    addAndMakeVisible(presetBrowser_);
 
     // Key combo
     keyLabel_.setText("Key", juce::dontSendNotification);

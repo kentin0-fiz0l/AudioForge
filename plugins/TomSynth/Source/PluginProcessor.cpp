@@ -12,6 +12,11 @@ static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout
 TomProcessor::TomProcessor() : AudioProcessor(BusesProperties().withOutput("Output", juce::AudioChannelSet::stereo(), true)),
       apvts_(*this, nullptr, "PARAMETERS", createParameterLayout()),
       midiLearnManager_(apvts_) {
+      presetManager_(apvts_, "TomSynth") {
+
+    // Scan for presets on startup
+    presetManager_.scanPresets();
+}
     for (int i = 0; i < 4; ++i) synth_.addVoice(new TomVoice());
     synth_.addSound(new TomSound());
 }
@@ -45,5 +50,7 @@ void TomProcessor::setStateInformation(const void* d, int sz) {
     if (x && x->hasTagName(apvts_.state.getType())) apvts_.replaceState(juce::ValueTree::fromXml(*x));
         if (auto* midiXml = x->getChildByName("MIDILearnMappings"))
             midiLearnManager_.loadFromXml(*midiXml);
+        if (auto* presetXml = xml->getChildByName("PresetManagerState"))
+            presetManager_.loadFromXml(*presetXml);
 }
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter() { return new TomProcessor(); }

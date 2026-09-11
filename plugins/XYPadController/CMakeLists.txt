@@ -21,6 +21,8 @@ target_sources(XYPadController PRIVATE
     Source/PluginEditor.cpp
     Source/XYPadComponent.cpp
     ../../midi/MIDILearnManager.cpp
+    ../../shared/preset/PresetManager.cpp
+    ../../shared/preset/PresetBrowser.cpp
 )
 
 target_compile_definitions(XYPadController PUBLIC

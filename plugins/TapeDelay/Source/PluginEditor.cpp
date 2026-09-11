@@ -1,6 +1,10 @@
 #include "PluginEditor.h"
-DelayEditor::DelayEditor(DelayProcessor& p) : AudioProcessorEditor(&p), processor_(p) {
+DelayEditor::DelayEditor(DelayProcessor& p) : AudioProcessorEditor(&p), processor_(p),
+      presetBrowser_(processor_.getPresetManager()) {
     setSize(750, 350);
+
+    // Preset browser
+    addAndMakeVisible(presetBrowser_);
     auto setup = [this](juce::Label& l, const char* t, juce::Slider& s, auto& a, const char* id) {
         l.setText(t, juce::dontSendNotification); l.setJustificationType(juce::Justification::centred);
         l.setColour(juce::Label::textColourId, juce::Colour(0xffdddddd)); addAndMakeVisible(l);

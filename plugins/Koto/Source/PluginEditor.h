@@ -16,6 +16,9 @@ public:
 private:
     KotoProcessor& processor_;
 
+    // Preset browser
+    AudioForge::PresetBrowser presetBrowser_;
+
     juce::Label scaleLabel_, playStyleLabel_;
     juce::ComboBox scaleCombo_, playStyleCombo_;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> scaleAttachment_, playStyleAttachment_;

@@ -14,6 +14,9 @@ public:
 
 private:
     PolysynthProcessor& processor_;
+
+    // Preset browser
+    AudioForge::PresetBrowser presetBrowser_;
     juce::Label oscMixLabel_, detuneLabel_, unisonVoicesLabel_, unisonDetuneLabel_;
     juce::Label filterCutoffLabel_, filterResonanceLabel_, filterMixLabel_;
     juce::Label attackLabel_, decayLabel_, sustainLabel_, releaseLabel_;

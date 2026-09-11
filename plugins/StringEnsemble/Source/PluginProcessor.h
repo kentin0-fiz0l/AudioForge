@@ -4,6 +4,7 @@
 #include "StringVoice.h"
 #include "StringEngine.h"
 #include "../../../midi/MIDILearnManager.h"
+#include "../../../shared/preset/PresetManager.h"
 
 class StringEnsembleProcessor : public juce::AudioProcessor
 {
@@ -36,6 +37,7 @@ public:
     juce::AudioProcessorValueTreeState& getValueTreeState() { return apvts_; }
 
     AudioForge::MIDILearnManager& getMidiLearnManager() { return midiLearnManager_; }
+    AudioForge::PresetManager& getPresetManager() { return presetManager_; }
 
 private:
     juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();

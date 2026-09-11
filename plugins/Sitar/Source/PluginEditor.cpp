@@ -5,6 +5,9 @@ SitarEditor::SitarEditor(SitarProcessor& p)
 {
     setSize(800, 550);
 
+    // Preset browser
+    addAndMakeVisible(presetBrowser_);
+
     // Raga scale selector
     ragaLabel_.setText("Raga Scale", juce::dontSendNotification);
     ragaLabel_.setJustificationType(juce::Justification::centred);

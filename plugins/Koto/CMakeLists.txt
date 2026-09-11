@@ -27,6 +27,8 @@ target_sources(Koto PRIVATE
     Source/KotoEngine.cpp
     Source/KotoVoice.cpp
     ../../midi/MIDILearnManager.cpp
+    ../../shared/preset/PresetManager.cpp
+    ../../shared/preset/PresetBrowser.cpp
 )
 
 target_compile_definitions(Koto PUBLIC

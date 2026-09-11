@@ -1,6 +1,7 @@
 #pragma once
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "../../../midi/MIDILearnManager.h"
+#include "../../../shared/preset/PresetManager.h"
 
 class XYPadControllerProcessor : public juce::AudioProcessor {
 public:
@@ -31,6 +32,7 @@ public:
 
     juce::AudioProcessorValueTreeState& getAPVTS() { return apvts_; }
     AudioForge::MIDILearnManager& getMidiLearnManager() { return midiLearnManager_; }
+    AudioForge::PresetManager& getPresetManager() { return presetManager_; }
 
     // Called from UI when pad position changes
     void queueCCMessage(int cc, float value);

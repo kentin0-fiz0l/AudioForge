@@ -8,6 +8,9 @@ public:
     void resized() override;
 private:
     DelayProcessor& processor_;
+
+    // Preset browser
+    AudioForge::PresetBrowser presetBrowser_;
     juce::Label timeLabel_, feedbackLabel_, wowLabel_, flutterLabel_, saturationLabel_, mixLabel_;
     juce::Slider timeSlider_, feedbackSlider_, wowSlider_, flutterSlider_, saturationSlider_, mixSlider_;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment>

@@ -16,6 +16,9 @@ public:
 private:
     SitarProcessor& processor_;
 
+    // Preset browser
+    AudioForge::PresetBrowser presetBrowser_;
+
     juce::Label ragaLabel_;
     juce::ComboBox ragaCombo_;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> ragaAttachment_;

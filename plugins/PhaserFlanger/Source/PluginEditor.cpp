@@ -1,7 +1,11 @@
 #include "PluginEditor.h"
 
-PhaserFlangerEditor::PhaserFlangerEditor(PhaserFlangerProcessor& p) : AudioProcessorEditor(&p), processor_(p) {
+PhaserFlangerEditor::PhaserFlangerEditor(PhaserFlangerProcessor& p) : AudioProcessorEditor(&p), processor_(p),
+      presetBrowser_(processor_.getPresetManager()) {
     setSize(750, 350);
+
+    // Preset browser
+    addAndMakeVisible(presetBrowser_);
     modeBox_.addItem("Phaser", 1); modeBox_.addItem("Flanger", 2);
     addAndMakeVisible(modeBox_);
     modeAttachment_ = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(

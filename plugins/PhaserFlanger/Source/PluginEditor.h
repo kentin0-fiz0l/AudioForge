@@ -10,6 +10,9 @@ public:
     void resized() override;
 private:
     PhaserFlangerProcessor& processor_;
+
+    // Preset browser
+    AudioForge::PresetBrowser presetBrowser_;
     juce::ComboBox modeBox_;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> modeAttachment_;
     juce::Label rateLabel_, depthLabel_, feedbackLabel_, centreFreqLabel_, mixLabel_;

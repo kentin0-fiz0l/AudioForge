@@ -8,6 +8,9 @@ public:
     void resized() override;
 private:
     ShimmerProcessor& processor_;
+
+    // Preset browser
+    AudioForge::PresetBrowser presetBrowser_;
     juce::ComboBox pitchModeBox_;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> pitchModeAttachment_;
     juce::Label sizeLabel_, dampingLabel_, shimmerLabel_, feedbackLabel_, mixLabel_;

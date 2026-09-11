@@ -1,7 +1,11 @@
 #include "PluginEditor.h"
 
-TremoloVibratoEditor::TremoloVibratoEditor(TremoloVibratoProcessor& p) : AudioProcessorEditor(&p), processor_(p) {
+TremoloVibratoEditor::TremoloVibratoEditor(TremoloVibratoProcessor& p) : AudioProcessorEditor(&p), processor_(p),
+      presetBrowser_(processor_.getPresetManager()) {
     setSize(650, 350);
+
+    // Preset browser
+    addAndMakeVisible(presetBrowser_);
     modeBox_.addItem("Tremolo", 1); modeBox_.addItem("Vibrato", 2);
     addAndMakeVisible(modeBox_);
     modeAttachment_ = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(

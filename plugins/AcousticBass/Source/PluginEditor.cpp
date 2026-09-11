@@ -5,6 +5,9 @@ AcousticBassEditor::AcousticBassEditor(AcousticBassProcessor& p)
 {
     setSize(700, 450);
 
+    // Preset browser
+    addAndMakeVisible(presetBrowser_);
+
     // Bass type selector
     bassTypeLabel_.setText("Bass Type", juce::dontSendNotification);
     bassTypeLabel_.setJustificationType(juce::Justification::centred);

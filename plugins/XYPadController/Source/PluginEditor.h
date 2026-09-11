@@ -15,6 +15,9 @@ public:
 private:
     XYPadControllerProcessor& processor_;
 
+    // Preset browser
+    AudioForge::PresetBrowser presetBrowser_;
+
     // Main XY pad
     XYPadComponent xyPad_;
 

@@ -19,6 +19,9 @@ MultibandCompressorAudioProcessorEditor::MultibandCompressorAudioProcessorEditor
 {
     setSize(900, 600);
 
+    // Preset browser
+    addAndMakeVisible(presetBrowser_);
+
     // Setup crossover sliders
     auto setupSlider = [this](juce::Slider& slider) {
         slider.setSliderStyle(juce::Slider::LinearHorizontal);
