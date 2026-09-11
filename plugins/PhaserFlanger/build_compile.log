@@ -1,8 +1,0 @@
-[  1%] Building CXX object CMakeFiles/PhaserFlanger.dir/Source/PluginProcessor.cpp.o
-/Users/kentino/Projects/Active/AudioForge/plugins/PhaserFlanger/Source/PluginProcessor.cpp:59:31: error: use of undeclared identifier 'xmlState'
-   59 |         if (auto* presetXml = xmlState->getChildByName("PresetManagerState"))
-      |                               ^
-1 error generated.
-make[2]: *** [CMakeFiles/PhaserFlanger.dir/Source/PluginProcessor.cpp.o] Error 1
-make[1]: *** [CMakeFiles/PhaserFlanger.dir/all] Error 2
-make: *** [all] Error 2
