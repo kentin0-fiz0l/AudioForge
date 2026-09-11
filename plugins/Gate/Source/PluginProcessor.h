@@ -15,6 +15,8 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <juce_dsp/juce_dsp.h>
 #include "GateEngine.h"
+#include "../../../midi/MIDILearnManager.h"
+#include "../../../shared/preset/PresetManager.h"
 
 //==============================================================================
 /**
@@ -64,6 +66,9 @@ public:
     void changeProgramName(int index, const juce::String& newName) override;
 
     //==============================================================================
+    AudioForge::MIDILearnManager& getMIDILearnManager() { return midiLearnManager_; }
+    AudioForge::PresetManager& getPresetManager() { return presetManager_; }
+
     void getStateInformation(juce::MemoryBlock& destData) override;
     void setStateInformation(const void* data, int sizeInBytes) override;
 

@@ -69,7 +69,7 @@ void CompressorProcessor::setStateInformation(const void* d, int sz) {
         apvts_.replaceState(juce::ValueTree::fromXml(*x));
         if (auto* midiXml = x->getChildByName("MIDILearnMappings"))
             midiLearnManager_.loadFromXml(*midiXml);
-        if (auto* presetXml = xmlState->getChildByName("PresetManagerState"))
+        if (auto* presetXml = x->getChildByName("PresetManagerState"))
             presetManager_.loadFromXml(*presetXml);
 }
 

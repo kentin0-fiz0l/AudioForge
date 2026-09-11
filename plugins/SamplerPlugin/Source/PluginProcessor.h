@@ -6,6 +6,8 @@
 #include "SamplerVoice.h"
 #include "SampleLibrary.h"
 #include "KeyZone.h"
+#include "../../../midi/MIDILearnManager.h"
+#include "../../../shared/preset/PresetManager.h"
 
 /**
  * Sampler Plugin Processor
@@ -56,6 +58,9 @@ public:
 
     //==============================================================================
     // State
+    AudioForge::MIDILearnManager& getMIDILearnManager() { return midiLearnManager_; }
+    AudioForge::PresetManager& getPresetManager() { return presetManager_; }
+
     void getStateInformation(juce::MemoryBlock& destData) override;
     void setStateInformation(const void* data, int sizeInBytes) override;
 

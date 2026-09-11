@@ -4,6 +4,8 @@
 #include <presets/PresetManager.h>
 #include <synth/VoiceManager.h>
 #include "Voice.h"
+#include "../../../midi/MIDILearnManager.h"
+#include "../../../shared/preset/PresetManager.h"
 
 /**
  * OrganEmulator Processor
@@ -54,5 +56,8 @@ private:
 
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
 
+
+    AudioForge::MIDILearnManager midiLearnManager_;
+    AudioForge::PresetManager presetManager_;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PluginProcessor)
 };

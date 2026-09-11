@@ -1,0 +1,8 @@
+[  1%] Building CXX object CMakeFiles/HiHat.dir/Source/PluginProcessor.cpp.o
+/Users/kentino/Projects/Active/AudioForge/plugins/HiHat/Source/PluginProcessor.cpp:51:31: error: use of undeclared identifier 'xmlState'
+   51 |         if (auto* presetXml = xmlState->getChildByName("PresetManagerState"))
+      |                               ^
+1 error generated.
+make[2]: *** [CMakeFiles/HiHat.dir/Source/PluginProcessor.cpp.o] Error 1
+make[1]: *** [CMakeFiles/HiHat.dir/all] Error 2
+make: *** [all] Error 2

@@ -1,0 +1,18 @@
+[  1%] Building CXX object CMakeFiles/XYPadController.dir/Source/PluginProcessor.cpp.o
+[  2%] Building CXX object CMakeFiles/XYPadController.dir/Source/PluginEditor.cpp.o
+/Users/kentino/Projects/Active/AudioForge/plugins/XYPadController/Source/PluginEditor.cpp:3:24: error: constructor for 'XYPadControllerEditor' must explicitly initialize the member 'presetBrowser_' which does not have a default constructor
+    3 | XYPadControllerEditor::XYPadControllerEditor(XYPadControllerProcessor& p)
+      |                        ^
+/Users/kentino/Projects/Active/AudioForge/plugins/XYPadController/Source/PluginEditor.h:20:31: note: member is declared here
+   20 |     AudioForge::PresetBrowser presetBrowser_;
+      |                               ^
+/Users/kentino/Projects/Active/AudioForge/plugins/XYPadController/Source/../../../shared/preset/PresetBrowser.h:7:7: note: 'AudioForge::PresetBrowser' declared here
+    7 | class PresetBrowser : public juce::Component,
+      |       ^
+/Users/kentino/Projects/Active/AudioForge/plugins/XYPadController/Source/PluginEditor.cpp:5:7: error: type 'AudioForge::PresetBrowser' does not provide a call operator
+    5 |       presetBrowser_(processor_.getPresetManager()),
+      |       ^~~~~~~~~~~~~~
+2 errors generated.
+make[2]: *** [CMakeFiles/XYPadController.dir/Source/PluginEditor.cpp.o] Error 1
+make[1]: *** [CMakeFiles/XYPadController.dir/all] Error 2
+make: *** [all] Error 2

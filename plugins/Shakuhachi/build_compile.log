@@ -1,0 +1,138 @@
+[  1%] Generating Shakuhachi_artefacts/JuceLibraryCode/JuceHeader.h
+[  2%] Building CXX object CMakeFiles/Shakuhachi.dir/Source/PluginProcessor.cpp.o
+[  3%] Building CXX object CMakeFiles/Shakuhachi.dir/Source/PluginEditor.cpp.o
+/Users/kentino/Projects/Active/AudioForge/plugins/Shakuhachi/Source/PluginEditor.cpp:50:15: warning: 'Font' is deprecated: Use the constructor that takes a FontOptions argument [-Wdeprecated-declarations]
+   50 |     g.setFont(juce::Font(32.0f, juce::Font::bold));
+      |               ^
+/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_graphics/fonts/juce_Font.h:76:7: note: 'Font' has been explicitly marked deprecated here
+   76 |     [[deprecated ("Use the constructor that takes a FontOptions argument")]]
+      |       ^
+/Users/kentino/Projects/Active/AudioForge/plugins/Shakuhachi/Source/PluginEditor.cpp:50:15: warning: 'Font' is deprecated: Use the constructor that takes a FontOptions argument [-Wdeprecated-declarations]
+   50 |     g.setFont(juce::Font(32.0f, juce::Font::bold));
+      |               ^
+/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_graphics/fonts/juce_Font.h:76:7: note: 'Font' has been explicitly marked deprecated here
+   76 |     [[deprecated ("Use the constructor that takes a FontOptions argument")]]
+      |       ^
+/Users/kentino/Projects/Active/AudioForge/plugins/Shakuhachi/Source/PluginEditor.cpp:54:15: warning: 'Font' is deprecated: Use the constructor that takes a FontOptions argument [-Wdeprecated-declarations]
+   54 |     g.setFont(juce::Font(15.0f, juce::Font::bold));
+      |               ^
+/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_graphics/fonts/juce_Font.h:76:7: note: 'Font' has been explicitly marked deprecated here
+   76 |     [[deprecated ("Use the constructor that takes a FontOptions argument")]]
+      |       ^
+/Users/kentino/Projects/Active/AudioForge/plugins/Shakuhachi/Source/PluginEditor.cpp:54:15: warning: 'Font' is deprecated: Use the constructor that takes a FontOptions argument [-Wdeprecated-declarations]
+   54 |     g.setFont(juce::Font(15.0f, juce::Font::bold));
+      |               ^
+/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_graphics/fonts/juce_Font.h:76:7: note: 'Font' has been explicitly marked deprecated here
+   76 |     [[deprecated ("Use the constructor that takes a FontOptions argument")]]
+      |       ^
+4 warnings generated.
+[  5%] Building CXX object CMakeFiles/Shakuhachi.dir/Source/ShakuhachiEngine.cpp.o
+[  6%] Building CXX object CMakeFiles/Shakuhachi.dir/Source/ShakuhachiVoice.cpp.o
+[  7%] Building CXX object CMakeFiles/Shakuhachi.dir/Users/kentino/Projects/Active/AudioForge/midi/MIDILearnManager.cpp.o
+[  8%] Building CXX object CMakeFiles/Shakuhachi.dir/Users/kentino/Projects/Active/AudioForge/shared/preset/PresetManager.cpp.o
+[ 10%] Building CXX object CMakeFiles/Shakuhachi.dir/Users/kentino/Projects/Active/AudioForge/shared/preset/PresetBrowser.cpp.o
+[ 11%] Building CXX object CMakeFiles/Shakuhachi.dir/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_audio_processors/juce_audio_processors.mm.o
+[ 12%] Building CXX object CMakeFiles/Shakuhachi.dir/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_gui_extra/juce_gui_extra.mm.o
+[ 13%] Building CXX object CMakeFiles/Shakuhachi.dir/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_gui_basics/juce_gui_basics_2.cpp.o
+[ 15%] Building CXX object CMakeFiles/Shakuhachi.dir/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_gui_basics/juce_gui_basics_3.cpp.o
+[ 16%] Building CXX object CMakeFiles/Shakuhachi.dir/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_gui_basics/juce_gui_basics_4.cpp.o
+[ 17%] Building CXX object CMakeFiles/Shakuhachi.dir/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_gui_basics/juce_gui_basics_5.cpp.o
+[ 18%] Building CXX object CMakeFiles/Shakuhachi.dir/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_gui_basics/juce_gui_basics.mm.o
+In file included from /Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_gui_basics/juce_gui_basics.mm:35:
+/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_gui_basics/juce_gui_basics.cpp:61:2: warning: This version of JUCE does not use the splash screen, the flag JUCE_DISPLAY_SPLASH_SCREEN is ignored [-W#pragma-messages]
+   61 |  JUCE_COMPILER_WARNING ("This version of JUCE does not use the splash screen, the flag JUCE_DISPLAY_SPLASH_SCREEN is ignored")
+      |  ^
+/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_core/system/juce_PlatformDefs.h:292:38: note: expanded from macro 'JUCE_COMPILER_WARNING'
+  292 |  #define JUCE_COMPILER_WARNING(msg)  _Pragma (JUCE_STRINGIFY (message (msg)))
+      |                                      ^
+<scratch space>:71:2: note: expanded from here
+   71 |  message ("This version of JUCE does not use the splash screen, the flag JUCE_DISPLAY_SPLASH_SCREEN is ignored")
+      |  ^
+1 warning generated.
+[ 20%] Building CXX object CMakeFiles/Shakuhachi.dir/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.cpp.o
+[ 21%] Building C object CMakeFiles/Shakuhachi.dir/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.c.o
+[ 22%] Building C object CMakeFiles/Shakuhachi.dir/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_graphics/juce_graphics_libjpg_1.c.o
+[ 24%] Building C object CMakeFiles/Shakuhachi.dir/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_graphics/juce_graphics_libjpg_2.c.o
+[ 25%] Building C object CMakeFiles/Shakuhachi.dir/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_graphics/juce_graphics_libjpg_3.c.o
+[ 26%] Building C object CMakeFiles/Shakuhachi.dir/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_graphics/juce_graphics_libpng.c.o
+[ 27%] Building C object CMakeFiles/Shakuhachi.dir/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_graphics/juce_graphics_lunasvg.c.o
+[ 29%] Building CXX object CMakeFiles/Shakuhachi.dir/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_graphics/juce_graphics.mm.o
+[ 30%] Building CXX object CMakeFiles/Shakuhachi.dir/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_events/juce_events.mm.o
+[ 31%] Building CXX object CMakeFiles/Shakuhachi.dir/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_core/juce_core_CompilationTime.cpp.o
+[ 32%] Building C object CMakeFiles/Shakuhachi.dir/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_core/juce_core_zlib.c.o
+[ 34%] Building CXX object CMakeFiles/Shakuhachi.dir/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_core/juce_core.mm.o
+[ 35%] Building CXX object CMakeFiles/Shakuhachi.dir/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_data_structures/juce_data_structures.mm.o
+[ 36%] Building CXX object CMakeFiles/Shakuhachi.dir/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.cpp.o
+[ 37%] Building CXX object CMakeFiles/Shakuhachi.dir/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.cpp.o
+[ 39%] Building CXX object CMakeFiles/Shakuhachi.dir/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.mm.o
+[ 40%] Building CXX object CMakeFiles/Shakuhachi.dir/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_audio_basics/juce_audio_basics.mm.o
+[ 41%] Building CXX object CMakeFiles/Shakuhachi.dir/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_audio_utils/juce_audio_utils.mm.o
+[ 43%] Building C object CMakeFiles/Shakuhachi.dir/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_audio_formats/juce_audio_formats_flac_1.c.o
+[ 44%] Building C object CMakeFiles/Shakuhachi.dir/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_audio_formats/juce_audio_formats_flac_2.c.o
+[ 45%] Building CXX object CMakeFiles/Shakuhachi.dir/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_audio_formats/juce_audio_formats.mm.o
+[ 46%] Building CXX object CMakeFiles/Shakuhachi.dir/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_audio_devices/juce_audio_devices.mm.o
+[ 48%] Building CXX object CMakeFiles/Shakuhachi.dir/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_dsp/juce_dsp.mm.o
+[ 49%] Linking CXX static library Shakuhachi_artefacts/Release/libShakuhachi_SharedCode.a
+[ 49%] Built target Shakuhachi
+[ 50%] Generating Shakuhachi_artefacts/JuceLibraryCode/Shakuhachi_Standalone/PkgInfo
+[ 51%] Building CXX object CMakeFiles/Shakuhachi_Standalone.dir/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_audio_plugin_client/juce_audio_plugin_client_AAX_utils.cpp.o
+[ 53%] Building CXX object CMakeFiles/Shakuhachi_Standalone.dir/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_audio_plugin_client/juce_audio_plugin_client_ARA.cpp.o
+[ 54%] Building CXX object CMakeFiles/Shakuhachi_Standalone.dir/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_audio_plugin_client/juce_audio_plugin_client_Standalone.cpp.o
+[ 55%] Building CXX object CMakeFiles/Shakuhachi_Standalone.dir/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_audio_plugin_client/juce_audio_plugin_client_Unity.cpp.o
+[ 56%] Building CXX object CMakeFiles/Shakuhachi_Standalone.dir/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_audio_plugin_client/juce_audio_plugin_client_AAX.mm.o
+[ 58%] Building CXX object CMakeFiles/Shakuhachi_Standalone.dir/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_audio_plugin_client/juce_audio_plugin_client_AU_1.mm.o
+[ 59%] Building CXX object CMakeFiles/Shakuhachi_Standalone.dir/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_audio_plugin_client/juce_audio_plugin_client_AU_2.mm.o
+[ 60%] Building CXX object CMakeFiles/Shakuhachi_Standalone.dir/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_audio_plugin_client/juce_audio_plugin_client_AUv3.mm.o
+[ 62%] Building CXX object CMakeFiles/Shakuhachi_Standalone.dir/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_audio_plugin_client/juce_audio_plugin_client_LV2.mm.o
+[ 63%] Building CXX object CMakeFiles/Shakuhachi_Standalone.dir/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_audio_plugin_client/juce_audio_plugin_client_VST2.mm.o
+[ 64%] Building CXX object CMakeFiles/Shakuhachi_Standalone.dir/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_audio_plugin_client/juce_audio_plugin_client_VST3.mm.o
+[ 65%] Linking CXX executable Shakuhachi_artefacts/Release/Standalone/Shakuhachi.app/Contents/MacOS/Shakuhachi
+Copying OS X content Shakuhachi_artefacts/Release/Standalone/Shakuhachi.app/Contents/Resources/RecentFilesMenuTemplate.nib
+[ 65%] Built target Shakuhachi_Standalone
+[ 67%] Generating Shakuhachi_artefacts/JuceLibraryCode/Shakuhachi_AU/PkgInfo
+[ 68%] Building CXX object CMakeFiles/Shakuhachi_AU.dir/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_audio_plugin_client/juce_audio_plugin_client_AAX_utils.cpp.o
+[ 69%] Building CXX object CMakeFiles/Shakuhachi_AU.dir/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_audio_plugin_client/juce_audio_plugin_client_ARA.cpp.o
+[ 70%] Building CXX object CMakeFiles/Shakuhachi_AU.dir/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_audio_plugin_client/juce_audio_plugin_client_Standalone.cpp.o
+[ 72%] Building CXX object CMakeFiles/Shakuhachi_AU.dir/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_audio_plugin_client/juce_audio_plugin_client_Unity.cpp.o
+[ 73%] Building CXX object CMakeFiles/Shakuhachi_AU.dir/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_audio_plugin_client/juce_audio_plugin_client_AAX.mm.o
+[ 74%] Building CXX object CMakeFiles/Shakuhachi_AU.dir/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_audio_plugin_client/juce_audio_plugin_client_AU_1.mm.o
+[ 75%] Building CXX object CMakeFiles/Shakuhachi_AU.dir/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_audio_plugin_client/juce_audio_plugin_client_AU_2.mm.o
+[ 77%] Building CXX object CMakeFiles/Shakuhachi_AU.dir/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_audio_plugin_client/juce_audio_plugin_client_AUv3.mm.o
+[ 78%] Building CXX object CMakeFiles/Shakuhachi_AU.dir/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_audio_plugin_client/juce_audio_plugin_client_LV2.mm.o
+[ 79%] Building CXX object CMakeFiles/Shakuhachi_AU.dir/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_audio_plugin_client/juce_audio_plugin_client_VST2.mm.o
+[ 81%] Building CXX object CMakeFiles/Shakuhachi_AU.dir/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_audio_plugin_client/juce_audio_plugin_client_VST3.mm.o
+[ 82%] Linking CXX CFBundle shared module Shakuhachi_artefacts/Release/AU/Shakuhachi.component/Contents/MacOS/Shakuhachi
+[ 82%] Built target Shakuhachi_AU
+[ 83%] Building VST3 manifest helper for Shakuhachi
+-- The CXX compiler identification is AppleClang 16.0.0.16000026
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Configuring done (0.3s)
+-- Generating done (0.0s)
+-- Build files have been written to: /Users/kentino/Projects/Active/AudioForge/plugins/Shakuhachi/build/vst3_helpers/Shakuhachi
+[ 50%] Building CXX object CMakeFiles/vst3_helper.dir/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_audio_plugin_client/VST3/juce_VST3ManifestHelper.cpp.o
+[100%] Linking CXX executable vst3_helper
+[100%] Built target vst3_helper
+[ 83%] Built target Shakuhachi_vst3_helper
+[ 84%] Generating Shakuhachi_artefacts/JuceLibraryCode/Shakuhachi_VST3/PkgInfo
+[ 86%] Building CXX object CMakeFiles/Shakuhachi_VST3.dir/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_audio_plugin_client/juce_audio_plugin_client_AAX_utils.cpp.o
+[ 87%] Building CXX object CMakeFiles/Shakuhachi_VST3.dir/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_audio_plugin_client/juce_audio_plugin_client_ARA.cpp.o
+[ 88%] Building CXX object CMakeFiles/Shakuhachi_VST3.dir/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_audio_plugin_client/juce_audio_plugin_client_Standalone.cpp.o
+[ 89%] Building CXX object CMakeFiles/Shakuhachi_VST3.dir/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_audio_plugin_client/juce_audio_plugin_client_Unity.cpp.o
+[ 91%] Building CXX object CMakeFiles/Shakuhachi_VST3.dir/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_audio_plugin_client/juce_audio_plugin_client_AAX.mm.o
+[ 92%] Building CXX object CMakeFiles/Shakuhachi_VST3.dir/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_audio_plugin_client/juce_audio_plugin_client_AU_1.mm.o
+[ 93%] Building CXX object CMakeFiles/Shakuhachi_VST3.dir/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_audio_plugin_client/juce_audio_plugin_client_AU_2.mm.o
+[ 94%] Building CXX object CMakeFiles/Shakuhachi_VST3.dir/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_audio_plugin_client/juce_audio_plugin_client_AUv3.mm.o
+[ 96%] Building CXX object CMakeFiles/Shakuhachi_VST3.dir/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_audio_plugin_client/juce_audio_plugin_client_LV2.mm.o
+[ 97%] Building CXX object CMakeFiles/Shakuhachi_VST3.dir/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_audio_plugin_client/juce_audio_plugin_client_VST2.mm.o
+[ 98%] Building CXX object CMakeFiles/Shakuhachi_VST3.dir/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_audio_plugin_client/juce_audio_plugin_client_VST3.mm.o
+[100%] Linking CXX CFBundle shared module Shakuhachi_artefacts/Release/VST3/Shakuhachi.vst3/Contents/MacOS/Shakuhachi
+/Users/kentino/Projects/Active/AudioForge/plugins/Shakuhachi/build/Shakuhachi_artefacts/Release/VST3/Shakuhachi.vst3: code has no resources but signature indicates they must be present
+-- Replacing invalid signature with ad-hoc signature
+/Users/kentino/Projects/Active/AudioForge/plugins/Shakuhachi/build/Shakuhachi_artefacts/Release/VST3/Shakuhachi.vst3: replacing existing signature
+removing moduleinfo.json
+creating /Users/kentino/Projects/Active/AudioForge/plugins/Shakuhachi/build/Shakuhachi_artefacts/Release/VST3/Shakuhachi.vst3/Contents/Resources/moduleinfo.json
+[100%] Built target Shakuhachi_VST3
