@@ -81,6 +81,7 @@ private:
     static constexpr const char* PARAM_GLIDE_TIME = "glideTime";
 
     AudioForge::MIDILearnManager midiLearnManager_;
+    AudioForge::PresetManager presetManager_;
 
 JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ClassicMonosynthProcessor)
 };

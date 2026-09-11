@@ -38,6 +38,7 @@ MIDICCMapperProcessor::MIDICCMapperProcessor()
                          .withInput("Input", juce::AudioChannelSet::stereo(), true)
                          .withOutput("Output", juce::AudioChannelSet::stereo(), true)),
       apvts_(*this, nullptr, "PARAMETERS", createParameterLayout()),
+      midiLearnManager_(apvts_),
       presetManager_(apvts_, "MIDICCMapper") {
 
     // Scan for presets on startup

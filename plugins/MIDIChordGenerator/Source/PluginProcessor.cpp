@@ -38,6 +38,7 @@ MIDIChordGeneratorProcessor::MIDIChordGeneratorProcessor()
                          .withInput("Input", juce::AudioChannelSet::stereo(), true)
                          .withOutput("Output", juce::AudioChannelSet::stereo(), true)),
       apvts_(*this, nullptr, "PARAMETERS", createParameterLayout()),
+      midiLearnManager_(apvts_),
       presetManager_(apvts_, "MIDIChordGenerator") {
 
     // Scan for presets on startup

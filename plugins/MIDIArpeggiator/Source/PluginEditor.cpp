@@ -4,7 +4,7 @@ MIDIArpeggiatorEditor::MIDIArpeggiatorEditor(MIDIArpeggiatorProcessor& p)
     : AudioProcessorEditor(&p), processor_(p),
       presetBrowser_(processor_.getPresetManager()) {
 
-    setSize(500, 400);
+    setSize(500, 450); // Increased for preset browser
 
     // Preset browser
     addAndMakeVisible(presetBrowser_);
@@ -106,6 +106,11 @@ void MIDIArpeggiatorEditor::paint(juce::Graphics& g) {
 void MIDIArpeggiatorEditor::resized() {
     auto bounds = getLocalBounds().reduced(20);
     bounds.removeFromTop(50); // Title space
+
+    // Preset browser
+    auto presetArea = bounds.removeFromTop(40);
+    presetBrowser_.setBounds(presetArea);
+    bounds.removeFromTop(10);
 
     auto topRow = bounds.removeFromTop(60);
 

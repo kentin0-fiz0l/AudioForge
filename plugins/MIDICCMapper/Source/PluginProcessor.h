@@ -39,6 +39,7 @@ public:
 private:
     juce::AudioProcessorValueTreeState apvts_;
     AudioForge::MIDILearnManager midiLearnManager_;
+    AudioForge::PresetManager presetManager_;
     MappingEngine engine_;
 
     void updateEngine();

@@ -32,6 +32,7 @@ private:
     juce::Synthesiser synth_;
     void updateVoiceParameters();
     AudioForge::MIDILearnManager midiLearnManager_;
+    AudioForge::PresetManager presetManager_;
 
 JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(HiHatProcessor)
 };

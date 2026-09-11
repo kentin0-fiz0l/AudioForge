@@ -1,7 +1,9 @@
 #include "PluginEditor.h"
 
 ElectricPianoEditor::ElectricPianoEditor(ElectricPianoProcessor& p)
-    : AudioProcessorEditor(&p), processor_(p)
+    : AudioProcessorEditor(&p),
+      processor_(p),
+      presetBrowser_(processor_.getPresetManager())
 {
     // Window size
     setSize(700, 500);

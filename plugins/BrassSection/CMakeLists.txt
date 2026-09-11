@@ -31,9 +31,10 @@ target_sources(BrassSection PRIVATE
     Source/PluginEditor.cpp
     Source/BrassVoice.cpp
     Source/BrassEngine.cpp
-    ../../midi/MIDILearnManager.cpp)
+    ../../midi/MIDILearnManager.cpp
     ../../shared/preset/PresetManager.cpp
     ../../shared/preset/PresetBrowser.cpp
+    ../../shared/preset/PresetBrowser.cpp)
 
 # Compiler definitions
 target_compile_definitions(BrassSection PUBLIC

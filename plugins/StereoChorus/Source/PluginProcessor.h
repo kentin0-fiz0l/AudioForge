@@ -32,6 +32,7 @@ private:
     juce::dsp::Chorus<float> chorus_;
     void updateChorusParameters();
     AudioForge::MIDILearnManager midiLearnManager_;
+    AudioForge::PresetManager presetManager_;
 
 JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ChorusProcessor)
 };

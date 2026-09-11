@@ -55,6 +55,7 @@ private:
     static constexpr const char* PARAM_ENSEMBLE_SIZE = "ensembleSize";
 
     AudioForge::MIDILearnManager midiLearnManager_;
+    AudioForge::PresetManager presetManager_;
 
 JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(StringEnsembleProcessor)
 };

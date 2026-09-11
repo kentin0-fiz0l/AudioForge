@@ -53,6 +53,7 @@ private:
     static constexpr const char* PARAM_FRET_NOISE = "fretNoise";
 
     AudioForge::MIDILearnManager midiLearnManager_;
+    AudioForge::PresetManager presetManager_;
 
 JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AcousticBassProcessor)
 };

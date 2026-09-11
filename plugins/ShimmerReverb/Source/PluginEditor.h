@@ -1,6 +1,7 @@
 #pragma once
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "PluginProcessor.h"
+#include "../../../shared/preset/PresetBrowser.h"
 class ShimmerEditor : public juce::AudioProcessorEditor {
 public:
     ShimmerEditor(ShimmerProcessor&); ~ShimmerEditor() override;

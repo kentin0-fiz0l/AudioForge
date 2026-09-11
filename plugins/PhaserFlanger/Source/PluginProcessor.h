@@ -33,6 +33,7 @@ private:
     ModulationEngine engine_;
     void updateEngineParameters();
     AudioForge::MIDILearnManager midiLearnManager_;
+    AudioForge::PresetManager presetManager_;
 
 JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PhaserFlangerProcessor)
 };

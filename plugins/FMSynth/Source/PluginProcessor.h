@@ -40,6 +40,7 @@ private:
     juce::AudioProcessorValueTreeState apvts_;
     juce::Synthesiser synth_;
     AudioForge::MIDILearnManager midiLearnManager_;
+    AudioForge::PresetManager presetManager_;
 
     void updateVoiceParameters();
 

@@ -33,6 +33,7 @@ private:
     juce::AudioProcessorValueTreeState apvts_;
     VocoderEngine engine_;
     AudioForge::MIDILearnManager midiLearnManager_;
+    AudioForge::PresetManager presetManager_;
     void updateEngineParameters();
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(VocoderProcessor)
 };
