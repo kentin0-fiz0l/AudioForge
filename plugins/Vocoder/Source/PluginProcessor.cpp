@@ -79,7 +79,7 @@ void VocoderProcessor::setStateInformation(const void* d, int sz) {
         // Load MIDI mappings from state
         if (auto* midiMappingsXml = x->getChildByName("MIDILearnMappings"))
             midiLearnManager_.loadFromXml(*midiMappingsXml);
-        if (auto* presetXml = xml->getChildByName("PresetManagerState"))
+        if (auto* presetXml = xmlState->getChildByName("PresetManagerState"))
             presetManager_.loadFromXml(*presetXml);
     }
 }

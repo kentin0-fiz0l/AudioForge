@@ -135,7 +135,7 @@ void SitarProcessor::setStateInformation(const void* data, int sizeInBytes)
             apvts_.replaceState(juce::ValueTree::fromXml(*xmlState));
         if (auto* midiXml = xmlState->getChildByName("MIDILearnMappings"))
             midiLearnManager_.loadFromXml(*midiXml);
-        if (auto* presetXml = xml->getChildByName("PresetManagerState"))
+        if (auto* presetXml = xmlState->getChildByName("PresetManagerState"))
             presetManager_.loadFromXml(*presetXml);
 }
 

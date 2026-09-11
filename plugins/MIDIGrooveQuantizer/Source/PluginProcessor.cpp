@@ -89,7 +89,7 @@ void MIDIGrooveQuantizerProcessor::setStateInformation(const void* data, int siz
         apvts_.replaceState(juce::ValueTree::fromXml(*xml));
         if (auto* midiXml = xml->getChildByName("MIDILearnMappings"))
             midiLearnManager_.loadFromXml(*midiXml);
-        if (auto* presetXml = xml->getChildByName("PresetManagerState"))
+        if (auto* presetXml = xmlState->getChildByName("PresetManagerState"))
             presetManager_.loadFromXml(*presetXml);
     }
 }

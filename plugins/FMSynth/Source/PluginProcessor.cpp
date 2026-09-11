@@ -105,7 +105,7 @@ void FMProcessor::setStateInformation(const void* data, int sizeInBytes)
         apvts_.replaceState(juce::ValueTree::fromXml(*xml));
         if (auto* midiMappingsXml = xml->getChildByName("MIDILearnMappings"))
             midiLearnManager_.loadFromXml(*midiMappingsXml);
-        if (auto* presetXml = xml->getChildByName("PresetManagerState"))
+        if (auto* presetXml = xmlState->getChildByName("PresetManagerState"))
             presetManager_.loadFromXml(*presetXml);
     }
 }
