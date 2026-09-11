@@ -4,12 +4,11 @@
 KotoProcessor::KotoProcessor()
     : AudioProcessor(BusesProperties().withOutput("Output", juce::AudioChannelSet::stereo(), true)),
       apvts_(*this, nullptr, "Parameters", createParameterLayout()),
-      midiLearnManager_(apvts_) {
+      midiLearnManager_(apvts_),
       presetManager_(apvts_, "Koto") {
 
     // Scan for presets on startup
     presetManager_.scanPresets();
-}
     for (int i = 0; i < 8; ++i)
         synth_.addVoice(new KotoVoice());
 

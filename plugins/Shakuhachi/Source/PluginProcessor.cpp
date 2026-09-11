@@ -4,12 +4,11 @@
 ShakuhachiProcessor::ShakuhachiProcessor()
     : AudioProcessor(BusesProperties().withOutput("Output", juce::AudioChannelSet::stereo(), true)),
       apvts_(*this, nullptr, "Parameters", createParameterLayout()),
-      midiLearnManager_(apvts_) {
+      midiLearnManager_(apvts_),
       presetManager_(apvts_, "Shakuhachi") {
 
     // Scan for presets on startup
     presetManager_.scanPresets();
-}
     for (int i = 0; i < 4; ++i)
         synth_.addVoice(new ShakuhachiVoice());
 

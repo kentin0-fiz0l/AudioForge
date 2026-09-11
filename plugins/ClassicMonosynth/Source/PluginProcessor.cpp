@@ -4,12 +4,11 @@
 ClassicMonosynthProcessor::ClassicMonosynthProcessor()
     : AudioProcessor(BusesProperties().withOutput("Output", juce::AudioChannelSet::stereo(), true)),
       apvts_(*this, nullptr, "Parameters", createParameterLayout()),
-      midiLearnManager_(apvts_) {
+      midiLearnManager_(apvts_),
       presetManager_(apvts_, "ClassicMonosynth") {
 
     // Scan for presets on startup
     presetManager_.scanPresets();
-}
     // Monosynth = only 1 voice!
     synth_.addVoice(new MonosynthVoice());
     synth_.addSound(new MonosynthSound());

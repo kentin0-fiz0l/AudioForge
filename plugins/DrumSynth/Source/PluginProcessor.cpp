@@ -1,14 +1,15 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
-#include "FactoryPresets.h"
 
 PluginProcessor::PluginProcessor()
     : AudioProcessor(BusesProperties()
                     .withOutput("Output", juce::AudioChannelSet::stereo(), true))
     , apvts(*this, nullptr, "Parameters", createParameterLayout())
-    , presetManager("DrumSynth", *this)
+    , midiLearnManager_(apvts)
+    , presetManager(apvts, "DrumSynth")
 {
-    presetManager.setFactoryPresets(DrumSynthPresets::getFactoryPresets());
+    // Scan for presets on startup
+    presetManager.scanPresets();
 }
 
 PluginProcessor::~PluginProcessor()

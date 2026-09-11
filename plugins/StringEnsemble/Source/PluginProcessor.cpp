@@ -5,12 +5,11 @@ StringEnsembleProcessor::StringEnsembleProcessor()
     : AudioProcessor(BusesProperties()
                          .withOutput("Output", juce::AudioChannelSet::stereo(), true)),
       apvts_(*this, nullptr, "Parameters", createParameterLayout()),
-      midiLearnManager_(apvts_) {
+      midiLearnManager_(apvts_),
       presetManager_(apvts_, "StringEnsemble") {
 
     // Scan for presets on startup
     presetManager_.scanPresets();
-}
     for (int i = 0; i < 12; ++i)
         synth_.addVoice(new StringVoice());
 

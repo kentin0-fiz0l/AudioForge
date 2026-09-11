@@ -103,7 +103,7 @@ void XYPadControllerProcessor::setStateInformation(const void* data, int sizeInB
         apvts_.replaceState(juce::ValueTree::fromXml(*xml));
         if (auto* midiXml = xml->getChildByName("MIDILearnMappings"))
             midiLearnManager_.loadFromXml(*midiXml);
-        if (auto* presetXml = xmlState->getChildByName("PresetManagerState"))
+        if (auto* presetXml = xml->getChildByName("PresetManagerState"))
             presetManager_.loadFromXml(*presetXml);
     }
 }

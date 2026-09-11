@@ -18,12 +18,11 @@ static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout
 SnareProcessor::SnareProcessor()
     : AudioProcessor(BusesProperties().withOutput("Output", juce::AudioChannelSet::stereo(), true)),
       apvts_(*this, nullptr, "PARAMETERS", createParameterLayout()),
-      midiLearnManager_(apvts_) {
+      midiLearnManager_(apvts_),
       presetManager_(apvts_, "SnareSynth") {
 
     // Scan for presets on startup
     presetManager_.scanPresets();
-}
     for (int i = 0; i < 4; ++i)
         synth_.addVoice(new SnareVoice());
     synth_.addSound(new SnareSound());
@@ -92,7 +91,7 @@ void SnareProcessor::setStateInformation(const void* data, int sizeInBytes)
         apvts_.replaceState(juce::ValueTree::fromXml(*xml));
         if (auto* midiXml = xml->getChildByName("MIDILearnMappings"))
             midiLearnManager_.loadFromXml(*midiXml);
-        if (auto* presetXml = xmlState->getChildByName("PresetManagerState"))
+        if (auto* presetXml = xml->getChildByName("PresetManagerState"))
             presetManager_.loadFromXml(*presetXml);
 }
 

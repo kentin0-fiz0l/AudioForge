@@ -15,6 +15,7 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <juce_gui_basics/juce_gui_basics.h>
 #include "PluginProcessor.h"
+#include "../../../shared/preset/PresetBrowser.h"
 
 //==============================================================================
 class MultibandCompressorAudioProcessorEditor : public juce::AudioProcessorEditor,
@@ -101,5 +102,7 @@ private:
     // Metering
     float band1GR = 0.0f, band2GR = 0.0f, band3GR = 0.0f, band4GR = 0.0f;
 
+
+    AudioForge::PresetBrowser presetBrowser_;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MultibandCompressorAudioProcessorEditor)
 };

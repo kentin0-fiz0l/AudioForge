@@ -25,13 +25,12 @@ static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout
 FMProcessor::FMProcessor()
     : AudioProcessor(BusesProperties().withOutput("Output", juce::AudioChannelSet::stereo(), true)),
       apvts_(*this, nullptr, "PARAMETERS", createParameterLayout()),
-      midiLearnManager_(apvts_)
+      midiLearnManager_(apvts_),
       presetManager_(apvts_, "FMSynth") {
 
     // Scan for presets on startup
     presetManager_.scanPresets();
-}
-{
+
     for (int i = 0; i < 6; ++i)
         synth_.addVoice(new FMVoice());
     synth_.addSound(new FMSound());
@@ -105,7 +104,7 @@ void FMProcessor::setStateInformation(const void* data, int sizeInBytes)
         apvts_.replaceState(juce::ValueTree::fromXml(*xml));
         if (auto* midiMappingsXml = xml->getChildByName("MIDILearnMappings"))
             midiLearnManager_.loadFromXml(*midiMappingsXml);
-        if (auto* presetXml = xmlState->getChildByName("PresetManagerState"))
+        if (auto* presetXml = xml->getChildByName("PresetManagerState"))
             presetManager_.loadFromXml(*presetXml);
     }
 }

@@ -1,6 +1,8 @@
 #pragma once
 
 #include <juce_audio_processors/juce_audio_processors.h>
+#include "../../../midi/MIDILearnManager.h"
+#include "../../../shared/preset/PresetManager.h"
 #include "SpectralProcessor.h"
 #include "FrozenSpectrum.h"
 #include "PhaseEvolver.h"
@@ -60,6 +62,8 @@ public:
     //==============================================================================
     // Parameter access (for UI)
     juce::AudioProcessorValueTreeState& getAPVTS() { return apvts; }
+    AudioForge::MIDILearnManager& getMIDILearnManager() { return midiLearnManager_; }
+    AudioForge::PresetManager& getPresetManager() { return presetManager_; }
 
     // Access to spectral data (for visualization)
     const SpectralProcessor& getSpectralProcessor() const { return spectralProcessor; }
@@ -79,6 +83,8 @@ private:
     //==============================================================================
     // Parameters (managed by AudioProcessorValueTreeState)
     juce::AudioProcessorValueTreeState apvts;
+    AudioForge::MIDILearnManager midiLearnManager_;
+    AudioForge::PresetManager presetManager_;
 
     //==============================================================================
     // State

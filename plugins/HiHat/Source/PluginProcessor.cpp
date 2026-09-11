@@ -10,12 +10,11 @@ static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout
 }
 HiHatProcessor::HiHatProcessor() : AudioProcessor(BusesProperties().withOutput("Output", juce::AudioChannelSet::stereo(), true)),
       apvts_(*this, nullptr, "PARAMETERS", createParameterLayout()),
-      midiLearnManager_(apvts_) {
+      midiLearnManager_(apvts_),
       presetManager_(apvts_, "HiHat") {
 
     // Scan for presets on startup
     presetManager_.scanPresets();
-}
     for (int i = 0; i < 4; ++i) synth_.addVoice(new HiHatVoice());
     synth_.addSound(new HiHatSound());
 }

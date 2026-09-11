@@ -86,8 +86,12 @@ FreezeFXProcessor::FreezeFXProcessor()
                     juce::String(),
                     juce::AudioProcessorParameter::genericParameter,
                     [](float value, int) { return juce::String((int)value) + " Hz"; })
-            })
+            }),
+      midiLearnManager_(apvts),
+      presetManager_(apvts, "FreezeFX")
 {
+    // Scan for presets on startup
+    presetManager_.scanPresets();
 }
 
 FreezeFXProcessor::~FreezeFXProcessor()
