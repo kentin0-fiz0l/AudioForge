@@ -1,0 +1,11 @@
+[  1%] Building CXX object CMakeFiles/ShimmerReverb.dir/Source/PluginProcessor.cpp.o
+/Users/kentino/Projects/Active/AudioForge/plugins/ShimmerReverb/Source/PluginProcessor.cpp:45:5: error: use of undeclared identifier 'xml'
+   45 |     xml->addChildElement(presetManager_.saveToXml().release());
+      |     ^
+/Users/kentino/Projects/Active/AudioForge/plugins/ShimmerReverb/Source/PluginProcessor.cpp:54:31: error: use of undeclared identifier 'xmlState'
+   54 |         if (auto* presetXml = xmlState->getChildByName("PresetManagerState"))
+      |                               ^
+2 errors generated.
+make[2]: *** [CMakeFiles/ShimmerReverb.dir/Source/PluginProcessor.cpp.o] Error 1
+make[1]: *** [CMakeFiles/ShimmerReverb.dir/all] Error 2
+make: *** [all] Error 2

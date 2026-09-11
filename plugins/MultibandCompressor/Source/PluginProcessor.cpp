@@ -512,6 +512,7 @@ void MultibandCompressorAudioProcessor::getStateInformation(juce::MemoryBlock& d
 {
     auto state = parameters.copyState();
     std::unique_ptr<juce::XmlElement> xml(state.createXml());
+    xml->addChildElement(presetManager_.saveToXml().release());
     copyXmlToBinary(*xml, destData);
 }
 

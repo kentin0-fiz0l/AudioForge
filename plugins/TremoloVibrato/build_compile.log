@@ -1,0 +1,8 @@
+[  1%] Building CXX object CMakeFiles/TremoloVibrato.dir/Source/PluginProcessor.cpp.o
+/Users/kentino/Projects/Active/AudioForge/plugins/TremoloVibrato/Source/PluginProcessor.cpp:57:31: error: use of undeclared identifier 'xmlState'
+   57 |         if (auto* presetXml = xmlState->getChildByName("PresetManagerState"))
+      |                               ^
+1 error generated.
+make[2]: *** [CMakeFiles/TremoloVibrato.dir/Source/PluginProcessor.cpp.o] Error 1
+make[1]: *** [CMakeFiles/TremoloVibrato.dir/all] Error 2
+make: *** [all] Error 2

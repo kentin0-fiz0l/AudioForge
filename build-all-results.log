@@ -1,0 +1,184 @@
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  AudioForge Mass Build - All Preset Plugins
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Building: AcousticBass
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  [1/3] Configuring...
+  [2/3] Building...
+  ❌ Build failed - see plugins/AcousticBass/build_compile.log
+  Last errors:
+    /Users/kentino/Projects/Active/AudioForge/plugins/AcousticBass/Source/PluginProcessor.cpp:4:24: error: constructor for 'AcousticBassProcessor' must explicitly initialize the member 'presetManager_' which does not have a default constructor
+    /Users/kentino/Projects/Active/AudioForge/plugins/AcousticBass/Source/PluginProcessor.cpp:8:7: error: type 'AudioForge::PresetManager' does not provide a call operator
+    /Users/kentino/Projects/Active/AudioForge/plugins/AcousticBass/Source/PluginProcessor.cpp:8:45: error: expected ';' after expression
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Building: AnalogKick
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  [1/3] Configuring...
+  [2/3] Building...
+  ❌ Build failed - see plugins/AnalogKick/build_compile.log
+  Last errors:
+    /Users/kentino/Projects/Active/AudioForge/plugins/AnalogKick/Source/PluginProcessor.cpp:23:7: error: type 'AudioForge::PresetManager' does not provide a call operator
+    /Users/kentino/Projects/Active/AudioForge/plugins/AnalogKick/Source/PluginProcessor.cpp:23:43: error: expected ';' after expression
+    /Users/kentino/Projects/Active/AudioForge/plugins/AnalogKick/Source/PluginProcessor.cpp:98:31: error: use of undeclared identifier 'xmlState'
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Building: AutoPanner
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  [1/3] Configuring...
+  [2/3] Building...
+  ❌ Build failed - see plugins/AutoPanner/build_compile.log
+  Last errors:
+    /Users/kentino/Projects/Active/AudioForge/plugins/AutoPanner/Source/PluginProcessor.cpp:56:31: error: use of undeclared identifier 'xmlState'
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Building: BrassSection
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  [1/3] Configuring...
+  [2/3] Building...
+  ❌ Build failed - see plugins/BrassSection/build_compile.log
+  Last errors:
+    /Users/kentino/Projects/Active/AudioForge/plugins/BrassSection/Source/PluginProcessor.cpp:4:24: error: constructor for 'BrassSectionProcessor' must explicitly initialize the member 'presetManager_' which does not have a default constructor
+    /Users/kentino/Projects/Active/AudioForge/plugins/BrassSection/Source/PluginProcessor.cpp:9:7: error: type 'AudioForge::PresetManager' does not provide a call operator
+    /Users/kentino/Projects/Active/AudioForge/plugins/BrassSection/Source/PluginProcessor.cpp:9:45: error: expected ';' after expression
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Building: ClassicMonosynth
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  [1/3] Configuring...
+  [2/3] Building...
+  ❌ Build failed - see plugins/ClassicMonosynth/build_compile.log
+  Last errors:
+    /Users/kentino/Projects/Active/AudioForge/plugins/ClassicMonosynth/Source/PluginProcessor.cpp:4:28: error: constructor for 'ClassicMonosynthProcessor' must explicitly initialize the member 'presetManager_' which does not have a default constructor
+    /Users/kentino/Projects/Active/AudioForge/plugins/ClassicMonosynth/Source/PluginProcessor.cpp:8:7: error: type 'AudioForge::PresetManager' does not provide a call operator
+    /Users/kentino/Projects/Active/AudioForge/plugins/ClassicMonosynth/Source/PluginProcessor.cpp:8:49: error: expected ';' after expression
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Building: DrumSynth
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  [1/3] Configuring...
+  [2/3] Building...
+  ❌ Build failed - see plugins/DrumSynth/build_compile.log
+  Last errors:
+    /Users/kentino/Projects/Active/AudioForge/plugins/DrumSynth/Source/PluginEditor.cpp:7:7: error: member initializer 'presetBrowser_' does not name a non-static data member or base class
+    /Users/kentino/Projects/Active/AudioForge/plugins/DrumSynth/Source/PluginEditor.cpp:32:23: error: use of undeclared identifier 'presetBrowser_'
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Building: ElectricPiano
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  [1/3] Configuring...
+  [2/3] Building...
+  [3/3] Verifying...
+  ✅ SUCCESS: ElectricPiano
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Building: FMSynth
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  [1/3] Configuring...
+  [2/3] Building...
+  ❌ Build failed - see plugins/FMSynth/build_compile.log
+  Last errors:
+    /Users/kentino/Projects/Active/AudioForge/plugins/FMSynth/Source/PluginProcessor.cpp:28:32: error: missing ',' between base or member initializers
+    /Users/kentino/Projects/Active/AudioForge/plugins/FMSynth/Source/PluginProcessor.cpp:34:1: error: expected unqualified-id
+    /Users/kentino/Projects/Active/AudioForge/plugins/FMSynth/Source/PluginProcessor.cpp:108:31: error: use of undeclared identifier 'xmlState'
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Building: FreezeFX
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  [1/3] Configuring...
+  [2/3] Building...
+  ❌ Build failed - see plugins/FreezeFX/build_compile.log
+  Last errors:
+    /Users/kentino/Projects/Active/AudioForge/plugins/FreezeFX/Source/PluginEditor.cpp:8:37: error: no member named 'getPresetManager' in 'FreezeFXProcessor'
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Building: Gate
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  [1/3] Configuring...
+  [2/3] Building...
+  ❌ Build failed - see plugins/Gate/build_compile.log
+  Last errors:
+    /Users/kentino/Projects/Active/AudioForge/plugins/Gate/Source/PluginEditor.cpp:19:37: error: no member named 'getPresetManager' in 'GateAudioProcessor'
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Building: HiHat
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  [1/3] Configuring...
+  [2/3] Building...
+  ❌ Build failed - see plugins/HiHat/build_compile.log
+  Last errors:
+    /Users/kentino/Projects/Active/AudioForge/plugins/HiHat/Source/PluginProcessor.cpp:51:31: error: use of undeclared identifier 'xmlState'
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Building: Koto
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  [1/3] Configuring...
+  [2/3] Building...
+  [3/3] Verifying...
+  ✅ SUCCESS: Koto
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Building: Limiter
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  [1/3] Configuring...
+  [2/3] Building...
+  ❌ Build failed - see plugins/Limiter/build_compile.log
+  Last errors:
+    /Users/kentino/Projects/Active/AudioForge/plugins/Limiter/Source/PluginEditor.cpp:18:35: error: no member named 'getPresetManager' in 'LimiterAudioProcessor'
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Building: MacroController
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  [1/3] Configuring...
+  [2/3] Building...
+  [3/3] Verifying...
+  ✅ SUCCESS: MacroController
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Building: MIDIArpeggiator
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  [1/3] Configuring...
+  [2/3] Building...
+  [3/3] Verifying...
+  ✅ SUCCESS: MIDIArpeggiator
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Building: MIDICCMapper
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  [1/3] Configuring...
+  [2/3] Building...
+  ❌ Build failed - see plugins/MIDICCMapper/build_compile.log
+  Last errors:
+    /Users/kentino/Projects/Active/AudioForge/plugins/MIDICCMapper/Source/PluginProcessor.cpp:143:31: error: use of undeclared identifier 'xmlState'
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Building: MIDIChordGenerator
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  [1/3] Configuring...
+  [2/3] Building...
+  ❌ Build failed - see plugins/MIDIChordGenerator/build_compile.log
+  Last errors:
+    /Users/kentino/Projects/Active/AudioForge/plugins/MIDIChordGenerator/Source/PluginProcessor.cpp:120:31: error: use of undeclared identifier 'xmlState'
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Building: MIDIGrooveQuantizer
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  [1/3] Configuring...
+  [2/3] Building...
+  ❌ Build failed - see plugins/MIDIGrooveQuantizer/build_compile.log
+  Last errors:
+    /Users/kentino/Projects/Active/AudioForge/plugins/MIDIGrooveQuantizer/Source/PluginProcessor.cpp:92:31: error: use of undeclared identifier 'xmlState'
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Building: MIDIHarmonizer
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  [1/3] Configuring...
+  [2/3] Building...
+  ❌ Build failed - see plugins/MIDIHarmonizer/build_compile.log
+  Last errors:
+    /Users/kentino/Projects/Active/AudioForge/plugins/MIDIHarmonizer/Source/PluginProcessor.cpp:140:31: error: use of undeclared identifier 'xmlState'
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Building: MultibandCompressor
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  [1/3] Configuring...
+  [2/3] Building...
+  ❌ Build failed - see plugins/MultibandCompressor/build_compile.log
+  Last errors:
+    /Users/kentino/Projects/Active/AudioForge/plugins/MultibandCompressor/Source/PluginEditor.cpp:19:37: error: no member named 'getPresetManager' in 'MultibandCompressorAudioProcessor'
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Building: OrganEmulator
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  [1/3] Configuring...
+  [2/3] Building...
+  ❌ Build failed - see plugins/OrganEmulator/build_compile.log
+  Last errors:
+    /Users/kentino/Projects/Active/AudioForge/plugins/OrganEmulator/Source/../../../shared/preset/PresetManager.h:7:7: error: redefinition of 'PresetManager'
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Building: PadSynth
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  [1/3] Configuring...
+  [2/3] Building...

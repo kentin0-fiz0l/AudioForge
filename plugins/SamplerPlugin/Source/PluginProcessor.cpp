@@ -289,6 +289,7 @@ void SamplerPluginProcessor::getStateInformation(juce::MemoryBlock& destData)
         }
     }
 
+    xml->addChildElement(presetManager_.saveToXml().release());
     copyXmlToBinary(*xml, destData);
 }
 

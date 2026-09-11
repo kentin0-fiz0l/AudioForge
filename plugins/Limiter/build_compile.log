@@ -1,0 +1,37 @@
+[  1%] Building CXX object CMakeFiles/Limiter.dir/Source/PluginProcessor.cpp.o
+[  2%] Building CXX object CMakeFiles/Limiter.dir/Source/PluginEditor.cpp.o
+In file included from /Users/kentino/Projects/Active/AudioForge/plugins/Limiter/Source/PluginEditor.cpp:13:
+/Users/kentino/Projects/Active/AudioForge/JUCE/modules/../../shared/ui/AudioForgeTheme.h:140:19: warning: 'Font' is deprecated: Use the constructor that takes a FontOptions argument [-Wdeprecated-declarations]
+  140 |         g.setFont(juce::Font(Typography::Title, Typography::Bold));
+      |                   ^
+/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_graphics/fonts/juce_Font.h:76:7: note: 'Font' has been explicitly marked deprecated here
+   76 |     [[deprecated ("Use the constructor that takes a FontOptions argument")]]
+      |       ^
+In file included from /Users/kentino/Projects/Active/AudioForge/plugins/Limiter/Source/PluginEditor.cpp:13:
+/Users/kentino/Projects/Active/AudioForge/JUCE/modules/../../shared/ui/AudioForgeTheme.h:140:19: warning: 'Font' is deprecated: Use the constructor that takes a FontOptions argument [-Wdeprecated-declarations]
+  140 |         g.setFont(juce::Font(Typography::Title, Typography::Bold));
+      |                   ^
+/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_graphics/fonts/juce_Font.h:76:7: note: 'Font' has been explicitly marked deprecated here
+   76 |     [[deprecated ("Use the constructor that takes a FontOptions argument")]]
+      |       ^
+In file included from /Users/kentino/Projects/Active/AudioForge/plugins/Limiter/Source/PluginEditor.cpp:13:
+/Users/kentino/Projects/Active/AudioForge/JUCE/modules/../../shared/ui/AudioForgeTheme.h:146:23: warning: 'Font' is deprecated: Use the constructor that takes a FontOptions argument [-Wdeprecated-declarations]
+  146 |             g.setFont(juce::Font(Typography::Subtitle, Typography::Regular));
+      |                       ^
+/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_graphics/fonts/juce_Font.h:76:7: note: 'Font' has been explicitly marked deprecated here
+   76 |     [[deprecated ("Use the constructor that takes a FontOptions argument")]]
+      |       ^
+In file included from /Users/kentino/Projects/Active/AudioForge/plugins/Limiter/Source/PluginEditor.cpp:13:
+/Users/kentino/Projects/Active/AudioForge/JUCE/modules/../../shared/ui/AudioForgeTheme.h:146:23: warning: 'Font' is deprecated: Use the constructor that takes a FontOptions argument [-Wdeprecated-declarations]
+  146 |             g.setFont(juce::Font(Typography::Subtitle, Typography::Regular));
+      |                       ^
+/Users/kentino/Projects/Active/AudioForge/JUCE/modules/juce_graphics/fonts/juce_Font.h:76:7: note: 'Font' has been explicitly marked deprecated here
+   76 |     [[deprecated ("Use the constructor that takes a FontOptions argument")]]
+      |       ^
+/Users/kentino/Projects/Active/AudioForge/plugins/Limiter/Source/PluginEditor.cpp:18:35: error: no member named 'getPresetManager' in 'LimiterAudioProcessor'
+   18 |     presetBrowser_(audioProcessor.getPresetManager())
+      |                    ~~~~~~~~~~~~~~ ^
+4 warnings and 1 error generated.
+make[2]: *** [CMakeFiles/Limiter.dir/Source/PluginEditor.cpp.o] Error 1
+make[1]: *** [CMakeFiles/Limiter.dir/all] Error 2
+make: *** [all] Error 2
