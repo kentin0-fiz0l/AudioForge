@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="AudioForge - Professional audio plugins for music production. Free, open-source VST3/AU plugins for mixing and mastering.">
-    <meta name="keywords" content="audio plugins, VST3, AU, free plugins, mixing, mastering, EQ, compressor, reverb">
-    <title>AudioForge - Professional Audio Plugins</title>
+    <meta name="description" content="AudioForge - 39 professional audio plugins with universal preset management and MIDI Learn. Free, open-source VST3/AU plugins for music production.">
+    <meta name="keywords" content="audio plugins, VST3, AU, free plugins, mixing, mastering, EQ, compressor, reverb, presets, MIDI learn, synthesizers">
+    <title>AudioForge - 39 Professional Audio Plugins | v2.0.1</title>
     <style>
         :root {
             --bg: #0a0a0a;
@@ -29,6 +29,27 @@
             background: var(--bg);
             color: var(--text);
             line-height: 1.6;
+        }
+
+        /* Announcement Banner */
+        .announcement-banner {
+            background: linear-gradient(135deg, #4a9eff 0%, #67acff 100%);
+            color: white;
+            text-align: center;
+            padding: 1rem 1.5rem;
+            font-weight: 600;
+            font-size: 1.125rem;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .announcement-banner a {
+            color: white;
+            text-decoration: underline;
+            margin-left: 0.5rem;
+        }
+
+        .announcement-banner a:hover {
+            opacity: 0.9;
         }
 
         /* Header */
@@ -254,19 +275,28 @@
     </style>
 </head>
 <body>
+    <div class="announcement-banner">
+        🎉 v2.0.1 Released - 39/39 plugins with universal preset management and MIDI Learn!
+        <a href="https://github.com/kentin0-fiz0l/AudioForge/releases/tag/v2.0.1">Read Release Notes →</a>
+    </div>
+
     <header>
         <h1>AudioForge</h1>
-        <p>Professional audio plugins for music production. Free, open-source, and built with JUCE.</p>
+        <p>39 professional audio plugins with universal preset management, MIDI Learn, and seamless DAW integration. Free, open-source, and built with JUCE.</p>
     </header>
 
     <div class="stats">
         <div class="stat">
-            <span class="stat-number">19</span>
+            <span class="stat-number">39</span>
             <span class="stat-label">Plugins</span>
         </div>
         <div class="stat">
-            <span class="stat-number">84%</span>
-            <span class="stat-label">PluginVal Pass</span>
+            <span class="stat-number">100%</span>
+            <span class="stat-label">Preset Coverage</span>
+        </div>
+        <div class="stat">
+            <span class="stat-number">100%</span>
+            <span class="stat-label">MIDI Learn</span>
         </div>
         <div class="stat">
             <span class="stat-number">100%</span>
@@ -340,11 +370,15 @@
         </div>
 
         <div class="download-section">
-            <h2>Download AudioForge</h2>
-            <p>Available for macOS (VST3/AU) and Linux (.deb, .rpm, AppImage). Free forever.</p>
+            <h2>Download AudioForge v2.0.1</h2>
+            <p><strong>39 professional plugins</strong> with universal preset management and MIDI Learn.<br>
+            Available for macOS (VST3/AU) - Universal Binary (Intel + Apple Silicon). Free forever.</p>
+            <p style="margin-top: 1rem; font-size: 0.9375rem; color: var(--text-muted);">
+                ✨ New in v2.0.1: 21 additional plugins, complete preset system, 100% MIDI Learn coverage
+            </p>
             <div class="download-buttons">
                 <a href="https://github.com/kentin0-fiz0l/AudioForge/releases/latest" class="btn btn-primary">
-                    Download Latest Release
+                    Download v2.0.1
                 </a>
                 <a href="https://github.com/kentin0-fiz0l/AudioForge" class="btn btn-secondary">
                     View on GitHub
