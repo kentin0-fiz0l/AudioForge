@@ -6,9 +6,10 @@ PluginProcessor::PluginProcessor()
     : AudioProcessor(BusesProperties()
                     .withOutput("Output", juce::AudioChannelSet::stereo(), true))
     , apvts(*this, nullptr, "Parameters", createParameterLayout())
-    , presetManager("OrganEmulator", *this)
+    , midiLearnManager_(apvts)
+    , presetManager_(apvts, "OrganEmulator")
 {
-    presetManager.setFactoryPresets(OrganEmulatorPresets::getFactoryPresets());
+    presetManager_.scanPresets();
 }
 
 PluginProcessor::~PluginProcessor()

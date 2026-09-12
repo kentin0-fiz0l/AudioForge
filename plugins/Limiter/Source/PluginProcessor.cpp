@@ -65,7 +65,9 @@ LimiterAudioProcessor::LimiterAudioProcessor()
             0.0f,
             "dB"
         )
-    })
+    }),
+    midiLearnManager_(parameters),
+    presetManager_(parameters, "Limiter")
 {
     // Get parameter pointers
     ceilingParam = parameters.getRawParameterValue("ceiling");

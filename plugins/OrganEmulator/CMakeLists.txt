@@ -31,6 +31,9 @@ target_sources(OrganEmulator PRIVATE
     Source/DrawbarEngine.cpp
     Source/LeslieSimulator.cpp
     Source/Voice.cpp
+    ../../midi/MIDILearnManager.cpp
+    ../../shared/preset/PresetManager.cpp
+    ../../shared/preset/PresetBrowser.cpp
 )
 
 # Include directories

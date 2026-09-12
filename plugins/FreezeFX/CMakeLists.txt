@@ -30,6 +30,14 @@ target_sources(FreezeFX PRIVATE
     Source/SpectralProcessor.cpp
     Source/FrozenSpectrum.cpp
     Source/PhaseEvolver.cpp
+    ../../midi/MIDILearnManager.cpp
+    ../../shared/preset/PresetManager.cpp
+    ../../shared/preset/PresetBrowser.cpp
+)
+
+# Include directories
+target_include_directories(FreezeFX PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../shared
 )
 
 # Link libraries

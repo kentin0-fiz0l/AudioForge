@@ -2,7 +2,8 @@
 
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <synth/VoiceManager.h>
-#include <presets/PresetManager.h>
+#include "../../../midi/MIDILearnManager.h"
+#include "../../../shared/preset/PresetManager.h"
 #include "Voice.h"
 
 class PluginProcessor : public juce::AudioProcessor
@@ -35,12 +36,14 @@ public:
     void setStateInformation(const void* data, int sizeInBytes) override;
 
     juce::AudioProcessorValueTreeState& getAPVTS() { return apvts; }
-    AudioForge::PresetManager& getPresetManager() { return presetManager; }
+    AudioForge::MIDILearnManager& getMIDILearnManager() { return midiLearnManager_; }
+    AudioForge::PresetManager& getPresetManager() { return presetManager_; }
 
 private:
     juce::AudioProcessorValueTreeState apvts;
     AudioForge::VoiceManager<Voice, 8> voiceManager;
-    AudioForge::PresetManager presetManager;
+    AudioForge::MIDILearnManager midiLearnManager_;
+    AudioForge::PresetManager presetManager_;
 
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
 

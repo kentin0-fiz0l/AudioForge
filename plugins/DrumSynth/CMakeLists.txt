@@ -31,6 +31,9 @@ target_sources(DrumSynth PRIVATE
     Source/KickModule.cpp
     Source/SnareModule.cpp
     Source/HiHatModule.cpp
+    ../../midi/MIDILearnManager.cpp
+    ../../shared/preset/PresetManager.cpp
+    ../../shared/preset/PresetBrowser.cpp
 )
 
 # Include directories

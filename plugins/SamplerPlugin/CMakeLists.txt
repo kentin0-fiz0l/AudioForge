@@ -34,6 +34,9 @@ target_sources(SamplerPlugin PRIVATE
     Source/ZoneEditor.cpp
     Source/WaveformDisplay.cpp
     Source/VelocityLayerEditor.cpp
+    ../../midi/MIDILearnManager.cpp
+    ../../shared/preset/PresetManager.cpp
+    ../../shared/preset/PresetBrowser.cpp
     Source/SampleBrowser.cpp)
 
 # Compiler definitions

@@ -66,7 +66,7 @@ void VocoderProcessor::getStateInformation(juce::MemoryBlock& d) {
 
     // Add MIDI mappings to state
     x->addChildElement(midiLearnManager_.saveToXml().release());
-    xml->addChildElement(presetManager_.saveToXml().release());
+    x->addChildElement(presetManager_.saveToXml().release());
 
     copyXmlToBinary(*x, d);
 }

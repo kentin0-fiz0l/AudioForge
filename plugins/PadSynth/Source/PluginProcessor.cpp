@@ -6,10 +6,10 @@ PluginProcessor::PluginProcessor()
     : AudioProcessor(BusesProperties()
                     .withOutput("Output", juce::AudioChannelSet::stereo(), true))
     , apvts(*this, nullptr, "Parameters", createParameterLayout())
-    , presetManager("PadSynth", *this)
+    , midiLearnManager_(apvts)
+    , presetManager_(apvts, "PadSynth")
 {
-    // Load factory presets
-    presetManager.setFactoryPresets(PadSynthPresets::getFactoryPresets());
+    presetManager_.scanPresets();
 }
 
 PluginProcessor::~PluginProcessor()

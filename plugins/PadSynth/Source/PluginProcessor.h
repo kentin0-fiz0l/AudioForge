@@ -2,7 +2,6 @@
 
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <synth/VoiceManager.h>
-#include <presets/PresetManager.h>
 #include "Voice.h"
 #include "../../../midi/MIDILearnManager.h"
 #include "../../../shared/preset/PresetManager.h"
@@ -37,12 +36,11 @@ public:
     void setStateInformation(const void* data, int sizeInBytes) override;
 
     juce::AudioProcessorValueTreeState& getAPVTS() { return apvts; }
-    AudioForge::PresetManager& getPresetManager() { return presetManager; }
+    AudioForge::PresetManager& getPresetManager() { return presetManager_; }
 
 private:
     juce::AudioProcessorValueTreeState apvts;
     AudioForge::VoiceManager<Voice, 6> voiceManager; // 6-note polyphony (due to unison)
-    AudioForge::PresetManager presetManager;
 
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
 

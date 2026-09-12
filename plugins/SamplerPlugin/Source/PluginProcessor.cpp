@@ -5,7 +5,10 @@ SamplerPluginProcessor::SamplerPluginProcessor()
     : AudioProcessor(BusesProperties()
                      .withOutput("Output", juce::AudioChannelSet::stereo(), true))
     , apvts(*this, nullptr, "Parameters", createParameterLayout())
+    , midiLearnManager_(apvts)
+    , presetManager_(apvts, "SamplerPlugin")
 {
+    presetManager_.scanPresets();
 }
 
 SamplerPluginProcessor::~SamplerPluginProcessor()

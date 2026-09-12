@@ -6,10 +6,10 @@ PluginProcessor::PluginProcessor()
                     .withOutput("Output", juce::AudioChannelSet::stereo(), true))
     , apvts(*this, nullptr, "Parameters", createParameterLayout())
     , midiLearnManager_(apvts)
-    , presetManager(apvts, "DrumSynth")
+    , presetManager_(apvts, "DrumSynth")
 {
     // Scan for presets on startup
-    presetManager.scanPresets();
+    presetManager_.scanPresets();
 }
 
 PluginProcessor::~PluginProcessor()

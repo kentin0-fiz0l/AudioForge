@@ -49,7 +49,7 @@ set_target_properties(AudioForgeSynth PROPERTIES
 # AudioForgePresets - Preset management system
 # ============================================================================
 add_library(AudioForgePresets STATIC
-    presets/PresetManager.cpp
+    preset/PresetManager.cpp
 )
 
 target_include_directories(AudioForgePresets PUBLIC

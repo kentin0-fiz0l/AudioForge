@@ -6,10 +6,10 @@ PluginProcessor::PluginProcessor()
     : AudioProcessor(BusesProperties()
                     .withOutput("Output", juce::AudioChannelSet::stereo(), true))
     , apvts(*this, nullptr, "Parameters", createParameterLayout())
-    , presetManager("WavetableSynth", *this)
+    , midiLearnManager_(apvts)
+    , presetManager_(apvts, "WavetableSynth")
 {
-    // Load factory presets
-    presetManager.setFactoryPresets(WavetableSynthPresets::getFactoryPresets());
+    presetManager_.scanPresets();
 }
 
 PluginProcessor::~PluginProcessor()

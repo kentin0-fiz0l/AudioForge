@@ -30,6 +30,9 @@ target_sources(WavetableSynth PRIVATE
     Source/PluginEditor.cpp
     Source/WavetableOscillator.cpp
     Source/Voice.cpp
+    ../../midi/MIDILearnManager.cpp
+    ../../shared/preset/PresetManager.cpp
+    ../../shared/preset/PresetBrowser.cpp
 )
 
 # Include directories

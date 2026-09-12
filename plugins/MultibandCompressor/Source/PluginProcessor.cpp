@@ -290,7 +290,9 @@ MultibandCompressorAudioProcessor::MultibandCompressorAudioProcessor()
                       std::make_unique<juce::AudioParameterBool>("band4Solo", "Band 4 Solo", false),
                       std::make_unique<juce::AudioParameterBool>("band4Bypass", "Band 4 Bypass", false),
                       std::make_unique<juce::AudioParameterBool>("band4MidSide", "Band 4 Mid/Side", false)
-                  })
+                  }),
+       midiLearnManager_(parameters),
+       presetManager_(parameters, "MultibandCompressor")
 {
     // Get parameter pointers - Crossovers
     crossover1Param = parameters.getRawParameterValue("crossover1");

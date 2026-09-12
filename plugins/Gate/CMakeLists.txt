@@ -8,6 +8,7 @@ project(Gate VERSION 1.0.0)
 # Add JUCE
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../JUCE ${CMAKE_CURRENT_BINARY_DIR}/JUCE)
 
+
 # Plugin configuration
 juce_add_plugin(Gate
     COMPANY_NAME "AudioForge"
@@ -32,6 +33,9 @@ target_sources(Gate PRIVATE
     Source/GateEngine.cpp
     ../../shared/dsp/EnvelopeFollower.cpp
     ../../shared/dsp/Sidechain.cpp
+    ../../midi/MIDILearnManager.cpp
+    ../../shared/preset/PresetManager.cpp
+    ../../shared/preset/PresetBrowser.cpp
 )
 
 # Include directories

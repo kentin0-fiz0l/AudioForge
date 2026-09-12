@@ -115,5 +115,8 @@ private:
     //==============================================================================
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
 
+    AudioForge::MIDILearnManager midiLearnManager_;
+    AudioForge::PresetManager presetManager_;
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SamplerPluginProcessor)
 };

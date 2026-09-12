@@ -8,6 +8,7 @@ project(MultibandCompressor VERSION 1.0.0)
 # Add JUCE
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../JUCE ${CMAKE_CURRENT_BINARY_DIR}/JUCE)
 
+
 # Plugin configuration
 juce_add_plugin(MultibandCompressor
     COMPANY_NAME "AudioForge"
@@ -34,6 +35,9 @@ target_sources(MultibandCompressor PRIVATE
     ../../shared/dsp/LinkwitzRiley.cpp
     ../../shared/dsp/MidSide.cpp
     ../../shared/dsp/EnvelopeFollower.cpp
+    ../../midi/MIDILearnManager.cpp
+    ../../shared/preset/PresetManager.cpp
+    ../../shared/preset/PresetBrowser.cpp
 )
 
 # Include directories

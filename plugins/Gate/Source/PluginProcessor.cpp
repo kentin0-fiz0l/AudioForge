@@ -143,7 +143,9 @@ GateAudioProcessor::GateAudioProcessor()
                           juce::AudioProcessorParameter::genericParameter,
                           [](float value, int) { return juce::String(value, 1) + " ms"; }
                       )
-                  })
+                  }),
+       midiLearnManager_(parameters),
+       presetManager_(parameters, "Gate")
 {
     // Get parameter pointers
     thresholdParam = parameters.getRawParameterValue("threshold");

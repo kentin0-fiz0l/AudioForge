@@ -30,6 +30,9 @@ target_sources(PadSynth PRIVATE
     Source/PluginEditor.cpp
     Source/UnisonVoice.cpp
     Source/Voice.cpp
+    ../../midi/MIDILearnManager.cpp
+    ../../shared/preset/PresetManager.cpp
+    ../../shared/preset/PresetBrowser.cpp
 )
 
 # Include directories

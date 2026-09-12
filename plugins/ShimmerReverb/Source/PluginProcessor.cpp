@@ -42,7 +42,7 @@ void ShimmerProcessor::getStateInformation(juce::MemoryBlock& d) {
     auto s = apvts_.copyState();
     std::unique_ptr<juce::XmlElement> x(s.createXml());
     x->addChildElement(midiLearnManager_.saveToXml().release());
-    xml->addChildElement(presetManager_.saveToXml().release());
+    x->addChildElement(presetManager_.saveToXml().release());
     copyXmlToBinary(*x, d);
 }
 void ShimmerProcessor::setStateInformation(const void* d, int sz) {

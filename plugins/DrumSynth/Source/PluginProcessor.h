@@ -1,6 +1,7 @@
 #pragma once
 
 #include <juce_audio_processors/juce_audio_processors.h>
+#include "../../../midi/MIDILearnManager.h"
 #include "../../../shared/preset/PresetManager.h"
 #include "KickModule.h"
 #include "SnareModule.h"
@@ -46,7 +47,8 @@ public:
     void setStateInformation(const void* data, int sizeInBytes) override;
 
     juce::AudioProcessorValueTreeState& getAPVTS() { return apvts; }
-    AudioForge::PresetManager& getPresetManager() { return presetManager; }
+    AudioForge::MIDILearnManager& getMIDILearnManager() { return midiLearnManager_; }
+    AudioForge::PresetManager& getPresetManager() { return presetManager_; }
 
     // MIDI note numbers for drum triggers
     static constexpr int KICK_NOTE = 36;   // C1
@@ -55,11 +57,13 @@ public:
 
 private:
     juce::AudioProcessorValueTreeState apvts;
-    AudioForge::PresetManager presetManager;
 
     KickModule kickModule;
     SnareModule snareModule;
     HiHatModule hihatModule;
+
+    AudioForge::MIDILearnManager midiLearnManager_;
+    AudioForge::PresetManager presetManager_;
 
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
 
