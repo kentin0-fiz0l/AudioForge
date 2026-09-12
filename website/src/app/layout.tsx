@@ -3,8 +3,8 @@ import { Navigation } from "@/components/Navigation";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "AudioForge - Professional VST3 Plugins",
-  description: "22 professional VST3 and AU plugins for music production. Free, open source, and professional-grade.",
+  title: "AudioForge - 39 Professional VST3 Plugins | v2.0.1",
+  description: "39 professional VST3 and AU plugins with universal preset management and MIDI Learn. Free, open source, and professional-grade.",
   metadataBase: new URL('https://audioforge-site.sfo3.cdn.digitaloceanspaces.com'),
   icons: {
     icon: '/favicon.svg',
@@ -17,14 +17,14 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'en_US',
     url: 'https://audioforge-site.sfo3.cdn.digitaloceanspaces.com/index.html',
-    title: 'AudioForge - Professional VST3 & AU Plugins',
-    description: '22 professional audio plugins for music production. Built with JUCE, free and open source.',
+    title: 'AudioForge - 39 Professional VST3 & AU Plugins | v2.0.1',
+    description: '39 professional audio plugins with universal preset management and MIDI Learn. Built with JUCE, free and open source.',
     siteName: 'AudioForge',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'AudioForge - Professional VST3 & AU Plugins',
-    description: '22 professional audio plugins for music production. Built with JUCE, free and open source.',
+    title: 'AudioForge - 39 Professional VST3 & AU Plugins | v2.0.1',
+    description: '39 professional audio plugins with universal preset management and MIDI Learn. Built with JUCE, free and open source.',
   },
 };
 
@@ -52,7 +52,7 @@ const softwareSchema = {
     "price": "0",
     "priceCurrency": "USD"
   },
-  "description": "22 professional VST3 and AU plugins for music production. Built with JUCE and modern C++17."
+  "description": "39 professional VST3 and AU plugins with universal preset management and MIDI Learn. Built with JUCE and modern C++17."
 };
 
 export default function RootLayout({

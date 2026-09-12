@@ -344,7 +344,7 @@ export default function Home() {
                 Ready to Try AudioForge?
               </h3>
               <p className="text-foreground-muted text-lg mb-8 max-w-2xl mx-auto">
-                Download AudioForge v1.9.0 with 22 plugins (VST3 & AU) and start making music today. Free forever, no strings attached.
+                Download AudioForge v2.0.1 with 39 plugins (VST3 & AU), universal preset management, and full MIDI Learn support. Free forever, no strings attached.
               </p>
               <a
                 href="https://github.com/kentin0-fiz0l/AudioForge/releases/latest"
@@ -352,7 +352,7 @@ export default function Home() {
                 rel="noopener noreferrer"
                 className="inline-block px-10 py-4 bg-gradient-primary text-white font-semibold text-lg rounded-lg hover:shadow-glow-primary transition-all"
               >
-                Download v1.9.0
+                Download v2.0.1
               </a>
             </div>
           </div>

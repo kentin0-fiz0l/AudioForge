@@ -24,17 +24,17 @@ export const ReleaseAnnouncement: React.FC = () => {
             <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
               <div>
                 <span className="font-bold text-foreground text-sm sm:text-base">
-                  🎉 v1.9.0 Released!
+                  🎉 v2.0.1 Released!
                 </span>
                 <span className="hidden sm:inline text-foreground-muted text-sm ml-2">
-                  2 critical bugs fixed • 21/22 plugins now validated
+                  39 plugins • 100% preset coverage • Universal MIDI Learn
                 </span>
               </div>
 
               {/* CTA Buttons */}
               <div className="flex items-center gap-2">
                 <a
-                  href="https://github.com/kentin0-fiz0l/AudioForge/releases/tag/v1.9.0"
+                  href="https://github.com/kentin0-fiz0l/AudioForge/releases/tag/v2.0.1"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="px-3 py-1.5 bg-background-light hover:bg-background-lighter text-primary text-xs font-semibold rounded border border-primary/30 hover:border-primary/50 transition-all"
@@ -47,7 +47,7 @@ export const ReleaseAnnouncement: React.FC = () => {
                   rel="noopener noreferrer"
                   className="px-3 py-1.5 bg-gradient-primary text-white text-xs font-semibold rounded hover:shadow-glow-primary transition-all"
                 >
-                  Download Now
+                  Download v2.0.1
                 </a>
               </div>
             </div>
@@ -67,7 +67,7 @@ export const ReleaseAnnouncement: React.FC = () => {
 
         {/* Mobile-only detailed text */}
         <div className="sm:hidden text-foreground-muted text-xs mt-2 pl-11">
-          SpectralFreeze & Sampler fixed • 95.5% validation rate achieved
+          21 new plugins • Complete preset system • Full MIDI Learn support
         </div>
       </div>
     </div>
