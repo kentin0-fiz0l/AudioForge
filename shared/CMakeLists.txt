@@ -3,6 +3,9 @@
 
 cmake_minimum_required(VERSION 3.22)
 
+# Include strict compiler warnings (prevents bugs like v2.0.2 use-after-free)
+include(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/CompilerWarnings.cmake)
+
 # ============================================================================
 # AudioForgeDSP - Header-only DSP library
 # ============================================================================
@@ -45,6 +48,9 @@ set_target_properties(AudioForgeSynth PROPERTIES
     POSITION_INDEPENDENT_CODE ON
 )
 
+# Add strict compiler warnings
+add_audioforge_warnings(AudioForgeSynth)
+
 # ============================================================================
 # AudioForgePresets - Preset management system
 # ============================================================================
@@ -69,3 +75,6 @@ set_target_properties(AudioForgePresets PROPERTIES
     CXX_STANDARD_REQUIRED YES
     POSITION_INDEPENDENT_CODE ON
 )
+
+# Add strict compiler warnings (CRITICAL: prevents use-after-free bugs)
+add_audioforge_warnings(AudioForgePresets)
