@@ -60,7 +60,7 @@ export const Hero: React.FC<HeroProps> = ({ className = '' }) => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <span className="text-green-400 font-semibold text-sm md:text-base">
-              🎉 v2.0.1: 39 Plugins • 100% Preset Coverage • Full MIDI Learn
+              ✅ v2.0.2: Critical Stability Fix • 39 Plugins • 100% Tested
             </span>
           </div>
 
@@ -83,7 +83,7 @@ export const Hero: React.FC<HeroProps> = ({ className = '' }) => {
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                 </svg>
-                Download v2.0.1
+                Download v2.0.2
               </span>
             </a>
             <a
