@@ -3,7 +3,6 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <juce_gui_basics/juce_gui_basics.h>
 #include "PluginProcessor.h"
-#include "../../../shared/preset/PresetBrowser.h"
 
 class PolysynthEditor : public juce::AudioProcessorEditor
 {
@@ -17,7 +16,6 @@ private:
     PolysynthProcessor& processor_;
 
     // Preset browser
-    AudioForge::PresetBrowser presetBrowser_;
     juce::Label oscMixLabel_, detuneLabel_, unisonVoicesLabel_, unisonDetuneLabel_;
     juce::Label filterCutoffLabel_, filterResonanceLabel_, filterMixLabel_;
     juce::Label attackLabel_, decayLabel_, sustainLabel_, releaseLabel_;

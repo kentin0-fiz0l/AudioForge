@@ -1,12 +1,10 @@
 #include "PluginEditor.h"
 
 CompressorEditor::CompressorEditor(CompressorProcessor& p)
-    : AudioProcessorEditor(&p), processor_(p),
-      presetBrowser_(processor_.getPresetManager()) {
+    : AudioProcessorEditor(&p), processor_(p) {
     setSize(850, 450);
 
     // Preset browser
-    addAndMakeVisible(presetBrowser_);
 
     modeBox_.addItem("VCA (Clean)", 1);
     modeBox_.addItem("FET (Aggressive)", 2);

@@ -3,7 +3,6 @@
 #include <juce_gui_basics/juce_gui_basics.h>
 #include "PluginProcessor.h"
 #include "../../../midi/MIDILearnSlider.h"
-#include "../../../shared/preset/PresetBrowser.h"
 
 class MIDIChordGeneratorEditor : public juce::AudioProcessorEditor {
 public:
@@ -17,7 +16,6 @@ private:
     MIDIChordGeneratorProcessor& processor_;
 
     // Preset browser
-    AudioForge::PresetBrowser presetBrowser_;
 
     // Chord type & voicing
     juce::ComboBox chordTypeCombo_;

@@ -2,7 +2,6 @@
 
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "PluginProcessor.h"
-#include "../../../shared/preset/PresetBrowser.h"
 
 /**
  * PadSynth Editor
@@ -78,6 +77,5 @@ private:
                     const juce::String& parameterID);
 
 
-    AudioForge::PresetBrowser presetBrowser_;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PluginEditor)
 };

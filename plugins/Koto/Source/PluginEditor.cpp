@@ -1,13 +1,11 @@
 #include "PluginEditor.h"
 
 KotoEditor::KotoEditor(KotoProcessor& p)
-    : AudioProcessorEditor(&p), processor_(p),
-      presetBrowser_(processor_.getPresetManager())
+    : AudioProcessorEditor(&p), processor_(p)
 {
     setSize(750, 500);
 
     // Preset browser
-    addAndMakeVisible(presetBrowser_);
 
     // Scale selector
     scaleLabel_.setText("Scale", juce::dontSendNotification);

@@ -1,11 +1,9 @@
 #include "PluginEditor.h"
 
-VocoderEditor::VocoderEditor(VocoderProcessor& p) : AudioProcessorEditor(&p), processor_(p),
-      presetBrowser_(processor_.getPresetManager()) {
+VocoderEditor::VocoderEditor(VocoderProcessor& p) : AudioProcessorEditor(&p), processor_(p) {
     setSize(850, 450);
 
     // Preset browser
-    addAndMakeVisible(presetBrowser_);
 
     auto setup = [this](juce::Label& l, const char* t, juce::Slider& s, auto& a, const char* id) {
         l.setText(t, juce::dontSendNotification);

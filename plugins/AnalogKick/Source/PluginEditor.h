@@ -2,7 +2,6 @@
 
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "PluginProcessor.h"
-#include "../../../shared/preset/PresetBrowser.h"
 
 class KickEditor : public juce::AudioProcessorEditor
 {
@@ -17,7 +16,6 @@ private:
     KickProcessor& processor_;
 
     // Preset browser
-    AudioForge::PresetBrowser presetBrowser_;
 
     juce::Label pitchLabel_, pitchEnvAmountLabel_, pitchEnvDecayLabel_;
     juce::Label decayLabel_, clickLabel_, driveLabel_, toneLabel_;

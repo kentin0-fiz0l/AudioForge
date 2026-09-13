@@ -1,13 +1,11 @@
 #include "PluginEditor.h"
 
 MIDIArpeggiatorEditor::MIDIArpeggiatorEditor(MIDIArpeggiatorProcessor& p)
-    : AudioProcessorEditor(&p), processor_(p),
-      presetBrowser_(processor_.getPresetManager()) {
+    : AudioProcessorEditor(&p), processor_(p) {
 
     setSize(500, 450); // Increased for preset browser
 
     // Preset browser
-    addAndMakeVisible(presetBrowser_);
 
     // Pattern combo
     patternLabel_.setText("Pattern", juce::dontSendNotification);
@@ -109,7 +107,6 @@ void MIDIArpeggiatorEditor::resized() {
 
     // Preset browser
     auto presetArea = bounds.removeFromTop(40);
-    presetBrowser_.setBounds(presetArea);
     bounds.removeFromTop(10);
 
     auto topRow = bounds.removeFromTop(60);

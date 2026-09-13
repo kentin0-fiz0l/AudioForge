@@ -1,13 +1,11 @@
 #include "PluginEditor.h"
 
 PolysynthEditor::PolysynthEditor(PolysynthProcessor& p)
-    : AudioProcessorEditor(&p), processor_(p),
-      presetBrowser_(processor_.getPresetManager())
+    : AudioProcessorEditor(&p), processor_(p)
 {
     setSize(900, 550);
 
     // Preset browser
-    addAndMakeVisible(presetBrowser_);
 
     auto setupControl = [this](juce::Label& label, const char* text, juce::Slider& slider, auto& attachment, const char* paramId) {
         label.setText(text, juce::dontSendNotification);

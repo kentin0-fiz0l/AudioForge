@@ -1,7 +1,6 @@
 #pragma once
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "PluginProcessor.h"
-#include "../../../shared/preset/PresetBrowser.h"
 
 class VocoderEditor : public juce::AudioProcessorEditor, private juce::Timer {
 public:
@@ -15,7 +14,6 @@ private:
     VocoderProcessor& processor_;
 
     // Preset browser
-    AudioForge::PresetBrowser presetBrowser_;
     
     juce::Label numBandsLabel_, formantLabel_, carrierLabel_, modulatorLabel_;
     juce::Label attackLabel_, releaseLabel_, mixLabel_;

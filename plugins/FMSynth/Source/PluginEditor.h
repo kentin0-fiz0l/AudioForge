@@ -2,7 +2,6 @@
 
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "PluginProcessor.h"
-#include "../../../shared/preset/PresetBrowser.h"
 
 class FMEditor : public juce::AudioProcessorEditor
 {
@@ -17,7 +16,6 @@ private:
     FMProcessor& processor_;
 
     // Preset browser
-    AudioForge::PresetBrowser presetBrowser_;
 
     juce::Label algorithmLabel_, feedbackLabel_;
     juce::Slider algorithmSlider_, feedbackSlider_;

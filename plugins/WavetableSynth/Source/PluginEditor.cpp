@@ -3,8 +3,7 @@
 #include "../../shared/ui/AudioForgeTheme.h"
 
 PluginEditor::PluginEditor(PluginProcessor& p)
-    : AudioProcessorEditor(&p), audioProcessor(p),
-      presetBrowser_(audioProcessor.getPresetManager())
+    : AudioProcessorEditor(&p), audioProcessor(p)
 {
     // Setup all sliders
     setupSlider(wtPositionSlider, wtPositionLabel, "Position", wtPositionAttachment, "wtPosition");
@@ -39,7 +38,6 @@ PluginEditor::PluginEditor(PluginProcessor& p)
     setSize(900, 550);
 
     // Preset browser
-    addAndMakeVisible(presetBrowser_);
 }
 
 PluginEditor::~PluginEditor()

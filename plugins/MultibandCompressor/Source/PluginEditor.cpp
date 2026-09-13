@@ -15,13 +15,11 @@
 //==============================================================================
 MultibandCompressorAudioProcessorEditor::MultibandCompressorAudioProcessorEditor(
     MultibandCompressorAudioProcessor& p)
-    : AudioProcessorEditor(&p), audioProcessor(p),
-      presetBrowser_(audioProcessor.getPresetManager())
+    : AudioProcessorEditor(&p), audioProcessor(p)
 {
     setSize(900, 600);
 
     // Preset browser
-    addAndMakeVisible(presetBrowser_);
 
     // Setup crossover sliders
     auto setupSlider = [this](juce::Slider& slider) {

@@ -1,13 +1,11 @@
 #include "PluginEditor.h"
 
 XYPadControllerEditor::XYPadControllerEditor(XYPadControllerProcessor& p)
-    : AudioProcessorEditor(&p), processor_(p), xyPad_(p.getAPVTS()),
-      presetBrowser_(processor_.getPresetManager()) {
+    : AudioProcessorEditor(&p), processor_(p), xyPad_(p.getAPVTS()) {
 
     setSize(500, 550);
 
     // Preset browser
-    addAndMakeVisible(presetBrowser_);
 
     // XY Pad
     addAndMakeVisible(xyPad_);

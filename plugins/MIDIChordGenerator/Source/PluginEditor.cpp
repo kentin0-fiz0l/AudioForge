@@ -1,13 +1,11 @@
 #include "PluginEditor.h"
 
 MIDIChordGeneratorEditor::MIDIChordGeneratorEditor(MIDIChordGeneratorProcessor& p)
-    : AudioProcessorEditor(&p), processor_(p),
-      presetBrowser_(processor_.getPresetManager()) {
+    : AudioProcessorEditor(&p), processor_(p) {
 
     setSize(500, 350);
 
     // Preset browser
-    addAndMakeVisible(presetBrowser_);
 
     // Chord type combo
     chordTypeLabel_.setText("Chord Type", juce::dontSendNotification);

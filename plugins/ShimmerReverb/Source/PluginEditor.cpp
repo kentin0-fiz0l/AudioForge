@@ -1,10 +1,8 @@
 #include "PluginEditor.h"
-ShimmerEditor::ShimmerEditor(ShimmerProcessor& p) : AudioProcessorEditor(&p), processor_(p),
-      presetBrowser_(processor_.getPresetManager()) {
+ShimmerEditor::ShimmerEditor(ShimmerProcessor& p) : AudioProcessorEditor(&p), processor_(p) {
     setSize(750, 350);
 
     // Preset browser
-    addAndMakeVisible(presetBrowser_);
     pitchModeBox_.addItem("Octave Up", 1); pitchModeBox_.addItem("Octave Down", 2); pitchModeBox_.addItem("Both", 3);
     addAndMakeVisible(pitchModeBox_);
     pitchModeAttachment_ = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(

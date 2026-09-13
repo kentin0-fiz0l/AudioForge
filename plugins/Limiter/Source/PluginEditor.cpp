@@ -14,8 +14,7 @@
 
 //==============================================================================
 LimiterAudioProcessorEditor::LimiterAudioProcessorEditor (LimiterAudioProcessor& p)
-    : AudioProcessorEditor (&p), audioProcessor (p),
-    presetBrowser_(audioProcessor.getPresetManager())
+    : AudioProcessorEditor (&p), audioProcessor (p)
 {
     // Set size
     setSize (600, 400);

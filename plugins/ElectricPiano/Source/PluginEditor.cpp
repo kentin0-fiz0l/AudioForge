@@ -2,14 +2,12 @@
 
 ElectricPianoEditor::ElectricPianoEditor(ElectricPianoProcessor& p)
     : AudioProcessorEditor(&p),
-      processor_(p),
-      presetBrowser_(processor_.getPresetManager())
+      processor_(p)
 {
     // Window size
     setSize(700, 500);
 
     // Preset browser
-    addAndMakeVisible(presetBrowser_);
 
     // Model selector
     modelLabel_.setText("Model", juce::dontSendNotification);

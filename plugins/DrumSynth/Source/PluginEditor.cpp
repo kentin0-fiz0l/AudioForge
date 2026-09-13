@@ -3,8 +3,7 @@
 #include "../../shared/ui/AudioForgeTheme.h"
 
 PluginEditor::PluginEditor(PluginProcessor& p)
-    : AudioProcessorEditor(&p), audioProcessor(p),
-      presetBrowser_(audioProcessor.getPresetManager())
+    : AudioProcessorEditor(&p), audioProcessor(p)
 {
     // Setup all sliders - Kick section
     setupSlider(kickPitchSlider, kickPitchLabel, "Pitch", kickPitchAttachment, "kickPitch");
@@ -29,7 +28,6 @@ PluginEditor::PluginEditor(PluginProcessor& p)
     setSize(900, 450);
 
     // Preset browser
-    addAndMakeVisible(presetBrowser_);
 }
 
 PluginEditor::~PluginEditor()

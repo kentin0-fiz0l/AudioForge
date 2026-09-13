@@ -1,13 +1,11 @@
 #include "PluginEditor.h"
 
 StringEnsembleEditor::StringEnsembleEditor(StringEnsembleProcessor& p)
-    : AudioProcessorEditor(&p), processor_(p),
-      presetBrowser_(processor_.getPresetManager())
+    : AudioProcessorEditor(&p), processor_(p)
 {
     setSize(700, 480);
 
     // Preset browser
-    addAndMakeVisible(presetBrowser_);
 
     // String type selector
     stringTypeLabel_.setText("String Type", juce::dontSendNotification);

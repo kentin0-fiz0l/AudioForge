@@ -4,14 +4,12 @@
 
 FreezeFXEditor::FreezeFXEditor(FreezeFXProcessor& p)
     : AudioProcessorEditor(&p),
-      audioProcessor(p),
-      presetBrowser_(audioProcessor.getPresetManager())
+      audioProcessor(p)
 {
     // Set window size
     setSize(500, 600);
 
     // Preset browser
-    addAndMakeVisible(presetBrowser_);
 
     // Freeze Button
     freezeButton.setButtonText("FREEZE");

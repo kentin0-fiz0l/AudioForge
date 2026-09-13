@@ -45,9 +45,9 @@ void PresetManager::savePreset(const juce::String& name,
         scanPresets();
 
         // Set as current preset
-        for (const auto& p : presets_) {
-            if (p.file == presetFile) {
-                currentPreset_ = &p;
+        for (int i = 0; i < presets_.size(); ++i) {
+            if (presets_[i].file == presetFile) {
+                currentPreset_ = &presets_.getReference(i);  // Safe: points to element in array
                 isModified_ = false;
                 break;
             }
@@ -78,9 +78,9 @@ bool PresetManager::loadPreset(const juce::File& presetFile) {
         apvts_.replaceState(valueTree);
 
         // Update current preset tracking
-        for (const auto& p : presets_) {
-            if (p.file == presetFile) {
-                currentPreset_ = &p;
+        for (int i = 0; i < presets_.size(); ++i) {
+            if (presets_[i].file == presetFile) {
+                currentPreset_ = &presets_.getReference(i);  // Safe: points to element in array
                 isModified_ = false;
                 return true;
             }

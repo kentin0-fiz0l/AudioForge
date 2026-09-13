@@ -1,13 +1,11 @@
 #include "PluginEditor.h"
 
 BrassSectionEditor::BrassSectionEditor(BrassSectionProcessor& p)
-    : AudioProcessorEditor(&p), processor_(p),
-      presetBrowser_(processor_.getPresetManager())
+    : AudioProcessorEditor(&p), processor_(p)
 {
     setSize(700, 500);
 
     // Preset browser
-    addAndMakeVisible(presetBrowser_);
 
     // Instrument selector
     instrumentLabel_.setText("Instrument", juce::dontSendNotification);

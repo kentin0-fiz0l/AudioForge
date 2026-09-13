@@ -3,7 +3,6 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <juce_gui_basics/juce_gui_basics.h>
 #include "PluginProcessor.h"
-#include "../../../shared/preset/PresetBrowser.h"
 
 /**
  * ElectricPianoEditor - GUI for the ElectricPiano plugin
@@ -27,7 +26,6 @@ private:
     ElectricPianoProcessor& processor_;
 
     // Preset browser
-    AudioForge::PresetBrowser presetBrowser_;
 
     // Model selection
     juce::Label modelLabel_;

@@ -3,8 +3,7 @@
 #include "../../shared/ui/AudioForgeTheme.h"
 
 PluginEditor::PluginEditor(PluginProcessor& p)
-    : AudioProcessorEditor(&p), audioProcessor(p),
-      presetBrowser_(audioProcessor.getPresetManager())
+    : AudioProcessorEditor(&p), audioProcessor(p)
 {
     // Setup all sliders
     setupSlider(waveformSlider, waveformLabel, "Waveform", waveformAttachment, "waveform");
@@ -48,7 +47,6 @@ PluginEditor::PluginEditor(PluginProcessor& p)
     setSize(850, 500);
 
     // Preset browser
-    addAndMakeVisible(presetBrowser_);
 }
 
 PluginEditor::~PluginEditor()

@@ -2,7 +2,6 @@
 
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "PluginProcessor.h"
-#include "../../../shared/preset/PresetBrowser.h"
 
 class SnareEditor : public juce::AudioProcessorEditor
 {
@@ -17,7 +16,6 @@ private:
     SnareProcessor& processor_;
 
     // Preset browser
-    AudioForge::PresetBrowser presetBrowser_;
 
     juce::Label toneLabel_, snappyLabel_, decayLabel_, snareDecayLabel_, pitchEnvLabel_, snapLabel_;
     juce::Slider toneSlider_, snappySlider_, decaySlider_, snareDecaySlider_, pitchEnvSlider_, snapSlider_;

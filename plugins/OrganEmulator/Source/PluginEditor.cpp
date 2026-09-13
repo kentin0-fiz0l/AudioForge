@@ -3,8 +3,7 @@
 #include "../../shared/ui/AudioForgeTheme.h"
 
 PluginEditor::PluginEditor(PluginProcessor& p)
-    : AudioProcessorEditor(&p), audioProcessor(p),
-      presetBrowser_(audioProcessor.getPresetManager())
+    : AudioProcessorEditor(&p), audioProcessor(p)
 {
     // Setup all drawbar faders (vertical)
     setupDrawbar(drawbar16Slider, drawbar16Label, "16'", drawbar16Attachment, "drawbar16");
@@ -29,7 +28,6 @@ PluginEditor::PluginEditor(PluginProcessor& p)
     setSize(950, 500);
 
     // Preset browser
-    addAndMakeVisible(presetBrowser_);
 }
 
 PluginEditor::~PluginEditor()

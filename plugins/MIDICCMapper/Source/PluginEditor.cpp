@@ -1,13 +1,11 @@
 #include "PluginEditor.h"
 
 MIDICCMapperEditor::MIDICCMapperEditor(MIDICCMapperProcessor& p)
-    : AudioProcessorEditor(&p), processor_(p),
-      presetBrowser_(processor_.getPresetManager()) {
+    : AudioProcessorEditor(&p), processor_(p) {
 
     setSize(500, 450);
 
     // Preset browser
-    addAndMakeVisible(presetBrowser_);
 
     // Column headers
     juce::String headers[] = {"#", "Status", "In CC", "Out CC", "Range", "Curve"};

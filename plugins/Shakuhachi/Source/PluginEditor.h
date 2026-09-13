@@ -3,7 +3,6 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <juce_gui_basics/juce_gui_basics.h>
 #include "PluginProcessor.h"
-#include "../../../shared/preset/PresetBrowser.h"
 
 class ShakuhachiEditor : public juce::AudioProcessorEditor
 {
@@ -18,7 +17,6 @@ private:
     ShakuhachiProcessor& processor_;
 
     // Preset browser
-    AudioForge::PresetBrowser presetBrowser_;
 
     juce::Label breathPressureLabel_, embouchureLabel_, airNoiseLabel_, brightnessLabel_;
     juce::Label attackLabel_, releaseLabel_, vibratoRateLabel_, vibratoDepthLabel_;

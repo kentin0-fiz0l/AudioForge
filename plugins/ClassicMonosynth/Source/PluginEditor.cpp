@@ -1,13 +1,11 @@
 #include "PluginEditor.h"
 
 ClassicMonosynthEditor::ClassicMonosynthEditor(ClassicMonosynthProcessor& p)
-    : AudioProcessorEditor(&p), processor_(p),
-      presetBrowser_(processor_.getPresetManager())
+    : AudioProcessorEditor(&p), processor_(p)
 {
     setSize(1000, 600);
 
     // Preset browser
-    addAndMakeVisible(presetBrowser_);
 
     // Helper lambda for setup
     auto setupControl = [this](juce::Label& label, const char* text, juce::Slider& slider,

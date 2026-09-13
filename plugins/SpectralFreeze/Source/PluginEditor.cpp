@@ -272,7 +272,7 @@ void SpectralFreezeEditor::paint(juce::Graphics& g)
 
     // Freeze status indicator (only if processor is prepared)
     if (audioProcessor.spectralProcessor.isProcessorPrepared() &&
-        audioProcessor.spectralProcessor.isFrozen())
+        audioProcessor.spectralProcessor.isFrozen()
     {
         g.setColour(juce::Colours::red.withAlpha(0.3f));
         g.fillRect(spectrogramBounds);
@@ -340,7 +340,7 @@ void SpectralFreezeEditor::resized()
 void SpectralFreezeEditor::timerCallback()
 {
     // Only update visualization if processor is prepared
-    if (!audioProcessor.spectralProcessor.isProcessorPrepared())
+    if (!audioProcessor.spectralProcessor.isProcessorPrepared()
     {
         repaint();  // Still repaint UI, just don't access spectrum data
         return;
@@ -348,7 +348,7 @@ void SpectralFreezeEditor::timerCallback()
 
     // Update spectrogram history with current spectrum
     const auto& currentSpectrum = audioProcessor.spectralProcessor.getCurrentMagnitudeSpectrum();
-    if (!currentSpectrum.empty())
+    if (!currentSpectrum.empty()
     {
         spectrogramHistory[spectrogramWriteIndex] = currentSpectrum;
         spectrogramWriteIndex = (spectrogramWriteIndex + 1) % SPECTROGRAM_HISTORY_SIZE;
@@ -361,7 +361,7 @@ void SpectralFreezeEditor::timerCallback()
 void SpectralFreezeEditor::paintSpectrogram(juce::Graphics& g, juce::Rectangle<int> bounds)
 {
     // Safety check: ensure spectrogram history is valid
-    if (spectrogramHistory.empty() || spectrogramHistory[0].empty())
+    if (spectrogramHistory.empty() || spectrogramHistory[0].empty()
         return;
 
     // Draw spectrogram as rolling waterfall (time vs. frequency)
@@ -411,11 +411,11 @@ void SpectralFreezeEditor::paintFrozenSpectrumOverlay(juce::Graphics& g, juce::R
 {
     // Draw frozen spectrum as overlay line (only if processor is prepared and frozen)
     if (!audioProcessor.spectralProcessor.isProcessorPrepared() ||
-        !audioProcessor.spectralProcessor.isFrozen())
+        !audioProcessor.spectralProcessor.isFrozen()
         return;
 
     const auto& frozenSpectrum = audioProcessor.spectralProcessor.getFrozenMagnitudeSpectrum();
-    if (frozenSpectrum.empty())
+    if (frozenSpectrum.empty()
         return;
 
     int numBins = frozenSpectrum.size();

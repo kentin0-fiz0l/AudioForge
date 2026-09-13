@@ -1,7 +1,6 @@
 #pragma once
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "PluginProcessor.h"
-#include "../../../shared/preset/PresetBrowser.h"
 class HiHatEditor : public juce::AudioProcessorEditor {
 public:
     HiHatEditor(HiHatProcessor&);
@@ -12,7 +11,6 @@ private:
     HiHatProcessor& processor_;
 
     // Preset browser
-    AudioForge::PresetBrowser presetBrowser_;
     juce::Label toneLabel_, decayLabel_, metallicLabel_, opennessLabel_;
     juce::Slider toneSlider_, decaySlider_, metallicSlider_, opennessSlider_;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment>

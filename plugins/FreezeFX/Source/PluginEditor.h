@@ -1,7 +1,6 @@
 #pragma once
 
 #include "PluginProcessor.h"
-#include "../../../shared/preset/PresetBrowser.h"
 #include <juce_audio_processors/juce_audio_processors.h>
 
 /**
@@ -71,6 +70,5 @@ private:
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> lowPassAttachment;
 
 
-    AudioForge::PresetBrowser presetBrowser_;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FreezeFXEditor)
 };

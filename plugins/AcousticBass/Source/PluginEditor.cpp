@@ -1,13 +1,11 @@
 #include "PluginEditor.h"
 
 AcousticBassEditor::AcousticBassEditor(AcousticBassProcessor& p)
-    : AudioProcessorEditor(&p), processor_(p),
-      presetBrowser_(processor_.getPresetManager())
+    : AudioProcessorEditor(&p), processor_(p)
 {
     setSize(700, 450);
 
     // Preset browser
-    addAndMakeVisible(presetBrowser_);
 
     // Bass type selector
     bassTypeLabel_.setText("Bass Type", juce::dontSendNotification);

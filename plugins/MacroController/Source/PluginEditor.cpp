@@ -2,13 +2,11 @@
 
 MacroControllerEditor::MacroControllerEditor(MacroControllerProcessor& p)
     : AudioProcessorEditor(&p),
-      processor_(p),
-      presetBrowser_(processor_.getPresetManager()) {
+      processor_(p) {
 
     setSize(400, 550);  // Increase height for preset browser
 
     // Preset browser
-    addAndMakeVisible(presetBrowser_);
 
     // Macro knob
     macroLabel_.setText("Macro", juce::dontSendNotification);
@@ -83,7 +81,6 @@ void MacroControllerEditor::resized() {
 
     // Preset browser at top
     auto presetArea = bounds.removeFromTop(40);
-    presetBrowser_.setBounds(presetArea);
 
     bounds.removeFromTop(10);
 

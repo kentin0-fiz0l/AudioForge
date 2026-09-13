@@ -322,7 +322,7 @@ void GranularEngineEditor::timerCallback()
 
 void GranularEngineEditor::paintWaveform(juce::Graphics& g, juce::Rectangle<int> bounds)
 {
-    if (bounds.isEmpty())
+    if (bounds.isEmpty()
         return;
 
     // Background
@@ -377,7 +377,7 @@ void GranularEngineEditor::paintWaveform(juce::Graphics& g, juce::Rectangle<int>
 
 void GranularEngineEditor::paintWindowPreview(juce::Graphics& g, juce::Rectangle<int> bounds)
 {
-    if (bounds.isEmpty())
+    if (bounds.isEmpty()
         return;
 
     // Background
@@ -493,7 +493,7 @@ void GranularEngineEditor::paintWindowPreview(juce::Graphics& g, juce::Rectangle
 
 void GranularEngineEditor::paintGrainActivity(juce::Graphics& g, juce::Rectangle<int> bounds)
 {
-    if (bounds.isEmpty())
+    if (bounds.isEmpty()
         return;
 
     // Background
@@ -561,7 +561,7 @@ void GranularEngineEditor::paintGrainActivity(juce::Graphics& g, juce::Rectangle
 void GranularEngineEditor::mouseDown(const juce::MouseEvent& event)
 {
     // Check if click is in waveform bounds
-    if (waveformBounds.contains(event.getPosition()))
+    if (waveformBounds.contains(event.getPosition()
     {
         // Set position based on click location
         float newPosition = (event.x - waveformBounds.getX()) / (float)waveformBounds.getWidth();
@@ -578,7 +578,7 @@ void GranularEngineEditor::mouseDown(const juce::MouseEvent& event)
 void GranularEngineEditor::mouseDrag(const juce::MouseEvent& event)
 {
     // Same as mouseDown - allow dragging to adjust position
-    if (waveformBounds.contains(event.getPosition()))
+    if (waveformBounds.contains(event.getPosition()
     {
         float newPosition = (event.x - waveformBounds.getX()) / (float)waveformBounds.getWidth();
         newPosition = juce::jlimit(0.0f, 1.0f, newPosition);

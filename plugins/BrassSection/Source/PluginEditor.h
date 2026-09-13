@@ -3,7 +3,6 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <juce_gui_basics/juce_gui_basics.h>
 #include "PluginProcessor.h"
-#include "../../../shared/preset/PresetBrowser.h"
 
 class BrassSectionEditor : public juce::AudioProcessorEditor
 {
@@ -18,7 +17,6 @@ private:
     BrassSectionProcessor& processor_;
 
     // Preset browser
-    AudioForge::PresetBrowser presetBrowser_;
 
     // Instrument and articulation selection
     juce::Label instrumentLabel_;

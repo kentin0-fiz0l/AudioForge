@@ -3,8 +3,7 @@
 
 SamplerPluginEditor::SamplerPluginEditor(SamplerPluginProcessor& p)
     : AudioProcessorEditor(&p),
-      processor(p),
-      presetBrowser_(processor.getPresetManager())
+      processor(p)
 {
 
     // Create components
@@ -209,7 +208,6 @@ SamplerPluginEditor::SamplerPluginEditor(SamplerPluginProcessor& p)
     setSize(950, 650);
 
     // Preset browser
-    addAndMakeVisible(presetBrowser_);
 
     // Initial updates
     updateMemoryDisplay();

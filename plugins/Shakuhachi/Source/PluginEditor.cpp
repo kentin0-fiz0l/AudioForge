@@ -1,13 +1,11 @@
 #include "PluginEditor.h"
 
 ShakuhachiEditor::ShakuhachiEditor(ShakuhachiProcessor& p)
-    : AudioProcessorEditor(&p), processor_(p),
-      presetBrowser_(processor_.getPresetManager())
+    : AudioProcessorEditor(&p), processor_(p)
 {
     setSize(800, 500);
 
     // Preset browser
-    addAndMakeVisible(presetBrowser_);
 
     // Setup controls with bamboo/zen naming
     auto setupControl = [this](juce::Label& label, const char* text, juce::Slider& slider,

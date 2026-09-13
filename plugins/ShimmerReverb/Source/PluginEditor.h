@@ -1,7 +1,6 @@
 #pragma once
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "PluginProcessor.h"
-#include "../../../shared/preset/PresetBrowser.h"
 class ShimmerEditor : public juce::AudioProcessorEditor {
 public:
     ShimmerEditor(ShimmerProcessor&); ~ShimmerEditor() override;
@@ -11,7 +10,6 @@ private:
     ShimmerProcessor& processor_;
 
     // Preset browser
-    AudioForge::PresetBrowser presetBrowser_;
     juce::ComboBox pitchModeBox_;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> pitchModeAttachment_;
     juce::Label sizeLabel_, dampingLabel_, shimmerLabel_, feedbackLabel_, mixLabel_;

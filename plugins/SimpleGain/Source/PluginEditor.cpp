@@ -3,8 +3,7 @@
 
 SimpleGainEditor::SimpleGainEditor(SimpleGainProcessor& p)
     : AudioProcessorEditor(&p),
-      processor(p),
-      presetBrowser_(processor.getPresetManager())
+      processor(p)
 {
     // Configure gain slider
     gainSlider.setSliderStyle(juce::Slider::RotaryVerticalDrag);
@@ -42,9 +41,6 @@ SimpleGainEditor::SimpleGainEditor(SimpleGainProcessor& p)
 
     // Set editor size
     setSize(400, 300);
-
-    // Preset browser
-    addAndMakeVisible(presetBrowser_);
 }
 
 SimpleGainEditor::~SimpleGainEditor()
