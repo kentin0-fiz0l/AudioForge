@@ -145,7 +145,7 @@ jobs:
             mesa-common-dev
 
       - name: Cache JUCE build
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: |
             plugins/*/build/_deps
