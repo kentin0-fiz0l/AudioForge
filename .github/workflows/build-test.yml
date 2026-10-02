@@ -105,12 +105,18 @@ jobs:
         shell: bash
         run: |
           echo "::group::Running AudioForge Test Suite"
+          # Keep the real exit code: a crash and a failed assertion look very
+          # different, and '|| exit 1' used to flatten both to 1.
+          set +e
           if [ "${{ runner.os }}" = "Windows" ]; then
-            ./build/${{ env.BUILD_TYPE }}/TestRunner.exe || exit 1
+            ./build/${{ env.BUILD_TYPE }}/TestRunner.exe
           else
-            ./build/TestRunner || exit 1
+            ./build/TestRunner
           fi
+          status=$?
           echo "::endgroup::"
+          echo "TestRunner exit code: $status"
+          exit $status
 
       - name: Upload test results on failure
         if: failure()

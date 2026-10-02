@@ -17,13 +17,26 @@ class SimpleGainPluginTests;
 class PanUtilPluginTests;
 class PluginIntegrationTests;
 
+// Writes JUCE's per-test log lines to stdout, flushing after each one.
+// The default runner logs through juce::Logger, which on Windows goes to the
+// debugger instead of the console, and buffered output is lost entirely if a
+// test crashes the process.
+class ConsoleTestRunner : public juce::UnitTestRunner
+{
+protected:
+    void logMessage(const juce::String& message) override
+    {
+        std::cout << message << std::endl;
+    }
+};
+
 int main(int argc, char* argv[])
 {
     // Initialize JUCE
     juce::ScopedJuceInitialiser_GUI juceInit;
 
     // Create test runner
-    juce::UnitTestRunner runner;
+    ConsoleTestRunner runner;
 
     std::cout << "========================================\n";
     std::cout << "    AudioForge Test Suite\n";
