@@ -70,6 +70,14 @@ target_link_libraries(AudioForgePresets PUBLIC
 
 target_compile_features(AudioForgePresets PUBLIC cxx_std_17)
 
+# This target compiles its own copy of the JUCE modules it links, so it needs
+# the same module config the plugins use. Without these, juce_gui_extra builds
+# its embedded web browser and requires GTK/WebKit headers on Linux.
+target_compile_definitions(AudioForgePresets PRIVATE
+    JUCE_WEB_BROWSER=0
+    JUCE_USE_CURL=0
+)
+
 set_target_properties(AudioForgePresets PROPERTIES
     CXX_STANDARD 17
     CXX_STANDARD_REQUIRED YES

@@ -6,25 +6,19 @@
 
 function(add_audioforge_warnings target)
     # Get the compiler warnings appropriate for this compiler
-    set(CLANG_WARNINGS
+    # Flags understood by both Clang and GCC
+    set(COMMON_WARNINGS
         -Wall                       # Enable all warnings
         -Wextra                     # Enable extra warnings
         -Wpedantic                  # Warn about non-standard C++
 
-        # CRITICAL: Catch the v2.0.2 bug type
-        -Werror=address-of-temporary    # ERROR: Taking address of temporary (THE BUG WE FIXED!)
-        -Werror=return-stack-address    # ERROR: Returning address of local variable
-        -Werror=dangling                # ERROR: Dangling references
-
         # Memory safety
-        -Wdangling-field            # Warn about dangling field references
         -Wunused-variable           # Catch unused variables
         -Wunused-parameter          # Catch unused parameters
         -Wshadow                    # Warn about variable shadowing
 
         # Modernization
         -Wdeprecated                # Warn about deprecated features
-        -Wc++17-extensions          # Warn about C++17 usage (we require it)
 
         # Code quality
         -Wconversion                # Warn about implicit conversions
@@ -34,8 +28,22 @@ function(add_audioforge_warnings target)
         -Wnull-dereference          # Warn about potential null dereferences
     )
 
+    # Clang-only flags; GCC rejects these as unrecognized options
+    set(CLANG_WARNINGS
+        ${COMMON_WARNINGS}
+
+        # CRITICAL: Catch the v2.0.2 bug type
+        -Werror=address-of-temporary    # ERROR: Taking address of temporary (THE BUG WE FIXED!)
+        -Werror=return-stack-address    # ERROR: Returning address of local variable
+        -Werror=dangling                # ERROR: Dangling references
+
+        -Wdangling-field            # Warn about dangling field references
+        -Wc++17-extensions          # Warn about C++17 usage (we require it)
+    )
+
     set(GCC_WARNINGS
-        ${CLANG_WARNINGS}
+        ${COMMON_WARNINGS}
+        -Werror=return-local-addr   # ERROR: GCC's name for returning a local's address
         -Wmisleading-indentation    # Warn about misleading indentation
         -Wduplicated-cond           # Warn about duplicated conditions
         -Wduplicated-branches       # Warn about duplicated branches
@@ -78,14 +86,6 @@ function(add_audioforge_warnings target)
     endif()
 
     target_compile_options(${target} PRIVATE ${PROJECT_WARNINGS})
-
-    # Also make the critical warnings errors
-    if(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-        target_compile_options(${target} PRIVATE
-            -Werror=address-of-temporary
-            -Werror=return-stack-address
-        )
-    endif()
 
     message(STATUS "AudioForge: Strict compiler warnings enabled for ${target}")
 endfunction()

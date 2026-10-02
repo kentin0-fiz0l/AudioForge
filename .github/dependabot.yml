@@ -15,16 +15,6 @@ updates:
       prefix: "ci"
       include: "scope"
 
-  # Git submodules (JUCE)
-  - package-ecosystem: "gitsubmodule"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-    open-pull-requests-limit: 3
-    labels:
-      - "dependencies"
-      - "juce"
-    commit-message:
-      prefix: "build"
-      include: "scope"
+  # JUCE is pinned to a release tag (currently 9.0.1) and upgraded by hand.
+  # Dependabot's gitsubmodule updater can only follow a branch tip, so it is
+  # intentionally not enabled for the JUCE submodule.
