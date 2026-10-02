@@ -60,6 +60,16 @@ target_sources(TestRunner PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/BasicSynth/Source/PluginEditor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/BasicSynth/Source/Voice.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/BasicSynth/Source/Oscillator.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/BasicSynth/Source/OscillatorBank.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/BasicSynth/Source/NoiseGenerator.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/BasicSynth/Source/LFO.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/BasicSynth/Source/ModulationMatrix.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/BasicSynth/Source/Chorus.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/BasicSynth/Source/Reverb.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/BasicSynth/Source/Saturation.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/BasicSynth/Source/EffectsChain.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../shared/synth/ADSREnvelope.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../shared/synth/MultiModeFilter.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/CleanDelay/Source/PluginProcessor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/CleanDelay/Source/PluginEditor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/SimpleEQ/Source/PluginProcessor.cpp
