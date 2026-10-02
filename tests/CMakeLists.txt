@@ -98,6 +98,13 @@ target_compile_definitions(TestRunner PUBLIC
 # Set C++ standard
 target_compile_features(TestRunner PRIVATE cxx_std_17)
 
+# Tests construct processors as local variables, and some are large:
+# CleanDelay holds about 1.5 MB of delay buffers inline. Windows gives the main
+# thread a 1 MB stack by default where macOS and Linux give 8 MB, so match them.
+if(MSVC)
+    target_link_options(TestRunner PRIVATE /STACK:8388608)
+endif()
+
 # Code coverage configuration
 if(ENABLE_COVERAGE)
     message(STATUS "Code coverage enabled")
