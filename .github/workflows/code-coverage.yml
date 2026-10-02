@@ -53,7 +53,7 @@ jobs:
           cmake -B build \
             -DENABLE_COVERAGE=ON \
             -DCMAKE_BUILD_TYPE=Debug
-          cmake --build build --parallel
+          cmake --build build --parallel 4
 
       - name: Run tests
         working-directory: tests
