@@ -120,10 +120,7 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Setup CMake
-        uses: jwlawson/actions-setup-cmake@v2
-        with:
-          cmake-version: 3.15.x
+      # CMake is deliberately not pinned; see build-test.yml
 
       - name: Install Linux dependencies
         if: runner.os == 'Linux'
@@ -132,13 +129,15 @@ jobs:
           sudo apt-get install -y \
             libasound2-dev \
             libcurl4-openssl-dev \
-            libfreetype6-dev \
+            libfontconfig1-dev \
+            libfreetype-dev \
             libgl1-mesa-dev \
             libjack-jackd2-dev \
             libx11-dev \
             libxcomposite-dev \
             libxcursor-dev \
             libxext-dev \
+            libxi-dev \
             libxinerama-dev \
             libxrandr-dev \
             libxrender-dev \
@@ -167,7 +166,7 @@ jobs:
         working-directory: tests
         run: |
           cmake -B build -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}
-          cmake --build build --config ${{ env.BUILD_TYPE }} --parallel
+          cmake --build build --config ${{ env.BUILD_TYPE }} --parallel 4
           echo "::group::Running tests before release"
           if [ "${{ runner.os }}" = "Windows" ]; then
             ./build/${{ env.BUILD_TYPE }}/TestRunner.exe || {

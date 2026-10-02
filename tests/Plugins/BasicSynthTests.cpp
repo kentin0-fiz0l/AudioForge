@@ -56,9 +56,10 @@ private:
         expect(processor.getBusCount(true) == 0, "Should have no input bus");
         expect(processor.getBusCount(false) == 1, "Should have one output bus");
 
-        // Check parameter count (8 parameters)
+        // Check parameter count: 8 synth parameters + filter type
+        // + 9 effects parameters (chorus, reverb, saturation)
         const auto& params = processor.getParameters();
-        expect(params.size() == 8, "Should have 8 parameters");
+        expect(params.size() == 18, "Should have 18 parameters");
     }
 
     void testParameterRanges()
@@ -127,6 +128,16 @@ private:
         beginTest("MIDI note on/off handling");
 
         BasicSynthProcessor processor;
+
+        // Bypass the time-based effects so this measures the amp envelope's
+        // release rather than the reverb tail, which rings for about a second
+        for (auto* param : processor.getParameters())
+        {
+            const auto name = param->getName(64);
+            if (name == "Chorus Mix" || name == "Reverb Mix")
+                param->setValueNotifyingHost(0.0f);
+        }
+
         processor.prepareToPlay(48000.0, 512);
 
         juce::AudioBuffer<float> buffer(2, 512);
