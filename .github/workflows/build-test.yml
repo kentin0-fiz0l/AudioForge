@@ -16,7 +16,8 @@ env:
 
 jobs:
   build-and-test:
-    name: ${{ matrix.name }}
+    # Must match the required status checks in main's branch protection
+    name: Build and Test (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
