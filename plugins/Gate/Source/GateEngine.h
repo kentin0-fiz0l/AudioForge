@@ -163,7 +163,7 @@ private:
     double currentSampleRate = 44100.0;
     int maxSamplesPerBlock = 512;
 
-    float currentGainReduction = 0.0f;  // Current gain reduction (linear, 0-1)
+    float currentGainReduction = 0.0f;  // Gain being applied (linear, range to 1); envelope state
     float targetGainReduction = 0.0f;   // Target gain reduction
 
     // Hold state

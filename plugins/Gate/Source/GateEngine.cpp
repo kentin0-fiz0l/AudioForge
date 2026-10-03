@@ -213,11 +213,9 @@ void GateEngine::process(juce::AudioBuffer<float>& buffer,
         lookaheadWritePosition = (lookaheadWritePosition + 1) % bufferSize;
     }
 
-    // Store current gain reduction for metering (guard against division by zero)
-    if (range > 0.00001f)
-        currentGainReduction = 1.0f - (currentGainReduction / range);  // Convert to 0-1 for metering
-    else
-        currentGainReduction = 1.0f;  // Fully open if range is effectively zero
+    // currentGainReduction is the envelope's running state and carries over
+    // to the next block, so it must not be rescaled here. The meter derives
+    // its value from it in getGainReductionDb().
 }
 
 float GateEngine::calculateGainReduction(float inputLevel)
@@ -342,9 +340,9 @@ float GateEngine::timeConstantToCoeff(float timeMs)
 
 float GateEngine::getGainReductionDb() const
 {
-    // Convert linear gain reduction to dB
-    float gainReductionLinear = 1.0f - currentGainReduction;
-    return juce::Decibels::gainToDecibels(gainReductionLinear);
+    // The gain being applied, in dB: 0 dB when the gate is open, falling to
+    // the range setting when it is closed
+    return juce::Decibels::gainToDecibels(currentGainReduction);
 }
 
 float GateEngine::getInputLevelDb() const
