@@ -11,6 +11,9 @@
  *
  * State-variable filters allow smooth transitions between filter types
  * and provide all outputs simultaneously.
+ *
+ * Implemented as a zero-delay-feedback (trapezoidal) filter, which is stable
+ * at every cutoff up to Nyquist.
  */
 class MultiModeFilter
 {
@@ -60,13 +63,15 @@ private:
     FilterType filterType = FilterType::LowPass;
 
     // State variables (integrators)
-    float lp = 0.0f;  // Low-pass output
-    float bp = 0.0f;  // Band-pass output
-    float hp = 0.0f;  // High-pass output
+    float ic1eq = 0.0f;  // First integrator state
+    float ic2eq = 0.0f;  // Second integrator state
 
     // Filter coefficients
-    float cutoffCoeff = 0.0f;  // Cutoff coefficient (2 * sin(π * f / fs))
+    float cutoffCoeff = 0.0f;  // Cutoff coefficient (tan(π * f / fs))
     float resonanceCoeff = 0.0f;  // Resonance coefficient (1 / Q)
+    float a1 = 1.0f;  // Terms of the solved feedback loop,
+    float a2 = 0.0f;  // derived from the two coefficients above
+    float a3 = 0.0f;
 
     // Last parameters (for change detection)
     float lastCutoff = -1.0f;
