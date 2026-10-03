@@ -1,71 +1,128 @@
 #include "MIDIGenerator.h"
+#include <algorithm>
+#include <atomic>
 
-MIDIGenerator::MIDIGenerator() {}
+namespace {
 
-void MIDIGenerator::generateFromStructure(const TrackStructure& structure) {
-    generatedSequence_ = std::make_unique<GeneratedSequence>();
-    generatedSequence_->bpm = structure.bpm;
-    generatedSequence_->notes.clear();
+// MIDI channels (1-16), matching the routing described in AI_PRODUCER_README.md
+constexpr int kDrumChannel = 10;
+constexpr int kBassChannel = 1;
+constexpr int kChordChannel = 2;
+constexpr int kLeadChannel = 3;
 
-    // Calculate total bars
-    totalBars_ = 0;
-    for (const auto& section : structure.sections) {
-        int endBar = section.startBar + section.lengthBars;
-        if (endBar > totalBars_) {
-            totalBars_ = endBar;
-        }
-    }
-    generatedSequence_->totalBars = totalBars_;
-
-    // Generate MIDI for each instrument
-    if (structure.hasDrums) {
-        generateDrums(structure, generatedSequence_->notes);
-    }
-    if (structure.hasBass) {
-        generateBass(structure, generatedSequence_->notes);
-    }
-    if (structure.hasChords) {
-        generateChords(structure, generatedSequence_->notes);
-    }
-    if (structure.hasLead) {
-        generateLead(structure, generatedSequence_->notes);
-    }
+std::uint64_t nextSequenceId() {
+    static std::atomic<std::uint64_t> counter{0};
+    return ++counter;
 }
 
-void MIDIGenerator::fillMIDIBuffer(juce::MidiBuffer& buffer,
-                                   int startSample,
-                                   int numSamples,
-                                   double sampleRate,
-                                   double bpm) {
-    if (!generatedSequence_) return;
+} // namespace
 
-    // Convert sample position to quarter notes
-    double samplesPerQuarterNote = (sampleRate * 60.0) / bpm;
-    double startQuarterNote = startSample / samplesPerQuarterNote;
-    double endQuarterNote = (startSample + numSamples) / samplesPerQuarterNote;
+void MIDIGenerator::HeldNotes::noteOn(int channel, int noteNumber) {
+    held_[static_cast<size_t>(channel - 1)].set(static_cast<size_t>(noteNumber));
+}
 
-    // Add notes that fall within this time range
-    for (const auto& note : generatedSequence_->notes) {
-        if (note.startTime >= startQuarterNote && note.startTime < endQuarterNote) {
-            int sampleOffset = static_cast<int>((note.startTime - startQuarterNote) * samplesPerQuarterNote);
-            sampleOffset = juce::jlimit(0, numSamples - 1, sampleOffset);
+bool MIDIGenerator::HeldNotes::noteOff(int channel, int noteNumber) {
+    auto& notes = held_[static_cast<size_t>(channel - 1)];
+    const auto note = static_cast<size_t>(noteNumber);
 
-            // Note on
-            buffer.addEvent(juce::MidiMessage::noteOn(note.channel + 1, note.noteNumber, (juce::uint8)note.velocity),
-                           sampleOffset);
+    const bool wasHeld = notes.test(note);
+    notes.reset(note);
+    return wasHeld;
+}
 
-            // Note off (schedule it for later)
-            int noteOffSample = static_cast<int>((note.startTime + note.duration - startQuarterNote) * samplesPerQuarterNote);
-            if (noteOffSample < numSamples) {
-                buffer.addEvent(juce::MidiMessage::noteOff(note.channel + 1, note.noteNumber),
-                               juce::jlimit(0, numSamples - 1, noteOffSample));
+void MIDIGenerator::HeldNotes::releaseAll(juce::MidiBuffer& buffer, int sampleOffset) {
+    for (size_t channel = 0; channel < held_.size(); ++channel) {
+        auto& notes = held_[channel];
+        if (notes.none()) continue;
+
+        for (size_t note = 0; note < notes.size(); ++note) {
+            if (notes.test(note)) {
+                buffer.addEvent(juce::MidiMessage::noteOff(static_cast<int>(channel) + 1,
+                                                           static_cast<int>(note)),
+                                sampleOffset);
             }
         }
+        notes.reset();
     }
 }
 
-void MIDIGenerator::reset() {
-    currentPlaybackPosition_ = 0.0;
+bool MIDIGenerator::HeldNotes::isEmpty() const {
+    return std::all_of(held_.begin(), held_.end(),
+                       [](const std::bitset<128>& notes) { return notes.none(); });
+}
+
+std::unique_ptr<const MIDIGenerator::Sequence> MIDIGenerator::generateFromStructure(const TrackStructure& structure) {
+    auto sequence = std::make_unique<Sequence>();
+    sequence->id = nextSequenceId();
+    sequence->bpm = structure.bpm;
+
+    // Calculate total bars
+    for (const auto& section : structure.sections) {
+        sequence->totalBars = std::max(sequence->totalBars, section.startBar + section.lengthBars);
+    }
+
+    // Generate notes for each instrument
+    std::vector<MIDINote> notes;
+    if (structure.hasDrums) {
+        generateDrums(structure, notes);
+    }
+    if (structure.hasBass) {
+        generateBass(structure, notes);
+    }
+    if (structure.hasChords) {
+        generateChords(structure, notes);
+    }
+    if (structure.hasLead) {
+        generateLead(structure, notes);
+    }
+
+    // Split each note into a note-on and a note-off event. Keeping them as
+    // separate events means a note-off is found when playback reaches it,
+    // however many blocks after the note-on that is.
+    sequence->events.reserve(notes.size() * 2);
+    for (const auto& note : notes) {
+        sequence->events.push_back({note.startTime, note.channel, note.noteNumber, note.velocity, true});
+        sequence->events.push_back({note.startTime + note.duration, note.channel, note.noteNumber, 0, false});
+    }
+
+    std::stable_sort(sequence->events.begin(), sequence->events.end(),
+                     [](const Event& a, const Event& b) {
+                         if (a.time != b.time) return a.time < b.time;
+                         return !a.isNoteOn && b.isNoteOn; // Note-offs first
+                     });
+
+    return sequence;
+}
+
+void MIDIGenerator::renderRange(const Sequence& sequence,
+                                juce::MidiBuffer& buffer,
+                                HeldNotes& heldNotes,
+                                double fromPpq,
+                                double toPpq,
+                                double blockStartPpq,
+                                double ppqPerSample,
+                                int numSamples) {
+    if (numSamples <= 0 || ppqPerSample <= 0.0 || toPpq <= fromPpq) return;
+
+    const auto& events = sequence.events;
+    auto event = std::lower_bound(events.begin(), events.end(), fromPpq,
+                                  [](const Event& e, double time) { return e.time < time; });
+
+    for (; event != events.end() && event->time < toPpq; ++event) {
+        const int sampleOffset = juce::jlimit(0, numSamples - 1,
+                                              juce::roundToInt((event->time - blockStartPpq) / ppqPerSample));
+
+        if (event->isNoteOn) {
+            buffer.addEvent(juce::MidiMessage::noteOn(event->channel, event->noteNumber,
+                                                      static_cast<juce::uint8>(event->velocity)),
+                            sampleOffset);
+            heldNotes.noteOn(event->channel, event->noteNumber);
+        } else if (heldNotes.noteOff(event->channel, event->noteNumber)) {
+            // Only release notes that are sounding: after a seek, the range can
+            // hold note-offs for notes whose note-on was never played
+            buffer.addEvent(juce::MidiMessage::noteOff(event->channel, event->noteNumber), sampleOffset);
+        }
+    }
 }
 
 // Generate drums (4/4 house beat)
@@ -82,7 +139,7 @@ void MIDIGenerator::generateDrums(const TrackStructure& structure, std::vector<M
             // Kick drum (every 16th note grid)
             for (int step : pattern.kickSteps) {
                 MIDINote note;
-                note.channel = 9; // MIDI drum channel (10 in 1-indexed)
+                note.channel = kDrumChannel;
                 note.noteNumber = MusicTheory::DrumNotes::KICK;
                 note.velocity = 100;
                 note.startTime = barStart + (step * 0.25); // 16th notes
@@ -93,7 +150,7 @@ void MIDIGenerator::generateDrums(const TrackStructure& structure, std::vector<M
             // Snare
             for (int step : pattern.snareSteps) {
                 MIDINote note;
-                note.channel = 9;
+                note.channel = kDrumChannel;
                 note.noteNumber = MusicTheory::DrumNotes::SNARE;
                 note.velocity = 90;
                 note.startTime = barStart + (step * 0.25);
@@ -104,7 +161,7 @@ void MIDIGenerator::generateDrums(const TrackStructure& structure, std::vector<M
             // Hi-hats
             for (int step : pattern.hatSteps) {
                 MIDINote note;
-                note.channel = 9;
+                note.channel = kDrumChannel;
                 note.noteNumber = MusicTheory::DrumNotes::CLOSED_HAT;
                 note.velocity = 70;
                 note.startTime = barStart + (step * 0.25);
@@ -132,7 +189,7 @@ void MIDIGenerator::generateBass(const TrackStructure& structure, std::vector<MI
             // Bass on every beat
             for (int beat = 0; beat < 4; ++beat) {
                 MIDINote note;
-                note.channel = 1; // Bass channel
+                note.channel = kBassChannel;
                 note.noteNumber = rootNote - 12; // One octave lower
                 note.velocity = 80;
                 note.startTime = bar * 4.0 + beat;
@@ -153,13 +210,13 @@ void MIDIGenerator::generateChords(const TrackStructure& structure, std::vector<
         for (int bar = section.startBar; bar < section.startBar + section.lengthBars; ++bar) {
             // Whole note chords
             MIDINote root, fifth;
-            root.channel = 2;
+            root.channel = kChordChannel;
             root.noteNumber = rootNote + 12; // C5
             root.velocity = 60;
             root.startTime = bar * 4.0;
             root.duration = 4.0;
 
-            fifth.channel = 2;
+            fifth.channel = kChordChannel;
             fifth.noteNumber = rootNote + 12 + 7; // Fifth
             fifth.velocity = 60;
             fifth.startTime = bar * 4.0;
@@ -186,7 +243,7 @@ void MIDIGenerator::generateLead(const TrackStructure& structure, std::vector<MI
                 // Simple 8th note melody
                 for (int i = 0; i < 8; ++i) {
                     MIDINote note;
-                    note.channel = 3;
+                    note.channel = kLeadChannel;
                     note.noteNumber = rootNote + scale[i % scale.size()];
                     note.velocity = 90;
                     note.startTime = bar * 4.0 + i * 0.5;

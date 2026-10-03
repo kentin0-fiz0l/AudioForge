@@ -30,6 +30,8 @@ public:
         testParameterRanges();
         testOscillatorOutput();
         testMIDINoteHandling();
+        testDefaultPatchLevel();
+        testReverbTailLength();
         testPolyphony();
         testADSREnvelope();
         testStateManagement();
@@ -50,15 +52,16 @@ private:
         expect(processor.acceptsMidi(), "Should accept MIDI");
         expect(!processor.producesMidi(), "Should not produce MIDI");
         expect(!processor.isMidiEffect(), "Should not be MIDI effect");
-        expect(processor.getTailLengthSeconds() == 0.0, "Should have no tail");
+        expect(processor.getTailLengthSeconds() > 0.0, "Default patch has a reverb, so it has a tail");
 
         // Check bus configuration (stereo output)
         expect(processor.getBusCount(true) == 0, "Should have no input bus");
         expect(processor.getBusCount(false) == 1, "Should have one output bus");
 
-        // Check parameter count (8 parameters)
+        // Check parameter count: 8 synth parameters + filter type
+        // + 9 effects parameters (chorus, reverb, saturation)
         const auto& params = processor.getParameters();
-        expect(params.size() == 8, "Should have 8 parameters");
+        expect(params.size() == 18, "Should have 18 parameters");
     }
 
     void testParameterRanges()
@@ -127,6 +130,16 @@ private:
         beginTest("MIDI note on/off handling");
 
         BasicSynthProcessor processor;
+
+        // Bypass the time-based effects so this measures the amp envelope's
+        // release rather than the reverb tail, which rings for about a second
+        for (auto* param : processor.getParameters())
+        {
+            const auto name = param->getName(64);
+            if (name == "Chorus Mix" || name == "Reverb Mix")
+                param->setValueNotifyingHost(0.0f);
+        }
+
         processor.prepareToPlay(48000.0, 512);
 
         juce::AudioBuffer<float> buffer(2, 512);
@@ -156,6 +169,89 @@ private:
 
         // After release phase, output should be silent or very quiet
         expect(peakAfterRelease < 0.01f, "Should be quiet after release phase");
+    }
+
+    void testDefaultPatchLevel()
+    {
+        beginTest("Default patch stays within full scale");
+
+        // Regression test: the voice filter used to become unstable at the
+        // default 20 kHz cutoff and pin the output at a constant level well
+        // over full scale, ignoring the envelope.
+        BasicSynthProcessor processor;
+        processor.prepareToPlay(48000.0, 512);
+
+        juce::AudioBuffer<float> buffer(2, 512);
+        juce::MidiBuffer midiBuffer;
+        midiBuffer.addEvent(juce::MidiMessage::noteOn(1, 60, 1.0f), 0);
+
+        float peak = 0.0f;
+        double sum = 0.0;
+        int count = 0;
+
+        // Hold a full-velocity note for about half a second
+        for (int block = 0; block < 47; ++block)
+        {
+            buffer.clear();
+            processor.processBlock(buffer, midiBuffer);
+            midiBuffer.clear();
+
+            peak = std::max(peak, buffer.getMagnitude(0, 512));
+            for (int i = 0; i < 512; ++i)
+            {
+                sum += buffer.getSample(0, i);
+                ++count;
+            }
+        }
+
+        expect(peak > 0.05f, "A held note should be clearly audible");
+        expect(peak < 1.0f, "A single note should not exceed full scale");
+        expect(std::abs(sum / count) < 0.01, "Output should not carry a DC offset");
+    }
+
+    void testReverbTailLength()
+    {
+        beginTest("Reported tail covers the reverb decay");
+
+        BasicSynthProcessor processor;
+        const double tailSeconds = processor.getTailLengthSeconds();
+
+        processor.prepareToPlay(48000.0, 512);
+
+        juce::AudioBuffer<float> buffer(2, 512);
+        juce::MidiBuffer midiBuffer;
+        midiBuffer.addEvent(juce::MidiMessage::noteOn(1, 60, 1.0f), 0);
+
+        float heldPeak = 0.0f;
+        for (int block = 0; block < 47; ++block)
+        {
+            buffer.clear();
+            processor.processBlock(buffer, midiBuffer);
+            midiBuffer.clear();
+            heldPeak = std::max(heldPeak, buffer.getMagnitude(0, 512));
+        }
+
+        // Release the note, then wait out the envelope release (300 ms by
+        // default) plus the tail the plugin reports
+        midiBuffer.addEvent(juce::MidiMessage::noteOff(1, 60), 0);
+        const int blocksToWait = static_cast<int>(std::ceil((0.3 + tailSeconds) * 48000.0 / 512.0));
+
+        for (int block = 0; block < blocksToWait; ++block)
+        {
+            buffer.clear();
+            processor.processBlock(buffer, midiBuffer);
+            midiBuffer.clear();
+        }
+
+        expect(buffer.getMagnitude(0, 512) < heldPeak * 0.003f,
+               "Output should have decayed by at least 50 dB once the reported tail has passed");
+
+        // With the reverb mixed out there is nothing left to ring
+        for (auto* param : processor.getParameters())
+            if (param->getName(64) == "Reverb Mix")
+                param->setValueNotifyingHost(0.0f);
+
+        expect(processor.getTailLengthSeconds() == 0.0, "No reverb means no tail");
     }
 
     void testPolyphony()

@@ -13,11 +13,11 @@ concurrency:
 
 env:
   BUILD_TYPE: Release
-  CMAKE_VERSION: 3.15.x
 
 jobs:
   build-and-test:
-    name: ${{ matrix.name }}
+    # Must match the required status checks in main's branch protection
+    name: Build and Test (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -45,10 +45,10 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
-      - name: Setup CMake
-        uses: jwlawson/actions-setup-cmake@v2
-        with:
-          cmake-version: ${{ env.CMAKE_VERSION }}
+      # CMake is deliberately not pinned: the runner image's own CMake always
+      # matches its toolchain. A pinned version must satisfy both JUCE
+      # (>= 3.22) and the image's Visual Studio release, and has gone stale
+      # on both counts before.
 
       - name: Install Linux dependencies
         if: runner.os == 'Linux'
@@ -57,13 +57,15 @@ jobs:
           sudo apt-get install -y \
             libasound2-dev \
             libcurl4-openssl-dev \
-            libfreetype6-dev \
+            libfontconfig1-dev \
+            libfreetype-dev \
             libgl1-mesa-dev \
             libjack-jackd2-dev \
             libx11-dev \
             libxcomposite-dev \
             libxcursor-dev \
             libxext-dev \
+            libxi-dev \
             libxinerama-dev \
             libxrandr-dev \
             libxrender-dev \
@@ -85,30 +87,37 @@ jobs:
         working-directory: plugins/SimpleGain
         run: |
           cmake -B build -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}
-          cmake --build build --config ${{ env.BUILD_TYPE }} --parallel
+          cmake --build build --config ${{ env.BUILD_TYPE }} --parallel 4
 
       - name: Build PanUtil
         working-directory: plugins/PanUtil
         run: |
           cmake -B build -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}
-          cmake --build build --config ${{ env.BUILD_TYPE }} --parallel
+          cmake --build build --config ${{ env.BUILD_TYPE }} --parallel 4
 
       - name: Build Test Runner
         working-directory: tests
         run: |
           cmake -B build -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}
-          cmake --build build --config ${{ env.BUILD_TYPE }} --parallel
+          cmake --build build --config ${{ env.BUILD_TYPE }} --parallel 4
 
       - name: Run Tests
         working-directory: tests
+        shell: bash
         run: |
           echo "::group::Running AudioForge Test Suite"
+          # Keep the real exit code: a crash and a failed assertion look very
+          # different, and '|| exit 1' used to flatten both to 1.
+          set +e
           if [ "${{ runner.os }}" = "Windows" ]; then
-            ./build/${{ env.BUILD_TYPE }}/TestRunner.exe || exit 1
+            ./build/${{ env.BUILD_TYPE }}/TestRunner.exe
           else
-            ./build/TestRunner || exit 1
+            ./build/TestRunner
           fi
+          status=$?
           echo "::endgroup::"
+          echo "TestRunner exit code: $status"
+          exit $status
 
       - name: Upload test results on failure
         if: failure()
@@ -124,8 +133,8 @@ jobs:
         with:
           name: AudioForge-${{ matrix.artifact_name }}
           path: |
-            plugins/SimpleGain/build/SimpleGain_artefacts/VST3/*.vst3
-            plugins/PanUtil/build/PanUtil_artefacts/VST3/*.vst3
+            plugins/SimpleGain/build/SimpleGain_artefacts/${{ env.BUILD_TYPE }}/VST3/*.vst3
+            plugins/PanUtil/build/PanUtil_artefacts/${{ env.BUILD_TYPE }}/VST3/*.vst3
           retention-days: 7
           if-no-files-found: error
 
@@ -148,15 +157,21 @@ jobs:
 
       - name: Validate artifact structure
         run: |
-          for artifact in artifacts/*/plugins/*/build/*_artefacts/VST3/*.vst3; do
-            if [ -d "$artifact" ]; then
-              echo "✓ Found VST3 bundle: $(basename $artifact)"
-              # Check for required files in VST3 bundle
-              if [ -d "$artifact/Contents" ]; then
-                echo "  ✓ Contains Contents directory"
-              else
-                echo "  ✗ Missing Contents directory"
-                exit 1
-              fi
+          found=0
+          while IFS= read -r artifact; do
+            found=$((found + 1))
+            echo "✓ Found VST3 bundle: $artifact"
+            # Check for required files in VST3 bundle
+            if [ -d "$artifact/Contents" ]; then
+              echo "  ✓ Contains Contents directory"
+            else
+              echo "  ✗ Missing Contents directory"
+              exit 1
             fi
-          done
+          done < <(find artifacts -type d -name "*.vst3")
+
+          if [ "$found" -eq 0 ]; then
+            echo "✗ No VST3 bundles found in the downloaded artifacts"
+            exit 1
+          fi
+          echo "Validated $found VST3 bundle(s)"

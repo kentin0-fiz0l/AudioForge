@@ -16,6 +16,7 @@ add_executable(TestRunner
     DSP/ParameterSmoothingTests.cpp
     DSP/WaveShapingTests.cpp
     DSP/SaturationAlgorithmsTests.cpp
+    DSP/MultiModeFilterTests.cpp
     Plugins/SimpleGainTests.cpp
     Plugins/PanUtilTests.cpp
     Plugins/BasicSynthTests.cpp
@@ -26,6 +27,7 @@ add_executable(TestRunner
     Plugins/SaturationTests.cpp
     Plugins/ChorusFlangerTests.cpp
     Plugins/ReverbTests.cpp
+    Plugins/AIProducerTests.cpp
     Integration/PluginIntegrationTests.cpp)
 
 # Link JUCE libraries
@@ -60,6 +62,16 @@ target_sources(TestRunner PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/BasicSynth/Source/PluginEditor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/BasicSynth/Source/Voice.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/BasicSynth/Source/Oscillator.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/BasicSynth/Source/OscillatorBank.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/BasicSynth/Source/NoiseGenerator.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/BasicSynth/Source/LFO.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/BasicSynth/Source/ModulationMatrix.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/BasicSynth/Source/Chorus.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/BasicSynth/Source/Reverb.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/BasicSynth/Source/Saturation.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/BasicSynth/Source/EffectsChain.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../shared/synth/ADSREnvelope.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../shared/synth/MultiModeFilter.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/CleanDelay/Source/PluginProcessor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/CleanDelay/Source/PluginEditor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/SimpleEQ/Source/PluginProcessor.cpp
@@ -73,7 +85,12 @@ target_sources(TestRunner PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/ChorusFlanger/Source/PluginProcessor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/ChorusFlanger/Source/PluginEditor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/Reverb/Source/PluginProcessor.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/Reverb/Source/PluginEditor.cpp)
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/Reverb/Source/PluginEditor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/AIProducer/Source/PluginProcessor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/AIProducer/Source/PluginEditor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/AIProducer/Source/MIDIGenerator.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/AIProducer/Source/MusicTheory.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/AIProducer/Source/AIClient.cpp)
 
 # Compiler definitions
 target_compile_definitions(TestRunner PUBLIC
@@ -87,6 +104,13 @@ target_compile_definitions(TestRunner PUBLIC
 
 # Set C++ standard
 target_compile_features(TestRunner PRIVATE cxx_std_17)
+
+# Tests construct processors as local variables, and some are large:
+# CleanDelay holds about 1.5 MB of delay buffers inline. Windows gives the main
+# thread a 1 MB stack by default where macOS and Linux give 8 MB, so match them.
+if(MSVC)
+    target_link_options(TestRunner PRIVATE /STACK:8388608)
+endif()
 
 # Code coverage configuration
 if(ENABLE_COVERAGE)

@@ -41,15 +41,28 @@ private:
     void onTrackGenerated(TrackStructure structure);
     void onGenerationError(std::string error);
 
+    // Hands a newly generated sequence to the audio thread (message thread only)
+    void publishSequence(std::unique_ptr<const MIDIGenerator::Sequence> next);
+
     std::unique_ptr<AIClient> aiClient_;
-    std::unique_ptr<MIDIGenerator> midiGenerator_;
 
     bool isGenerating_ = false;
     juce::String statusMessage_ = "Ready";
     float progress_ = 0.0f;
 
     double lastSampleRate_ = 44100.0;
-    double currentBPM_ = 128.0;
+
+    // The sequence being played. Written on the message thread by
+    // publishSequence() and read on the audio thread in processBlock().
+    juce::SpinLock sequenceLock_;
+    std::unique_ptr<const MIDIGenerator::Sequence> sequence_;
+
+    // Playback state, touched only on the audio thread
+    MIDIGenerator::HeldNotes heldNotes_;
+    std::uint64_t playingSequenceId_ = 0;   // 0 = nothing played yet
+    bool wasPlaying_ = false;
+    double nextBlockStartPpq_ = 0.0;        // Where the next block starts if the transport runs on
+    double renderedUpToPpq_ = 0.0;          // Events before this have already been sent
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AIProducerProcessor)
 };
