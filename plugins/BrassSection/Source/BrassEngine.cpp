@@ -8,9 +8,7 @@ BrassEngine::BrassEngine()
 void BrassEngine::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
     sampleRate_ = sampleRate;
-    filterLP_ = 0.0f;
-    filterBP_ = 0.0f;
-    filterHP_ = 0.0f;
+    filter_.reset();
     noiseLP_ = 0.0f;
 }
 
@@ -293,17 +291,11 @@ float BrassEngine::processFiltering(float sample, float cutoffMod)
     // Clamp cutoff
     dynamicCutoff = juce::jlimit(200.0f, 10000.0f, dynamicCutoff);
 
-    // Calculate filter coefficients
-    float f = 2.0f * std::sin(juce::MathConstants<float>::pi * dynamicCutoff / static_cast<float>(sampleRate_));
-    float q = 1.0f / filterResonance_;
-
-    // Process SVF
-    filterLP_ += f * filterBP_;
-    filterHP_ = sample - filterLP_ - q * filterBP_;
-    filterBP_ += f * filterHP_;
-
-    // Return low-pass filtered output (warm brass sound)
-    return filterLP_;
+    // Low-pass filtered output (warm brass sound). The shared filter stays
+    // stable over this whole cutoff range; the hand-rolled one it replaces
+    // did not, and a loud Marcato note at high brightness overflowed it.
+    filter_.setParameters(dynamicCutoff, filterResonance_, sampleRate_);
+    return filter_.processSample(sample);
 }
 
 float BrassEngine::processVibrato(float frequency)
