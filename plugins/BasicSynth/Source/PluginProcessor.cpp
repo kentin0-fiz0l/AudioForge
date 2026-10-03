@@ -252,6 +252,16 @@ void BasicSynthProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::M
     levelMeter.updateLevel(peakLevel);
 }
 
+double BasicSynthProcessor::getTailLengthSeconds() const
+{
+    // The reverb keeps ringing after the last voice has stopped. Hosts use
+    // this to decide how long to keep processing once the input goes quiet.
+    if (reverbMixParam->get() <= 0.0f)
+        return 0.0;
+
+    return Reverb::decayTimeSeconds(reverbSizeParam->get());
+}
+
 juce::AudioProcessorEditor* BasicSynthProcessor::createEditor()
 {
     return new BasicSynthEditor(*this);

@@ -47,10 +47,22 @@ public:
      */
     void reset();
 
+    /**
+     * Time for the reverb to decay by 60 dB (RT60) at a given room size.
+     * Damping only shortens this, so it is an upper bound.
+     *
+     * @param roomSize Room size (0.0-1.0)
+     * @return Decay time in seconds
+     */
+    static double decayTimeSeconds(float roomSize);
+
 private:
     // Comb filter delays (in samples at 44.1kHz, will be scaled)
     static constexpr int NUM_COMBS = 4;
     static constexpr int COMB_DELAYS[NUM_COMBS] = {1557, 1617, 1491, 1422};
+
+    // Comb feedback for a room size (0-1): larger rooms decay more slowly
+    static float feedbackForRoomSize(float roomSize);
 
     // Allpass filter delays (in samples at 44.1kHz, will be scaled)
     static constexpr int NUM_ALLPASS = 2;
