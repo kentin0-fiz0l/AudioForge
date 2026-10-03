@@ -7,6 +7,12 @@ build/
 *.vst3
 *.component
 
+# Build logs written by the build-*.sh scripts on every run.
+# Deliberately not a blanket *.log: docs/validation/*.log are kept as records.
+plugins/*/build*.log
+/build-*.log
+/failed-plugins-build.log
+
 # IDE
 .vscode/
 .idea/
