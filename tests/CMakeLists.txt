@@ -28,6 +28,7 @@ add_executable(TestRunner
     Plugins/ChorusFlangerTests.cpp
     Plugins/ReverbTests.cpp
     Plugins/AIProducerTests.cpp
+    Plugins/BrassEngineTests.cpp
     Integration/PluginIntegrationTests.cpp)
 
 # Link JUCE libraries
@@ -90,7 +91,8 @@ target_sources(TestRunner PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/AIProducer/Source/PluginEditor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/AIProducer/Source/MIDIGenerator.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/AIProducer/Source/MusicTheory.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/AIProducer/Source/AIClient.cpp)
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/AIProducer/Source/AIClient.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/BrassSection/Source/BrassEngine.cpp)
 
 # Compiler definitions
 target_compile_definitions(TestRunner PUBLIC

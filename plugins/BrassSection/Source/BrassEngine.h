@@ -2,6 +2,7 @@
 
 #include <juce_core/juce_core.h>
 #include <juce_dsp/juce_dsp.h>
+#include <synth/MultiModeFilter.h>
 #include <array>
 #include <cmath>
 
@@ -100,12 +101,10 @@ private:
     // Vibrato LFO
     float vibratoPhase_ = 0.0f;
 
-    // Filter (state variable filter)
+    // Filter (low-pass, cutoff follows the note's amplitude)
     float filterCutoff_ = 1000.0f;
     float filterResonance_ = 0.7f;
-    float filterLP_ = 0.0f;
-    float filterBP_ = 0.0f;
-    float filterHP_ = 0.0f;
+    MultiModeFilter filter_;
 
     // Breath noise
     juce::Random random_;
