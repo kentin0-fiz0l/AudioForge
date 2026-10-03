@@ -16,6 +16,7 @@ add_executable(TestRunner
     DSP/ParameterSmoothingTests.cpp
     DSP/WaveShapingTests.cpp
     DSP/SaturationAlgorithmsTests.cpp
+    DSP/MultiModeFilterTests.cpp
     Plugins/SimpleGainTests.cpp
     Plugins/PanUtilTests.cpp
     Plugins/BasicSynthTests.cpp

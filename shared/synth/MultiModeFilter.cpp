@@ -26,20 +26,17 @@ void MultiModeFilter::setFilterType(FilterType type)
 
 float MultiModeFilter::processSample(float input)
 {
-    // State-variable filter topology
-    // Compute all outputs simultaneously using state equations
+    // Zero-delay-feedback state-variable filter (trapezoidal integrators).
+    // Both integrators are solved together for this sample, which keeps the
+    // filter stable at any cutoff up to Nyquist. The previous Chamberlin form
+    // updated them one after the other and blew up above roughly fs/6.
+    const float v3 = input - ic2eq;
+    const float bp = a1 * ic1eq + a2 * v3;
+    const float lp = ic2eq + a2 * ic1eq + a3 * v3;
 
-    // High-pass output: input - lp - Q * bp
-    hp = input - lp - resonanceCoeff * bp;
-
-    // Band-pass output: integrate high-pass
-    bp = bp + cutoffCoeff * hp;
-
-    // Low-pass output: integrate band-pass
-    lp = lp + cutoffCoeff * bp;
-
-    // Notch output: sum of high-pass and low-pass
-    float notch = hp + lp;
+    // Update the integrator states
+    ic1eq = 2.0f * bp - ic1eq;
+    ic2eq = 2.0f * lp - ic2eq;
 
     // Select output based on filter type
     float output = 0.0f;
@@ -50,29 +47,27 @@ float MultiModeFilter::processSample(float input)
             break;
 
         case FilterType::HighPass:
-            output = hp;
+            output = input - resonanceCoeff * bp - lp;
             break;
 
         case FilterType::BandPass:
+            // Not normalised: gain at the cutoff is Q, as before
             output = bp;
             break;
 
         case FilterType::Notch:
-            output = notch;
+            // High-pass plus low-pass
+            output = input - resonanceCoeff * bp;
             break;
     }
-
-    // Soft clipping to prevent runaway oscillation
-    output = std::max(-2.0f, std::min(2.0f, output));
 
     return output;
 }
 
 void MultiModeFilter::reset()
 {
-    lp = 0.0f;
-    bp = 0.0f;
-    hp = 0.0f;
+    ic1eq = 0.0f;
+    ic2eq = 0.0f;
 }
 
 void MultiModeFilter::updateCoefficients(float cutoffHz, float resonance, double sampleRate)
@@ -80,20 +75,25 @@ void MultiModeFilter::updateCoefficients(float cutoffHz, float resonance, double
     // Clamp cutoff frequency to valid range
     cutoffHz = std::max(20.0f, std::min(20000.0f, cutoffHz));
 
-    // Clamp resonance to prevent instability
+    // Clamp resonance to the supported range
     resonance = std::max(0.5f, std::min(20.0f, resonance));
 
-    // Calculate cutoff coefficient: 2 * sin(π * f / fs)
-    // This maps frequency to the filter's internal frequency scale
+    // Calculate cutoff coefficient: tan(π * f / fs)
+    // The tangent pre-warps the frequency so the cutoff lands where requested
     const float pi = juce::MathConstants<float>::pi;
     float normalizedFreq = cutoffHz / static_cast<float>(sampleRate);
 
-    // Clamp normalized frequency to Nyquist limit
-    normalizedFreq = std::min(normalizedFreq, 0.499f);
+    // Keep the cutoff below Nyquist, where the tangent goes to infinity
+    normalizedFreq = std::min(normalizedFreq, 0.49f);
 
-    cutoffCoeff = 2.0f * std::sin(pi * normalizedFreq);
+    cutoffCoeff = std::tan(pi * normalizedFreq);
 
     // Calculate resonance coefficient: 1 / Q
     // Higher Q (lower coefficient) = more resonance
     resonanceCoeff = 1.0f / resonance;
+
+    // Terms of the solved feedback loop, used once per sample
+    a1 = 1.0f / (1.0f + cutoffCoeff * (cutoffCoeff + resonanceCoeff));
+    a2 = cutoffCoeff * a1;
+    a3 = cutoffCoeff * a2;
 }
