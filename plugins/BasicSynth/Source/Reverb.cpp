@@ -1,5 +1,6 @@
 #include "Reverb.h"
 #include <algorithm>
+#include <cmath>
 
 Reverb::Reverb()
 {
@@ -127,11 +128,27 @@ float Reverb::processAllpass(AllpassFilter& allpass, float input)
     return output;
 }
 
-void Reverb::updateCoefficients()
+float Reverb::feedbackForRoomSize(float roomSize)
 {
     // Map room size (0-1) to feedback (0.5-0.95)
     // Larger rooms = longer decay = higher feedback
-    float feedback = 0.5f + reverbRoomSize * 0.45f;
+    return 0.5f + std::max(0.0f, std::min(1.0f, roomSize)) * 0.45f;
+}
+
+double Reverb::decayTimeSeconds(float roomSize)
+{
+    // Each trip round a comb filter scales the signal by its feedback, so it
+    // takes log(0.001) / log(feedback) trips to fall 60 dB. The longest comb
+    // decays last.
+    const double longestCombSeconds = 1617.0 / 44100.0;
+    const double feedback = static_cast<double>(feedbackForRoomSize(roomSize));
+
+    return longestCombSeconds * std::log(0.001) / std::log(feedback);
+}
+
+void Reverb::updateCoefficients()
+{
+    float feedback = feedbackForRoomSize(reverbRoomSize);
 
     // Update all comb filters
     for (int i = 0; i < NUM_COMBS; ++i)
