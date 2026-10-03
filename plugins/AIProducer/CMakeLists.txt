@@ -21,6 +21,7 @@ juce_add_plugin(AIProducer
     NEEDS_MIDI_OUTPUT TRUE    # This plugin generates MIDI!
     IS_MIDI_EFFECT FALSE
     EDITOR_WANTS_KEYBOARD_FOCUS TRUE  # For text input
+    NEEDS_CURL TRUE                   # Link libcurl on Linux (JUCE_USE_CURL=1 below)
     COPY_PLUGIN_AFTER_BUILD TRUE)
 
 # Add source files

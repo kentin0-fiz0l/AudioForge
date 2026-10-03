@@ -1,0 +1,141 @@
+name: Build All Plugins
+
+# Compiles every plugin under plugins/ on Linux. "Build and Test" only builds
+# two plugins plus the test runner; this is the check that the rest still
+# compile, and that they compile somewhere other than a developer's Mac.
+#
+# Each plugin compiles its own copy of the JUCE modules, so building all of
+# them in one job would take hours. They are split into shards that run in
+# parallel instead.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  BUILD_TYPE: Release
+  PLUGINS_PER_SHARD: 4
+
+jobs:
+  plan:
+    name: Plan shards
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.shards.outputs.matrix }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Split plugins into shards
+        id: shards
+        run: |
+          # Every directory directly under plugins/ that has a CMakeLists.txt.
+          # Names are restricted to a safe character set because they end up
+          # in shell commands in the build job.
+          matrix=$(find plugins -mindepth 2 -maxdepth 2 -name CMakeLists.txt \
+            | xargs -n1 dirname | xargs -n1 basename \
+            | grep -E '^[A-Za-z0-9_-]+$' | sort \
+            | jq -R -s -c --argjson size "$PLUGINS_PER_SHARD" '
+                split("\n") | map(select(length > 0)) as $plugins
+                | {include: [range(0; $plugins | length; $size) as $i
+                    | {shard: ($i / $size + 1), plugins: ($plugins[$i:$i + $size] | join(" "))}]}')
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+          echo "$matrix" | jq .
+
+  build:
+    name: Shard ${{ matrix.shard }}
+    needs: plan
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.plan.outputs.matrix) }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libasound2-dev \
+            libcurl4-openssl-dev \
+            libfontconfig1-dev \
+            libfreetype-dev \
+            libgl1-mesa-dev \
+            libjack-jackd2-dev \
+            libx11-dev \
+            libxcomposite-dev \
+            libxcursor-dev \
+            libxext-dev \
+            libxi-dev \
+            libxinerama-dev \
+            libxrandr-dev \
+            libxrender-dev \
+            mesa-common-dev
+
+      - name: Build plugins
+        env:
+          PLUGINS: ${{ matrix.plugins }}
+          SHARD: ${{ matrix.shard }}
+        run: |
+          # Build every plugin in the shard even if an earlier one fails, so a
+          # single run reports all the breakage rather than the first.
+          set +e
+          mkdir -p logs
+          failed=""
+
+          {
+            echo "### Shard $SHARD"
+            echo ""
+            echo "| Plugin | Result | Time |"
+            echo "|---|---|---|"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          for plugin in $PLUGINS; do
+            echo "::group::$plugin"
+            start=$SECONDS
+
+            cmake -S "plugins/$plugin" -B "build/$plugin" -DCMAKE_BUILD_TYPE="$BUILD_TYPE" \
+              > "logs/$plugin-configure.log" 2>&1 \
+            && cmake --build "build/$plugin" --config "$BUILD_TYPE" --parallel 4 \
+              > "logs/$plugin-build.log" 2>&1
+            status=$?
+            elapsed=$((SECONDS - start))
+
+            if [ $status -eq 0 ]; then
+              echo "$plugin: built in ${elapsed}s"
+              echo "| $plugin | pass | ${elapsed}s |" >> "$GITHUB_STEP_SUMMARY"
+            else
+              failed="$failed $plugin"
+              echo "| $plugin | **FAIL** | ${elapsed}s |" >> "$GITHUB_STEP_SUMMARY"
+              echo "$plugin: FAILED after ${elapsed}s. First errors:"
+              grep -hE "error:|Error at|fatal error|undefined reference|CMake Error" \
+                "logs/$plugin-configure.log" "logs/$plugin-build.log" 2>/dev/null | head -25
+            fi
+            echo "::endgroup::"
+
+            # Each build tree is large; drop it before starting the next one
+            rm -rf "build/$plugin"
+          done
+
+          if [ -n "$failed" ]; then
+            echo "::error::Failed to build:$failed"
+            exit 1
+          fi
+
+      - name: Upload build logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs-shard-${{ matrix.shard }}
+          path: logs/
+          retention-days: 7

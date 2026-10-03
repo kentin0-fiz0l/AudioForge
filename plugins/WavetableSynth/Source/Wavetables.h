@@ -2,6 +2,7 @@
 
 #include <array>
 #include <cmath>
+#include <cstdlib>
 #include <vector>
 
 namespace Wavetables
