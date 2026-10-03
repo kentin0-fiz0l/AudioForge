@@ -26,6 +26,7 @@ add_executable(TestRunner
     Plugins/SaturationTests.cpp
     Plugins/ChorusFlangerTests.cpp
     Plugins/ReverbTests.cpp
+    Plugins/AIProducerTests.cpp
     Integration/PluginIntegrationTests.cpp)
 
 # Link JUCE libraries
@@ -83,7 +84,12 @@ target_sources(TestRunner PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/ChorusFlanger/Source/PluginProcessor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/ChorusFlanger/Source/PluginEditor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/Reverb/Source/PluginProcessor.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/Reverb/Source/PluginEditor.cpp)
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/Reverb/Source/PluginEditor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/AIProducer/Source/PluginProcessor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/AIProducer/Source/PluginEditor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/AIProducer/Source/MIDIGenerator.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/AIProducer/Source/MusicTheory.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/AIProducer/Source/AIClient.cpp)
 
 # Compiler definitions
 target_compile_definitions(TestRunner PUBLIC
