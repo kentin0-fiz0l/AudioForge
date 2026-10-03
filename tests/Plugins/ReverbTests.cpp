@@ -41,6 +41,7 @@ public:
         testStereoProcessing();
         testStateManagement();
         testLevelMetering();
+        testWetLevelMatchesInput();
     }
 
 private:
@@ -566,6 +567,70 @@ private:
 
         expect(processor2.freezeParam->get() == processor1.freezeParam->get(),
                "Freeze should be restored");
+    }
+
+    void testWetLevelMatchesInput()
+    {
+        beginTest("Wet signal is about as loud as the input");
+
+        // Regression test: the eight comb filters were summed with no
+        // scaling, so the wet signal came out 20 dB or more above the input.
+        const double sampleRate = 48000.0;
+        const int blockSize = 512;
+        const float amplitude = 0.5f;
+
+        float lowestRatio = 1000.0f;
+        float highestRatio = 0.0f;
+
+        for (float roomSize : { 0.0f, 0.5f, 1.0f })
+        {
+            for (float damping : { 0.0f, 0.5f, 1.0f })
+            {
+                ReverbAudioProcessor processor;
+                processor.roomSizeParam->setValueNotifyingHost(roomSize);
+                processor.dampingParam->setValueNotifyingHost(damping);
+                processor.mixParam->setValueNotifyingHost(1.0f);   // Fully wet
+                processor.prepareToPlay(sampleRate, blockSize);
+
+                juce::AudioBuffer<float> buffer(2, blockSize);
+                juce::MidiBuffer midiBuffer;
+                juce::Random random(7);
+
+                double inputSquares = 0.0;
+                double outputSquares = 0.0;
+
+                // Three seconds of noise; measure the last two, once the
+                // reverb has filled up
+                for (int block = 0; block < 281; ++block)
+                {
+                    for (int i = 0; i < blockSize; ++i)
+                    {
+                        const float sample = amplitude * (2.0f * random.nextFloat() - 1.0f);
+                        buffer.setSample(0, i, sample);
+                        buffer.setSample(1, i, sample);
+
+                        if (block >= 94)
+                            inputSquares += static_cast<double>(sample) * sample;
+                    }
+
+                    processor.processBlock(buffer, midiBuffer);
+
+                    if (block >= 94)
+                        for (int i = 0; i < blockSize; ++i)
+                            outputSquares += static_cast<double>(buffer.getSample(0, i)) * buffer.getSample(0, i);
+                }
+
+                const float ratio = static_cast<float>(std::sqrt(outputSquares / inputSquares));
+                lowestRatio = std::min(lowestRatio, ratio);
+                highestRatio = std::max(highestRatio, ratio);
+            }
+        }
+
+        // Within 6 dB either way across the whole room size and damping range
+        expect(highestRatio <= 2.0f, "Wet signal should not be much louder than the input (highest ratio "
+                                         + juce::String(highestRatio, 2) + ")");
+        expect(lowestRatio >= 0.5f, "Wet signal should not be much quieter than the input (lowest ratio "
+                                        + juce::String(lowestRatio, 2) + ")");
     }
 
     void testLevelMetering()

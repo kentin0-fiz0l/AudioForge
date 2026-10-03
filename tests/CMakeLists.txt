@@ -29,6 +29,9 @@ add_executable(TestRunner
     Plugins/ReverbTests.cpp
     Plugins/AIProducerTests.cpp
     Plugins/BrassEngineTests.cpp
+    Plugins/GateEngineTests.cpp
+    Plugins/GrainWindowTests.cpp
+    Plugins/KotoEngineTests.cpp
     Integration/PluginIntegrationTests.cpp)
 
 # Link JUCE libraries
@@ -92,7 +95,13 @@ target_sources(TestRunner PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/AIProducer/Source/MIDIGenerator.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/AIProducer/Source/MusicTheory.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/AIProducer/Source/AIClient.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/BrassSection/Source/BrassEngine.cpp)
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/BrassSection/Source/BrassEngine.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/Gate/Source/GateEngine.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../shared/dsp/EnvelopeFollower.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../shared/dsp/Sidechain.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/GranularEngine/Source/GrainExtractor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/GranularEngine/Source/GrainBuffer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/Koto/Source/KotoEngine.cpp)
 
 # Compiler definitions
 target_compile_definitions(TestRunner PUBLIC
