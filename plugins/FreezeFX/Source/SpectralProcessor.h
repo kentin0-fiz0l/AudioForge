@@ -26,6 +26,13 @@ public:
     // Processing
     void processBlock(juce::AudioBuffer<float>& buffer);
 
+    // Keeps the analysis window up to date without running any FFT, so the
+    // first frame processed afterwards sees the audio that led up to it
+    void pushInput(const juce::AudioBuffer<float>& buffer);
+
+    // Discards output left over from an earlier run of processBlock
+    void clearOutput();
+
     //==============================================================================
     // FFT Configuration
     void setFFTSize(int size);           // 1024, 2048, 4096, 8192
@@ -74,7 +81,7 @@ private:
     //==============================================================================
     // Buffers
     std::vector<float> fftBuffer;           // Complex FFT data (size = fftSize * 2)
-    std::vector<float> windowBuffer;        // Hann window (size = fftSize)
+    std::vector<float> windowBuffer;        // Square-root Hann window (size = fftSize)
 
     // Lock-free double buffering for spectrum data
     // Audio thread writes to buffer[writeIndex], UI reads from buffer[1-writeIndex]
@@ -86,8 +93,8 @@ private:
     // Overlap-Add Buffers (per channel)
     struct ChannelData
     {
-        std::vector<float> inputFIFO;       // Input samples waiting for FFT
-        std::vector<float> outputFIFO;      // Output samples from IFFT
+        std::vector<float> inputFIFO;       // The last fftSize input samples
+        std::vector<float> outputFIFO;      // Overlap-added output, next sample at outputReadPos
         int inputWritePos = 0;
         int outputReadPos = 0;
     };
@@ -95,9 +102,11 @@ private:
     std::vector<ChannelData> channelData;
     int numChannels = 2;
 
+    void shiftInput(ChannelData& channel);
+
     //==============================================================================
     // Windowing
-    void createHannWindow();
+    void createWindow();
 
     double sampleRate = 44100.0;
 

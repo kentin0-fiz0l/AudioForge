@@ -4,6 +4,9 @@ name: Build All Plugins
 # two plugins plus the test runner; this is the check that the rest still
 # compile, and that they compile somewhere other than a developer's Mac.
 #
+# Each plugin that builds is then run through tools/stress-host, which drives
+# it at extreme and random settings and fails on runaway or invalid output.
+#
 # Each plugin compiles its own copy of the JUCE modules, so building all of
 # them in one job would take hours. They are split into shards that run in
 # parallel instead.
@@ -21,6 +24,10 @@ concurrency:
 env:
   BUILD_TYPE: Release
   PLUGINS_PER_SHARD: 4
+  # Peak ceiling for tools/stress-host. It sits between the loudest healthy
+  # plugin (PadSynth, 9.3) and the quietest of the faults the host was written
+  # to catch (13.2). See tools/stress-host/README.md.
+  STRESS_MAX_PEAK: 12
 
 jobs:
   plan:
@@ -82,22 +89,29 @@ jobs:
             libxrender-dev \
             mesa-common-dev
 
-      - name: Build plugins
+      - name: Build stress host
+        run: |
+          cmake -S tools/stress-host -B build/stress-host -DCMAKE_BUILD_TYPE="$BUILD_TYPE"
+          cmake --build build/stress-host --config "$BUILD_TYPE" --parallel 4
+
+      - name: Build and stress plugins
         env:
           PLUGINS: ${{ matrix.plugins }}
           SHARD: ${{ matrix.shard }}
         run: |
-          # Build every plugin in the shard even if an earlier one fails, so a
-          # single run reports all the breakage rather than the first.
+          # Build and stress every plugin in the shard even if an earlier one
+          # fails, so a single run reports all the breakage rather than the first.
           set +e
           mkdir -p logs
           failed=""
+          unsound=""
+          stress_host="build/stress-host/StressHost_artefacts/$BUILD_TYPE/StressHost"
 
           {
             echo "### Shard $SHARD"
             echo ""
-            echo "| Plugin | Result | Time |"
-            echo "|---|---|---|"
+            echo "| Plugin | Build | Time | Stress | Loudest peak |"
+            echo "|---|---|---|---|---|"
           } >> "$GITHUB_STEP_SUMMARY"
 
           for plugin in $PLUGINS; do
@@ -113,10 +127,28 @@ jobs:
 
             if [ $status -eq 0 ]; then
               echo "$plugin: built in ${elapsed}s"
-              echo "| $plugin | pass | ${elapsed}s |" >> "$GITHUB_STEP_SUMMARY"
+
+              # The host prints one tab-separated line per plugin:
+              # name, verdict, loudest peak, then the settings behind a failure
+              vst3=$(find "build/$plugin" -type d -name '*.vst3' | head -1)
+              timeout 600 "$stress_host" --max-peak "$STRESS_MAX_PEAK" "$vst3" > "logs/$plugin-stress.log" 2>&1
+              stress_status=$?
+              result=$(grep -m1 -P '\t(ok|TOO-LOUD|NON-FINITE|LOAD-FAILED)\t' "logs/$plugin-stress.log")
+              verdict=$(echo "$result" | cut -f2)
+              peak=$(echo "$result" | cut -f3 | sed 's/^peak //')
+
+              if [ $stress_status -eq 0 ]; then
+                echo "$plugin: stress ok, peak $peak"
+                echo "| $plugin | pass | ${elapsed}s | ok | $peak |" >> "$GITHUB_STEP_SUMMARY"
+              else
+                unsound="$unsound $plugin"
+                echo "| $plugin | pass | ${elapsed}s | **${verdict:-CRASHED}** | $peak |" >> "$GITHUB_STEP_SUMMARY"
+                echo "$plugin: STRESS FAILED (exit $stress_status):"
+                cat "logs/$plugin-stress.log"
+              fi
             else
               failed="$failed $plugin"
-              echo "| $plugin | **FAIL** | ${elapsed}s |" >> "$GITHUB_STEP_SUMMARY"
+              echo "| $plugin | **FAIL** | ${elapsed}s | | |" >> "$GITHUB_STEP_SUMMARY"
               echo "$plugin: FAILED after ${elapsed}s. First errors:"
               grep -hE "error:|Error at|fatal error|undefined reference|CMake Error" \
                 "logs/$plugin-configure.log" "logs/$plugin-build.log" 2>/dev/null | head -25
@@ -129,10 +161,13 @@ jobs:
 
           if [ -n "$failed" ]; then
             echo "::error::Failed to build:$failed"
-            exit 1
           fi
+          if [ -n "$unsound" ]; then
+            echo "::error::Failed the stress host:$unsound"
+          fi
+          [ -z "$failed$unsound" ]
 
-      - name: Upload build logs on failure
+      - name: Upload logs on failure
         if: failure()
         uses: actions/upload-artifact@v4
         with:
