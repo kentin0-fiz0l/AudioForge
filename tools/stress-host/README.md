@@ -21,6 +21,9 @@ cmake --build build/stress-host --parallel 8
 ```bash
 build/stress-host/StressHost_artefacts/Release/StressHost path/to/Plugin.vst3
 
+# Also fail any plugin whose loudest peak is above 12
+build/stress-host/StressHost_artefacts/Release/StressHost --max-peak 12 path/to/Plugin.vst3
+
 # One line per run instead of one per plugin
 STRESS_VERBOSE=1 build/stress-host/StressHost_artefacts/Release/StressHost path/to/Plugin.vst3
 ```
@@ -33,10 +36,21 @@ for p in ~/Library/Audio/Plug-Ins/VST3/*.vst3; do
 done
 ```
 
-The exit code is 0 when every plugin loaded and produced only finite output.
+The exit code is 0 when every plugin loaded and passed. Each plugin's line carries its verdict:
+
+- `ok`
+- `NON-FINITE`: some output sample was `inf` or `NaN`
+- `TOO-LOUD`: the loudest peak was above the ceiling given with `--max-peak`
+- `LOAD-FAILED`: the bundle held no plugin, or it could not be instantiated
+
+## In CI
+
+The `Build All Plugins` workflow builds this host in every shard and runs it on each plugin straight after that plugin builds, on Linux. A plugin that fails turns its shard red, and the verdict and loudest peak for every plugin are in the run summary. CI runs with `--max-peak 12`; the value is `STRESS_MAX_PEAK` at the top of `.github/workflows/build-all-plugins.yml`. With every plugin healthy the loudest is PadSynth at 9.3; the faults this host was written to catch gave 13.2 (BasicSynth), 14.4 (Reverb), 190 (Koto) and 1e38 (Gate). The ceiling is a tripwire for runaway output, not a statement that 12 is an acceptable level. A plugin that is legitimately louder needs the ceiling raised, since there are no per-plugin exceptions.
+
+The host's settings are the same on every run, but a few plugins generate their own unseeded noise, so their peaks move a little from run to run (Shakuhachi has given 6.9 to 7.9). Leave room for that when moving the ceiling.
 
 ## Reading the results
 
 A peak well above 1.0 is not automatically a bug. Compressors with maximum makeup gain, saturators at full drive, and filters at high resonance are legitimately loud. Look for peaks that are orders of magnitude out, output from an effect that exceeds what its controls could explain, and anything non-finite.
 
-Only tested on macOS so far.
+Runs on macOS and, without a display, on Linux. Not tried on Windows.

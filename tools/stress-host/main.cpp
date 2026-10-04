@@ -5,7 +5,7 @@
 // settings, at several sample rates, while playing full-velocity notes and
 // feeding noise. Reports any non-finite output and the loudest peak seen.
 //
-// Usage: StressHost <plugin.vst3> [more plugins...]
+// Usage: StressHost [--max-peak <level>] <plugin.vst3> [more plugins...]
 
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <cmath>
@@ -23,6 +23,43 @@ namespace
         bool nonFinite = false;
         float peak = 0.0f;
     };
+
+    // What the caller is prepared to accept from a plugin
+    struct Limits
+    {
+        float maxPeak = 0.0f; // Set by --max-peak; 0 = no ceiling given
+    };
+
+    enum class Verdict { ok, tooLoud, nonFinite };
+
+    const char* toString(Verdict verdict)
+    {
+        switch (verdict)
+        {
+            case Verdict::tooLoud:   return "TOO-LOUD";
+            case Verdict::nonFinite: return "NON-FINITE";
+            case Verdict::ok:        break;
+        }
+
+        return "ok";
+    }
+
+    // Decides whether a plugin's results count as a failure. worstPeak is the
+    // loudest finite sample across every setting and sample rate; the inputs
+    // were noise at 0.5 and full-velocity notes.
+    //
+    // Silence is not a failure: pattern generators and a sampler with nothing
+    // loaded are legitimately silent here.
+    Verdict judge(bool nonFinite, float worstPeak, const Limits& limits)
+    {
+        if (nonFinite)
+            return Verdict::nonFinite;
+
+        if (limits.maxPeak > 0.0f && worstPeak > limits.maxPeak)
+            return Verdict::tooLoud;
+
+        return Verdict::ok;
+    }
 
     struct Config
     {
@@ -129,11 +166,19 @@ int main(int argc, char* argv[])
     formatManager.addFormat(new juce::VST3PluginFormat());
     auto* format = formatManager.getFormat(0);
 
+    Limits limits;
     int numFailed = 0;
 
     for (int arg = 1; arg < argc; ++arg)
     {
         const juce::String path(argv[arg]);
+
+        if (path == "--max-peak" && arg + 1 < argc)
+        {
+            limits.maxPeak = juce::String(argv[++arg]).getFloatValue();
+            continue;
+        }
+
         const auto name = juce::File(path).getFileNameWithoutExtension();
 
         juce::OwnedArray<juce::PluginDescription> descriptions;
@@ -211,17 +256,17 @@ int main(int argc, char* argv[])
             continue;
         }
 
-        const bool failed = ! nonFiniteWhere.isEmpty();
-        if (failed)
+        const auto verdict = judge(! nonFiniteWhere.isEmpty(), worstPeak, limits);
+        if (verdict != Verdict::ok)
             ++numFailed;
 
-        std::cout << name << "\t" << (failed ? "NON-FINITE" : "ok")
+        std::cout << name << "\t" << toString(verdict)
                   << "\tpeak " << juce::String(worstPeak, 2) << " (" << worstPeakWhere << ")";
 
-        if (failed)
+        if (verdict == Verdict::nonFinite)
             std::cout << "\t" << nonFiniteWhere.size() << " runs, first: " << nonFiniteWhere[0]
                       << "\t" << firstNonFiniteParams;
-        else if (worstPeak > 8.0f)
+        else if (verdict == Verdict::tooLoud || worstPeak > 8.0f)
             std::cout << "\tloudest with: " << worstPeakParams;
 
         std::cout << std::endl;
