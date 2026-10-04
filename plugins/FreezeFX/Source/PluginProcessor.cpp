@@ -162,7 +162,10 @@ void FreezeFXProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::Mid
     // This eliminates 100% of spectral processing overhead when the effect is inactive
     if (!freeze && !wasFrozen)
     {
-        // Freeze is off and was off - complete bypass (no FFT!)
+        // Freeze is off and was off - bypass (no FFT!). The analysis window is
+        // still kept up to date, so there is something to capture the moment
+        // freeze is switched on.
+        spectralProcessor.pushInput(buffer);
         return;
     }
 
@@ -178,16 +181,18 @@ void FreezeFXProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::Mid
     // Check for freeze trigger (edge detection)
     if (freeze && !wasFrozen)
     {
-        // Capture current spectrum on freeze toggle
-        frozenSpectrum.captureSpectrum(
-            spectralProcessor.getMagnitudeSpectrum(),
-            spectralProcessor.getPhaseSpectrum());
+        // Capture on freeze toggle. No spectrum has been computed while
+        // bypassed, so take it from the first frame analysed from here on:
+        // that frame ends within one hop of this moment.
+        capturePending = true;
+        spectralProcessor.clearOutput();
         frozenSpectrum.freeze();
     }
     else if (!freeze && wasFrozen)
     {
         frozenSpectrum.unfreeze();
         wasFrozen = false;  // Reset state
+        spectralProcessor.pushInput(buffer);
         return;  // Exit early - no processing needed when transitioning to bypass
     }
     wasFrozen = freeze;  // Update state for next block
@@ -229,6 +234,12 @@ void FreezeFXProcessor::processSpectrum(std::vector<float>& magnitude, std::vect
     // Get current parameters
     float freezeMix = apvts.getRawParameterValue(PARAM_FREEZE_MIX)->load();
     float deltaTime = 1.0f / getSampleRate() * spectralProcessor.getHopSize();
+
+    if (capturePending)
+    {
+        frozenSpectrum.captureSpectrum(magnitude, phase);
+        capturePending = false;
+    }
 
     // If frozen, blend with frozen spectrum
     if (frozenSpectrum.isFrozen() && freezeMix > 0.0f)

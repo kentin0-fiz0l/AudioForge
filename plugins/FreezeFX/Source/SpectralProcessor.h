@@ -26,6 +26,13 @@ public:
     // Processing
     void processBlock(juce::AudioBuffer<float>& buffer);
 
+    // Keeps the analysis window up to date without running any FFT, so the
+    // first frame processed afterwards sees the audio that led up to it
+    void pushInput(const juce::AudioBuffer<float>& buffer);
+
+    // Discards output left over from an earlier run of processBlock
+    void clearOutput();
+
     //==============================================================================
     // FFT Configuration
     void setFFTSize(int size);           // 1024, 2048, 4096, 8192
@@ -94,6 +101,8 @@ private:
 
     std::vector<ChannelData> channelData;
     int numChannels = 2;
+
+    void shiftInput(ChannelData& channel);
 
     //==============================================================================
     // Windowing
