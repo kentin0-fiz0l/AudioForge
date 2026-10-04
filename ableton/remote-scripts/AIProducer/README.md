@@ -13,7 +13,7 @@ Press one trigger (MIDI note C3) and AI Producer:
 
 ---
 
-This is a Live Remote Script (plain Python, run by Live itself), not a plugin. It is the "agent outside the plugin" counterpart to the AI Producer VST in `plugins/AIProducer`: instead of emitting MIDI from one plugin instance, it builds the tracks and clips directly in the Live session. It also accepts a small set of OSC commands on UDP port 9000 (`/ai_producer/generate`, `/live/song/set/tempo`, `/live/song/start_playing`, `/live/song/stop_playing`, `/live/song/create_midi_track`, `/live/track/set/volume`).
+This is a Live Remote Script (plain Python, run by Live itself), not a plugin. It is the "agent outside the plugin" counterpart to the AI Producer VST in `plugins/AIProducer`: instead of emitting MIDI from one plugin instance, it builds the tracks and clips directly in the Live session. It also accepts OSC commands on UDP port 9000: `/ai_producer/generate`, `/live/song/set/tempo`, `/live/song/start_playing`, `/live/song/stop_playing` and `/live/song/create_midi_track`, plus the mixer, device and meter commands described below.
 
 ## Installation
 
@@ -80,6 +80,38 @@ The Input has to be set to your keyboard: Live only sends the script notes from 
 ### Method 3: Add Keyboard Shortcut (Advanced)
 
 Edit `AIProducer.py` to add Cmd+G shortcut (requires more Live API knowledge)
+
+---
+
+## Controlling the Mixer
+
+Besides generating tracks, the script answers commands about the mixer, so a track can be mixed from outside Live. `live_control.py` sends a command and prints the reply:
+
+```bash
+cd ableton/remote-scripts/AIProducer
+python3 live_control.py /live/mixer                                   # every track's level, pan, sends and devices
+python3 live_control.py /live/meters                                  # meter readings, and the peak since last asked
+python3 live_control.py /live/track/set/volume_db "AI Bass" -3        # fader, in the dB Live displays
+python3 live_control.py /live/track/set/pan 6 -0.2
+python3 live_control.py /live/track/set/send "AI Lead" 0 0.3
+python3 live_control.py /live/device/load master audio_effects/Limiter
+python3 live_control.py /live/device/params master 0
+python3 live_control.py /live/device/set master 0 1 0.5
+python3 live_control.py /live/device/delete "AI Chords" 1
+```
+
+A track is named by its index, its name, `master` or `return:0`. Device paths follow Live's browser, starting from `audio_effects`, `instruments`, `drums`, `sounds`, `midi_effects`, `plugins`, `packs`, `samples` or `user_library`.
+
+Meter readings are Live's own values from 0 to 1, not decibels.
+
+## Recording Feedback
+
+```bash
+# From the repository root
+python3 ableton/remote-scripts/AIProducer/live_control.py feedback "the hi-hat is too bright"
+```
+
+This appends the comment to `feedback/log.jsonl`, together with the mixer, the meters and every device's settings at that moment. See `feedback/README.md` for how the log is used.
 
 ---
 
@@ -172,7 +204,9 @@ ls -la ~/Music/Ableton/User\ Library/Remote\ Scripts/AIProducer/
 # EffectChains.py
 # MIDIGenerator.py
 # MusicTheory.py
+# MixerControl.py
 # OSCServer.py
+# live_control.py
 # trigger_generate.py
 # README.md
 ```
