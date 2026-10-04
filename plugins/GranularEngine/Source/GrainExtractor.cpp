@@ -207,12 +207,16 @@ void GrainExtractor::createKaiserWindow()
     };
 
     float denominator = besselI0(beta);
-    int center = (grainSize - 1) / 2;
+
+    // Position runs from -1 at the first sample to +1 at the last. The centre
+    // has to be fractional: with integer division an even grain size put the
+    // last sample past +1, and the square root below returned NaN.
+    float center = (grainSize - 1) / 2.0f;
 
     for (int i = 0; i < grainSize; ++i)
     {
-        float n = (float)(i - center) / (float)center;
-        float arg = beta * std::sqrt(1.0f - n * n);
+        float n = (i - center) / center;
+        float arg = beta * std::sqrt(juce::jmax(0.0f, 1.0f - n * n));
         window[i] = besselI0(arg) / denominator;
     }
 }

@@ -47,7 +47,9 @@ float KotoEngine::processSample(float baseFrequency, float velocity, bool noteOn
     // Update string delay length
     float delayLength = static_cast<float>(sampleRate_) / frequency;
     string_.delayLength = delayLength;
-    string_.feedback = 0.994f + decayTime_ * 0.004f; // Longer decay = higher feedback
+    // Longer decay = higher feedback. The Decay control runs up to 2.0, and
+    // without the limit this mapping passes 1.0 at a decay of 1.5.
+    string_.feedback = juce::jmin(MAX_STRING_FEEDBACK, 0.994f + decayTime_ * 0.004f);
 
     // Update tone filter coefficient
     toneCoeff_ = 0.3f + tone_ * 0.6f;
@@ -79,7 +81,15 @@ float KotoEngine::processSample(float baseFrequency, float velocity, bool noteOn
                 // Short pluck burst every tremolo cycle
                 if (noteOn && lastTremoloTrigger_ < 5)
                 {
-                    excitation = (random_.nextFloat() * 2.0f - 1.0f) * velocity * 0.7f;
+                    // The string is still ringing from the previous plucks when
+                    // the next one arrives. Scale each pluck by how much of the
+                    // last one is left, so the level settles at that of a single
+                    // pluck instead of piling up.
+                    const float tripsPerPluck = frequency / juce::jmax(0.1f, tremoloRate_);
+                    const float retained = std::pow(string_.feedback, tripsPerPluck);
+
+                    excitation = (random_.nextFloat() * 2.0f - 1.0f) * velocity * 0.7f
+                                 * std::sqrt(1.0f - retained * retained);
                     lastTremoloTrigger_++;
                 }
             }
@@ -89,7 +99,15 @@ float KotoEngine::processSample(float baseFrequency, float velocity, bool noteOn
             // Continuous noisy excitation
             if (noteOn)
             {
-                excitation = (random_.nextFloat() * 2.0f - 1.0f) * velocity * 0.15f;
+                // Noise fed in continuously builds up in the string by a factor
+                // of 1 / sqrt(1 - feedback^2). Divide that out so the level is
+                // the same at every decay setting: an RMS of 0.15 at full
+                // velocity (0.26 is 0.15 * sqrt(3), uniform noise having an RMS
+                // of 1 / sqrt(3)).
+                const float g = string_.feedback;
+
+                excitation = (random_.nextFloat() * 2.0f - 1.0f) * velocity * 0.26f
+                             * std::sqrt(1.0f - g * g);
             }
             break;
     }
