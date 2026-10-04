@@ -89,6 +89,7 @@ private:
     //==============================================================================
     // State
     bool wasFrozen = false;  // Track previous freeze state for edge detection
+    bool capturePending = false;  // Freeze was just switched on; capture the next frame
 
     //==============================================================================
     // Performance: Pre-allocated buffers for spectral blending (avoid per-frame allocation)

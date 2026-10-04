@@ -125,12 +125,7 @@ void SpectralProcessor::processBlock(juce::AudioBuffer<float>& buffer)
                 // Overlap-add the frame onto what earlier frames left there
                 processFFTFrame(channel.inputFIFO.data(), channel.outputFIFO.data());
 
-                // Shift input FIFO (overlap)
-                std::copy(channel.inputFIFO.begin() + hopSize,
-                         channel.inputFIFO.end(),
-                         channel.inputFIFO.begin());
-
-                channel.inputWritePos = fftSize - hopSize;
+                shiftInput(channel);
             }
 
             // Read output sample from FIFO. At most hopSize samples are read
@@ -139,6 +134,46 @@ void SpectralProcessor::processBlock(juce::AudioBuffer<float>& buffer)
             channel.outputReadPos++;
         }
     }
+}
+
+void SpectralProcessor::pushInput(const juce::AudioBuffer<float>& buffer)
+{
+    const int numSamples = buffer.getNumSamples();
+    const int numCh = juce::jmin(buffer.getNumChannels(), numChannels);
+
+    for (int ch = 0; ch < numCh; ++ch)
+    {
+        auto& channel = channelData[ch];
+        const float* input = buffer.getReadPointer(ch);
+
+        for (int i = 0; i < numSamples; ++i)
+        {
+            channel.inputFIFO[channel.inputWritePos] = input[i];
+            channel.inputWritePos++;
+
+            if (channel.inputWritePos >= fftSize)
+                shiftInput(channel);
+        }
+    }
+}
+
+void SpectralProcessor::clearOutput()
+{
+    for (auto& channel : channelData)
+    {
+        std::fill(channel.outputFIFO.begin(), channel.outputFIFO.end(), 0.0f);
+        channel.outputReadPos = 0;
+    }
+}
+
+void SpectralProcessor::shiftInput(ChannelData& channel)
+{
+    // Drop the oldest hop, leaving room for the next one at the end
+    std::copy(channel.inputFIFO.begin() + hopSize,
+             channel.inputFIFO.end(),
+             channel.inputFIFO.begin());
+
+    channel.inputWritePos = fftSize - hopSize;
 }
 
 void SpectralProcessor::processFFTFrame(const float* input, float* output)
