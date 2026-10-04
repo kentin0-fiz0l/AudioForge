@@ -130,6 +130,9 @@ private:
 
     // Reverb components (8 comb filters + 4 all-pass filters per channel)
     static constexpr int numCombs = 8;
+
+    // Brings the summed comb output back to roughly the input level
+    static constexpr float reverbInputGain = 0.05f;
     static constexpr int numAllPasses = 4;
 
     CombFilter combsLeft[numCombs];

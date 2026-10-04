@@ -180,8 +180,11 @@ void ReverbAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::
             preDelayIndex = (preDelayIndex + 1) % maxPreDelaySamples;
         }
 
-        // Mix to mono for reverb input
-        float monoInput = (delayedL + delayedR) * 0.5f;
+        // Mix to mono for reverb input. Eight parallel combs followed by the
+        // all-passes multiply the level by 15-28x depending on room size and
+        // damping, so scale the input down to keep the wet signal about as
+        // loud as the dry one.
+        float monoInput = (delayedL + delayedR) * 0.5f * reverbInputGain;
 
         // Process through comb filters (parallel)
         float combOutL = 0.0f;

@@ -10,6 +10,10 @@ class KotoEngine
 public:
     static constexpr int DELAY_BUFFER_SIZE = 8192;
 
+    // Highest loop gain allowed for the string. It must stay below 1, or each
+    // trip round the string makes the note louder instead of quieter.
+    static constexpr float MAX_STRING_FEEDBACK = 0.9995f;
+
     enum class Scale
     {
         InSen,        // E F A B D (in-sen scale)
