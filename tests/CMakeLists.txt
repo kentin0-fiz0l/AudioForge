@@ -33,6 +33,7 @@ add_executable(TestRunner
     Plugins/GrainWindowTests.cpp
     Plugins/KotoEngineTests.cpp
     Plugins/SpectralProcessorTests.cpp
+    Plugins/HiHatEngineTests.cpp
     Integration/PluginIntegrationTests.cpp)
 
 # Link JUCE libraries
@@ -103,7 +104,8 @@ target_sources(TestRunner PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/GranularEngine/Source/GrainExtractor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/GranularEngine/Source/GrainBuffer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/Koto/Source/KotoEngine.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/FreezeFX/Source/SpectralProcessor.cpp)
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/FreezeFX/Source/SpectralProcessor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/HiHat/Source/HiHatEngine.cpp)
 
 # Compiler definitions
 target_compile_definitions(TestRunner PUBLIC
