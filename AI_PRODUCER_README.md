@@ -1,12 +1,14 @@
-# 🤖 AI Producer - Autonomous Music Creation Plugin
+# 🤖 AI Producer - Track Sketch Generator Plugin
 
-**The world's first AI-powered DAW plugin that creates complete tracks for you!**
+**A VST3/AU plugin that writes a full MIDI arrangement into your DAW session.**
 
 ## Overview
 
-AI Producer is a revolutionary VST3/AU plugin that uses artificial intelligence to generate complete music tracks from simple text prompts. Just type what you want (e.g., "Create a progressive house track"), click Generate, and watch as the AI composes a full arrangement with drums, bass, chords, and melody.
+AI Producer generates a complete arrangement (drums, bass, chords and lead) as MIDI and plays it in time with your DAW's transport. The goal is to drive that generation from a text prompt using an AI model.
 
-**Status**: ✅ MVP Complete  
+**What works today**: the plugin generates one fixed 72-bar house arrangement in A minor at 128 BPM and plays it back in sync with the host. **The text prompt is not used yet**, and no AI model is called; every prompt produces the same track. See [Known Limitations](#known-limitations).
+
+**Status**: 🚧 Prototype - playback engine working, AI generation not implemented  
 **Install Location**: `~/Library/Audio/Plug-Ins/VST3/AI Producer.vst3`  
 **Formats**: VST3, AU, Standalone
 
@@ -25,10 +27,11 @@ AI Producer is a revolutionary VST3/AU plugin that uses artificial intelligence 
   - Track 4 (Channel 3): Lead
 
 ### 2. Generate Your Track
-- Type a prompt in the text box (e.g., "Create a house track")
-- Click "🎵 Generate Track"
-- Wait a few seconds while the AI creates your arrangement
-- Press play in your DAW → Your track plays!
+- Click "🎵 Generate Track" (the prompt text is ignored for now)
+- Set your DAW's tempo to 128 BPM, the tempo the track is written for
+- Press play from bar 1 → the track plays in time with your DAW
+
+Playback follows the host transport: the arrangement is laid out along the song timeline starting at bar 1, so stopping, looping and moving the playhead all behave as you would expect. Nothing plays while the transport is stopped.
 
 ### 3. Customize
 - Edit the generated MIDI in your DAW's piano roll
@@ -40,16 +43,17 @@ AI Producer is a revolutionary VST3/AU plugin that uses artificial intelligence 
 
 ## Features
 
-### Current (MVP v1.0)
-✅ **Text-Based Generation** - Describe what you want in natural language  
-✅ **Complete Arrangements** - Intro, Build, Drop, Breakdown, Outro  
+### Current (prototype)
+✅ **Complete Arrangement** - Intro, Build, Drop, Breakdown, Build, Drop, Outro (72 bars)  
 ✅ **Multi-Instrument Output** - Drums, Bass, Chords, Lead (4 MIDI channels)  
-✅ **Genre-Aware Patterns** - House, Techno, DnB, Hip-Hop, Trap  
-✅ **Music Theory Engine** - Correct scales, chord progressions, rhythms  
-✅ **Real-Time Progress** - See what the AI is doing
+✅ **Host-Synced Playback** - Follows the DAW transport, tempo and playhead position  
+✅ **Music Theory Library** - Scales, chords, progressions and drum patterns for several genres (only the house drum pattern is used so far)  
+✅ **Status Display** - Shows when the track is ready and what tempo to use
 
 ### Coming Soon (v2.0)
+⏳ **Text-Based Generation** - Describe what you want in natural language  
 ⏳ **Real AI Integration** - Connect to OpenAI, Claude, or local Ollama  
+⏳ **Genre-Aware Patterns** - House, Techno, DnB, Hip-Hop, Trap  
 ⏳ **Advanced Generation** - More sophisticated melodies and harmonies  
 ⏳ **Humanization** - Subtle timing/velocity variations  
 ⏳ **Mixing Controls** - Auto-set velocities for good mix balance  
@@ -69,20 +73,19 @@ The plugin understands music theory:
 - **Drum Patterns**: 4-on-floor, House, Techno, DnB, Trap, Hip-Hop
 - **BPM Ranges**: Correct tempos for each genre
 
-### 2. AI Decision Making
-The AI analyzes your prompt and decides:
-- Genre (House, Techno, DnB, etc.)
-- BPM (e.g., 128 for house)
-- Key and Scale (e.g., A minor)
-- Chord Progression (e.g., i-VI-III-VII)
-- Arrangement Structure (which sections, how long, energy levels)
+### 2. Track Structure (planned: AI decision making)
+A track is described by a structure: genre, BPM, key and scale, chord progression, and an arrangement of sections with lengths and energy levels.
+
+Today that structure is fixed in code (house, 128 BPM, A minor). The plan is for an AI model to choose it from your prompt.
 
 ### 3. MIDI Generation
-Based on the AI's decisions, the plugin generates MIDI:
-- **Drums**: Kick, snare, hi-hats on correct beats for the genre
-- **Bass**: Root notes following the chord progression
-- **Chords**: Full harmonic foundation
-- **Lead**: Melodic lines using the selected scale
+From the track structure, the plugin generates MIDI:
+- **Drums**: Kick, snare and hi-hats in a classic house pattern
+- **Bass**: The key's root note on every beat
+- **Chords**: Root and fifth, held for each bar
+- **Lead**: An 8th-note pentatonic phrase, in the drop sections only
+
+The chord progression in the structure is not followed yet: bass and chords stay on the root.
 
 ### 4. DAW Integration
 The generated MIDI outputs to your DAW:
@@ -94,6 +97,8 @@ The generated MIDI outputs to your DAW:
 ---
 
 ## Example Prompts
+
+> **Not implemented yet.** These are the results the plugin is intended to produce once prompts drive generation. Today every prompt produces the house track described first.
 
 ### House Music
 ```
@@ -291,7 +296,7 @@ User interface:
 ## Known Limitations
 
 ### Current MVP Limitations
-1. **Hardcoded Output**: Currently generates the same house track structure every time (AI integration coming in v2.0)
+1. **Hardcoded Output**: Generates the same house track every time. The prompt text is ignored and no AI model is called (AI integration coming in v2.0)
 2. **Limited Variation**: Drums and bass are simple patterns (will add variation in v2.0)
 3. **No Mixing**: All MIDI velocities are static (will add dynamics in v2.0)
 4. **One Genre**: Only generates house-style tracks (will add genre selector in v2.0)
@@ -301,6 +306,8 @@ User interface:
 2. **Manual Routing**: You must manually route MIDI channels to instruments
 3. **No Undo**: Once generated, use your DAW's undo if you want to go back
 4. **No Real-Time**: Generation happens once, not during playback
+5. **Not Saved With the Project**: The generated track is not stored in the plugin's state, so it must be generated again after reopening a session
+6. **Tempo Is Not Set For You**: Playback follows the host tempo; set your DAW to the track's BPM yourself
 
 ---
 

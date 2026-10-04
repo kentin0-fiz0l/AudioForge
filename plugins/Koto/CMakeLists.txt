@@ -44,4 +44,8 @@ target_link_libraries(Koto PRIVATE
     juce::juce_dsp
 )
 
-juce_add_bundle_resources_directory(Koto Resources)
+# The Resources folder is empty for now, and git does not track empty
+# directories, so it is missing from a fresh clone
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Resources")
+    juce_add_bundle_resources_directory(Koto Resources)
+endif()

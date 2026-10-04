@@ -81,6 +81,6 @@ private:
     std::string ollamaEndpoint_;
     bool isGenerating_;
 
-    // HTTP client will be implemented with JUCE's URL class
-    std::unique_ptr<class HTTPClient> httpClient_;
+    // HTTP client will be implemented with JUCE's URL class in v2.0
+    // std::unique_ptr<class HTTPClient> httpClient_;
 };

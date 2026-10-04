@@ -121,6 +121,7 @@ private:
 
         // Process one buffer to update filter coefficients
         juce::AudioBuffer<float> dummyBuffer(2, 512);
+        dummyBuffer.clear(); // the sizing constructor leaves samples uninitialized
         juce::MidiBuffer dummyMidi;
         processor.processBlock(dummyBuffer, dummyMidi);
 
@@ -170,6 +171,7 @@ private:
 
         // Process one buffer to update filter coefficients
         juce::AudioBuffer<float> dummyBuffer(2, 512);
+        dummyBuffer.clear(); // the sizing constructor leaves samples uninitialized
         juce::MidiBuffer dummyMidi;
         processor.processBlock(dummyBuffer, dummyMidi);
 
@@ -219,6 +221,7 @@ private:
 
         // Process one buffer to update filter coefficients
         juce::AudioBuffer<float> dummyBuffer(2, 512);
+        dummyBuffer.clear(); // the sizing constructor leaves samples uninitialized
         juce::MidiBuffer dummyMidi;
         processor.processBlock(dummyBuffer, dummyMidi);
 
@@ -266,6 +269,7 @@ private:
 
         // Process one buffer to update filter coefficients
         juce::AudioBuffer<float> dummyBuffer(2, 512);
+        dummyBuffer.clear(); // the sizing constructor leaves samples uninitialized
         juce::MidiBuffer dummyMidi;
         processor.processBlock(dummyBuffer, dummyMidi);
 
@@ -313,6 +317,7 @@ private:
 
         // Process one buffer to update filter coefficients
         juce::AudioBuffer<float> dummyBuffer(2, 512);
+        dummyBuffer.clear(); // the sizing constructor leaves samples uninitialized
         juce::MidiBuffer dummyMidi;
         processor.processBlock(dummyBuffer, dummyMidi);
 
@@ -362,6 +367,7 @@ private:
 
         // Process one buffer to update filter coefficients
         juce::AudioBuffer<float> dummyBuffer(2, 512);
+        dummyBuffer.clear(); // the sizing constructor leaves samples uninitialized
         juce::MidiBuffer dummyMidi;
         processor.processBlock(dummyBuffer, dummyMidi);
 
@@ -411,6 +417,7 @@ private:
 
         // Process one buffer to update filter coefficients
         juce::AudioBuffer<float> dummyBuffer(2, 512);
+        dummyBuffer.clear(); // the sizing constructor leaves samples uninitialized
         juce::MidiBuffer dummyMidi;
         processor.processBlock(dummyBuffer, dummyMidi);
 
@@ -459,6 +466,7 @@ private:
 
         // Process one buffer to update filter coefficients
         juce::AudioBuffer<float> dummyBuffer(2, 512);
+        dummyBuffer.clear(); // the sizing constructor leaves samples uninitialized
         juce::MidiBuffer dummyMidi;
         processor.processBlock(dummyBuffer, dummyMidi);
 
