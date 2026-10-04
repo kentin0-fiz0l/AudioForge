@@ -74,7 +74,7 @@ private:
     //==============================================================================
     // Buffers
     std::vector<float> fftBuffer;           // Complex FFT data (size = fftSize * 2)
-    std::vector<float> windowBuffer;        // Hann window (size = fftSize)
+    std::vector<float> windowBuffer;        // Square-root Hann window (size = fftSize)
 
     // Lock-free double buffering for spectrum data
     // Audio thread writes to buffer[writeIndex], UI reads from buffer[1-writeIndex]
@@ -86,8 +86,8 @@ private:
     // Overlap-Add Buffers (per channel)
     struct ChannelData
     {
-        std::vector<float> inputFIFO;       // Input samples waiting for FFT
-        std::vector<float> outputFIFO;      // Output samples from IFFT
+        std::vector<float> inputFIFO;       // The last fftSize input samples
+        std::vector<float> outputFIFO;      // Overlap-added output, next sample at outputReadPos
         int inputWritePos = 0;
         int outputReadPos = 0;
     };
@@ -97,7 +97,7 @@ private:
 
     //==============================================================================
     // Windowing
-    void createHannWindow();
+    void createWindow();
 
     double sampleRate = 44100.0;
 
