@@ -29,3 +29,19 @@ jobs:
             ! -path "*/JuceLibraryCode/*" 2>/dev/null || true)
 
           echo "✅ Code formatting check complete (informational only)"
+
+  remote-script-tests:
+    name: Remote Script Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run the AI Producer Remote Script tests
+        run: |
+          # Live runs this script in its own Python, so nothing else imports
+          # it. These tests load it against a fake of Live's API, which is
+          # enough to catch a script that cannot be imported at all.
+          python3 --version
+          python3 -m unittest discover -s ableton/tests -v

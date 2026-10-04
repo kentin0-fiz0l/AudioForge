@@ -131,6 +131,7 @@ class TrackGenerator:
         """Generate a progressive house track structure"""
         return {
             'genre': 'House',
+            'style': 'house',  # Key into get_drum_pattern
             'bpm': 128,
             'key': 57,  # A (MIDI note)
             'scale': 'Minor',
@@ -152,6 +153,7 @@ class TrackGenerator:
         """Generate a techno track - harder, faster, relentless"""
         return {
             'genre': 'Techno',
+            'style': 'techno',
             'bpm': 135,
             'key': 50,  # D (darker)
             'scale': 'Phrygian',  # Dark scale
@@ -170,6 +172,7 @@ class TrackGenerator:
         """Generate a Drum & Bass track - fast breaks, heavy bass"""
         return {
             'genre': 'Drum & Bass',
+            'style': 'dnb',
             'bpm': 174,
             'key': 55,  # G
             'scale': 'Minor',
@@ -190,6 +193,7 @@ class TrackGenerator:
         """Generate a Hip-Hop track - boom bap, laid back"""
         return {
             'genre': 'Hip-Hop',
+            'style': 'hiphop',
             'bpm': 90,
             'key': 60,  # C
             'scale': 'Minor',
@@ -208,6 +212,7 @@ class TrackGenerator:
         """Generate an Ambient track - no drums, evolving pads"""
         return {
             'genre': 'Ambient',
+            'style': 'ambient',
             'bpm': 65,
             'key': 62,  # D
             'scale': 'Dorian',

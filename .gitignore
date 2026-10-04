@@ -59,3 +59,7 @@ releases/
 # docs/manuals/*.pdf
 validation-results/
 dist/
+
+# Python
+__pycache__/
+*.pyc

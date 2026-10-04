@@ -2,22 +2,35 @@
 """
 Simple trigger for AI Producer
 Run this while Ableton is open with AI Producer activated
+
+    python3 trigger_generate.py            # house
+    python3 trigger_generate.py techno     # house, techno, dnb, hiphop or ambient
 """
 
 import socket
 import sys
 
-def send_osc_trigger():
-    """Send OSC message to trigger generation"""
-    # This is a simple approach - in reality, the Remote Script
-    # needs to be triggered via MIDI or internal mechanisms
-    print("To trigger AI Producer:")
-    print("1. Make sure Ableton is open")
-    print("2. Preferences → Link, Tempo & MIDI")
-    print("3. Control Surface: AIProducer")
-    print("4. Press MIDI note C3 (middle C) on your keyboard")
-    print("")
-    print("Or edit AIProducer.py to auto-generate on load!")
+PORT = 9000
+
+
+def osc_string(text):
+    """Encode a string the OSC way: null-terminated, padded to 4 bytes"""
+    data = text.encode('utf-8') + b'\x00'
+    return data + b'\x00' * (-len(data) % 4)
+
+
+def send_generate(genre='house', port=PORT, host='127.0.0.1'):
+    """Send the OSC message that makes AI Producer generate a track"""
+    message = osc_string('/ai_producer/generate') + osc_string(',s') + osc_string(genre)
+
+    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
+        sock.sendto(message, (host, port))
+
 
 if __name__ == "__main__":
-    send_osc_trigger()
+    genre = sys.argv[1] if len(sys.argv) > 1 else 'house'
+    send_generate(genre)
+    print(f"Sent a generate request for '{genre}'.")
+    print("Nothing happens unless Live is open with AIProducer chosen as a")
+    print("Control Surface (Settings -> Link, Tempo & MIDI). Live's Log.txt")
+    print("shows what the script did.")
