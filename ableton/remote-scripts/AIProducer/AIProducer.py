@@ -20,8 +20,8 @@ class AIProducer:
         self.app = Live.Application.get_application()
         self.song = self.app.get_document()
 
-        # Initialize device loader for automatic instrument loading
-        self.device_loader = DeviceLoader(self.app, self.log)
+        # Loads an instrument onto each generated track
+        self.device_loader = DeviceLoader(self.app, self.song, self.log)
 
         # Initialize effect chains
         self.effect_chains = EffectChains(self.log)
@@ -52,24 +52,6 @@ class AIProducer:
     def log(self, message):
         """Log message to Ableton's Log.txt"""
         self.c_instance.log_message(f"[AI Producer] {message}")
-
-    def load_device_simple(self, track, device_type):
-        """
-        Simplified device loading - tells user which instrument to use
-        Full browser API automation is complex, so we guide the user instead
-        """
-        device_recommendations = {
-            'drums': 'Drum Rack (Browser → Drums → Drum Rack)',
-            'bass': 'Operator or Wavetable (Browser → Instruments)',
-            'chords': 'Analog or Wavetable (Browser → Instruments)',
-            'lead': 'Operator or Wavetable (Browser → Instruments)'
-        }
-
-        if device_type in device_recommendations:
-            self.log(f"💡 Recommended instrument: {device_recommendations[device_type]}")
-            self.log(f"   Drag it onto the '{track.name}' track to hear sound!")
-            return True
-        return False
 
     def disconnect(self):
         """Cleanup on script unload"""
@@ -188,7 +170,7 @@ class AIProducer:
         return None
 
     def _use_template_tracks(self, tracks, genre='house'):
-        """Add MIDI to existing template tracks (they already have instruments!)"""
+        """Add MIDI to existing template tracks, and an instrument to any that has none"""
         structure = TrackGenerator.generate_track(genre)
         bpm = structure['bpm']
         total_bars = structure['total_bars']
@@ -197,6 +179,14 @@ class AIProducer:
         # Set tempo
         self.song.tempo = bpm
         self.log(f"Set tempo to {bpm} BPM")
+
+        # A template track with nothing on it gets an instrument; one that
+        # has a device keeps it
+        for name, kind in (('AI Drums', 'drums'), ('AI Bass', 'bass'), ('AI Chords', 'chords'), ('AI Lead', 'lead')):
+            try:
+                self.device_loader.load_instrument(tracks[name], kind)
+            except Exception as e:
+                self.log(f"✗ Instrument for {name} failed: {str(e)}")
 
         # Add MIDI to existing tracks
         try:
@@ -314,7 +304,7 @@ class AIProducer:
         self.log("")
         self.log("🎛️  Effect Chain Recommendations...")
         self.log("=" * 50)
-        self.log("Once you add instruments, apply these effects:")
+        self.log("Effects that suit each track:")
 
         self.effect_chains.apply_chain(None, 'drums')
         self.effect_chains.apply_chain(None, 'bass')
@@ -323,12 +313,11 @@ class AIProducer:
 
         self.log("=" * 50)
         self.log(f"COMPLETE! {total_bars} bars, {bpm} BPM")
-        self.log("Add instruments, then apply effects for pro sound!")
         self.log("Press SPACE to play!")
         self.log("=" * 50)
 
     def _create_drum_track(self, structure):
-        """Create drums track with Drum Rack and MIDI"""
+        """Create drums track with an instrument and MIDI"""
         self.log("Creating drums track...")
 
         # Create MIDI track
@@ -337,8 +326,6 @@ class AIProducer:
         track = self.song.tracks[track_index]
         track.name = "AI Drums"
 
-        # Load Drum Rack automatically!
-        self.log("Loading Drum Rack...")
         self.device_loader.load_instrument(track, 'drums')
 
         # Create MIDI clip
@@ -360,8 +347,6 @@ class AIProducer:
         track = self.song.tracks[track_index]
         track.name = "AI Bass"
 
-        # Load Operator for bass
-        self.log("Loading Operator for bass...")
         self.device_loader.load_instrument(track, 'bass')
 
         # Create clip
@@ -383,8 +368,6 @@ class AIProducer:
         track = self.song.tracks[track_index]
         track.name = "AI Chords"
 
-        # Load Analog for chords
-        self.log("Loading Analog for chords...")
         self.device_loader.load_instrument(track, 'chords')
 
         # Create clip
@@ -406,8 +389,6 @@ class AIProducer:
         track = self.song.tracks[track_index]
         track.name = "AI Lead"
 
-        # Load Wavetable for lead
-        self.log("Loading Wavetable for lead...")
         self.device_loader.load_instrument(track, 'lead')
 
         # Create clip

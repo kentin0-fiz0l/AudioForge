@@ -43,11 +43,44 @@ class FakeClip:
                       if not (from_pitch <= n[0] < from_pitch + pitch_span
                               and from_time <= n[1] < from_time + time_span)]
 
-    def set_notes(self, notes):
+    def _check(self, notes):
         for pitch, start, duration, velocity, muted in notes:
             if not (0 <= pitch <= 127 and start >= 0 and duration > 0 and 1 <= velocity <= 127):
                 raise ValueError(f"bad note {(pitch, start, duration, velocity, muted)}")
+
+    def set_notes(self, notes):
+        # Deprecated since Live 11, and still there
+        FakeClip.deprecated_calls += 1
+        self._check(notes)
         self.notes.extend(notes)
+
+    def add_new_notes(self, specifications):
+        # Live 11 and later: takes note specifications, not tuples
+        notes = []
+        for spec in specifications:
+            if not isinstance(spec, FakeNoteSpecification):
+                raise TypeError("add_new_notes takes MidiNoteSpecification objects")
+            notes.append((spec.pitch, spec.start_time, spec.duration, spec.velocity, spec.mute))
+        self._check(notes)
+        self.notes.extend(notes)
+
+    deprecated_calls = 0
+
+
+class FakeNoteSpecification:
+    """Live.Clip.MidiNoteSpecification, which takes keyword arguments only"""
+
+    def __init__(self, *, pitch, start_time, duration, velocity=100, mute=False):
+        self.pitch = pitch
+        self.start_time = start_time
+        self.duration = duration
+        self.velocity = velocity
+        self.mute = mute
+
+
+class FakeOldClip(FakeClip):
+    """A clip from before Live 11, which has no add_new_notes"""
+    add_new_notes = None
 
 
 class FakeClipSlot:
@@ -91,6 +124,10 @@ class FakeDevice:
         self.parameters = [FakeParameter("Device On", 1.0)]
         self.parameters += [FakeParameter(f"{name} Param {i}", 0.5) for i in range(1, num_params)]
 
+        # A plugin with factory patches shows them to Live as a parameter
+        if name == "BasicSynth":
+            self.parameters.append(FakeParameter("Program", 0.0))
+
 
 class FakeTrack:
     def __init__(self, name="MIDI"):
@@ -124,6 +161,20 @@ class FakeBrowser:
             FakeBrowserItem("Utility"),
             FakeBrowserItem("Compressor", [FakeBrowserItem("Glue.adv")], loadable=True),
             FakeBrowserItem("Presets Only", [FakeBrowserItem("Wide.adg")]),
+        ])
+
+        # What Live Intro has, with the AudioForge plugins installed. Four
+        # of them were named with a prefix, and one may still be.
+        self.instruments = FakeBrowserItem("Instruments", [
+            FakeBrowserItem("Drift"), FakeBrowserItem("Simpler"), FakeBrowserItem("Instrument Rack")])
+        self.drums = FakeBrowserItem("Drums", [
+            FakeBrowserItem("Drum Hits", [FakeBrowserItem("Kick 909.aif")]),
+            FakeBrowserItem("Drum Rack"), FakeBrowserItem("808 Core Kit.adg"), FakeBrowserItem("909 Core Kit.adg")])
+        self.plugins = FakeBrowserItem("Plug-Ins", [
+            FakeBrowserItem("Audio Units", [FakeBrowserItem("AudioForge", [FakeBrowserItem("DrumSynth")])]),
+            FakeBrowserItem("VST3", [FakeBrowserItem("AudioForge", [
+                FakeBrowserItem("AudioForge - ElectricPiano"), FakeBrowserItem("BasicSynth"),
+                FakeBrowserItem("DrumSynth"), FakeBrowserItem("Polysynth"), FakeBrowserItem("SimpleGain")])]),
         ])
 
     def load_item(self, item):
@@ -175,6 +226,7 @@ def install_fake_live(song):
     live = types.ModuleType("Live")
     application = types.SimpleNamespace(get_document=lambda: song, browser=FakeBrowser(song))
     live.Application = types.SimpleNamespace(get_application=lambda: application)
+    live.Clip = types.SimpleNamespace(MidiNoteSpecification=FakeNoteSpecification)
     live.MidiMap = types.SimpleNamespace(
         forward_midi_note=lambda script, midi_map, channel, note: forwarded.append(
             (script, midi_map, channel, note)) or True)
@@ -192,6 +244,7 @@ class AIProducerTestCase(unittest.TestCase):
     def setUp(self):
         self.song = FakeSong()
         self.forwarded = install_fake_live(self.song)
+        FakeClip.deprecated_calls = 0
 
         if str(SCRIPTS_DIR) not in sys.path:
             sys.path.insert(0, str(SCRIPTS_DIR))
@@ -295,6 +348,134 @@ class GenerationTests(AIProducerTestCase):
         self.assertEqual([t.name for t in self.song.tracks], TRACK_NAMES)
         self.assertEqual(self.song.tempo, 135)
         self.assertEqual(self.kick_steps_in_first_bar(), [0, 6, 8, 14])
+        for name, clip in self.clips_by_track().items():
+            self.assertTrue(clip.notes, f"{name} clip is empty")
+
+
+class InstrumentTests(AIProducerTestCase):
+    def browser(self):
+        return sys.modules["Live"].Application.get_application().browser
+
+    def instruments_by_track(self):
+        return {track.name: [device.name for device in track.devices] for track in self.song.tracks}
+
+    def test_new_tracks_get_audioforge_instruments(self):
+        self.script.generate_track("house")
+
+        self.assert_no_failures_logged()
+        self.assertEqual(self.instruments_by_track(), {
+            "AI Drums": ["DrumSynth"],
+            "AI Bass": ["BasicSynth"],
+            "AI Chords": ["AudioForge - ElectricPiano"],
+            "AI Lead": ["Polysynth"],
+        })
+
+    def test_the_bass_is_set_to_its_bass_patch(self):
+        self.script.generate_track("house")
+
+        bass = self.song.tracks[1].devices[0]
+        program = next(p for p in bass.parameters if p.name == "Program")
+
+        # Four patches spread over the parameter's range: Init, Bass, Pad, Lead
+        self.assertAlmostEqual(program.value, 1.0 / 3.0, places=3)
+
+    def test_without_the_plugins_it_uses_what_every_live_has(self):
+        self.browser().plugins = FakeBrowserItem("Plug-Ins", [FakeBrowserItem("VST3", [])])
+
+        self.script.generate_track("house")
+
+        self.assert_no_failures_logged()
+        self.assertEqual(self.instruments_by_track(), {
+            "AI Drums": ["909 Core Kit"],
+            "AI Bass": ["Drift"],
+            "AI Chords": ["Drift"],
+            "AI Lead": ["Drift"],
+        })
+
+    def test_with_nothing_to_load_it_says_what_to_add(self):
+        browser = self.browser()
+        browser.plugins = FakeBrowserItem("Plug-Ins", [])
+        browser.instruments = FakeBrowserItem("Instruments", [])
+        browser.drums = FakeBrowserItem("Drums", [])
+
+        self.script.generate_track("house")
+
+        self.assert_no_failures_logged()
+        self.assertEqual(self.instruments_by_track(), {name: [] for name in TRACK_NAMES})
+        self.assertIn("No instrument could be loaded on 'AI Bass'", self.log_text())
+        for name, clip in self.clips_by_track().items():
+            self.assertTrue(clip.notes, f"{name} clip is empty")
+
+    def test_a_failed_load_still_leaves_every_track_its_clip(self):
+        def refuse(item):
+            raise RuntimeError("the browser is busy")
+
+        self.browser().load_item = refuse
+
+        self.script.generate_track("house")
+
+        self.assertEqual([t.name for t in self.song.tracks], TRACK_NAMES)
+        self.assertIn("Could not load an instrument on 'AI Drums': the browser is busy", self.log_text())
+        for name, clip in self.clips_by_track().items():
+            self.assertTrue(clip.notes, f"{name} clip is empty")
+
+    def test_a_load_that_has_not_landed_is_not_called_loaded(self):
+        self.browser().load_item = lambda item: None
+
+        self.script.generate_track("house")
+
+        self.assert_no_failures_logged()
+        self.assertNotIn("Loaded '", self.log_text())
+        self.assertIn("it is not there yet", self.log_text())
+
+    def test_the_patch_is_placed_within_whatever_range_live_gives(self):
+        loader = self.script.device_loader
+        device = FakeDevice("BasicSynth")
+        program = next(p for p in device.parameters if p.name == "Program")
+        program.min, program.max = 0.0, 3.0
+
+        loader._choose_patch(device, "bass", "BasicSynth")
+
+        self.assertEqual(program.value, 1.0)
+
+    def test_it_never_recommends_what_live_intro_lacks(self):
+        self.script.generate_track("house")
+
+        for missing in ("Operator", "Analog", "Wavetable", "EQ Eight"):
+            self.assertNotIn(missing, self.log_text())
+
+    def test_template_tracks_keep_their_instruments_and_empty_ones_get_one(self):
+        self.song.tracks = [FakeTrack(name) for name in TRACK_NAMES]
+        self.song.tracks[0].devices.append(FakeDevice("My Own Kit"))
+
+        self.script.generate_track("house")
+
+        self.assert_no_failures_logged()
+        self.assertEqual(self.instruments_by_track()["AI Drums"], ["My Own Kit"])
+        self.assertEqual(self.instruments_by_track()["AI Bass"], ["BasicSynth"])
+
+
+class NoteWritingTests(AIProducerTestCase):
+    def test_notes_are_written_with_the_current_call(self):
+        self.script.generate_track("house")
+
+        self.assert_no_failures_logged()
+        self.assertEqual(FakeClip.deprecated_calls, 0)
+        for name, clip in self.clips_by_track().items():
+            self.assertTrue(clip.notes, f"{name} clip is empty")
+
+    def test_an_older_live_still_gets_its_notes(self):
+        original = FakeClipSlot.create_clip
+
+        def create_old_clip(slot, length):
+            slot.clip = FakeOldClip(length)
+
+        FakeClipSlot.create_clip = create_old_clip
+        self.addCleanup(setattr, FakeClipSlot, "create_clip", original)
+
+        self.script.generate_track("house")
+
+        self.assert_no_failures_logged()
         for name, clip in self.clips_by_track().items():
             self.assertTrue(clip.notes, f"{name} clip is empty")
 
