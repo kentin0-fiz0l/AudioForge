@@ -25,8 +25,17 @@ What using the AudioForge plugins in real sessions has turned up, kept so it can
 | `source` | `user` (something heard), `measurement` (a number from a meter or test) or `observation` (noticed while working) |
 | `plugin` | The plugin it concerns, `all`, or `new plugin` for a gap. Entries captured from Live leave this out; the plugins in use are in `live` |
 | `text` | The feedback itself |
-| `status` | `open`, `fixed` (changed and installed, not yet listened to) or `resolved` (listened to and accepted) |
+| `status` | `open`, `fixed` (changed and installed, not yet listened to), `resolved` (listened to and accepted) or `noted` (a measurement kept for reference, with nothing to change) |
 | `fix` | For a fixed entry: the pull request and a line on what changed |
 | `live` | Live's state when it was captured, or `null` if Live was not reachable |
 
 The first twelve entries were written by hand from one session, before the capture command existed, which is why their `live` field is empty.
+
+## Levels
+
+Several entries are about level, so the standard they led to is written down here.
+
+- **Instruments.** The loudest single full-velocity note at default settings peaks at about -9 dBFS, and must fall between -12 and -6. Every factory patch is held to the same range. CI checks it on every build.
+- **Effects.** At default settings an effect should leave a track's level where it was. CI reports what each one does to a test signal; it does not fail the build on it.
+- **In a mix.** One note at -9 dBFS is not a whole part. Chords and a full drum pattern add up: four calibrated instruments playing a house loop with every fader at 0 dB peaked at -1.7 dBFS on the master. Expect to pull faders down a few dB, or to put a limiter on the master.
+- **Velocity.** The level standard is measured at full velocity. A clip written at lower velocities plays quieter on any instrument that follows velocity, which DrumSynth has done since #34.
