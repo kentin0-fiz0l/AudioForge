@@ -144,12 +144,13 @@ jobs:
               peak=$(echo "$result" | cut -f3 | sed 's/^peak //')
 
               # The level run prints one tab-separated line: name, kind (LEVEL,
-              # LEVEL-OUT-OF-RANGE, SILENT or EFFECT), then for the first two
-              # "note N", its level, "together" and that level.
+              # LEVEL-OUT-OF-RANGE, SILENT or EFFECT). An instrument follows
+              # with "note N", its level, "together" and that level; an
+              # effect with "gain" and what it does to the level at defaults.
               timeout 600 "$stress_host" --levels --level-range "$LEVEL_LOW" "$LEVEL_HIGH" "$vst3" > "logs/$plugin-level.log" 2>&1
               level_status=$?
               level_line=$(grep -m1 -P '\t(LEVEL|LEVEL-OUT-OF-RANGE|SILENT|EFFECT)(\t|$)' "logs/$plugin-level.log")
-              level=$(echo "$level_line" | cut -f4)
+              level=$(echo "$level_line" | cut -f3,4 | tr '\t' ' ')
               level=${level:-$(echo "$level_line" | cut -f2 | tr '[:upper:]' '[:lower:]')}
 
               if [ $level_status -ne 0 ]; then

@@ -44,8 +44,12 @@ void ReverbProcessor::updateReverbParameters() {
     params.roomSize = apvts_.getRawParameterValue("size")->load();
     params.damping = apvts_.getRawParameterValue("damping")->load();
     params.width = apvts_.getRawParameterValue("width")->load();
-    params.wetLevel = apvts_.getRawParameterValue("mix")->load();
-    params.dryLevel = 1.0f - params.wetLevel;
+    // juce::dsp::Reverb doubles the dry level it is given and triples the wet
+    // level. Undo both, so that Mix at zero passes the signal through at its
+    // own level and Mix at one gives the reverb alone at about that level.
+    const float mix = apvts_.getRawParameterValue("mix")->load();
+    params.wetLevel = mix / 3.0f;
+    params.dryLevel = (1.0f - mix) / 2.0f;
     reverb_.setParameters(params);
 }
 
@@ -71,6 +75,8 @@ void ReverbProcessor::setStateInformation(const void* d, int sz) {
             presetManager_.loadFromXml(*presetXml);
 }
 
+#ifndef AUDIOFORGE_TESTS
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter() {
     return new ReverbProcessor();
 }
+#endif

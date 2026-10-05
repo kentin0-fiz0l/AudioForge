@@ -44,7 +44,7 @@ Professional true peak limiter for mastering and final mix processing. Free alte
 | Parameter | Range | Default | Unit | Description |
 |-----------|-------|---------|------|-------------|
 | **Ceiling** | -12 to 0 | -0.3 | dBFS | Maximum output level |
-| **Threshold** | -24 to 0 | -6.0 | dB | Level above which limiting starts |
+| **Threshold** | -24 to 0 | 0.0 | dB | With Auto Makeup on, the level that is raised to the ceiling (up to 12 dB of makeup) |
 | **Release** | 10 to 1000 | 100 | ms | Gain reduction release time |
 | **Lookahead** | 0 to 10 | 5 | ms | Peak anticipation time |
 | **Oversampling** | 1x, 2x, 4x | 4x | - | Peak detection quality |

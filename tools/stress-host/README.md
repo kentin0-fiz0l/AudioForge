@@ -64,7 +64,9 @@ build/stress-host/StressHost_artefacts/Release/StressHost --levels path/to/Plugi
 build/stress-host/StressHost_artefacts/Release/StressHost --levels --level-range -12 -6 path/to/Plugin.vst3
 ```
 
-A line reads `Name  LEVEL  note 36  -9.1 dBFS  together  -4.2 dBFS`, or `LEVEL-OUT-OF-RANGE` in place of `LEVEL`. Effects report `EFFECT`. An instrument that makes no sound reports `SILENT` and is not failed, because the pattern generators wait for the host's transport and Sampler has nothing loaded.
+A line reads `Name  LEVEL  note 36  -9.1 dBFS  together  -4.2 dBFS`, or `LEVEL-OUT-OF-RANGE` in place of `LEVEL`.
+
+An effect has no level of its own, so it reports what it does to one: `Name  EFFECT  gain  -0.3 dB` is the change in peak level, at the default settings, of noise fed in at -6 dBFS. Nothing checks this figure, because some effects are meant to change the level, but one that adds several dB the moment it is loaded is worth a look. An instrument that makes no sound reports `SILENT` and is not failed, because the pattern generators wait for the host's transport and Sampler has nothing loaded.
 
 An instrument is brought into range with the `outputTrim` constant at the end of its `processBlock`. To recalibrate one, measure it, then scale that constant by the difference from -9 dB.
 
