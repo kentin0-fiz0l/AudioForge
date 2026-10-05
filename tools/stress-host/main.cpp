@@ -151,18 +151,12 @@ namespace
     // How loud an instrument is at its default settings: the loudest single
     // full-velocity note, and the loudest of a chord and a drum kit's worth
     // of notes played together. Returns false if the single note is outside
-    // the range. Effects are reported as such and skipped, and so are
-    // instruments that stay silent: a pattern generator waiting for the
-    // transport, or a sampler with nothing loaded.
+    // the range. An effect is reported by the gain it applies to noise and
+    // is not checked. Nor is an instrument that stays silent: a pattern
+    // generator waiting for the transport, or a sampler with nothing loaded.
     bool reportLevels(const juce::String& name, juce::AudioPluginFormatManager& formatManager,
                       const juce::PluginDescription& description, double sampleRate, const LevelRange& range)
     {
-        if (! description.isInstrument)
-        {
-            std::cout << name << "\tEFFECT" << std::endl;
-            return true;
-        }
-
         // A new instance for every measurement, so the tail of one note
         // cannot add to the next
         const auto measure = [&] (const std::vector<int>& notes)
@@ -178,6 +172,17 @@ namespace
             plugin->releaseResources();
             return peak;
         };
+
+        // An effect has no level of its own. Report what it does to the
+        // level of the noise it is fed, which peaks at 0.5.
+        if (! description.isInstrument)
+        {
+            const float gain = measure({}) / 0.5f;
+            std::cout << name << "\tEFFECT\tgain\t"
+                      << (gain > 0.0f ? juce::String(juce::Decibels::gainToDecibels(gain), 1) + " dB" : juce::String("silent"))
+                      << std::endl;
+            return true;
+        }
 
         // Some instruments are excited by random noise, and one note can
         // differ from the next by several dB. Shakuhachi still moved by

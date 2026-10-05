@@ -41,7 +41,7 @@ public:
     /** Set output ceiling in dBFS (-12 to 0) */
     void setCeiling(float ceilingDb) { ceiling = juce::Decibels::decibelsToGain(ceilingDb); }
 
-    /** Set threshold in dB (-24 to 0) */
+    /** Set threshold in dB (-24 to 0). Only used by auto makeup, which raises this level to the ceiling (by up to 12 dB). */
     void setThreshold(float thresholdDb) { threshold = juce::Decibels::decibelsToGain(thresholdDb); }
 
     /** Set release time in milliseconds (10 to 1000) */
@@ -113,7 +113,7 @@ private:
     // Parameters (linear gain)
 
     float ceiling = 1.0f;           // Output ceiling (default 0 dBFS)
-    float threshold = 0.5f;         // Threshold (default -6 dB)
+    float threshold = 1.0f;         // Threshold (default 0 dB: no makeup gain)
     float releaseTimeMs = 100.0f;   // Release time in ms
     float releaseCoeff = 0.99f;     // Exponential release coefficient
     bool autoMakeupEnabled = true;  // Auto makeup gain
@@ -137,12 +137,12 @@ private:
     // Helper Methods
 
     /**
-     * @brief Calculate gain reduction for a given input level
+     * @brief Calculate the gain reduction that keeps a level at or under the ceiling
      *
-     * @param inputLevel Input level (linear, 0-1)
+     * @param level Level after makeup gain (linear)
      * @return Gain reduction to apply (linear, 0-1)
      */
-    float calculateGainReduction(float inputLevel);
+    float calculateGainReduction(float level);
 
     /**
      * @brief Smooth gain reduction with exponential release

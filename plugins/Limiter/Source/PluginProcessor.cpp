@@ -36,7 +36,7 @@ LimiterAudioProcessor::LimiterAudioProcessor()
             "threshold",
             "Threshold",
             juce::NormalisableRange<float>(-24.0f, 0.0f, 0.1f),
-            -6.0f,
+            0.0f,   // No makeup gain until it is lowered, so the plugin starts out transparent
             "dB"
         ),
         std::make_unique<juce::AudioParameterFloat>(
@@ -228,7 +228,9 @@ void LimiterAudioProcessor::setStateInformation (const void* data, int sizeInByt
 
 //==============================================================================
 // This creates new instances of the plugin
+#ifndef AUDIOFORGE_TESTS
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
     return new LimiterAudioProcessor();
 }
+#endif

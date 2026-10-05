@@ -35,6 +35,8 @@ add_executable(TestRunner
     Plugins/SpectralProcessorTests.cpp
     Plugins/HiHatEngineTests.cpp
     Plugins/FreezeFXTests.cpp
+    Plugins/LimiterTests.cpp
+    Plugins/PlateReverbTests.cpp
     Integration/PluginIntegrationTests.cpp)
 
 # Link JUCE libraries
@@ -113,7 +115,13 @@ target_sources(TestRunner PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/../midi/MIDILearnManager.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../shared/preset/PresetManager.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../shared/preset/PresetBrowser.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/HiHat/Source/HiHatEngine.cpp)
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/HiHat/Source/HiHatEngine.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/Limiter/Source/PluginProcessor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/Limiter/Source/PluginEditor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/Limiter/Source/LimiterEngine.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/Limiter/Source/TruePeakDetector.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/PlateReverb/Source/PluginProcessor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/PlateReverb/Source/PluginEditor.cpp)
 
 # Compiler definitions
 target_compile_definitions(TestRunner PUBLIC

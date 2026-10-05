@@ -72,6 +72,10 @@ void LimiterEngine::process(juce::AudioBuffer<float>& buffer)
     auto* leftChannel = buffer.getWritePointer(0);
     auto* rightChannel = numChannels > 1 ? buffer.getWritePointer(1) : leftChannel;
 
+    // Makeup gain is applied after the gain reduction, so the reduction has
+    // to allow for it or the result lands above the ceiling
+    const float makeupGain = autoMakeupEnabled ? calculateMakeupGain() : 1.0f;
+
     // Process each sample
     for (int i = 0; i < numSamples; ++i)
     {
@@ -100,8 +104,8 @@ void LimiterEngine::process(juce::AudioBuffer<float>& buffer)
         }
 
         // === GAIN REDUCTION CALCULATION ===
-        // Calculate target gain reduction based on input level
-        targetGainReduction = calculateGainReduction(inputLevel);
+        // Gain reduction that keeps the level after makeup at or under the ceiling
+        targetGainReduction = calculateGainReduction(inputLevel * makeupGain);
 
         // Smooth gain reduction with exponential release
         currentGainReduction = smoothGainReduction(targetGainReduction, currentGainReduction);
@@ -111,12 +115,8 @@ void LimiterEngine::process(juce::AudioBuffer<float>& buffer)
         float rightOut = rightIn * currentGainReduction;
 
         // === AUTO MAKEUP GAIN ===
-        if (autoMakeupEnabled)
-        {
-            float makeupGain = calculateMakeupGain();
-            leftOut *= makeupGain;
-            rightOut *= makeupGain;
-        }
+        leftOut *= makeupGain;
+        rightOut *= makeupGain;
 
         // === OUTPUT TRIM ===
         leftOut *= outputTrim;
@@ -140,24 +140,14 @@ void LimiterEngine::process(juce::AudioBuffer<float>& buffer)
     );
 }
 
-float LimiterEngine::calculateGainReduction(float inputLevel)
+float LimiterEngine::calculateGainReduction(float level)
 {
-    // No reduction below threshold
-    if (inputLevel <= threshold)
+    // No reduction at or under the ceiling
+    if (level <= ceiling)
         return 1.0f;
 
-    // Calculate how much the input exceeds the threshold
-    float overThreshold = inputLevel - threshold;
-
-    // Brickwall limiting (infinite ratio)
-    // We want: output = threshold + (overshoot compressed to zero)
-    // So: output = ceiling when input > threshold
-    // Required gain = ceiling / inputLevel
-
-    float requiredGain = ceiling / inputLevel;
-
-    // Clamp gain reduction between 0 and 1
-    return juce::jlimit(0.0f, 1.0f, requiredGain);
+    // Brickwall limiting (infinite ratio): bring the level down to the ceiling
+    return ceiling / level;
 }
 
 float LimiterEngine::smoothGainReduction(float target, float current)
@@ -173,9 +163,8 @@ float LimiterEngine::smoothGainReduction(float target, float current)
 
 float LimiterEngine::calculateMakeupGain()
 {
-    // Auto makeup gain compensates for the gain reduction
-    // Formula: makeupGain = 1 / threshold (approximately)
-    // This brings the average level back up to near ceiling
+    // Auto makeup gain raises the signal so that the threshold level comes
+    // out at the ceiling. It never turns the signal down, and stops at 4x.
 
     if (threshold > 0.0f)
         return juce::jlimit(1.0f, 4.0f, ceiling / threshold);
