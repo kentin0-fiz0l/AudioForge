@@ -32,6 +32,16 @@ public:
         testWidthControl();
         testStateManagement();
         testLevelMetering();
+        testGainAndMonoExist();
+        testDefaultsLeaveTheSignalAlone();
+        testGain();
+        testMono();
+        testOldStateStillLoads();
+        testEmptyStateChangesNothing();
+        testStateKeepsGainAndMono();
+        testChangesGlide();
+        testBadNumbersInAStateAreSkipped();
+        testNeedsStereo();
     }
 
 private:
@@ -59,7 +69,7 @@ private:
         PanUtilProcessor processor;
         const auto& params = processor.getParameters();
 
-        expect(params.size() == 3, "Should have 3 parameters");
+        expect(params.size() == 5, "Should have 5 parameters");
 
         // Check pan parameter
         auto* panParam = dynamic_cast<juce::AudioParameterFloat*>(params[0]);
@@ -82,7 +92,7 @@ private:
         // Check mode parameter
         auto* modeParam = dynamic_cast<juce::AudioParameterChoice*>(params[2]);
         expect(modeParam != nullptr, "Mode should be choice parameter");
-        expectEquals(modeParam->getIndex(), 0, "Default mode should be Pan");
+        expectEquals(modeParam->getIndex(), 1, "Default mode should be Balance, which leaves a centred signal alone");
     }
 
     void testPanModeProcessing()
@@ -230,8 +240,8 @@ private:
         // Test width = 0 (mono)
         widthParam->setValueNotifyingHost(widthParam->convertTo0to1(0.0f));
 
-        // Process multiple blocks to let smoothing settle
-        for (int i = 0; i < 10; ++i)
+        // Half a second of blocks, to let the 50 ms smoothing settle
+        for (int i = 0; i < 47; ++i)
         {
             buffer.clear();
             for (int j = 0; j < blockSize; ++j)
@@ -245,14 +255,13 @@ private:
         float leftFinal = buffer.getSample(0, blockSize - 1);
         float rightFinal = buffer.getSample(1, blockSize - 1);
 
-        // Using larger tolerance to account for parameter smoothing iterations
-        expectWithinAbsoluteError(leftFinal, rightFinal, 0.2f,
+        expectWithinAbsoluteError(leftFinal, rightFinal, 0.01f,
                                 "Width 0 should produce mono (L ≈ R)");
 
         // Test width = 2.0 (wide)
         widthParam->setValueNotifyingHost(widthParam->convertTo0to1(2.0f));
 
-        for (int i = 0; i < 10; ++i)
+        for (int i = 0; i < 47; ++i)
         {
             buffer.clear();
             for (int j = 0; j < blockSize; ++j)
@@ -338,6 +347,249 @@ private:
         expect(leftLevel > 0.0f, "Left level meter should register signal");
         expect(rightLevel > 0.0f, "Right level meter should register signal");
         expect(leftLevel != rightLevel, "L/R meters should be independent");
+    }
+
+    //==========================================================================
+    // Gain and mono: with pan and width, what a track utility needs
+
+    static juce::RangedAudioParameter& parameter(PanUtilProcessor& processor, const juce::String& name)
+    {
+        for (auto* param : processor.getParameters())
+            if (param->getName(64) == name)
+                return *dynamic_cast<juce::RangedAudioParameter*>(param);
+
+        jassertfalse;
+        return *dynamic_cast<juce::RangedAudioParameter*>(processor.getParameters()[0]);
+    }
+
+    static float shown(PanUtilProcessor& processor, const juce::String& name)
+    {
+        auto& param = parameter(processor, name);
+        return param.convertFrom0to1(param.getValue());
+    }
+
+    static void set(PanUtilProcessor& processor, const juce::String& name, float value)
+    {
+        auto& param = parameter(processor, name);
+        param.setValueNotifyingHost(param.convertTo0to1(value));
+    }
+
+    struct Levels { float left, right; };
+
+    // A steady signal through the plugin for half a second; what it settles at
+    static Levels settle(PanUtilProcessor& processor, float left, float right)
+    {
+        processor.setRateAndBufferSizeDetails(48000.0, 512);
+        processor.prepareToPlay(48000.0, 512);
+
+        juce::AudioBuffer<float> buffer(2, 512);
+        juce::MidiBuffer midi;
+
+        for (int block = 0; block < 47; ++block)
+        {
+            for (int i = 0; i < 512; ++i)
+            {
+                buffer.setSample(0, i, left);
+                buffer.setSample(1, i, right);
+            }
+
+            processor.processBlock(buffer, midi);
+        }
+
+        return { buffer.getSample(0, 511), buffer.getSample(1, 511) };
+    }
+
+    void testGainAndMonoExist()
+    {
+        beginTest("Gain and Mono come after the parameters hosts already know");
+
+        PanUtilProcessor processor;
+        const auto& params = processor.getParameters();
+
+        expectEquals(params.size(), 5);
+        expectEquals(params[0]->getName(64), juce::String("Pan"));
+        expectEquals(params[1]->getName(64), juce::String("Width"));
+        expectEquals(params[2]->getName(64), juce::String("Mode"));
+
+        if (params.size() == 5)
+        {
+            expectEquals(params[3]->getName(64), juce::String("Gain"));
+            expectEquals(params[4]->getName(64), juce::String("Mono"));
+            expectWithinAbsoluteError(shown(processor, "Gain"), 0.0f, 0.0001f, "Gain starts at 0 dB");
+            expectEquals(shown(processor, "Mono"), 0.0f, "Mono starts off");
+        }
+    }
+
+    void testDefaultsLeaveTheSignalAlone()
+    {
+        beginTest("At its default settings the signal passes unchanged");
+
+        PanUtilProcessor processor;
+        const auto out = settle(processor, 0.5f, -0.25f);
+
+        expectWithinAbsoluteError(out.left, 0.5f, 0.0001f);
+        expectWithinAbsoluteError(out.right, -0.25f, 0.0001f);
+    }
+
+    void testGain()
+    {
+        beginTest("Gain changes the level by the decibels it shows");
+
+        for (float gainDb : { -36.0f, -12.0f, -6.0f, 6.0f, 24.0f })
+        {
+            PanUtilProcessor processor;
+            set(processor, "Mode", 1.0f); // Balance: no pan law in the way
+            set(processor, "Gain", gainDb);
+
+            const auto out = settle(processor, 0.01f, 0.01f);
+            const float expected = 0.01f * juce::Decibels::decibelsToGain(gainDb);
+
+            expectWithinAbsoluteError(out.left, expected, expected * 0.001f, juce::String(gainDb, 0) + " dB, left");
+            expectWithinAbsoluteError(out.right, expected, expected * 0.001f, juce::String(gainDb, 0) + " dB, right");
+        }
+    }
+
+    void testMono()
+    {
+        beginTest("Mono puts the same signal on both channels");
+
+        PanUtilProcessor processor;
+        set(processor, "Mode", 1.0f);
+        set(processor, "Mono", 1.0f);
+        set(processor, "Width", 2.0f); // Mono wins over width
+
+        const auto out = settle(processor, 0.8f, 0.2f);
+
+        expectWithinAbsoluteError(out.left, 0.5f, 0.0001f, "Left should be the average of the two");
+        expectWithinAbsoluteError(out.right, 0.5f, 0.0001f, "Right should be the average of the two");
+    }
+
+    void testOldStateStillLoads()
+    {
+        beginTest("A state saved before Gain and Mono existed still loads");
+
+        juce::MemoryBlock old;
+        {
+            juce::MemoryOutputStream stream(old, false);
+            stream.writeFloat(-0.5f); // Pan
+            stream.writeFloat(1.5f);  // Width
+            stream.writeInt(1);       // Mode: Balance
+        }
+
+        PanUtilProcessor processor;
+        set(processor, "Gain", -6.0f);
+        processor.setStateInformation(old.getData(), static_cast<int>(old.getSize()));
+
+        expectWithinAbsoluteError(shown(processor, "Pan"), -0.5f, 0.001f);
+        expectWithinAbsoluteError(shown(processor, "Width"), 1.5f, 0.001f);
+        expectEquals(shown(processor, "Mode"), 1.0f);
+        expectWithinAbsoluteError(shown(processor, "Gain"), -6.0f, 0.001f, "What the old state did not hold is left alone");
+    }
+
+    void testEmptyStateChangesNothing()
+    {
+        beginTest("A state too short to read changes nothing");
+
+        PanUtilProcessor processor;
+        const char junk[] = { 1, 2, 3 };
+        processor.setStateInformation(junk, sizeof(junk));
+        processor.setStateInformation(nullptr, 0);
+
+        // It used to read zeros, which set Width to nothing: mono
+        expectWithinAbsoluteError(shown(processor, "Width"), 1.0f, 0.001f);
+        expectWithinAbsoluteError(shown(processor, "Pan"), 0.0f, 0.001f);
+    }
+
+    void testStateKeepsGainAndMono()
+    {
+        beginTest("A saved state keeps Gain and Mono");
+
+        PanUtilProcessor original;
+        set(original, "Gain", 4.5f);
+        set(original, "Mono", 1.0f);
+        set(original, "Pan", 0.25f);
+
+        juce::MemoryBlock state;
+        original.getStateInformation(state);
+
+        PanUtilProcessor restored;
+        restored.setStateInformation(state.getData(), static_cast<int>(state.getSize()));
+
+        expectWithinAbsoluteError(shown(restored, "Gain"), 4.5f, 0.001f);
+        expectEquals(shown(restored, "Mono"), 1.0f);
+        expectWithinAbsoluteError(shown(restored, "Pan"), 0.25f, 0.001f);
+    }
+
+    void testChangesGlide()
+    {
+        beginTest("Gain and Mono glide to their new settings while audio plays");
+
+        // Left and right opposite, so Mono takes the signal away entirely
+        for (const char* name : { "Gain", "Mono" })
+        {
+            PanUtilProcessor processor;
+            processor.setRateAndBufferSizeDetails(48000.0, 512);
+            processor.prepareToPlay(48000.0, 512);
+
+            set(processor, name, juce::String(name) == "Gain" ? -36.0f : 1.0f);
+
+            juce::AudioBuffer<float> buffer(2, 512);
+            juce::MidiBuffer midi;
+            for (int i = 0; i < 512; ++i)
+            {
+                buffer.setSample(0, i, 0.5f);
+                buffer.setSample(1, i, -0.5f);
+            }
+
+            processor.processBlock(buffer, midi);
+
+            float largestStep = std::abs(buffer.getSample(0, 0) - 0.5f);
+            for (int i = 1; i < 512; ++i)
+                largestStep = juce::jmax(largestStep, std::abs(buffer.getSample(0, i) - buffer.getSample(0, i - 1)));
+
+            expect(buffer.getSample(0, 0) > 0.45f, juce::String(name) + ": the first sample should still be near where it was");
+            expect(buffer.getSample(0, 511) < 0.45f, juce::String(name) + ": it should be on its way by the end of the block");
+            expect(largestStep < 0.01f, juce::String(name) + " moved in a step of " + juce::String(largestStep, 4));
+        }
+    }
+
+    void testBadNumbersInAStateAreSkipped()
+    {
+        beginTest("A state holding something that is not a number leaves that setting alone");
+
+        juce::MemoryBlock bad;
+        {
+            juce::MemoryOutputStream stream(bad, false);
+            stream.writeFloat(std::numeric_limits<float>::quiet_NaN());  // Pan
+            stream.writeFloat(0.5f);                                     // Width
+            stream.writeInt(1);                                          // Mode
+            stream.writeFloat(std::numeric_limits<float>::infinity());   // Gain
+            stream.writeInt(0);                                          // Mono
+        }
+
+        PanUtilProcessor processor;
+        set(processor, "Pan", 0.3f);
+        set(processor, "Gain", -3.0f);
+        processor.setStateInformation(bad.getData(), static_cast<int>(bad.getSize()));
+
+        expectWithinAbsoluteError(shown(processor, "Pan"), 0.3f, 0.001f);
+        expectWithinAbsoluteError(shown(processor, "Gain"), -3.0f, 0.001f);
+        expectWithinAbsoluteError(shown(processor, "Width"), 0.5f, 0.001f, "The numbers that are good are still read");
+    }
+
+    void testNeedsStereo()
+    {
+        beginTest("The plugin asks for stereo in and out");
+
+        PanUtilProcessor processor;
+        juce::AudioProcessor::BusesLayout stereo, mono;
+        stereo.inputBuses.add(juce::AudioChannelSet::stereo());
+        stereo.outputBuses.add(juce::AudioChannelSet::stereo());
+        mono.inputBuses.add(juce::AudioChannelSet::mono());
+        mono.outputBuses.add(juce::AudioChannelSet::mono());
+
+        expect(processor.checkBusesLayoutSupported(stereo));
+        expect(! processor.checkBusesLayoutSupported(mono), "On one channel it could do nothing, and used to do so silently");
     }
 };
 
