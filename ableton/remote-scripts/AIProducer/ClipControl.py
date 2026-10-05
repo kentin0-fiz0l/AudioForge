@@ -1,16 +1,19 @@
 # Clip Control for AI Producer
-# Describes a Session clip, switches its warping, moves the start and end
-# of what it plays, and clears a track's Arrangement, driven by OSC commands
-# that send a reply
+# Describes a clip, switches its warping, moves the start and end of what it
+# plays, copies it to the Arrangement and clears a track's Arrangement,
+# driven by OSC commands that send a reply
+#
+# A clip is named by its track and a slot: a number for a Session slot, or
+# "@<beat>" for the Arrangement clip that is playing at that beat
 
 import math
 
 
 class ClipControl:
-    """Reads and changes clips in the Session view"""
+    """Reads and changes clips in the Session view and on the Arrangement timeline"""
 
     # Live keeps an unwarped clip's positions on whole samples, so a marker
-    # comes back a fraction of a millisecond from what was asked for
+    # or a copy's start comes back a fraction of a unit from what was asked for
     MARKER_TOLERANCE = 0.001
 
     def __init__(self, find_track, log_function):
@@ -19,6 +22,8 @@ class ClipControl:
 
         self.commands = {
             '/live/clip/info': self.get_info,
+            '/live/clip/arrangement': self.list_arrangement,
+            '/live/clip/duplicate': self.duplicate_to_arrangement,
             '/live/clip/set/warping': self.set_warping,
             '/live/clip/set/markers': self.set_markers,
             '/live/clip/clear_arrangement': self.clear_arrangement,
@@ -37,15 +42,18 @@ class ClipControl:
             self.log(f"Clip error for {address}: {e}")
             return {'ok': False, 'error': str(e)}
 
-    def _clip(self, target, slot_index):
+    def _clip(self, target, slot):
         track = self.find_track(target)
+
+        if str(slot).startswith('@'):
+            return self._arrangement_clip(track, float(str(slot)[1:]))
 
         # Return tracks have no slots at all
         slots = getattr(track, 'clip_slots', None)
         if slots is None:
             raise ValueError(f"'{track.name}' has no clip slots")
 
-        slot_index = int(slot_index)
+        slot_index = int(slot)
         if not 0 <= slot_index < len(slots):
             raise ValueError(f"No slot {slot_index}; '{track.name}' has {len(slots)}")
 
@@ -53,6 +61,20 @@ class ClipControl:
         if clip is None:
             raise ValueError(f"Slot {slot_index} of '{track.name}' has no clip")
         return clip
+
+    @classmethod
+    def _arrangement_clip(cls, track, beat):
+        """The clip on the track's timeline that is playing at a beat.
+
+        A clip that starts a hair after the beat counts too: Live puts a copy
+        on a whole sample, so it can start just after the beat it was asked
+        for, and the beat is then still inside the clip that was cut off there.
+        """
+        playing = [clip for clip in getattr(track, 'arrangement_clips', [])
+                   if clip.start_time - cls.MARKER_TOLERANCE <= beat < clip.end_time]
+        if not playing:
+            raise ValueError(f"No clip at beat {beat:g} on the Arrangement of '{track.name}'")
+        return max(playing, key=lambda clip: clip.start_time)
 
     @staticmethod
     def _describe(clip):
@@ -69,6 +91,11 @@ class ClipControl:
             'looping': bool(getattr(clip, 'looping', False)),
         }
 
+        # Where the clip sits on the timeline, in beats, for an Arrangement clip
+        if getattr(clip, 'is_arrangement_clip', hasattr(clip, 'end_time')):
+            description['start_time'] = clip.start_time
+            description['end_time'] = clip.end_time
+
         # How long the file itself is, whatever part of it the clip plays
         samples = getattr(clip, 'sample_length', None)
         rate = getattr(clip, 'sample_rate', None)
@@ -77,22 +104,45 @@ class ClipControl:
 
         return description
 
-    def get_info(self, target, slot_index):
-        return self._describe(self._clip(target, slot_index))
+    def get_info(self, target, slot):
+        return self._describe(self._clip(target, slot))
 
-    def _audio_clip(self, target, slot_index):
-        clip = self._clip(target, slot_index)
+    def list_arrangement(self, target):
+        """Describe every clip a track has on the Arrangement timeline, in order"""
+        track = self.find_track(target)
+        clips = sorted(getattr(track, 'arrangement_clips', []), key=lambda clip: clip.start_time)
+        return {'track': track.name, 'clips': [self._describe(clip) for clip in clips]}
+
+    def duplicate_to_arrangement(self, target, slot, beat):
+        """Copy a clip onto the track's timeline, starting at a beat.
+
+        Live cuts whatever was already there under the copy. The copy of an
+        unwarped audio clip spans the whole file, whatever the clip's own
+        markers say; set/markers on the copy trims it.
+        """
+        track = self.find_track(target)
+        clip = self._clip(target, slot)
+        beat = float(beat)
+        if not (math.isfinite(beat) and beat >= 0.0):
+            raise ValueError("The beat has to be a number, at or after the start")
+
+        track.duplicate_clip_to_arrangement(clip, beat)
+        self.log(f"Copied '{clip.name}' to beat {beat:g} of '{track.name}'")
+        return self._describe(self._arrangement_clip(track, beat))
+
+    def _audio_clip(self, target, slot):
+        clip = self._clip(target, slot)
         if not getattr(clip, 'is_audio_clip', False):
             raise ValueError(f"'{clip.name}' is not an audio clip")
         return clip
 
-    def set_markers(self, target, slot_index, start, end):
+    def set_markers(self, target, slot, start, end):
         """Move the start and end of what an audio clip plays.
 
         The values are in the clip's own units, as info reports them: beats
         for a warped clip, seconds for an unwarped one.
         """
-        clip = self._audio_clip(target, slot_index)
+        clip = self._audio_clip(target, slot)
         start, end = float(start), float(end)
         if not (math.isfinite(start) and math.isfinite(end) and start < end):
             raise ValueError("The start has to come before the end, and both have to be numbers")
@@ -146,14 +196,14 @@ class ClipControl:
             setattr(clip, start_name, start)
             setattr(clip, end_name, end)
 
-    def set_warping(self, target, slot_index, on):
+    def set_warping(self, target, slot, on):
         """Switch a clip's warping on or off.
 
         Live warps a long file to its own guess at the tempo when the file is
         imported. Stems of one song each get a different guess, and then no
         longer line up. With warping off a clip plays as recorded.
         """
-        clip = self._audio_clip(target, slot_index)
+        clip = self._audio_clip(target, slot)
         clip.warping = bool(int(on))
         self.log(f"Warping {'on' if clip.warping else 'off'} for '{clip.name}'")
         return self._describe(clip)

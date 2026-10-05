@@ -14,6 +14,7 @@ Run from the repository root:
 
 import importlib
 import json
+import math
 import pathlib
 import sys
 import tempfile
@@ -190,6 +191,19 @@ class FakeTrack:
         # Live's Track.delete_clip takes the clip itself, Session or Arrangement
         self.arrangement_clips.remove(clip)
 
+    def duplicate_clip_to_arrangement(self, clip, destination_time):
+        # Seen in Live 12.4.6: the copy of an unwarped audio clip spans the
+        # whole file, whatever the clip's own markers say
+        # Live puts an unwarped clip on a whole sample, so the copy can start
+        # a few billionths of a beat from where it was asked to
+        samples_per_beat = 44100.0 * 60.0 / 120.0
+        copy = FakeAudioClip(clip.name)
+        copy.start_time = math.ceil(destination_time * samples_per_beat) / samples_per_beat
+        copy.end_time = copy.start_time + copy.length
+        self.arrangement_clips.append(copy)
+        self.arrangement_clips.sort(key=lambda c: c.start_time)
+        return copy
+
 
 class FakeBrowserItem:
     def __init__(self, name, children=(), loadable=None):
@@ -235,6 +249,16 @@ class FakeSong:
         self.view = types.SimpleNamespace(selected_track=None)
         self.is_playing = False
         self.time_listeners = []
+        self.current_song_time = 0.0
+        self.cue_points = []
+
+    def set_or_delete_cue(self):
+        # As in Live: toggles a locator at the current song time
+        for cue in self.cue_points:
+            if abs(cue.time - self.current_song_time) < 1e-3:
+                self.cue_points.remove(cue)
+                return
+        self.cue_points.append(types.SimpleNamespace(time=self.current_song_time, name=""))
 
     def create_midi_track(self, index):
         self.tracks.insert(index, FakeTrack())
@@ -846,6 +870,49 @@ class ClipTests(LiveControlTestCase):
         self.assertEqual(self.ask("/live/clip/clear_arrangement", "AI Bass")["deleted"], 0,
                          "Clearing an empty timeline is fine")
 
+    def test_a_session_clip_can_be_copied_to_the_timeline(self):
+        reply = self.ask("/live/clip/duplicate", "AI Bass", 0, 312.0)
+
+        track = self.song.tracks[1]
+        self.assertEqual(len(track.arrangement_clips), 1)
+        self.assertEqual(track.arrangement_clips[0].start_time, 312.0)
+        self.assertEqual(reply["start_time"], 312.0)
+        self.assertEqual(reply["name"], "vocals")
+
+    def test_timeline_clips_are_listed_and_addressed_by_beat(self):
+        self.ask("/live/clip/duplicate", "AI Bass", 0, 8.0)
+        self.ask("/live/clip/duplicate", "AI Bass", 0, 500.0)
+
+        listing = self.ask("/live/clip/arrangement", "AI Bass")
+        self.assertEqual([c["start_time"] for c in listing["clips"]], [8.0, 500.0])
+        self.assertEqual(listing["clips"][0]["end_time"], 8.0 + 356.1)
+
+        # Any beat inside a clip finds it
+        self.assertEqual(self.ask("/live/clip/info", "AI Bass", "@520.5")["start_time"], 500.0)
+
+        reply = self.ask("/live/clip/set/markers", "AI Bass", "@8", 2.0, 10.0)
+        self.assertTrue(reply["ok"], reply.get("error"))
+        self.assertEqual((reply["start_marker"], reply["end_marker"]), (2.0, 10.0))
+        self.assertEqual(self.vocals.start_marker, 1.15, "The Session clip is left alone")
+
+        nothing = self.ask("/live/clip/info", "AI Bass", "@400")
+        self.assertFalse(nothing["ok"])
+        self.assertIn("No clip at beat 400", nothing["error"])
+
+    def test_a_copy_that_lands_just_after_the_beat_asked_for_is_still_found(self):
+        self.ask("/live/clip/duplicate", "AI Bass", 0, 8.0)
+        reply = self.ask("/live/clip/duplicate", "AI Bass", 0, 86.384333)
+
+        self.assertTrue(reply["ok"], reply.get("error"))
+        self.assertGreater(reply["start_time"], 86.384333, "Live put the copy on the next whole sample")
+
+        # The beat asked for names the copy, not the clip that was cut off there
+        trimmed = self.ask("/live/clip/set/markers", "AI Bass", "@86.384333", 0.0, 91.465813)
+        self.assertTrue(trimmed["ok"], trimmed.get("error"))
+        self.assertEqual(trimmed["start_time"], reply["start_time"])
+        self.assertEqual(self.ask("/live/clip/info", "AI Bass", "@8")["start_marker"], 1.15,
+                         "The copy at 8 is left alone")
+
     def test_a_looping_clip_keeps_its_loop(self):
         self.vocals.looping = True
         self.ask("/live/clip/set/markers", "AI Bass", 0, 2.0, 100.0)
@@ -893,9 +960,29 @@ class ClipTests(LiveControlTestCase):
         endless = self.ask("/live/clip/set/markers", "AI Bass", 0, 0.0, "inf")
         self.assertFalse(endless["ok"])
 
+        for beat in (-4.0, "nan"):
+            refused = self.ask("/live/clip/duplicate", "AI Bass", 0, beat)
+            self.assertFalse(refused["ok"])
+            self.assertEqual(self.song.tracks[1].arrangement_clips, [], "Nothing should be copied")
+
         # The master's slots launch scenes; they never hold a clip
         master = self.ask("/live/clip/info", "master", 0)
         self.assertFalse(master["ok"])
+
+
+class LocatorTests(LiveControlTestCase):
+    def test_all_locators_can_be_cleared(self):
+        for time in (8.0, 24.0, 360.0):
+            self.song.current_song_time = time
+            self.song.set_or_delete_cue()
+        self.song.current_song_time = 100.0
+
+        reply = self.ask("/live/song/clear_locators")
+
+        self.assertEqual(reply["deleted"], 3)
+        self.assertEqual(self.song.cue_points, [])
+        self.assertEqual(self.song.current_song_time, 100.0, "The playhead goes back where it was")
+        self.assertEqual(self.ask("/live/song/clear_locators")["deleted"], 0)
 
 
 class MeterTests(LiveControlTestCase):

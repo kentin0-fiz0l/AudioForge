@@ -29,6 +29,7 @@ class MixerControl:
             '/live/device/params': self.get_device_params,
             '/live/device/set': self.set_device_param,
             '/live/device/delete': self.delete_device,
+            '/live/song/clear_locators': self.clear_locators,
         }
 
     def handles(self, address):
@@ -198,6 +199,26 @@ class MixerControl:
     def set_send(self, target, send_index, value):
         sends = self._track(target).mixer_device.sends
         return self._set(self._at(sends, send_index, 'send', 'the track'), value)
+
+    # ------------------------------------------------------------------
+    # Locators
+
+    def clear_locators(self):
+        """Delete every locator in the Arrangement.
+
+        Live only toggles a locator at the playhead, so the playhead visits
+        each one and is then put back.
+        """
+        was_at = self.song.current_song_time
+        times = [cue.time for cue in self.song.cue_points]
+
+        for time in times:
+            self.song.current_song_time = time
+            self.song.set_or_delete_cue()
+
+        self.song.current_song_time = was_at
+        self.log(f"Deleted {len(times)} locator(s)")
+        return {'deleted': len(times)}
 
     # ------------------------------------------------------------------
     # Devices
