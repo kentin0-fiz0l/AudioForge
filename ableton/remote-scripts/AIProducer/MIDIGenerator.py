@@ -10,12 +10,11 @@ class MIDIClipGenerator:
         clip.name = f"AI Drums - {structure.get('genre', 'House')}"
 
         # Get genre-specific drum pattern
-        genre = structure.get('genre', 'House').lower()
-        pattern = MusicTheory.get_drum_pattern(genre)
+        pattern = MusicTheory.get_drum_pattern(structure.get('style', 'house'))
         total_bars = structure['total_bars']
 
         # Clear existing notes
-        clip.remove_notes_extended(0, 0, total_bars * 4, 128)
+        clip.remove_notes_extended(0, 128, 0, total_bars * 4)
 
         notes = []
 
@@ -58,7 +57,7 @@ class MIDIClipGenerator:
         root = structure['key']
         total_bars = structure['total_bars']
 
-        clip.remove_notes_extended(0, 0, total_bars * 4, 128)
+        clip.remove_notes_extended(0, 128, 0, total_bars * 4)
 
         notes = []
         bass_note = root - 12  # One octave lower
@@ -84,7 +83,7 @@ class MIDIClipGenerator:
         progression_pattern = structure['progression']
         total_bars = structure['total_bars']
 
-        clip.remove_notes_extended(0, 0, total_bars * 4, 128)
+        clip.remove_notes_extended(0, 128, 0, total_bars * 4)
 
         # Get chord progression
         chords = MusicTheory.parse_progression(root, scale, progression_pattern)
@@ -117,7 +116,7 @@ class MIDIClipGenerator:
         scale = structure['scale']
         total_bars = structure['total_bars']
 
-        clip.remove_notes_extended(0, 0, total_bars * 4, 128)
+        clip.remove_notes_extended(0, 128, 0, total_bars * 4)
 
         # Get scale notes for melody
         scale_notes = MusicTheory.get_scale_notes(root + 24, scale)  # 2 octaves up

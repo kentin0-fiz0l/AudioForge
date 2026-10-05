@@ -180,10 +180,11 @@ namespace
         };
 
         // Some instruments are excited by random noise, and one note can
-        // differ from the next by several dB. The median of a few is steady.
+        // differ from the next by several dB. Shakuhachi still moved by
+        // 3.6 dB between runs on the median of five, so take plenty.
         const auto typical = [&] (const std::vector<int>& notes)
         {
-            std::array<float, 5> peaks;
+            std::array<float, 21> peaks;
             for (auto& peak : peaks)
                 peak = measure(notes);
 

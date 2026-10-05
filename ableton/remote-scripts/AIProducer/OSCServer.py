@@ -1,11 +1,15 @@
 # OSC Server for AI Producer Remote Script
 # Receives commands from the chat interface
 
+import json
 import socket
 import struct
 
 class OSCServer:
-    """Simple OSC server for receiving commands"""
+    """Simple OSC server for receiving commands and replying to them"""
+
+    REPLY_ADDRESS = '/ai_producer/reply'
+    REPLY_CHUNK = 4000  # Bytes of reply text per datagram, under the UDP size limit
 
     def __init__(self, port=9000):
         self.port = port
@@ -26,8 +30,11 @@ class OSCServer:
             return None
 
         try:
-            data, addr = self.sock.recvfrom(1024)
-            return self._parse_osc(data)
+            data, addr = self.sock.recvfrom(4096)
+            message = self._parse_osc(data)
+            if message:
+                message['sender'] = addr
+            return message
         except socket.error:
             # No data available (non-blocking)
             return None
@@ -82,11 +89,46 @@ class OSCServer:
                         value = struct.unpack('>f', data[arg_start:arg_start+4])[0]
                         args.append(value)
                         arg_start += 4
+                elif tag == 's':  # null-terminated string, padded to 4 bytes
+                    string_end = data.find(b'\x00', arg_start)
+                    if string_end != -1:
+                        args.append(data[arg_start:string_end].decode('utf-8'))
+                        arg_start = (string_end + 4) & ~3  # skip the null, round up to a multiple of 4
 
             return {'address': address, 'args': args}
 
         except Exception as e:
             return None
+
+    @staticmethod
+    def _osc_string(text):
+        """Encode text the OSC way: null-terminated, padded to 4 bytes"""
+        data = text + b'\x00'
+        return data + b'\x00' * (-len(data) % 4)
+
+    def send_reply(self, sender, reply):
+        """Send a reply to whoever sent a command.
+
+        The reply goes back as JSON text. A long one is split over several
+        messages, each carrying its position and the total: (index, count, text).
+        """
+        if not self.running or sender is None:
+            return
+
+        # json.dumps escapes everything outside ASCII, so a split can never
+        # land inside a multi-byte character
+        text = json.dumps(reply).encode('utf-8')
+        chunks = [text[i:i + self.REPLY_CHUNK] for i in range(0, len(text), self.REPLY_CHUNK)]
+
+        for index, chunk in enumerate(chunks):
+            packet = (self._osc_string(self.REPLY_ADDRESS.encode('utf-8'))
+                      + self._osc_string(b',iis')
+                      + struct.pack('>ii', index, len(chunks))
+                      + self._osc_string(chunk))
+            try:
+                self.sock.sendto(packet, sender)
+            except socket.error:
+                return
 
     def close(self):
         """Close the OSC server"""

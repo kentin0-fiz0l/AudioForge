@@ -55,7 +55,7 @@ Every AudioForge instrument is calibrated to the same output level, so that swap
 
 > The loudest single full-velocity note, at the default settings, peaks at about -9 dBFS. Anything from -12 to -6 is accepted.
 
-`--levels` measures it. For each instrument it plays seven notes one at a time and reports the loudest, then a four-note chord and three drum notes together. Each single note is played five times and the median taken, because instruments excited by random noise (Shakuhachi, Sitar, Koto) differ by several dB from one note to the next:
+`--levels` measures it. For each instrument it plays seven notes one at a time and reports the loudest, then a four-note chord and three drum notes together. Each single note is played 21 times and the median taken, because instruments excited by random noise (Shakuhachi, Sitar, Koto) differ by several dB from one note to the next:
 
 ```bash
 build/stress-host/StressHost_artefacts/Release/StressHost --levels path/to/Plugin.vst3

@@ -53,8 +53,8 @@ bool ShakuhachiProcessor::isBusesLayoutSupported(const BusesLayout& layouts) con
 }
 
 // Output trim: puts the loudest single full-velocity note at the default settings at
-// about -9 dBFS (it was +5.2). Recalibrate with StressHost --levels; see tools/stress-host/README.md.
-static constexpr float outputTrim = 0.195f;  // -14.2 dB
+// about -9 dBFS (it was about +4.6; its level varies from note to note). Recalibrate with StressHost --levels; see tools/stress-host/README.md.
+static constexpr float outputTrim = 0.209f;  // -13.6 dB
 
 void ShakuhachiProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
