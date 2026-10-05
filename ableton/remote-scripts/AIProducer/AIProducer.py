@@ -8,6 +8,7 @@ from .OSCServer import OSCServer
 from .DeviceLoader import DeviceLoader
 from .EffectChains import EffectChains
 from .MixerControl import MixerControl
+from .ClipControl import ClipControl
 
 class AIProducer:
     """AI Producer Remote Script - Generates complete tracks automatically"""
@@ -28,6 +29,7 @@ class AIProducer:
 
         # Mixer, device and meter access for the chat interface
         self.mixer_control = MixerControl(self.song, self.app, self.log)
+        self.clip_control = ClipControl(self.mixer_control.find_track, self.log)
 
         self.log("AI Producer initialized!")
         self.log("=" * 50)
@@ -99,6 +101,10 @@ class AIProducer:
         try:
             if self.mixer_control.handles(address):
                 reply = self.mixer_control.handle(address, args)
+                self.osc_server.send_reply(message.get('sender'), reply)
+
+            elif self.clip_control.handles(address):
+                reply = self.clip_control.handle(address, args)
                 self.osc_server.send_reply(message.get('sender'), reply)
 
             elif address == '/ai_producer/generate':

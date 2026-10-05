@@ -78,6 +78,46 @@ class FakeNoteSpecification:
         self.mute = mute
 
 
+class FakeAudioClip:
+    """An audio clip as Live makes one from a long file: warped, on Live's own guess"""
+
+    def __init__(self, name):
+        self.name = name
+        self.is_audio_clip = True
+        self.length = 356.1
+        self.warping = True
+        self.warp_mode = 0
+
+        # Live also moves the start of the clip to where it thinks the
+        # first beat is
+        self.loop_start = 1.15   # With looping off, these are the clip's own start and end
+        self.loop_end = 145.38
+        self.start_marker = 1.15
+        self.end_marker = 145.38
+        self.looping = False
+        self.sample_length = 6411200
+        self.sample_rate = 44100.0
+
+    def __setattr__(self, name, value):
+        # As in Live: the start cannot be put after the end, nor the end before the start
+        if name == 'loop_start' and hasattr(self, 'loop_end') and value >= self.loop_end:
+            raise RuntimeError("loop start must be before the loop end")
+        if name == 'loop_end' and hasattr(self, 'loop_start') and value <= self.loop_start:
+            raise RuntimeError("loop end must be after the loop start")
+
+        # Seen in Live 12.4.6: with looping off, a start marker placed
+        # before the clip's own start is ignored, with no error
+        if (name == 'start_marker' and hasattr(self, 'loop_start')
+                and not getattr(self, 'looping', False) and value < self.loop_start):
+            return
+
+        if name == 'start_marker' and hasattr(self, 'end_marker') and value >= self.end_marker:
+            raise RuntimeError("start marker must be before the end marker")
+        if name == 'end_marker' and hasattr(self, 'start_marker') and value <= self.start_marker:
+            raise RuntimeError("end marker must be after the start marker")
+        object.__setattr__(self, name, value)
+
+
 class FakeOldClip(FakeClip):
     """A clip from before Live 11, which has no add_new_notes"""
     add_new_notes = None
@@ -725,6 +765,121 @@ class DeviceTests(LiveControlTestCase):
 
         self.assertEqual(reply["deleted"], "SimpleEQ")
         self.assertEqual([d.name for d in self.song.tracks[2].devices], ["SimpleGain"])
+
+
+class ClipTests(LiveControlTestCase):
+    def setUp(self):
+        super().setUp()
+        self.vocals = FakeAudioClip("vocals")
+        self.song.tracks[1].clip_slots[0].clip = self.vocals
+        self.song.tracks[0].clip_slots[0].create_clip(4.0)  # A MIDI clip
+
+    def test_a_clip_can_be_described(self):
+        reply = self.ask("/live/clip/info", "AI Bass", 0)
+
+        self.assertEqual(reply["name"], "vocals")
+        self.assertTrue(reply["audio"])
+        self.assertTrue(reply["warping"])
+        self.assertAlmostEqual(reply["length"], 356.1)
+
+    def test_warping_can_be_switched_off_and_on(self):
+        reply = self.ask("/live/clip/set/warping", 1, 0, 0)
+        self.assertFalse(self.vocals.warping)
+        self.assertFalse(reply["warping"])
+
+        self.ask("/live/clip/set/warping", "AI Bass", 0, 1)
+        self.assertTrue(self.vocals.warping)
+
+    def test_a_clip_reports_where_it_starts_and_how_long_its_file_is(self):
+        reply = self.ask("/live/clip/info", "AI Bass", 0)
+
+        self.assertAlmostEqual(reply["start_marker"], 1.15)
+        self.assertAlmostEqual(reply["end_marker"], 145.38)
+        self.assertAlmostEqual(reply["file_seconds"], 6411200 / 44100.0)
+
+    def test_the_start_and_end_of_a_clip_can_be_moved(self):
+        reply = self.ask("/live/clip/set/markers", "AI Bass", 0, 0.0, 145.0)
+
+        self.assertEqual(self.vocals.start_marker, 0.0, "The start should move even to before where the clip began")
+        self.assertEqual(self.vocals.end_marker, 145.0)
+        self.assertEqual((self.vocals.loop_start, self.vocals.loop_end), (0.0, 145.0))
+        self.assertEqual(reply["start_marker"], 0.0)
+        self.assertEqual(reply["loop_start"], 0.0)
+
+        # Moving both past the old end must not trip over the order they are set in
+        self.ask("/live/clip/set/markers", "AI Bass", 0, 150.0, 160.0)
+        self.assertEqual((self.vocals.start_marker, self.vocals.end_marker), (150.0, 160.0))
+
+        backwards = self.ask("/live/clip/set/markers", "AI Bass", 0, 10.0, 5.0)
+        self.assertFalse(backwards["ok"])
+        self.assertEqual((self.vocals.start_marker, self.vocals.end_marker), (150.0, 160.0))
+
+    def test_a_marker_live_rounds_to_the_nearest_sample_still_counts(self):
+        class SampleExactClip(FakeAudioClip):
+            """Keeps positions on whole samples, as Live does for an unwarped clip"""
+
+            def __setattr__(self, name, value):
+                if name in ('start_marker', 'end_marker', 'loop_start', 'loop_end'):
+                    value = round(value * 44100.0) / 44100.0
+                super().__setattr__(name, value)
+
+        self.song.tracks[2].clip_slots[0].clip = SampleExactClip("exact")
+
+        reply = self.ask("/live/clip/set/markers", "AI Chords", 0, 0.0, 145.378685)
+
+        self.assertTrue(reply["ok"], reply.get("error"))
+        self.assertAlmostEqual(reply["end_marker"], 145.378685, places=4)
+
+    def test_a_looping_clip_keeps_its_loop(self):
+        self.vocals.looping = True
+        self.ask("/live/clip/set/markers", "AI Bass", 0, 2.0, 100.0)
+
+        self.assertEqual((self.vocals.start_marker, self.vocals.end_marker), (2.0, 100.0))
+        self.assertEqual((self.vocals.loop_start, self.vocals.loop_end), (1.15, 145.38),
+                         "With looping on, those are the loop, and are left alone")
+
+    def test_a_marker_live_does_not_accept_is_reported_and_undone(self):
+        class StubbornClip(FakeAudioClip):
+            """Takes a new end but quietly keeps its old start, as Live can"""
+
+            def __setattr__(self, name, value):
+                if name == 'start_marker' and hasattr(self, 'start_marker'):
+                    return
+                super().__setattr__(name, value)
+
+        stubborn = StubbornClip("stubborn")
+        self.song.tracks[2].clip_slots[0].clip = stubborn
+
+        reply = self.ask("/live/clip/set/markers", "AI Chords", 0, 0.0, 100.0)
+
+        self.assertFalse(reply["ok"])
+        self.assertIn("did not take", reply["error"])
+        self.assertEqual(stubborn.end_marker, 145.38, "The end should be put back where it was")
+        self.assertEqual((stubborn.loop_start, stubborn.loop_end), (1.15, 145.38))
+
+    def test_mistakes_come_back_as_errors(self):
+        empty = self.ask("/live/clip/info", "AI Bass", 3)
+        self.assertFalse(empty["ok"])
+        self.assertIn("no clip", empty["error"])
+
+        midi = self.ask("/live/clip/set/warping", "AI Drums", 0, 0)
+        self.assertFalse(midi["ok"])
+        self.assertIn("not an audio clip", midi["error"])
+
+        no_slot = self.ask("/live/clip/info", "AI Bass", 99)
+        self.assertFalse(no_slot["ok"])
+        self.assertIn("No slot 99", no_slot["error"])
+
+        midi_markers = self.ask("/live/clip/set/markers", "AI Drums", 0, 0.0, 2.0)
+        self.assertFalse(midi_markers["ok"])
+        self.assertIn("not an audio clip", midi_markers["error"])
+
+        endless = self.ask("/live/clip/set/markers", "AI Bass", 0, 0.0, "inf")
+        self.assertFalse(endless["ok"])
+
+        # The master's slots launch scenes; they never hold a clip
+        master = self.ask("/live/clip/info", "master", 0)
+        self.assertFalse(master["ok"])
 
 
 class MeterTests(LiveControlTestCase):

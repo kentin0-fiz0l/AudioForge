@@ -54,6 +54,10 @@ class MixerControl:
         tracks.append(('master', self.song.master_track))
         return tracks
 
+    def find_track(self, target):
+        """Find a track by index, by 'master', by 'return:N' or by its name"""
+        return self._track(target)
+
     def _track(self, target):
         """Find a track by index, by 'master', by 'return:N' or by its name"""
         text = str(target).strip()
