@@ -41,6 +41,7 @@ add_executable(TestRunner
     Plugins/PlateReverbTests.cpp
     Plugins/OutputLevelTests.cpp
     Plugins/StateRestoreTests.cpp
+    Plugins/SpectralFreezeTests.cpp
     Plugins/PolysynthTests.cpp
     Plugins/EffectDefaultLevelTests.cpp
     Integration/PluginIntegrationTests.cpp)
@@ -143,6 +144,9 @@ target_sources(TestRunner PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/Polysynth/Source/PolysynthEngine.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/Polysynth/Source/PolysynthVoice.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/ShimmerReverb/Source/ShimmerEngine.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/SpectralFreeze/Source/PluginProcessor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/SpectralFreeze/Source/PluginEditor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/SpectralFreeze/Source/SpectralProcessor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/VintageCompressor/Source/PluginProcessor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/VintageCompressor/Source/PluginEditor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/VintageCompressor/Source/CompressorEngine.cpp)
