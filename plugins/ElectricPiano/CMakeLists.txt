@@ -15,7 +15,7 @@ juce_add_plugin(ElectricPiano
     PLUGIN_CODE AEPi
     FORMATS VST3 AU Standalone
     PRODUCT_NAME "ElectricPiano"
-    PLUGIN_NAME "AudioForge - ElectricPiano"
+    PLUGIN_NAME "ElectricPiano"
     IS_SYNTH TRUE
     NEEDS_MIDI_INPUT TRUE
     NEEDS_MIDI_OUTPUT FALSE

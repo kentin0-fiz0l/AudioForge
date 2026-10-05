@@ -15,7 +15,7 @@ juce_add_plugin(BrassSection
     PLUGIN_CODE ABrs
     FORMATS VST3 AU Standalone
     PRODUCT_NAME "BrassSection"
-    PLUGIN_NAME "AudioForge - BrassSection"
+    PLUGIN_NAME "BrassSection"
     IS_SYNTH TRUE
     NEEDS_MIDI_INPUT TRUE
     NEEDS_MIDI_OUTPUT FALSE
