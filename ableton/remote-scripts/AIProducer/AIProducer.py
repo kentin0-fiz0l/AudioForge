@@ -7,11 +7,13 @@ from .MIDIGenerator import MIDIClipGenerator
 from .OSCServer import OSCServer
 from .DeviceLoader import DeviceLoader
 from .EffectChains import EffectChains
+from .MixerControl import MixerControl
 
 class AIProducer:
     """AI Producer Remote Script - Generates complete tracks automatically"""
 
     TRIGGER_NOTE = 60  # C3
+    MAX_MESSAGES_PER_UPDATE = 16
 
     def __init__(self, c_instance):
         self.c_instance = c_instance
@@ -23,6 +25,9 @@ class AIProducer:
 
         # Initialize effect chains
         self.effect_chains = EffectChains(self.log)
+
+        # Mixer, device and meter access for the chat interface
+        self.mixer_control = MixerControl(self.song, self.app, self.log)
 
         self.log("AI Producer initialized!")
         self.log("=" * 50)
@@ -75,11 +80,16 @@ class AIProducer:
 
     def update_display(self):
         """Called every 100ms by Live - required method"""
-        # Check for OSC messages
+        # Check for OSC messages. Take more than one per update, so that
+        # several senders at once do not queue up behind each other.
         if self.osc_server:
-            message = self.osc_server.receive()
-            if message:
+            for _ in range(self.MAX_MESSAGES_PER_UPDATE):
+                message = self.osc_server.receive()
+                if not message:
+                    break
                 self._handle_osc_message(message)
+
+        self.mixer_control.update_meters()
 
     def refresh_state(self):
         """Called when Live refreshes - required method"""
@@ -105,7 +115,11 @@ class AIProducer:
         self.log(f"OSC: {address} {args}")
 
         try:
-            if address == '/ai_producer/generate':
+            if self.mixer_control.handles(address):
+                reply = self.mixer_control.handle(address, args)
+                self.osc_server.send_reply(message.get('sender'), reply)
+
+            elif address == '/ai_producer/generate':
                 # Extract genre from args (default to 'house')
                 genre = 'house'
                 if args and len(args) > 0:
@@ -131,14 +145,6 @@ class AIProducer:
                 track_index = len(self.song.tracks)
                 self.song.create_midi_track(track_index)
                 self.log("Created MIDI track")
-
-            elif address == '/live/track/set/volume':
-                if len(args) >= 2:
-                    track_idx = int(args[0])
-                    volume = float(args[1])
-                    if track_idx < len(self.song.tracks):
-                        self.song.tracks[track_idx].mixer_device.volume.value = volume
-                        self.log(f"Set track {track_idx} volume to {int(volume*100)}%")
 
         except Exception as e:
             self.log(f"OSC Error: {str(e)}")
