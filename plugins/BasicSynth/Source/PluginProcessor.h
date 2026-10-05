@@ -44,11 +44,11 @@ public:
     double getTailLengthSeconds() const override;
 
     //==============================================================================
-    // Programs
-    int getNumPrograms() override { return 1; }
-    int getCurrentProgram() override { return 0; }
-    void setCurrentProgram(int) override {}
-    const juce::String getProgramName(int) override { return {}; }
+    // Programs: the factory patches in FactoryPatches.h
+    int getNumPrograms() override;
+    int getCurrentProgram() override { return currentProgram.load(); }
+    void setCurrentProgram(int index) override;
+    const juce::String getProgramName(int index) override;
     void changeProgramName(int, const juce::String&) override {}
 
     //==============================================================================
@@ -106,6 +106,9 @@ private:
     juce::AudioParameterFloat* saturationMixParam;
     juce::AudioParameterChoice* saturationTypeParam;
 
+    // The factory patch chosen last; its values may have been changed since
+    std::atomic<int> currentProgram { 0 };
+
     // Voice management
     static constexpr int MAX_VOICES = 8;
     std::array<SynthVoice, MAX_VOICES> voices;
@@ -126,6 +129,7 @@ private:
     SynthVoice* stealVoice();
     void handleNoteOn(int midiNoteNumber, float velocity);
     void handleNoteOff(int midiNoteNumber);
+    void setLegacyState(const void* data);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(BasicSynthProcessor)
 };

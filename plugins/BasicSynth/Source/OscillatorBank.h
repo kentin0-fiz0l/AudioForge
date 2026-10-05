@@ -52,6 +52,14 @@ public:
     void configure(int oscIndex, const OscillatorConfig& config);
 
     /**
+     * Set the waveform of one oscillator.
+     *
+     * @param oscIndex Oscillator index (OSC_1 to SUB_OSC)
+     * @param waveform 0=sine, 1=saw, 2=square, 3=pulse
+     */
+    void setWaveform(int oscIndex, int waveform);
+
+    /**
      * Get the next sample from all enabled oscillators.
      * Automatically mixes all oscillators based on their levels.
      *

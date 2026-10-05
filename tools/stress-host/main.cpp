@@ -154,17 +154,22 @@ namespace
     // the range. An effect is reported by the gain it applies to noise and
     // is not checked. Nor is an instrument that stays silent: a pattern
     // generator waiting for the transport, or a sampler with nothing loaded.
+    // An instrument with factory patches is measured on each of them, the
+    // one it starts with first, and all of them have to be in the range.
     bool reportLevels(const juce::String& name, juce::AudioPluginFormatManager& formatManager,
                       const juce::PluginDescription& description, double sampleRate, const LevelRange& range)
     {
         // A new instance for every measurement, so the tail of one note
         // cannot add to the next
-        const auto measure = [&] (const std::vector<int>& notes)
+        const auto measure = [&] (const std::vector<int>& notes, int patch = 0)
         {
             juce::String error;
             auto plugin = formatManager.createPluginInstance(description, sampleRate, blockSize, error);
             if (plugin == nullptr)
                 return 0.0f;
+
+            if (patch > 0)
+                plugin->setCurrentProgram(patch);
 
             plugin->setRateAndBufferSizeDetails(sampleRate, blockSize);
             plugin->prepareToPlay(sampleRate, blockSize);
@@ -184,47 +189,69 @@ namespace
             return true;
         }
 
-        // Some instruments are excited by random noise, and one note can
-        // differ from the next by several dB. Shakuhachi still moved by
-        // 3.6 dB between runs on the median of five, so take plenty.
-        const auto typical = [&] (const std::vector<int>& notes)
+        juce::StringArray patches;
         {
-            std::array<float, 21> peaks;
-            for (auto& peak : peaks)
-                peak = measure(notes);
+            juce::String error;
+            if (auto plugin = formatManager.createPluginInstance(description, sampleRate, blockSize, error))
+                for (int patch = 0; patch < plugin->getNumPrograms(); ++patch)
+                    patches.add(plugin->getProgramName(patch));
+        }
 
-            std::sort(peaks.begin(), peaks.end());
-            return peaks[peaks.size() / 2];
-        };
+        if (patches.isEmpty())
+            patches.add({});
 
-        float loudestNotePeak = 0.0f;
-        int loudestNote = -1;
+        bool allInRange = true;
 
-        // Drum instruments answer particular notes; pitched ones answer all
-        for (int note : { 36, 38, 42, 46, 48, 60, 72 })
+        for (int patch = 0; patch < patches.size(); ++patch)
         {
-            const float peak = typical({ note });
-            if (peak > loudestNotePeak)
+            // Some instruments are excited by random noise, and one note can
+            // differ from the next by several dB. Shakuhachi still moved by
+            // 3.6 dB between runs on the median of five, so take plenty.
+            const auto typical = [&] (const std::vector<int>& notes)
             {
-                loudestNotePeak = peak;
-                loudestNote = note;
+                std::array<float, 21> peaks;
+                for (auto& peak : peaks)
+                    peak = measure(notes, patch);
+
+                std::sort(peaks.begin(), peaks.end());
+                return peaks[peaks.size() / 2];
+            };
+
+            float loudestNotePeak = 0.0f;
+            int loudestNote = -1;
+
+            // Drum instruments answer particular notes; pitched ones answer all
+            for (int note : { 36, 38, 42, 46, 48, 60, 72 })
+            {
+                const float peak = typical({ note });
+                if (peak > loudestNotePeak)
+                {
+                    loudestNotePeak = peak;
+                    loudestNote = note;
+                }
             }
+
+            // The patch it starts with is reported the way an instrument
+            // without patches is; the others name themselves at the end
+            const juce::String patchName = patch > 0 ? "\tpatch " + patches[patch] : juce::String();
+
+            if (loudestNote < 0)
+            {
+                std::cout << name << "\tSILENT" << patchName << std::endl;
+                continue;
+            }
+
+            const float together = juce::jmax(measure({ 48, 60, 64, 67 }, patch), measure({ 36, 38, 42 }, patch));
+            const float level = juce::Decibels::gainToDecibels(loudestNotePeak);
+            const bool inRange = ! range.given || (level >= range.low && level <= range.high);
+            allInRange = allInRange && inRange;
+
+            std::cout << name << "\t" << (inRange ? "LEVEL" : "LEVEL-OUT-OF-RANGE")
+                      << "\tnote " << loudestNote << "\t" << decibels(loudestNotePeak)
+                      << "\ttogether\t" << decibels(together) << patchName << std::endl;
         }
 
-        if (loudestNote < 0)
-        {
-            std::cout << name << "\tSILENT" << std::endl;
-            return true;
-        }
-
-        const float together = juce::jmax(measure({ 48, 60, 64, 67 }), measure({ 36, 38, 42 }));
-        const float level = juce::Decibels::gainToDecibels(loudestNotePeak);
-        const bool inRange = ! range.given || (level >= range.low && level <= range.high);
-
-        std::cout << name << "\t" << (inRange ? "LEVEL" : "LEVEL-OUT-OF-RANGE")
-                  << "\tnote " << loudestNote << "\t" << decibels(loudestNotePeak)
-                  << "\ttogether\t" << decibels(together) << std::endl;
-        return inRange;
+        return allInRange;
     }
 
     juce::Array<Config> makeConfigs(int numParams)

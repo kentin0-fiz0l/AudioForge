@@ -301,7 +301,26 @@ BasicSynthEditor::BasicSynthEditor(BasicSynthProcessor& p)
     };
     addAndMakeVisible(saturationDriveSlider);
 
-    // Start timer for level meter updates (30 Hz)
+    // Patch selector: the factory patches, which the host sees as programs
+    patchLabel.setText("Patch", juce::dontSendNotification);
+    patchLabel.attachToComponent(&patchSelector, true);
+    addAndMakeVisible(patchLabel);
+
+    for (int i = 0; i < audioProcessor.getNumPrograms(); ++i)
+        patchSelector.addItem(audioProcessor.getProgramName(i), i + 1);
+    patchSelector.onChange = [this]
+    {
+        audioProcessor.setCurrentProgram(patchSelector.getSelectedId() - 1);
+        audioProcessor.updateHostDisplay(juce::AudioProcessor::ChangeDetails().withProgramChanged(true));
+        syncFromParameters();
+    };
+    addAndMakeVisible(patchSelector);
+
+    // The controls above were given the defaults. Show what the processor
+    // has, which differs when a saved set is opened or a patch was chosen.
+    syncFromParameters();
+
+    // Start timer for the level meter and for following the parameters (30 Hz)
     startTimer(33);
 }
 
@@ -322,9 +341,9 @@ void BasicSynthEditor::paint(juce::Graphics& g)
     // Section labels
     g.setColour(Colors::TextSecondary);
     g.setFont(juce::Font(14.0f, juce::Font::bold));
-    g.drawText("ENVELOPE", 100, 115, 200, 20, juce::Justification::left);
-    g.drawText("FILTER", 100, 335, 200, 20, juce::Justification::left);
-    g.drawText("EFFECTS", 100, 485, 200, 20, juce::Justification::left);
+    g.drawText("ENVELOPE", 20, 115, 200, 20, juce::Justification::left);
+    g.drawText("FILTER", 20, 335, 200, 20, juce::Justification::left);
+    g.drawText("EFFECTS", 20, 485, 200, 20, juce::Justification::left);
 
     // Level meter with improved design
     int meterX = 20;
@@ -379,6 +398,13 @@ void BasicSynthEditor::resized()
 
     // Waveform selector (wider, not rotary)
     waveformSelector.setBounds(margin + labelWidth, y, 200, 24);
+
+    // Patch selector, to its right
+    patchSelector.setColour(juce::ComboBox::backgroundColourId, juce::Colour(0xff2d3748));
+    patchSelector.setColour(juce::ComboBox::textColourId, juce::Colour(0xffedf2f7));
+    patchSelector.setColour(juce::ComboBox::outlineColourId, juce::Colour(0xff4a5568));
+    patchSelector.setColour(juce::ComboBox::buttonColourId, juce::Colour(0xff4299e1));
+    patchSelector.setBounds(margin + labelWidth + 280, y, 200, 24);
     y += 50;
 
     // ADSR controls in a row
@@ -414,7 +440,8 @@ void BasicSynthEditor::resized()
     filterTypeSelector.setColour(juce::ComboBox::outlineColourId, juce::Colour(0xff4a5568));
     filterTypeSelector.setColour(juce::ComboBox::buttonColourId, juce::Colour(0xff4fd1c5));
 
-    filterTypeSelector.setBounds(x, y + 30, 120, 24);
+    // Leave room for the "Filter Type" label, which sits to the selector's left
+    filterTypeSelector.setBounds(x + 80, y + 30, 120, 24);
 
     y += controlHeight + 30;
 
@@ -433,5 +460,48 @@ void BasicSynthEditor::timerCallback()
 {
     // Update level meter display
     displayLevel = audioProcessor.getCurrentLevel();
+
+    // Follow changes made by the host: automation, or a patch chosen there
+    syncFromParameters();
+
     repaint();
+}
+
+void BasicSynthEditor::syncFromParameters()
+{
+    const auto& params = audioProcessor.getParameters();
+
+    // The value a parameter's control shows: seconds, Hz, or a choice's index
+    const auto shown = [&params] (int index)
+    {
+        auto* param = dynamic_cast<juce::RangedAudioParameter*>(params[index]);
+        return param != nullptr ? param->convertFrom0to1(param->getValue()) : 0.0f;
+    };
+
+    // A control being dragged is ahead of its parameter, so leave it alone
+    const auto follow = [&shown] (juce::Slider& slider, int index)
+    {
+        if (! slider.isMouseButtonDown())
+            slider.setValue(shown(index), juce::dontSendNotification);
+    };
+
+    const auto followChoice = [&shown] (juce::ComboBox& selector, int index)
+    {
+        selector.setSelectedId(juce::roundToInt(shown(index)) + 1, juce::dontSendNotification);
+    };
+
+    followChoice(waveformSelector, 0);
+    follow(volumeSlider, 1);
+    follow(attackSlider, 2);
+    follow(decaySlider, 3);
+    follow(sustainSlider, 4);
+    follow(releaseSlider, 5);
+    follow(filterCutoffSlider, 6);
+    follow(filterResonanceSlider, 7);
+    followChoice(filterTypeSelector, 8);
+    follow(chorusMixSlider, 11);
+    follow(reverbMixSlider, 14);
+    follow(saturationDriveSlider, 15);
+
+    patchSelector.setSelectedId(audioProcessor.getCurrentProgram() + 1, juce::dontSendNotification);
 }

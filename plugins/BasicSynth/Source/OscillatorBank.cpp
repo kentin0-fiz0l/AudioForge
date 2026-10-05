@@ -78,6 +78,12 @@ void OscillatorBank::configure(int oscIndex, const OscillatorConfig& config)
     }
 }
 
+void OscillatorBank::setWaveform(int oscIndex, int waveform)
+{
+    if (oscIndex >= 0 && oscIndex < NOISE)
+        configs[oscIndex].waveform = waveform;
+}
+
 float OscillatorBank::getNextSample()
 {
     float mixedOutput = 0.0f;

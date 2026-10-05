@@ -20,6 +20,7 @@ add_executable(TestRunner
     Plugins/SimpleGainTests.cpp
     Plugins/PanUtilTests.cpp
     Plugins/BasicSynthTests.cpp
+    Plugins/BasicSynthPatchTests.cpp
     Plugins/CleanDelayTests.cpp
     Plugins/SimpleEQTests.cpp
     Plugins/SimpleCompTests.cpp

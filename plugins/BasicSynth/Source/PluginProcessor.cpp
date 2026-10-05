@@ -1,128 +1,147 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
+#include "FactoryPatches.h"
+
+namespace
+{
+    // What the state was before it held every parameter: the waveform index
+    // and seven values, with nothing to mark it
+    constexpr int legacyStateSize = 32;
+
+    const char* const stateTag = "BasicSynthState";
+    const char* const programAttribute = "program";
+
+    void setShownValue(juce::RangedAudioParameter& param, float value)
+    {
+        param.setValueNotifyingHost(param.convertTo0to1(value));
+    }
+}
 
 BasicSynthProcessor::BasicSynthProcessor()
     : AudioProcessor(BusesProperties()
                      .withOutput("Output", juce::AudioChannelSet::stereo(), true))
 {
+    // A new instance starts as the first factory patch
+    const auto& init = BasicSynthPatches::all[0];
+
     // Waveform parameter: Sine, Saw, Square
     addParameter(waveformParam = new juce::AudioParameterChoice(
         PARAM_WAVEFORM,
         "Waveform",
         juce::StringArray{"Sine", "Sawtooth", "Square"},
-        0)); // Default: Sine
+        init.waveform));
 
     // Master volume parameter (0.0 to 1.0)
     addParameter(volumeParam = new juce::AudioParameterFloat(
         PARAM_VOLUME,
         "Volume",
         juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f),
-        0.7f)); // Default: 70%
+        init.volume));
 
     // ADSR Envelope parameters
     addParameter(attackParam = new juce::AudioParameterFloat(
         PARAM_ATTACK,
         "Attack",
         juce::NormalisableRange<float>(0.001f, 2.0f, 0.001f, 0.3f), // Skew toward short attacks
-        0.01f,  // Default: 10ms
+        init.attack,
         "s"));
 
     addParameter(decayParam = new juce::AudioParameterFloat(
         PARAM_DECAY,
         "Decay",
         juce::NormalisableRange<float>(0.001f, 2.0f, 0.001f, 0.3f),
-        0.1f,   // Default: 100ms
+        init.decay,
         "s"));
 
     addParameter(sustainParam = new juce::AudioParameterFloat(
         PARAM_SUSTAIN,
         "Sustain",
         juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f),
-        0.7f)); // Default: 70%
+        init.sustain));
 
     addParameter(releaseParam = new juce::AudioParameterFloat(
         PARAM_RELEASE,
         "Release",
         juce::NormalisableRange<float>(0.001f, 5.0f, 0.001f, 0.3f),
-        0.3f,   // Default: 300ms
+        init.release,
         "s"));
 
-    // Filter parameters (for future implementation)
+    // Filter parameters
     addParameter(filterCutoffParam = new juce::AudioParameterFloat(
         PARAM_FILTER_CUTOFF,
         "Filter Cutoff",
         juce::NormalisableRange<float>(20.0f, 20000.0f, 1.0f, 0.3f), // Skew toward low frequencies
-        20000.0f, // Default: wide open
+        init.filterCutoff,
         "Hz"));
 
     addParameter(filterResonanceParam = new juce::AudioParameterFloat(
         PARAM_FILTER_RESONANCE,
         "Filter Resonance",
         juce::NormalisableRange<float>(0.5f, 10.0f, 0.1f),
-        0.707f)); // Default: butterworth (no resonance)
+        init.filterResonance));
 
     addParameter(filterTypeParam = new juce::AudioParameterChoice(
         PARAM_FILTER_TYPE,
         "Filter Type",
         juce::StringArray("Low-pass", "High-pass", "Band-pass", "Notch"),
-        0)); // Default: Low-pass
+        init.filterType));
 
     // Chorus parameters
     addParameter(chorusRateParam = new juce::AudioParameterFloat(
         PARAM_CHORUS_RATE,
         "Chorus Rate",
         juce::NormalisableRange<float>(0.1f, 10.0f, 0.1f),
-        0.5f));
+        init.chorusRate));
 
     addParameter(chorusDepthParam = new juce::AudioParameterFloat(
         PARAM_CHORUS_DEPTH,
         "Chorus Depth",
         juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f),
-        0.5f));
+        init.chorusDepth));
 
     addParameter(chorusMixParam = new juce::AudioParameterFloat(
         PARAM_CHORUS_MIX,
         "Chorus Mix",
         juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f),
-        0.3f));
+        init.chorusMix));
 
     // Reverb parameters
     addParameter(reverbSizeParam = new juce::AudioParameterFloat(
         PARAM_REVERB_SIZE,
         "Reverb Size",
         juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f),
-        0.5f));
+        init.reverbSize));
 
     addParameter(reverbDampingParam = new juce::AudioParameterFloat(
         PARAM_REVERB_DAMPING,
         "Reverb Damping",
         juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f),
-        0.5f));
+        init.reverbDamping));
 
     addParameter(reverbMixParam = new juce::AudioParameterFloat(
         PARAM_REVERB_MIX,
         "Reverb Mix",
         juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f),
-        0.3f));
+        init.reverbMix));
 
     // Saturation parameters
     addParameter(saturationDriveParam = new juce::AudioParameterFloat(
         PARAM_SATURATION_DRIVE,
         "Saturation Drive",
         juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f),
-        0.0f));
+        init.saturationDrive));
 
     addParameter(saturationMixParam = new juce::AudioParameterFloat(
         PARAM_SATURATION_MIX,
         "Saturation Mix",
         juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f),
-        0.0f));
+        init.saturationMix));
 
     addParameter(saturationTypeParam = new juce::AudioParameterChoice(
         PARAM_SATURATION_TYPE,
         "Saturation Type",
         juce::StringArray("Soft Clip", "Hard Clip", "Tube"),
-        0)); // Default: Soft Clip
+        init.saturationType));
 }
 
 BasicSynthProcessor::~BasicSynthProcessor()
@@ -267,35 +286,110 @@ juce::AudioProcessorEditor* BasicSynthProcessor::createEditor()
     return new BasicSynthEditor(*this);
 }
 
+//==============================================================================
+// Factory patches, offered to the host as programs
+
+int BasicSynthProcessor::getNumPrograms()
+{
+    return static_cast<int>(BasicSynthPatches::all.size());
+}
+
+const juce::String BasicSynthProcessor::getProgramName(int index)
+{
+    if (! juce::isPositiveAndBelow(index, getNumPrograms()))
+        return {};
+
+    return BasicSynthPatches::all[static_cast<size_t>(index)].name;
+}
+
+void BasicSynthProcessor::setCurrentProgram(int index)
+{
+    if (! juce::isPositiveAndBelow(index, getNumPrograms()))
+        return;
+
+    const auto& patch = BasicSynthPatches::all[static_cast<size_t>(index)];
+    currentProgram = index;
+
+    setShownValue(*waveformParam, static_cast<float>(patch.waveform));
+    setShownValue(*volumeParam, patch.volume);
+    setShownValue(*attackParam, patch.attack);
+    setShownValue(*decayParam, patch.decay);
+    setShownValue(*sustainParam, patch.sustain);
+    setShownValue(*releaseParam, patch.release);
+    setShownValue(*filterCutoffParam, patch.filterCutoff);
+    setShownValue(*filterResonanceParam, patch.filterResonance);
+    setShownValue(*filterTypeParam, static_cast<float>(patch.filterType));
+    setShownValue(*chorusRateParam, patch.chorusRate);
+    setShownValue(*chorusDepthParam, patch.chorusDepth);
+    setShownValue(*chorusMixParam, patch.chorusMix);
+    setShownValue(*reverbSizeParam, patch.reverbSize);
+    setShownValue(*reverbDampingParam, patch.reverbDamping);
+    setShownValue(*reverbMixParam, patch.reverbMix);
+    setShownValue(*saturationDriveParam, patch.saturationDrive);
+    setShownValue(*saturationMixParam, patch.saturationMix);
+    setShownValue(*saturationTypeParam, static_cast<float>(patch.saturationType));
+}
+
+//==============================================================================
+// State
+
 void BasicSynthProcessor::getStateInformation(juce::MemoryBlock& destData)
 {
-    // Save plugin state
-    juce::MemoryOutputStream stream(destData, true);
+    // Every parameter under its ID, as the value its control shows, so a
+    // later change to a range or to the order of parameters does not
+    // disturb a saved set
+    juce::XmlElement state(stateTag);
+    state.setAttribute(programAttribute, currentProgram.load());
 
-    stream.writeInt(waveformParam->getIndex());
-    stream.writeFloat(volumeParam->get());
-    stream.writeFloat(attackParam->get());
-    stream.writeFloat(decayParam->get());
-    stream.writeFloat(sustainParam->get());
-    stream.writeFloat(releaseParam->get());
-    stream.writeFloat(filterCutoffParam->get());
-    stream.writeFloat(filterResonanceParam->get());
+    for (auto* param : getParameters())
+        if (auto* ranged = dynamic_cast<juce::RangedAudioParameter*>(param))
+            state.setAttribute(ranged->getParameterID(),
+                               static_cast<double>(ranged->convertFrom0to1(ranged->getValue())));
+
+    copyXmlToBinary(state, destData);
 }
 
 void BasicSynthProcessor::setStateInformation(const void* data, int sizeInBytes)
 {
-    // Restore plugin state
-    juce::MemoryInputStream stream(data, static_cast<size_t>(sizeInBytes), false);
+    if (data == nullptr || sizeInBytes <= 0)
+        return;
 
-    waveformParam->setValueNotifyingHost(static_cast<float>(stream.readInt()) /
-                                        (waveformParam->choices.size() - 1));
-    volumeParam->setValueNotifyingHost(volumeParam->convertTo0to1(stream.readFloat()));
-    attackParam->setValueNotifyingHost(attackParam->convertTo0to1(stream.readFloat()));
-    decayParam->setValueNotifyingHost(decayParam->convertTo0to1(stream.readFloat()));
-    sustainParam->setValueNotifyingHost(sustainParam->convertTo0to1(stream.readFloat()));
-    releaseParam->setValueNotifyingHost(releaseParam->convertTo0to1(stream.readFloat()));
-    filterCutoffParam->setValueNotifyingHost(filterCutoffParam->convertTo0to1(stream.readFloat()));
-    filterResonanceParam->setValueNotifyingHost(filterResonanceParam->convertTo0to1(stream.readFloat()));
+    const auto state = getXmlFromBinary(data, sizeInBytes);
+
+    if (state == nullptr)
+    {
+        if (sizeInBytes == legacyStateSize)
+            setLegacyState(data);
+        return;
+    }
+
+    if (! state->hasTagName(stateTag))
+        return;
+
+    // The patch is only remembered here, not loaded: the values saved with
+    // it include whatever was changed after it was chosen
+    const int program = state->getIntAttribute(programAttribute, currentProgram.load());
+    if (juce::isPositiveAndBelow(program, getNumPrograms()))
+        currentProgram = program;
+
+    for (auto* param : getParameters())
+        if (auto* ranged = dynamic_cast<juce::RangedAudioParameter*>(param))
+            if (state->hasAttribute(ranged->getParameterID()))
+                setShownValue(*ranged, static_cast<float>(state->getDoubleAttribute(ranged->getParameterID())));
+}
+
+void BasicSynthProcessor::setLegacyState(const void* data)
+{
+    juce::MemoryInputStream stream(data, static_cast<size_t>(legacyStateSize), false);
+
+    // The old state held a waveform, but the waveform was never used: every
+    // note was a sawtooth. Keep an old set sounding the way it did.
+    stream.readInt();
+    setShownValue(*waveformParam, static_cast<float>(BasicSynthPatches::all[0].waveform));
+
+    for (auto* param : { volumeParam, attackParam, decayParam, sustainParam,
+                         releaseParam, filterCutoffParam, filterResonanceParam })
+        setShownValue(*param, stream.readFloat());
 }
 
 //==============================================================================

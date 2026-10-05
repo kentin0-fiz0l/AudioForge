@@ -94,6 +94,9 @@ float SynthVoice::processSample(double sampleRate,
     float modulatedCutoff = filterCutoff * std::pow(2.0f, cutoffMod * 2.0f);
     modulatedCutoff = std::max(20.0f, std::min(20000.0f, modulatedCutoff));
 
+    // The Waveform control sets the main oscillator, the only one enabled
+    oscillatorBank.setWaveform(OscillatorBank::OSC_1, waveform);
+
     // Generate sample from oscillator bank (automatically mixes all enabled oscillators)
     float sample = oscillatorBank.getNextSample();
 
