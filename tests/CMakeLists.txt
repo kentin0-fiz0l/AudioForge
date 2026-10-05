@@ -35,6 +35,7 @@ add_executable(TestRunner
     Plugins/SpectralProcessorTests.cpp
     Plugins/HiHatEngineTests.cpp
     Plugins/FreezeFXTests.cpp
+    Plugins/DrumSynthTests.cpp
     Integration/PluginIntegrationTests.cpp)
 
 # Link JUCE libraries
@@ -113,7 +114,8 @@ target_sources(TestRunner PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/../midi/MIDILearnManager.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../shared/preset/PresetManager.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../shared/preset/PresetBrowser.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/HiHat/Source/HiHatEngine.cpp)
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/HiHat/Source/HiHatEngine.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/DrumSynth/Source/HiHatModule.cpp)
 
 # Compiler definitions
 target_compile_definitions(TestRunner PUBLIC

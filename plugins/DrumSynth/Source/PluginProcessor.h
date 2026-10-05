@@ -6,6 +6,7 @@
 #include "KickModule.h"
 #include "SnareModule.h"
 #include "HiHatModule.h"
+#include "DrumNotes.h"
 
 /**
  * DrumSynth Processor
@@ -49,11 +50,6 @@ public:
     juce::AudioProcessorValueTreeState& getAPVTS() { return apvts; }
     AudioForge::MIDILearnManager& getMIDILearnManager() { return midiLearnManager_; }
     AudioForge::PresetManager& getPresetManager() { return presetManager_; }
-
-    // MIDI note numbers for drum triggers
-    static constexpr int KICK_NOTE = 36;   // C1
-    static constexpr int SNARE_NOTE = 38;  // D1
-    static constexpr int HIHAT_NOTE = 42;  // F#1
 
 private:
     juce::AudioProcessorValueTreeState apvts;
