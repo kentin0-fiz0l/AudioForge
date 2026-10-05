@@ -99,6 +99,10 @@ jobs:
             --ignore-errors inconsistent,corrupt,format
 
       - name: Upload coverage to Codecov
+        # The report is built and checked above. Sending it to Codecov is a
+        # courtesy, and an outage there must not fail a required check:
+        # fail_ci_if_error does not cover the action failing to start.
+        continue-on-error: true
         uses: codecov/codecov-action@v4
         with:
           files: tests/coverage/coverage_filtered.info
