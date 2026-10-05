@@ -45,6 +45,11 @@ private:
     juce::Synthesiser synth_;
     juce::AudioProcessorValueTreeState apvts_;
 
+    // Gain at the end of the previous block, where the next ramp starts.
+    // prepareToPlay sets it; from zero, a host that skips that gets a fade in
+    float outputGain_ = 0.0f;
+    float targetOutputGain() const;
+
     static constexpr const char* PARAM_OSC_MIX = "oscMix";
     static constexpr const char* PARAM_DETUNE = "detune";
     static constexpr const char* PARAM_UNISON_VOICES = "unisonVoices";
@@ -58,6 +63,7 @@ private:
     static constexpr const char* PARAM_RELEASE = "release";
     static constexpr const char* PARAM_CHORUS_DEPTH = "chorusDepth";
     static constexpr const char* PARAM_CHORUS_RATE = "chorusRate";
+    static constexpr const char* PARAM_OUTPUT_LEVEL = "outputLevel";
 
     AudioForge::MIDILearnManager midiLearnManager_;
     AudioForge::PresetManager presetManager_;

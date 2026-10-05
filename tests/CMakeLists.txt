@@ -38,6 +38,7 @@ add_executable(TestRunner
     Plugins/DrumSynthTests.cpp
     Plugins/LimiterTests.cpp
     Plugins/PlateReverbTests.cpp
+    Plugins/OutputLevelTests.cpp
     Integration/PluginIntegrationTests.cpp)
 
 # Link JUCE libraries
@@ -123,7 +124,15 @@ target_sources(TestRunner PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/Limiter/Source/LimiterEngine.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/Limiter/Source/TruePeakDetector.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/PlateReverb/Source/PluginProcessor.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/PlateReverb/Source/PluginEditor.cpp)
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/PlateReverb/Source/PluginEditor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/ElectricPiano/Source/PluginProcessor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/ElectricPiano/Source/PluginEditor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/ElectricPiano/Source/ElectricPianoEngine.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/ElectricPiano/Source/ElectricPianoVoice.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/Polysynth/Source/PluginProcessor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/Polysynth/Source/PluginEditor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/Polysynth/Source/PolysynthEngine.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/Polysynth/Source/PolysynthVoice.cpp)
 
 # Compiler definitions
 target_compile_definitions(TestRunner PUBLIC

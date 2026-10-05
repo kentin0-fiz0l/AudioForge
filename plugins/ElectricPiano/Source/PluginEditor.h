@@ -66,6 +66,11 @@ private:
     juce::Slider reverbSlider_;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> reverbAttachment_;
 
+    // Output
+    juce::Label levelLabel_;
+    juce::Slider levelSlider_;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> levelAttachment_;
+
     // Helper to create rotary sliders
     void setupRotarySlider(juce::Slider& slider);
 
