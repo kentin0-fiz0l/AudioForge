@@ -55,15 +55,17 @@ public:
     //==============================================================================
     // Spectral Processing Callback
     // This function is called after FFT analysis, before IFFT synthesis
-    // Allows external modification of magnitude/phase spectrum
-    using SpectralCallback = std::function<void(std::vector<float>& magnitude,
+    // Allows external modification of magnitude/phase spectrum. Channels are
+    // analysed one after another, so the callback is told whose frame it is.
+    using SpectralCallback = std::function<void(int channel,
+                                                  std::vector<float>& magnitude,
                                                   std::vector<float>& phase)>;
     void setSpectralCallback(SpectralCallback callback) { spectralCallback = callback; }
 
 private:
     //==============================================================================
     // FFT Processing
-    void processFFTFrame(const float* input, float* output);
+    void processFFTFrame(int channel, const float* input, float* output);
     void applyWindow(float* data, int length);
     void computeMagnitudePhase(const float* complexData, int numBins);
     void reconstructComplex(float* complexData, int numBins);

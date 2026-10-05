@@ -123,7 +123,7 @@ void SpectralProcessor::processBlock(juce::AudioBuffer<float>& buffer)
                 channel.outputReadPos = 0;
 
                 // Overlap-add the frame onto what earlier frames left there
-                processFFTFrame(channel.inputFIFO.data(), channel.outputFIFO.data());
+                processFFTFrame(ch, channel.inputFIFO.data(), channel.outputFIFO.data());
 
                 shiftInput(channel);
             }
@@ -176,7 +176,7 @@ void SpectralProcessor::shiftInput(ChannelData& channel)
     channel.inputWritePos = fftSize - hopSize;
 }
 
-void SpectralProcessor::processFFTFrame(const float* input, float* output)
+void SpectralProcessor::processFFTFrame(int channel, const float* input, float* output)
 {
     // 1. Copy input to FFT buffer and apply window. The FFT takes fftSize
     //    real samples and needs the second half of the buffer as workspace.
@@ -197,7 +197,7 @@ void SpectralProcessor::processFFTFrame(const float* input, float* output)
     if (spectralCallback)
     {
         int currentWriteIdx = activeWriteBuffer.load(std::memory_order_acquire);
-        spectralCallback(magnitudeSpectrum[currentWriteIdx], phaseSpectrum[currentWriteIdx]);
+        spectralCallback(channel, magnitudeSpectrum[currentWriteIdx], phaseSpectrum[currentWriteIdx]);
     }
 
     // 5. Reconstruct complex spectrum from magnitude and phase

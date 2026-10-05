@@ -5,7 +5,8 @@
 /**
  * FrozenSpectrum
  *
- * Manages frozen spectral states - captures and stores magnitude/phase spectrum.
+ * Manages frozen spectral states - captures and stores the magnitude spectrum.
+ * The phase of a frozen sound keeps moving, so the processor looks after it.
  * Implements spectral blurring and frequency range selection.
  */
 class FrozenSpectrum
@@ -22,8 +23,16 @@ public:
 
     //==============================================================================
     // Spectrum Capture/Retrieval
-    void captureSpectrum(const std::vector<float>& magnitude, const std::vector<float>& phase);
-    void getSpectrum(std::vector<float>& magnitude, std::vector<float>& phase);
+    // Sizes the buffers, so that capturing does not allocate
+    void prepare(size_t numBins);
+
+    void captureSpectrum(const std::vector<float>& magnitude);
+
+    // The frozen magnitudes with blur and frequency range applied
+    void getSpectrum(std::vector<float>& magnitude);
+
+    // The magnitudes as they were captured, before blur and range
+    const std::vector<float>& getCapturedMagnitude() const { return frozenMagnitude; }
 
     //==============================================================================
     // Processing Parameters
@@ -36,7 +45,7 @@ private:
     //==============================================================================
     // Frozen State
     std::vector<float> frozenMagnitude;
-    std::vector<float> frozenPhase;
+    std::vector<float> blurScratch;
     bool frozen = false;
 
     //==============================================================================

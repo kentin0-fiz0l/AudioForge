@@ -19,6 +19,10 @@ public:
     // Phase Evolution
     void evolvePhase(std::vector<float>& phase, float deltaTime);
 
+    // Start the drift again from a known point, so that a freeze of the
+    // same sound drifts the same way every time it is rendered
+    void restart(juce::int64 seed);
+
     //==============================================================================
     // Parameters
     void setRandomizationAmount(float amount);  // 0-1: how much to randomize
@@ -36,6 +40,7 @@ private:
     //==============================================================================
     // Utility
     float wrapPhase(float phase);
+    void rollIncrements();
 
     //==============================================================================
     // Phase Increment (per bin)

@@ -13,14 +13,7 @@ void PhaseEvolver::evolvePhase(std::vector<float>& phase, float deltaTime)
     {
         phaseIncrement.resize(phase.size());
         phaseAccumulator.resize(phase.size());
-
-        // Initialize with frequency-dependent random increments
-        for (size_t i = 0; i < phaseIncrement.size(); ++i)
-        {
-            // Lower frequencies evolve slower (more natural)
-            float freqFactor = 1.0f / (1.0f + (float)i * 0.01f);
-            phaseIncrement[i] = (random.nextFloat() * 2.0f - 1.0f) * evolutionSpeed * freqFactor;
-        }
+        rollIncrements();
     }
 
     // Evolution modes
@@ -41,6 +34,24 @@ void PhaseEvolver::evolvePhase(std::vector<float>& phase, float deltaTime)
     {
         // Mode 2: Aggressive randomization (high randomization)
         evolvePhaseRandom(phase, timeStep);
+    }
+}
+
+void PhaseEvolver::restart(juce::int64 seed)
+{
+    random.setSeed(seed);
+    std::fill(phaseAccumulator.begin(), phaseAccumulator.end(), 0.0f);
+    rollIncrements();
+}
+
+void PhaseEvolver::rollIncrements()
+{
+    // Frequency-dependent random increments
+    for (size_t i = 0; i < phaseIncrement.size(); ++i)
+    {
+        // Lower frequencies evolve slower (more natural)
+        float freqFactor = 1.0f / (1.0f + (float)i * 0.01f);
+        phaseIncrement[i] = (random.nextFloat() * 2.0f - 1.0f) * evolutionSpeed * freqFactor;
     }
 }
 
@@ -114,12 +125,12 @@ void PhaseEvolver::setRandomizationAmount(float amount)
 
 void PhaseEvolver::setEvolutionSpeed(float speed)
 {
-    evolutionSpeed = juce::jmax(0.0f, speed);
+    speed = juce::jmax(0.0f, speed);
 
-    // Update phase increments with new speed
-    for (size_t i = 0; i < phaseIncrement.size(); ++i)
-    {
-        float freqFactor = 1.0f / (1.0f + (float)i * 0.01f);
-        phaseIncrement[i] = (random.nextFloat() * 2.0f - 1.0f) * evolutionSpeed * freqFactor;
-    }
+    // This is set before every block; only a change needs new increments
+    if (speed == evolutionSpeed)
+        return;
+
+    evolutionSpeed = speed;
+    rollIncrements();
 }
