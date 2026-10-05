@@ -42,14 +42,14 @@ private:
         expectWithinAbsoluteError(AudioForge::DSP::WaveShaping::softClip(0.5f), 0.5f, 0.01f,
                                 "Small signal should pass through mostly unchanged");
 
-        // Test saturation approaching ±1 (soft clip saturates around ±0.75 for input of 3.0)
+        // Above full scale the curve bends over, approaching ±1.5
         float saturatedPos = AudioForge::DSP::WaveShaping::softClip(3.0f);
-        expect(saturatedPos > 0.7f && saturatedPos < 1.0f,
-             "Large positive signal should saturate (0.7-1.0)");
+        expect(saturatedPos > 1.0f && saturatedPos < 1.5f,
+             "Large positive signal should saturate (1.0-1.5)");
 
         float saturatedNeg = AudioForge::DSP::WaveShaping::softClip(-3.0f);
-        expect(saturatedNeg < -0.7f && saturatedNeg > -1.0f,
-             "Large negative signal should saturate (-1.0 to -0.7)");
+        expect(saturatedNeg < -1.0f && saturatedNeg > -1.5f,
+             "Large negative signal should saturate (-1.5 to -1.0)");
 
         // Test symmetry
         expectWithinAbsoluteError(

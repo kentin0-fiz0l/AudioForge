@@ -120,6 +120,9 @@ void WaveShaperAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
     *toneFilter.state = *juce::dsp::IIR::Coefficients<float>::makeLowPass(
         currentSampleRate, cutoffFreq, 0.707f);
 
+    // Tone fully open bypasses the filter
+    const bool toneOpen = tone >= 1.0f;
+
     // Process audio
     const int numSamples = buffer.getNumSamples();
 
@@ -162,7 +165,12 @@ void WaveShaperAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
     // Apply tone filter
     juce::dsp::AudioBlock<float> block(buffer);
     juce::dsp::ProcessContextReplacing<float> context(block);
+
+    // A bypassed filter still follows the signal, so it is ready when Tone
+    // comes back down
+    context.isBypassed = toneOpen;
     toneFilter.process(context);
+    context.isBypassed = false;
 
     // Apply DC blocker
     dcBlocker.process(context);

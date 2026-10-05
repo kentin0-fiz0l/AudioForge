@@ -4,6 +4,7 @@
 
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
+#include "../../../shared/dsp/ReverbLevels.h"
 
 // Bass synthesizer voice with filter
 class BassSynthVoice : public juce::SynthesiserVoice
@@ -177,8 +178,9 @@ void BassLineProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
     juce::dsp::Reverb::Parameters reverbParams;
     reverbParams.roomSize = 0.5f;
     reverbParams.damping = 0.5f;
-    reverbParams.wetLevel = reverbMix_;
-    reverbParams.dryLevel = 1.0f - reverbMix_;
+    const auto reverbLevels = AudioForge::DSP::reverbLevelsForMix(reverbMix_);
+    reverbParams.wetLevel = reverbLevels.wet;
+    reverbParams.dryLevel = reverbLevels.dry;
     reverb_.setParameters(reverbParams);
 }
 
@@ -285,8 +287,9 @@ void BassLineProcessor::processBlock (juce::AudioBuffer<float>& buffer,
         juce::dsp::Reverb::Parameters params;
         params.roomSize = 0.5f;
         params.damping = 0.5f;
-        params.wetLevel = reverbMix_;
-        params.dryLevel = 1.0f - reverbMix_;
+        const auto reverbLevels = AudioForge::DSP::reverbLevelsForMix(reverbMix_);
+        params.wetLevel = reverbLevels.wet;
+        params.dryLevel = reverbLevels.dry;
         reverb_.setParameters(params);
 
         reverb_.process(context);

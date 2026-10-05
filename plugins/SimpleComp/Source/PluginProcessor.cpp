@@ -11,7 +11,7 @@ SimpleCompProcessor::SimpleCompProcessor()
         PARAM_THRESHOLD,
         "Threshold",
         juce::NormalisableRange<float>(-60.0f, 0.0f, 0.1f),
-        -20.0f,  // Default: -20 dB
+        -12.0f,  // Default: -12 dB, which leaves a track at the calibrated level almost untouched
         "dB"));
 
     // Ratio parameter (1:1 to 20:1)

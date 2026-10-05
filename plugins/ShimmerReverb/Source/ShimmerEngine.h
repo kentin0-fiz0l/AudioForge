@@ -2,6 +2,7 @@
 #include <juce_core/juce_core.h>
 #include <juce_dsp/juce_dsp.h>
 #include <vector>
+#include "../../../shared/dsp/ReverbLevels.h"
 
 class ShimmerEngine {
 public:
@@ -18,6 +19,7 @@ private:
     float size_ = 0.5f, damping_ = 0.5f, shimmer_ = 0.5f, feedback_ = 0.3f, mix_ = 0.5f;
     int pitchMode_ = 2; // both
     juce::dsp::Reverb reverb_;
+    juce::AudioBuffer<float> dryBuffer_;
     std::vector<float> pitchBuffer_[2];
     int pitchWritePos_ = 0;
     float pitchPhase_ = 0.0f;

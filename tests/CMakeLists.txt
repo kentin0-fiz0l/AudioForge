@@ -40,6 +40,7 @@ add_executable(TestRunner
     Plugins/LimiterTests.cpp
     Plugins/PlateReverbTests.cpp
     Plugins/OutputLevelTests.cpp
+    Plugins/EffectDefaultLevelTests.cpp
     Integration/PluginIntegrationTests.cpp)
 
 # Link JUCE libraries
@@ -133,7 +134,11 @@ target_sources(TestRunner PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/Polysynth/Source/PluginProcessor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/Polysynth/Source/PluginEditor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/Polysynth/Source/PolysynthEngine.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/Polysynth/Source/PolysynthVoice.cpp)
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/Polysynth/Source/PolysynthVoice.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/ShimmerReverb/Source/ShimmerEngine.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/VintageCompressor/Source/PluginProcessor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/VintageCompressor/Source/PluginEditor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/VintageCompressor/Source/CompressorEngine.cpp)
 
 # Compiler definitions
 target_compile_definitions(TestRunner PUBLIC
