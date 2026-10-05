@@ -331,6 +331,24 @@ class GenerationTests(AIProducerTestCase):
                 self.script.generate_track(genre)
                 self.assertEqual(self.kick_steps_in_first_bar(), kicks)
 
+    def test_house_has_a_clap_on_two_and_four(self):
+        self.script.generate_track("house")
+        drums = self.clips_by_track()["AI Drums"]
+
+        def steps(pitch):
+            return sorted(round(start / 0.25) for note_pitch, start, *_ in drums.notes
+                          if note_pitch == pitch and start < 4.0)
+
+        self.assertEqual(steps(39), [4, 12], "D#1 is the clap")
+        self.assertEqual(steps(38), [], "The clap takes the snare's place in house")
+
+    def test_other_genres_keep_their_snare(self):
+        self.script.generate_track("techno")
+        drums = self.clips_by_track()["AI Drums"]
+
+        self.assertTrue(any(pitch == 38 for pitch, *_ in drums.notes))
+        self.assertFalse(any(pitch == 39 for pitch, *_ in drums.notes))
+
     def test_unknown_genre_falls_back_to_house(self):
         self.script.generate_track("polka")
         self.assert_no_failures_logged()

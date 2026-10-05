@@ -48,6 +48,11 @@ class MIDIClipGenerator:
                 time = bar_start + (step * 0.25)
                 notes.append((MusicTheory.SNARE, time, 0.1, 90, False))
 
+            # Clap, in the styles that have one
+            for step in pattern.get('clap', []):
+                time = bar_start + (step * 0.25)
+                notes.append((MusicTheory.CLAP, time, 0.1, 95, False))
+
             # Closed hi-hat
             for step in pattern['hat_closed']:
                 time = bar_start + (step * 0.25)

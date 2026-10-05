@@ -7,6 +7,7 @@ class MusicTheory:
     # MIDI note numbers for drums (General MIDI standard)
     KICK = 36
     SNARE = 38
+    CLAP = 39
     CLOSED_HAT = 42
     OPEN_HAT = 46
     CRASH = 49
@@ -76,7 +77,8 @@ class MusicTheory:
         patterns = {
             'house': {
                 'kick': [0, 4, 8, 12],              # Four on floor
-                'snare': [4, 12],                    # 2 and 4
+                'snare': [],                         # The clap takes its place
+                'clap': [4, 12],                     # 2 and 4
                 'hat_closed': [0, 2, 4, 6, 8, 10, 12, 14],  # 8ths
                 'hat_open': [6, 14],                 # Accents
             },

@@ -79,6 +79,16 @@ juce::AudioProcessorValueTreeState::ParameterLayout PluginProcessor::createParam
         "hihatClick", "HiHat Click",
         juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f), 0.5f));
 
+    // Clap parameters. Added last, so the parameters before them keep
+    // their positions.
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        "clapTone", "Clap Tone",
+        juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f), 0.5f));
+
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        "clapDecay", "Clap Decay",
+        juce::NormalisableRange<float>(0.05f, 0.6f, 0.01f), 0.2f));
+
     return layout;
 }
 
@@ -112,25 +122,6 @@ void PluginProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiB
     // Clear output buffer
     buffer.clear();
 
-    // Process MIDI events
-    for (const auto metadata : midiMessages)
-    {
-        auto message = metadata.getMessage();
-
-        if (message.isNoteOn())
-        {
-            // Route to appropriate drum module
-            switch (drumForNote(message.getNoteNumber()))
-            {
-                case Drum::kick:      kickModule.trigger(); break;
-                case Drum::snare:     snareModule.trigger(); break;
-                case Drum::closedHat: hihatModule.trigger(false); break;
-                case Drum::openHat:   hihatModule.trigger(true); break;
-                case Drum::none:      break;
-            }
-        }
-    }
-
     // Get parameters
     float kickPitch = *apvts.getRawParameterValue("kickPitch");
     float kickDecay = *apvts.getRawParameterValue("kickDecay");
@@ -149,23 +140,37 @@ void PluginProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiB
     float hihatTone = *apvts.getRawParameterValue("hihatTone");
     float hihatClick = *apvts.getRawParameterValue("hihatClick");
 
+    float clapTone = *apvts.getRawParameterValue("clapTone");
+    float clapDecay = *apvts.getRawParameterValue("clapDecay");
+
     // Process audio
     auto* channelDataL = buffer.getWritePointer(0);
     auto* channelDataR = buffer.getNumChannels() > 1 ? buffer.getWritePointer(1) : nullptr;
 
+    // Notes are played at their own positions in the block. Triggering
+    // them all at its start put every hit up to a block early, which at
+    // 512 samples is 10 ms of unsteady timing.
+    auto nextNote = midiMessages.cbegin();
+    const auto lastNote = midiMessages.cend();
+
     for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
     {
+        for (; nextNote != lastNote && (*nextNote).samplePosition <= sample; ++nextNote)
+            triggerDrum((*nextNote).getMessage());
+
         float outputSample = 0.0f;
 
         // Process each drum module
-        outputSample += kickModule.processSample(getSampleRate(), kickPitch, kickDecay,
-                                                kickClick, kickTone, kickDrive);
+        outputSample += kickLevel * kickModule.processSample(getSampleRate(), kickPitch, kickDecay,
+                                                             kickClick, kickTone, kickDrive);
 
-        outputSample += snareModule.processSample(getSampleRate(), snareTune, snareSnap,
-                                                 snareTone, snareDecay, snareMix);
+        outputSample += snareLevel * snareModule.processSample(getSampleRate(), snareTune, snareSnap,
+                                                               snareTone, snareDecay, snareMix);
 
-        outputSample += hihatModule.processSample(getSampleRate(), hihatTune, hihatDecay,
-                                                  hihatTone, hihatClick);
+        outputSample += hihatLevel * hihatModule.processSample(getSampleRate(), hihatTune, hihatDecay,
+                                                               hihatTone, hihatClick);
+
+        outputSample += clapLevel * clapModule.processSample(getSampleRate(), clapTone, clapDecay);
 
         // Write to output (mono -> stereo if needed)
         channelDataL[sample] = outputSample;
@@ -173,7 +178,30 @@ void PluginProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiB
             channelDataR[sample] = outputSample;
     }
 
+    // A note placed past the end of the block is still played, a moment early
+    for (; nextNote != lastNote; ++nextNote)
+        triggerDrum((*nextNote).getMessage());
+
     buffer.applyGain(outputTrim);
+}
+
+void PluginProcessor::triggerDrum(const juce::MidiMessage& message)
+{
+    if (! message.isNoteOn())
+        return;
+
+    // A hit plays as hard as it is struck: half velocity, half the level
+    const float level = message.getFloatVelocity();
+
+    switch (drumForNote(message.getNoteNumber()))
+    {
+        case Drum::kick:      kickLevel = level;  kickModule.trigger(); break;
+        case Drum::snare:     snareLevel = level; snareModule.trigger(); break;
+        case Drum::closedHat: hihatLevel = level; hihatModule.trigger(false); break;
+        case Drum::openHat:   hihatLevel = level; hihatModule.trigger(true); break;
+        case Drum::clap:      clapLevel = level;  clapModule.trigger(); break;
+        case Drum::none:      break;
+    }
 }
 
 juce::AudioProcessorEditor* PluginProcessor::createEditor()
@@ -250,7 +278,9 @@ void PluginProcessor::setStateInformation(const void* data, int sizeInBytes)
             apvts.replaceState(juce::ValueTree::fromXml(*xmlState));
 }
 
+#ifndef AUDIOFORGE_TESTS
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
     return new PluginProcessor();
 }
+#endif

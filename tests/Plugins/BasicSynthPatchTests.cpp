@@ -231,7 +231,7 @@ private:
         {
             float loudest = 0.0f;
 
-            for (int note : { 36, 38, 42, 46, 48, 60, 72 })
+            for (int note : { 36, 38, 39, 42, 46, 48, 60, 72 })
             {
                 BasicSynthProcessor processor;
                 processor.setCurrentProgram(program);

@@ -221,7 +221,7 @@ namespace
             int loudestNote = -1;
 
             // Drum instruments answer particular notes; pitched ones answer all
-            for (int note : { 36, 38, 42, 46, 48, 60, 72 })
+            for (int note : { 36, 38, 39, 42, 46, 48, 60, 72 })
             {
                 const float peak = typical({ note });
                 if (peak > loudestNotePeak)

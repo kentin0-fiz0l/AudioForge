@@ -121,7 +121,7 @@ The script loads an instrument onto each track it creates, and onto a template t
 
 ### Track 1: AI Drums
 - Four-on-floor kick (every beat)
-- Snare/clap on 2 and 4
+- Clap on 2 and 4 in house; a snare in the other styles
 - 8th-note hi-hats
 - 72 bars
 

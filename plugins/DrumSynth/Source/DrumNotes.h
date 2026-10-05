@@ -4,8 +4,8 @@
  * Which drum a MIDI note plays.
  *
  * Follows the General MIDI drum map, so drum clips written for other
- * instruments work here: C1 kick, D1 snare, F#1 closed hat, A#1 open hat.
- * The pedal hat (G#1) plays the closed hat.
+ * instruments work here: C1 kick, D1 snare, D#1 clap, F#1 closed hat,
+ * A#1 open hat. The pedal hat (G#1) plays the closed hat.
  */
 enum class Drum
 {
@@ -13,7 +13,8 @@ enum class Drum
     kick,
     snare,
     closedHat,
-    openHat
+    openHat,
+    clap
 };
 
 inline Drum drumForNote(int note)
@@ -22,6 +23,7 @@ inline Drum drumForNote(int note)
     {
         case 36: return Drum::kick;
         case 38: return Drum::snare;
+        case 39: return Drum::clap;
         case 42: return Drum::closedHat;
         case 44: return Drum::closedHat;
         case 46: return Drum::openHat;

@@ -25,6 +25,10 @@ PluginEditor::PluginEditor(PluginProcessor& p)
     setupSlider(hihatToneSlider, hihatToneLabel, "Tone", hihatToneAttachment, "hihatTone");
     setupSlider(hihatClickSlider, hihatClickLabel, "Click", hihatClickAttachment, "hihatClick");
 
+    // Clap controls
+    setupSlider(clapToneSlider, clapToneLabel, "Tone", clapToneAttachment, "clapTone");
+    setupSlider(clapDecaySlider, clapDecayLabel, "Decay", clapDecayAttachment, "clapDecay");
+
     setSize(900, 450);
 
     // Preset browser
@@ -65,40 +69,47 @@ void PluginEditor::paint(juce::Graphics& g)
     // Section backgrounds
     auto kickArea = juce::Rectangle<int>(20, 70, 440, 180);
     auto snareArea = juce::Rectangle<int>(480, 70, 400, 180);
-    auto hihatArea = juce::Rectangle<int>(220, 270, 460, 160);
+    auto hihatArea = juce::Rectangle<int>(20, 270, 580, 160);
+    auto clapArea = juce::Rectangle<int>(620, 270, 260, 160);
 
     g.setColour(juce::Colour(0xff2a2a2a));
     g.fillRoundedRectangle(kickArea.toFloat(), 8.0f);
     g.fillRoundedRectangle(snareArea.toFloat(), 8.0f);
     g.fillRoundedRectangle(hihatArea.toFloat(), 8.0f);
+    g.fillRoundedRectangle(clapArea.toFloat(), 8.0f);
 
     // Section labels with MIDI note info
     g.setColour(juce::Colours::lightblue);
     g.setFont(18.0f);
     g.drawText("Kick (C1)", kickArea.getX(), kickArea.getY() + 5, kickArea.getWidth(), 25, juce::Justification::centred);
     g.drawText("Snare (D1)", snareArea.getX(), snareArea.getY() + 5, snareArea.getWidth(), 25, juce::Justification::centred);
-    g.drawText("Hi-Hat (F#1)", hihatArea.getX(), hihatArea.getY() + 5, hihatArea.getWidth(), 25, juce::Justification::centred);
+    g.drawText("Hi-Hat (F#1 closed, A#1 open)", hihatArea.getX(), hihatArea.getY() + 5, hihatArea.getWidth(), 25, juce::Justification::centred);
+    g.drawText("Clap (D#1)", clapArea.getX(), clapArea.getY() + 5, clapArea.getWidth(), 25, juce::Justification::centred);
 }
 
 void PluginEditor::resized()
 {
     // Kick section (5 controls)
-    kickPitchSlider.setBounds(40, 120, 80, 110);
-    kickDecaySlider.setBounds(135, 120, 80, 110);
-    kickClickSlider.setBounds(230, 120, 80, 110);
-    kickToneSlider.setBounds(325, 120, 80, 110);
-    kickDriveSlider.setBounds(420, 120, 80, 110);
+    kickPitchSlider.setBounds(28, 120, 80, 110);
+    kickDecaySlider.setBounds(114, 120, 80, 110);
+    kickClickSlider.setBounds(200, 120, 80, 110);
+    kickToneSlider.setBounds(286, 120, 80, 110);
+    kickDriveSlider.setBounds(372, 120, 80, 110);
 
     // Snare section (5 controls)
-    snareTuneSlider.setBounds(500, 120, 70, 110);
-    snareSnapSlider.setBounds(585, 120, 70, 110);
-    snareToneSlider.setBounds(670, 120, 70, 110);
-    snareDecaySlider.setBounds(755, 120, 70, 110);
-    snareMixSlider.setBounds(840, 120, 70, 110);
+    snareTuneSlider.setBounds(486, 120, 72, 110);
+    snareSnapSlider.setBounds(564, 120, 72, 110);
+    snareToneSlider.setBounds(642, 120, 72, 110);
+    snareDecaySlider.setBounds(720, 120, 72, 110);
+    snareMixSlider.setBounds(798, 120, 72, 110);
 
     // Hi-Hat section (4 controls)
-    hihatTuneSlider.setBounds(260, 320, 90, 90);
-    hihatDecaySlider.setBounds(370, 320, 90, 90);
-    hihatToneSlider.setBounds(480, 320, 90, 90);
-    hihatClickSlider.setBounds(590, 320, 90, 90);
+    hihatTuneSlider.setBounds(95, 320, 90, 90);
+    hihatDecaySlider.setBounds(210, 320, 90, 90);
+    hihatToneSlider.setBounds(325, 320, 90, 90);
+    hihatClickSlider.setBounds(440, 320, 90, 90);
+
+    // Clap section, to its right
+    clapToneSlider.setBounds(650, 320, 90, 90);
+    clapDecaySlider.setBounds(760, 320, 90, 90);
 }

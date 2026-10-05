@@ -123,6 +123,11 @@ target_sources(TestRunner PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/../shared/preset/PresetBrowser.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/HiHat/Source/HiHatEngine.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/DrumSynth/Source/HiHatModule.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/DrumSynth/Source/KickModule.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/DrumSynth/Source/SnareModule.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/DrumSynth/Source/ClapModule.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/DrumSynth/Source/PluginProcessor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/DrumSynth/Source/PluginEditor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/Limiter/Source/PluginProcessor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/Limiter/Source/PluginEditor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/Limiter/Source/LimiterEngine.cpp
