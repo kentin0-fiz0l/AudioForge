@@ -74,6 +74,10 @@ bool ClassicMonosynthProcessor::isBusesLayoutSupported(const BusesLayout& layout
         || layouts.getMainOutputChannelSet() == juce::AudioChannelSet::stereo();
 }
 
+// Output trim: puts the loudest single full-velocity note at the default settings at
+// about -9 dBFS (it was -21.7). Recalibrate with StressHost --levels; see tools/stress-host/README.md.
+static constexpr float outputTrim = 4.315f;  // +12.7 dB
+
 void ClassicMonosynthProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     juce::ScopedNoDenormals noDenormals;
@@ -83,6 +87,8 @@ void ClassicMonosynthProcessor::processBlock(juce::AudioBuffer<float>& buffer, j
 
     updateVoiceParameters();
     synth_.renderNextBlock(buffer, midiMessages, 0, buffer.getNumSamples());
+
+    buffer.applyGain(outputTrim);
 }
 
 void ClassicMonosynthProcessor::updateVoiceParameters()

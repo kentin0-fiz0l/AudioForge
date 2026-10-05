@@ -46,6 +46,10 @@ void FMProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
             voice->prepareToPlay(sampleRate, samplesPerBlock);
 }
 
+// Output trim: puts the loudest single full-velocity note at the default settings at
+// about -9 dBFS (it was -15.2). Recalibrate with StressHost --levels; see tools/stress-host/README.md.
+static constexpr float outputTrim = 2.042f;  // +6.2 dB
+
 void FMProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     // Process MIDI learn
@@ -55,6 +59,8 @@ void FMProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffe
     buffer.clear();
     updateVoiceParameters();
     synth_.renderNextBlock(buffer, midiMessages, 0, buffer.getNumSamples());
+
+    buffer.applyGain(outputTrim);
 }
 
 void FMProcessor::updateVoiceParameters()

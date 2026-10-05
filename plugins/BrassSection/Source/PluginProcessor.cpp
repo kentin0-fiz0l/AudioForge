@@ -81,6 +81,10 @@ bool BrassSectionProcessor::isBusesLayoutSupported(const BusesLayout& layouts) c
     return true;
 }
 
+// Output trim: puts the loudest single full-velocity note at the default settings at
+// about -9 dBFS (it was -3.4). Recalibrate with StressHost --levels; see tools/stress-host/README.md.
+static constexpr float outputTrim = 0.525f;  // -5.6 dB
+
 void BrassSectionProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     juce::ScopedNoDenormals noDenormals;
@@ -90,6 +94,8 @@ void BrassSectionProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
 
     updateVoiceParameters();
     synth_.renderNextBlock(buffer, midiMessages, 0, buffer.getNumSamples());
+
+    buffer.applyGain(outputTrim);
 }
 
 void BrassSectionProcessor::updateVoiceParameters()

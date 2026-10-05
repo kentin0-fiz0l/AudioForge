@@ -38,6 +38,10 @@ void SnareProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
             voice->prepareToPlay(sampleRate, samplesPerBlock);
 }
 
+// Output trim: puts the loudest single full-velocity note at the default settings at
+// about -9 dBFS (it was -6.0). Recalibrate with StressHost --levels; see tools/stress-host/README.md.
+static constexpr float outputTrim = 0.708f;  // -3.0 dB
+
 void SnareProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     for (const auto metadata : midiMessages)
@@ -45,6 +49,8 @@ void SnareProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBu
     buffer.clear();
     updateVoiceParameters();
     synth_.renderNextBlock(buffer, midiMessages, 0, buffer.getNumSamples());
+
+    buffer.applyGain(outputTrim);
 }
 
 void SnareProcessor::updateVoiceParameters()

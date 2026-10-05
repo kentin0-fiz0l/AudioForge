@@ -6,11 +6,21 @@
 // feeding noise. Reports any non-finite output and the loudest peak seen.
 //
 // Usage: StressHost [--max-peak <level>] <plugin.vst3> [more plugins...]
+//        StressHost --levels [--level-range <low dBFS> <high dBFS>] <plugin.vst3> [more plugins...]
+//
+// With --levels it does not stress anything. It reports how loud each
+// instrument is at its default settings, and with --level-range fails any
+// whose loudest single note is outside the range.
+//
+// Options apply to the plugins named after them, so put them first.
 
 #include <juce_audio_processors/juce_audio_processors.h>
+#include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
+#include <vector>
 
 namespace
 {
@@ -75,9 +85,9 @@ namespace
         return parts.joinIntoString(", ");
     }
 
-    // Plays a three-note chord at full velocity for a second, with noise on
+    // Plays the notes together at full velocity for a second, with noise on
     // any audio inputs, then releases and lets the plugin ring out.
-    RunResult run(juce::AudioProcessor& plugin, double sampleRate)
+    RunResult run(juce::AudioProcessor& plugin, double sampleRate, const std::vector<int>& notes = { 36, 60, 96 })
     {
         RunResult result;
 
@@ -95,11 +105,11 @@ namespace
             juce::MidiBuffer midi;
 
             if (block == 0)
-                for (int note : { 36, 60, 96 })
+                for (int note : notes)
                     midi.addEvent(juce::MidiMessage::noteOn(1, note, (juce::uint8) 127), 0);
 
             if (block == noteOffBlock)
-                for (int note : { 36, 60, 96 })
+                for (int note : notes)
                     midi.addEvent(juce::MidiMessage::noteOff(1, note), 0);
 
             buffer.clear();
@@ -125,6 +135,90 @@ namespace
         }
 
         return result;
+    }
+
+    juce::String decibels(float peak)
+    {
+        return peak > 0.0f ? juce::String(juce::Decibels::gainToDecibels(peak), 1) + " dBFS" : juce::String("silent");
+    }
+
+    struct LevelRange
+    {
+        float low = 0.0f, high = 0.0f; // dBFS
+        bool given = false;
+    };
+
+    // How loud an instrument is at its default settings: the loudest single
+    // full-velocity note, and the loudest of a chord and a drum kit's worth
+    // of notes played together. Returns false if the single note is outside
+    // the range. Effects are reported as such and skipped, and so are
+    // instruments that stay silent: a pattern generator waiting for the
+    // transport, or a sampler with nothing loaded.
+    bool reportLevels(const juce::String& name, juce::AudioPluginFormatManager& formatManager,
+                      const juce::PluginDescription& description, double sampleRate, const LevelRange& range)
+    {
+        if (! description.isInstrument)
+        {
+            std::cout << name << "\tEFFECT" << std::endl;
+            return true;
+        }
+
+        // A new instance for every measurement, so the tail of one note
+        // cannot add to the next
+        const auto measure = [&] (const std::vector<int>& notes)
+        {
+            juce::String error;
+            auto plugin = formatManager.createPluginInstance(description, sampleRate, blockSize, error);
+            if (plugin == nullptr)
+                return 0.0f;
+
+            plugin->setRateAndBufferSizeDetails(sampleRate, blockSize);
+            plugin->prepareToPlay(sampleRate, blockSize);
+            const float peak = run(*plugin, sampleRate, notes).peak;
+            plugin->releaseResources();
+            return peak;
+        };
+
+        // Some instruments are excited by random noise, and one note can
+        // differ from the next by several dB. The median of a few is steady.
+        const auto typical = [&] (const std::vector<int>& notes)
+        {
+            std::array<float, 5> peaks;
+            for (auto& peak : peaks)
+                peak = measure(notes);
+
+            std::sort(peaks.begin(), peaks.end());
+            return peaks[peaks.size() / 2];
+        };
+
+        float loudestNotePeak = 0.0f;
+        int loudestNote = -1;
+
+        // Drum instruments answer particular notes; pitched ones answer all
+        for (int note : { 36, 38, 42, 46, 48, 60, 72 })
+        {
+            const float peak = typical({ note });
+            if (peak > loudestNotePeak)
+            {
+                loudestNotePeak = peak;
+                loudestNote = note;
+            }
+        }
+
+        if (loudestNote < 0)
+        {
+            std::cout << name << "\tSILENT" << std::endl;
+            return true;
+        }
+
+        const float together = juce::jmax(measure({ 48, 60, 64, 67 }), measure({ 36, 38, 42 }));
+        const float level = juce::Decibels::gainToDecibels(loudestNotePeak);
+        const bool inRange = ! range.given || (level >= range.low && level <= range.high);
+
+        std::cout << name << "\t" << (inRange ? "LEVEL" : "LEVEL-OUT-OF-RANGE")
+                  << "\tnote " << loudestNote << "\t" << decibels(loudestNotePeak)
+                  << "\ttogether\t" << decibels(together) << std::endl;
+        return inRange;
     }
 
     juce::Array<Config> makeConfigs(int numParams)
@@ -167,6 +261,8 @@ int main(int argc, char* argv[])
     auto* format = formatManager.getFormat(0);
 
     Limits limits;
+    bool levelsOnly = false;
+    LevelRange levelRange;
     int numFailed = 0;
 
     for (int arg = 1; arg < argc; ++arg)
@@ -179,6 +275,20 @@ int main(int argc, char* argv[])
             continue;
         }
 
+        if (path == "--levels")
+        {
+            levelsOnly = true;
+            continue;
+        }
+
+        if (path == "--level-range" && arg + 2 < argc)
+        {
+            levelRange.low = juce::String(argv[++arg]).getFloatValue();
+            levelRange.high = juce::String(argv[++arg]).getFloatValue();
+            levelRange.given = true;
+            continue;
+        }
+
         const auto name = juce::File(path).getFileNameWithoutExtension();
 
         juce::OwnedArray<juce::PluginDescription> descriptions;
@@ -188,6 +298,14 @@ int main(int argc, char* argv[])
         {
             std::cout << name << "\tLOAD-FAILED\tno plugin found in bundle" << std::endl;
             ++numFailed;
+            continue;
+        }
+
+        if (levelsOnly)
+        {
+            if (! reportLevels(name, formatManager, *descriptions[0], 48000.0, levelRange))
+                ++numFailed;
+
             continue;
         }
 

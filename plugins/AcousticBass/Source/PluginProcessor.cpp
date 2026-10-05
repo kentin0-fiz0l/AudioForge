@@ -50,6 +50,10 @@ bool AcousticBassProcessor::isBusesLayoutSupported(const BusesLayout& layouts) c
         || layouts.getMainOutputChannelSet() == juce::AudioChannelSet::stereo();
 }
 
+// Output trim: puts the loudest single full-velocity note at the default settings at
+// about -9 dBFS (it was -3.7). Recalibrate with StressHost --levels; see tools/stress-host/README.md.
+static constexpr float outputTrim = 0.543f;  // -5.3 dB
+
 void AcousticBassProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     juce::ScopedNoDenormals noDenormals;
@@ -59,6 +63,8 @@ void AcousticBassProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
 
     updateVoiceParameters();
     synth_.renderNextBlock(buffer, midiMessages, 0, buffer.getNumSamples());
+
+    buffer.applyGain(outputTrim);
 }
 
 void AcousticBassProcessor::updateVoiceParameters()
