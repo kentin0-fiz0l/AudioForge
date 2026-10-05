@@ -178,12 +178,17 @@ class FakeTrack:
             panning=FakeParameter("Pan", 0.0, -1.0, 1.0),
             sends=[FakeParameter("A", 0.0), FakeParameter("B", 0.0)])
         self.devices = []
+        self.arrangement_clips = []
         self.has_audio_output = True
         self.output_meter_left = 0.0
         self.output_meter_right = 0.0
 
     def delete_device(self, index):
         del self.devices[index]
+
+    def delete_clip(self, clip):
+        # Live's Track.delete_clip takes the clip itself, Session or Arrangement
+        self.arrangement_clips.remove(clip)
 
 
 class FakeBrowserItem:
@@ -829,6 +834,17 @@ class ClipTests(LiveControlTestCase):
 
         self.assertTrue(reply["ok"], reply.get("error"))
         self.assertAlmostEqual(reply["end_marker"], 145.378685, places=4)
+
+    def test_the_timeline_of_a_track_can_be_cleared(self):
+        track = self.song.tracks[1]
+        track.arrangement_clips = [FakeAudioClip("vocals"), FakeAudioClip("vocals")]
+
+        reply = self.ask("/live/clip/clear_arrangement", "AI Bass")
+
+        self.assertEqual(reply["deleted"], 2)
+        self.assertEqual(track.arrangement_clips, [])
+        self.assertEqual(self.ask("/live/clip/clear_arrangement", "AI Bass")["deleted"], 0,
+                         "Clearing an empty timeline is fine")
 
     def test_a_looping_clip_keeps_its_loop(self):
         self.vocals.looping = True

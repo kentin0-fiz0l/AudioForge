@@ -1,6 +1,7 @@
 # Clip Control for AI Producer
-# Describes a Session clip, switches its warping, and moves the start and
-# end of what it plays, driven by OSC commands that send a reply
+# Describes a Session clip, switches its warping, moves the start and end
+# of what it plays, and clears a track's Arrangement, driven by OSC commands
+# that send a reply
 
 import math
 
@@ -20,6 +21,7 @@ class ClipControl:
             '/live/clip/info': self.get_info,
             '/live/clip/set/warping': self.set_warping,
             '/live/clip/set/markers': self.set_markers,
+            '/live/clip/clear_arrangement': self.clear_arrangement,
         }
 
     def handles(self, address):
@@ -122,6 +124,17 @@ class ClipControl:
             raise
 
         return self._describe(clip)
+
+    def clear_arrangement(self, target):
+        """Delete every clip a track has on the Arrangement timeline"""
+        track = self.find_track(target)
+        clips = list(getattr(track, 'arrangement_clips', []))
+
+        for clip in clips:
+            track.delete_clip(clip)
+
+        self.log(f"Cleared {len(clips)} clip(s) from the Arrangement of '{track.name}'")
+        return {'track': track.name, 'deleted': len(clips)}
 
     @staticmethod
     def _set_pair(clip, start_name, end_name, start, end):
