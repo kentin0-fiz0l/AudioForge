@@ -13,7 +13,7 @@ public:
     void trigger(float velocity);
     void release();
     
-    void setTone(float tone) { tone_ = juce::jlimit(0.0f, 1.0f, tone); }
+    void setTone(float tone) { tone_ = juce::jlimit(0.0f, 1.0f, tone); updateFilters(); }
     void setDecay(float decay) { decay_ = juce::jlimit(0.01f, 0.5f, decay); }
     void setMetallic(float metallic) { metallic_ = juce::jlimit(0.0f, 1.0f, metallic); }
     void setOpenness(float openness) { openness_ = juce::jlimit(0.0f, 1.0f, openness); }
@@ -27,6 +27,7 @@ private:
     float envelope_ = 0.0f;
     uint32_t noiseState_ = 54321;
     float bpFilter_[6] = {0};
-    float hpFilter_ = 0.0f;
+    float highPassCoeff_ = 0.0f, lowPassCoeff_ = 0.0f;
     float generateNoise();
+    void updateFilters();
 };

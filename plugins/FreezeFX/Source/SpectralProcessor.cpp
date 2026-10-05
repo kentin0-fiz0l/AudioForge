@@ -16,9 +16,7 @@ void SpectralProcessor::prepare(double newSampleRate, int samplesPerBlock, int n
     for (auto& channel : channelData)
     {
         channel.inputFIFO.resize(fftSize, 0.0f);
-        channel.outputFIFO.resize(fftSize * 2, 0.0f);  // Extra space for overlap
-        channel.inputWritePos = 0;
-        channel.outputReadPos = 0;
+        channel.outputFIFO.resize(fftSize, 0.0f);
     }
 
     reset();
@@ -30,7 +28,9 @@ void SpectralProcessor::reset()
     {
         std::fill(channel.inputFIFO.begin(), channel.inputFIFO.end(), 0.0f);
         std::fill(channel.outputFIFO.begin(), channel.outputFIFO.end(), 0.0f);
-        channel.inputWritePos = 0;
+
+        // New samples fill the last hop of the window; the rest is history
+        channel.inputWritePos = fftSize - hopSize;
         channel.outputReadPos = 0;
     }
 }
@@ -63,28 +63,34 @@ void SpectralProcessor::setFFTSize(int size)
     phaseSpectrum[1].resize(numBins, 0.0f);
 
     // Create window function
-    createHannWindow();
+    createWindow();
 
     // Reallocate channel FIFOs
     for (auto& channel : channelData)
     {
         channel.inputFIFO.resize(fftSize, 0.0f);
-        channel.outputFIFO.resize(fftSize * 2, 0.0f);
+        channel.outputFIFO.resize(fftSize, 0.0f);
     }
+
+    reset();
 }
 
 void SpectralProcessor::setOverlapFactor(int factor)
 {
     overlapFactor = juce::jlimit(2, 8, factor);
     hopSize = fftSize / overlapFactor;
+
+    reset();
 }
 
-void SpectralProcessor::createHannWindow()
+void SpectralProcessor::createWindow()
 {
-    // Hann window: 0.5 * (1 - cos(2*pi*n / (N-1)))
+    // Square root of a periodic Hann window. It is applied before the FFT and
+    // again after the inverse FFT, so each frame is shaped by a full Hann,
+    // and Hann frames overlapped by 2, 4 or 8 sum to a constant.
     for (int i = 0; i < fftSize; ++i)
     {
-        windowBuffer[i] = 0.5f * (1.0f - std::cos(2.0f * juce::MathConstants<float>::pi * i / (fftSize - 1)));
+        windowBuffer[i] = std::sqrt(0.5f * (1.0f - std::cos(2.0f * juce::MathConstants<float>::pi * i / fftSize)));
     }
 }
 
@@ -105,43 +111,83 @@ void SpectralProcessor::processBlock(juce::AudioBuffer<float>& buffer)
             channel.inputFIFO[channel.inputWritePos] = input[i];
             channel.inputWritePos++;
 
-            // When we have enough samples, process FFT frame
-            if (channel.inputWritePos >= hopSize)
+            // A full hop of new samples has arrived: process an FFT frame
+            if (channel.inputWritePos >= fftSize)
             {
-                // Process FFT frame
-                processFFTFrame(channel.inputFIFO.data(), channel.outputFIFO.data() + channel.outputReadPos);
+                // Drop the hop of output already played and make room for
+                // the tail of the new frame
+                std::copy(channel.outputFIFO.begin() + hopSize,
+                         channel.outputFIFO.end(),
+                         channel.outputFIFO.begin());
+                std::fill(channel.outputFIFO.end() - hopSize, channel.outputFIFO.end(), 0.0f);
+                channel.outputReadPos = 0;
 
-                // Shift input FIFO (overlap)
-                std::copy(channel.inputFIFO.begin() + hopSize,
-                         channel.inputFIFO.end(),
-                         channel.inputFIFO.begin());
+                // Overlap-add the frame onto what earlier frames left there
+                processFFTFrame(channel.inputFIFO.data(), channel.outputFIFO.data());
 
-                channel.inputWritePos = fftSize - hopSize;
+                shiftInput(channel);
             }
 
-            // Read output sample from FIFO
+            // Read output sample from FIFO. At most hopSize samples are read
+            // between frames, so this stays inside the buffer.
             output[i] = channel.outputFIFO[channel.outputReadPos];
-            channel.outputFIFO[channel.outputReadPos] = 0.0f;  // Clear for next overlap-add
             channel.outputReadPos++;
-
-            // Wrap output read position
-            if (channel.outputReadPos >= fftSize * 2)
-                channel.outputReadPos = 0;
         }
     }
 }
 
+void SpectralProcessor::pushInput(const juce::AudioBuffer<float>& buffer)
+{
+    const int numSamples = buffer.getNumSamples();
+    const int numCh = juce::jmin(buffer.getNumChannels(), numChannels);
+
+    for (int ch = 0; ch < numCh; ++ch)
+    {
+        auto& channel = channelData[ch];
+        const float* input = buffer.getReadPointer(ch);
+
+        for (int i = 0; i < numSamples; ++i)
+        {
+            channel.inputFIFO[channel.inputWritePos] = input[i];
+            channel.inputWritePos++;
+
+            if (channel.inputWritePos >= fftSize)
+                shiftInput(channel);
+        }
+    }
+}
+
+void SpectralProcessor::clearOutput()
+{
+    for (auto& channel : channelData)
+    {
+        std::fill(channel.outputFIFO.begin(), channel.outputFIFO.end(), 0.0f);
+        channel.outputReadPos = 0;
+    }
+}
+
+void SpectralProcessor::shiftInput(ChannelData& channel)
+{
+    // Drop the oldest hop, leaving room for the next one at the end
+    std::copy(channel.inputFIFO.begin() + hopSize,
+             channel.inputFIFO.end(),
+             channel.inputFIFO.begin());
+
+    channel.inputWritePos = fftSize - hopSize;
+}
+
 void SpectralProcessor::processFFTFrame(const float* input, float* output)
 {
-    // 1. Copy input to FFT buffer and apply window
+    // 1. Copy input to FFT buffer and apply window. The FFT takes fftSize
+    //    real samples and needs the second half of the buffer as workspace.
     for (int i = 0; i < fftSize; ++i)
     {
-        fftBuffer[i * 2] = input[i] * windowBuffer[i];      // Real part
-        fftBuffer[i * 2 + 1] = 0.0f;                        // Imaginary part
+        fftBuffer[i] = input[i] * windowBuffer[i];
+        fftBuffer[fftSize + i] = 0.0f;
     }
 
-    // 2. Forward FFT (time → frequency)
-    forwardFFT->performFrequencyOnlyForwardTransform(fftBuffer.data());
+    // 2. Forward FFT (time → frequency), giving interleaved real/imaginary pairs
+    forwardFFT->performRealOnlyForwardTransform(fftBuffer.data());
 
     // 3. Compute magnitude and phase
     computeMagnitudePhase(fftBuffer.data(), getNumBins());
@@ -157,15 +203,17 @@ void SpectralProcessor::processFFTFrame(const float* input, float* output)
     // 5. Reconstruct complex spectrum from magnitude and phase
     reconstructComplex(fftBuffer.data(), getNumBins());
 
-    // 6. Inverse FFT (frequency → time)
+    // 6. Inverse FFT (frequency → time), leaving fftSize real samples at the
+    //    start of the buffer
     inverseFFT->performRealOnlyInverseTransform(fftBuffer.data());
 
-    // 7. Apply window and overlap-add to output
-    float normalizationFactor = 1.0f / (fftSize * overlapFactor / 4.0f);  // Normalize for overlap-add
+    // 7. Apply window and overlap-add to output. Overlapped Hann frames sum
+    //    to overlapFactor / 2.
+    float normalizationFactor = 2.0f / static_cast<float>(overlapFactor);
 
     for (int i = 0; i < fftSize; ++i)
     {
-        output[i] += fftBuffer[i * 2] * windowBuffer[i] * normalizationFactor;
+        output[i] += fftBuffer[i] * windowBuffer[i] * normalizationFactor;
     }
 }
 
