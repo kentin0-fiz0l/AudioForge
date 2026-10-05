@@ -119,15 +119,15 @@ void PluginProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiB
 
         if (message.isNoteOn())
         {
-            int note = message.getNoteNumber();
-
             // Route to appropriate drum module
-            if (note == KICK_NOTE)
-                kickModule.trigger();
-            else if (note == SNARE_NOTE)
-                snareModule.trigger();
-            else if (note == HIHAT_NOTE)
-                hihatModule.trigger();
+            switch (drumForNote(message.getNoteNumber()))
+            {
+                case Drum::kick:      kickModule.trigger(); break;
+                case Drum::snare:     snareModule.trigger(); break;
+                case Drum::closedHat: hihatModule.trigger(false); break;
+                case Drum::openHat:   hihatModule.trigger(true); break;
+                case Drum::none:      break;
+            }
         }
     }
 

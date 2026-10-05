@@ -5,9 +5,10 @@ HiHatModule::HiHatModule()
 {
 }
 
-void HiHatModule::trigger()
+void HiHatModule::trigger(bool open)
 {
     active = true;
+    playedOpen = open;
     envLevel = 1.0f;
     filterState1 = 0.0f;
     filterState2 = 0.0f;
@@ -29,7 +30,7 @@ float HiHatModule::processSample(double sampleRate, float tune, float decay,
 
     // Update envelope (very fast decay for hi-hat)
     float deltaTime = static_cast<float>(1.0 / sampleRate);
-    float decayRate = 30.0f / decay; // Very fast decay
+    float decayRate = 30.0f / (playedOpen ? decay * openDecayRatio : decay);
     envLevel *= std::exp(-decayRate * deltaTime);
 
     // Stop if envelope is very quiet
@@ -58,6 +59,9 @@ float HiHatModule::processSample(double sampleRate, float tune, float decay,
     float clickEnv = (envLevel > 0.95f) ? (envLevel - 0.95f) * 20.0f : 0.0f;
     float output = filteredNoise * (envLevel + clickEnv * click);
 
+    if (playedOpen)
+        output *= openLevel;
+
     return output * 0.5f; // Scale down to prevent clipping
 }
 
@@ -72,7 +76,8 @@ float HiHatModule::applyHighpassFilter(float input, float cutoff, double sampleR
 {
     // Simple 2-pole highpass filter
     float q = 0.707f; // Butterworth response
-    float w0 = 2.0f * M_PI * cutoff / static_cast<float>(sampleRate);
+    const float pi = 3.14159265358979f; // M_PI is not defined by every compiler
+    float w0 = 2.0f * pi * cutoff / static_cast<float>(sampleRate);
     float alpha = std::sin(w0) / (2.0f * q);
 
     // Coefficients for highpass
