@@ -11,6 +11,8 @@ from .EffectChains import EffectChains
 class AIProducer:
     """AI Producer Remote Script - Generates complete tracks automatically"""
 
+    TRIGGER_NOTE = 60  # C3
+
     def __init__(self, c_instance):
         self.c_instance = c_instance
         self.app = Live.Application.get_application()
@@ -82,6 +84,14 @@ class AIProducer:
     def refresh_state(self):
         """Called when Live refreshes - required method"""
         pass
+
+    def connect_script_instances(self, instanciated_scripts):
+        """Called once all control surface scripts are loaded - required method"""
+        pass
+
+    def can_lock_to_devices(self):
+        """Called by Live to ask whether this script follows a device - required method"""
+        return False
 
     def _on_time_changed(self):
         """Called periodically - we use this to check for triggers"""
@@ -311,46 +321,6 @@ class AIProducer:
         self.log("Press SPACE to play!")
         self.log("=" * 50)
 
-            # Create tracks
-            try:
-                self._create_drum_track(structure)
-                self.log("✓ Drums created")
-            except Exception as e:
-                self.log(f"✗ Drums failed: {str(e)}")
-
-            try:
-                self._create_bass_track(structure)
-                self.log("✓ Bass created")
-            except Exception as e:
-                self.log(f"✗ Bass failed: {str(e)}")
-
-            try:
-                self._create_chord_track(structure)
-                self.log("✓ Chords created")
-            except Exception as e:
-                self.log(f"✗ Chords failed: {str(e)}")
-
-            try:
-                self._create_lead_track(structure)
-                self.log("✓ Lead created")
-            except Exception as e:
-                self.log(f"✗ Lead failed: {str(e)}")
-
-            self.log("=" * 50)
-            self.log(f"COMPLETE! {total_bars} bars, {bpm} BPM")
-            self.log("Press SPACE to play!")
-            self.log("=" * 50)
-
-            # Optionally start playback
-            # self.song.start_playing()
-
-        except Exception as e:
-            self.log("=" * 50)
-            self.log(f"FATAL ERROR: {str(e)}")
-            self.log("=" * 50)
-            import traceback
-            self.log(traceback.format_exc())
-
     def _create_drum_track(self, structure):
         """Create drums track with Drum Rack and MIDI"""
         self.log("Creating drums track...")
@@ -447,14 +417,17 @@ class AIProducer:
     # MIDI CC or Key binding handlers
     def build_midi_map(self, midi_map_handle):
         """Build MIDI mappings - called by Live"""
-        # We can map MIDI notes/CC to trigger generation
-        pass
+        # Live only passes a note to receive_midi if the script asks for it
+        script_handle = self.c_instance.handle()
+        for channel in range(16):
+            Live.MidiMap.forward_midi_note(script_handle, midi_map_handle, channel, self.TRIGGER_NOTE)
 
     def receive_midi(self, midi_bytes):
         """Handle incoming MIDI - can trigger generation"""
-        # Example: Note C3 (MIDI 60) triggers generation
+        # Note C3 (MIDI 60) triggers generation
         if len(midi_bytes) == 3:
             status, note, velocity = midi_bytes
-            if status == 144 and note == 60 and velocity > 0:  # Note On, C3
+            is_note_on = (status & 0xF0) == 0x90  # Note On, any channel
+            if is_note_on and note == self.TRIGGER_NOTE and velocity > 0:
                 self.log("Trigger received! Generating track...")
                 self.generate_track()

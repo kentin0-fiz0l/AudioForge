@@ -47,16 +47,19 @@ Live only scans that folder at startup, so restart Live after installing.
 
 ## How to Use
 
-### Method 1: Direct Trigger (Easiest)
+### Method 1: Trigger Script (Easiest)
 
-We'll add a simple trigger method. For now, use the Python console:
-
-1. In Ableton, open **Preferences → Log**
-2. Check **"Show Log"**
-3. In Terminal, run:
+With Live open and AIProducer active, run the trigger from a terminal. It sends the script an OSC message on UDP port 9000:
 
 ```bash
-# Open Ableton's log to see our messages
+cd ableton/remote-scripts/AIProducer
+python3 trigger_generate.py            # house
+python3 trigger_generate.py techno     # house, techno, dnb, hiphop or ambient
+```
+
+To watch what the script does, follow Live's log:
+
+```bash
 tail -f ~/Library/Preferences/Ableton/Live\ 12.*/Log.txt
 ```
 
@@ -70,7 +73,9 @@ The script logs when it initializes!
    - Control Surface: **AIProducer**
    - Input: **Your MIDI Keyboard**
 
-3. **Press MIDI note C3 (middle C)** → Generates track!
+3. **Press MIDI note C3 (middle C)** → Generates a house track!
+
+The Input has to be set to your keyboard: Live only sends the script notes from its own input port.
 
 ### Method 3: Add Keyboard Shortcut (Advanced)
 
@@ -163,8 +168,12 @@ ls -la ~/Music/Ableton/User\ Library/Remote\ Scripts/AIProducer/
 # Should see:
 # __init__.py
 # AIProducer.py
-# MusicTheory.py
+# DeviceLoader.py
+# EffectChains.py
 # MIDIGenerator.py
+# MusicTheory.py
+# OSCServer.py
+# trigger_generate.py
 # README.md
 ```
 
@@ -180,8 +189,20 @@ Should see: `[AI Producer] initialized!`
 
 ### No tracks created
 - Make sure script is activated in Preferences
-- Check log for errors
-- Try triggering again with MIDI C3
+- Check log for errors. A `RemoteScriptError` when Live starts means the script did not load at all
+- Try triggering again with `trigger_generate.py` or MIDI C3
+
+---
+
+## Tests
+
+The script can be exercised without Live. The tests stand in a small fake for Live's API, load the script the way Live does, and check the tracks, clips and notes it asks for:
+
+```bash
+python3 -m unittest discover -s ableton/tests -v
+```
+
+They show that the script loads and makes sensible calls. They cannot show that Live accepts those calls, so a change still needs trying in Live.
 
 ---
 
@@ -219,7 +240,7 @@ Or use Live's built-in console.
 
 - [ ] AI integration (OpenAI/Claude/Ollama)
 - [ ] Auto-load instruments
-- [ ] More genres (Techno, DnB, Hip-Hop)
+- [x] More genres (Techno, DnB, Hip-Hop, Ambient)
 - [ ] Variation control
 - [ ] Export MIDI files
 - [ ] Humanization

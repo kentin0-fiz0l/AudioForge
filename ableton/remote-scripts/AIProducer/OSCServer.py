@@ -82,6 +82,11 @@ class OSCServer:
                         value = struct.unpack('>f', data[arg_start:arg_start+4])[0]
                         args.append(value)
                         arg_start += 4
+                elif tag == 's':  # null-terminated string, padded to 4 bytes
+                    string_end = data.find(b'\x00', arg_start)
+                    if string_end != -1:
+                        args.append(data[arg_start:string_end].decode('utf-8'))
+                        arg_start = (string_end + 4) & ~3  # skip the null, round up to a multiple of 4
 
             return {'address': address, 'args': args}
 
