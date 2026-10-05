@@ -59,6 +59,10 @@ juce::AudioProcessorValueTreeState::ParameterLayout ElectricPianoProcessor::crea
     params.push_back(std::make_unique<juce::AudioParameterFloat>(
         PARAM_REVERB_MIX, "Reverb Mix", 0.0f, 1.0f, 0.0f));
 
+    // Output. Added last, so the parameters before it keep their positions.
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(
+        PARAM_OUTPUT_LEVEL, "Output Level", juce::NormalisableRange<float>(-24.0f, 12.0f, 0.1f), 0.0f, "dB"));
+
     return { params.begin(), params.end() };
 }
 
@@ -74,6 +78,8 @@ void ElectricPianoProcessor::prepareToPlay(double sampleRate, int samplesPerBloc
             voice->prepareToPlay(sampleRate, samplesPerBlock);
         }
     }
+
+    outputGain_ = targetOutputGain();
 }
 
 void ElectricPianoProcessor::releaseResources()
@@ -109,7 +115,15 @@ void ElectricPianoProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce
     // Render the synthesizer
     synth_.renderNextBlock(buffer, midiMessages, 0, buffer.getNumSamples());
 
-    buffer.applyGain(outputTrim);
+    // Ramp to the new gain across the block, so turning Output Level does not click
+    const float gain = targetOutputGain();
+    buffer.applyGainRamp(0, buffer.getNumSamples(), outputGain_, gain);
+    outputGain_ = gain;
+}
+
+float ElectricPianoProcessor::targetOutputGain() const
+{
+    return outputTrim * juce::Decibels::decibelsToGain(apvts_.getRawParameterValue(PARAM_OUTPUT_LEVEL)->load());
 }
 
 void ElectricPianoProcessor::updateVoiceParameters()
@@ -234,7 +248,9 @@ void ElectricPianoProcessor::setStateInformation(const void* data, int sizeInByt
 }
 
 // This creates new instances of the plugin
+#ifndef AUDIOFORGE_TESTS
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
     return new ElectricPianoProcessor();
 }
+#endif

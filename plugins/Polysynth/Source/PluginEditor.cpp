@@ -31,6 +31,8 @@ PolysynthEditor::PolysynthEditor(PolysynthProcessor& p)
     setupControl(releaseLabel_, "R", releaseSlider_, releaseAttachment_, "release");
     setupControl(chorusDepthLabel_, "Depth", chorusDepthSlider_, chorusDepthAttachment_, "chorusDepth");
     setupControl(chorusRateLabel_, "Rate", chorusRateSlider_, chorusRateAttachment_, "chorusRate");
+    setupControl(levelLabel_, "Level", levelSlider_, levelAttachment_, "outputLevel");
+    levelSlider_.setTextValueSuffix(" dB");
 }
 
 PolysynthEditor::~PolysynthEditor() {}
@@ -53,7 +55,7 @@ void PolysynthEditor::paint(juce::Graphics& g)
     g.drawText("OSCILLATORS & UNISON", 30, 85, 400, 25, juce::Justification::left);
     g.drawText("FILTER", 470, 85, 400, 25, juce::Justification::left);
     g.drawText("ENVELOPE", 30, 305, 400, 25, juce::Justification::left);
-    g.drawText("CHORUS", 470, 305, 400, 25, juce::Justification::left);
+    g.drawText("CHORUS & OUTPUT", 470, 305, 400, 25, juce::Justification::left);
 }
 
 void PolysynthEditor::resized()
@@ -75,6 +77,9 @@ void PolysynthEditor::resized()
 
     chorusDepthLabel_.setBounds(480, 340, knobSize, 20); chorusDepthSlider_.setBounds(480, 365, knobSize, knobSize);
     chorusRateLabel_.setBounds(560, 340, knobSize, 20); chorusRateSlider_.setBounds(560, 365, knobSize, knobSize);
+
+    // Output level, at the far end of the panel, apart from the chorus knobs
+    levelLabel_.setBounds(795, 340, knobSize, 20); levelSlider_.setBounds(795, 365, knobSize, knobSize);
 }
 
 void PolysynthEditor::setupRotarySlider(juce::Slider& slider)

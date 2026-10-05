@@ -86,6 +86,15 @@ ElectricPianoEditor::ElectricPianoEditor(ElectricPianoProcessor& p)
     addAndMakeVisible(reverbSlider_);
     reverbAttachment_ = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
         processor_.getValueTreeState(), "reverbMix", reverbSlider_);
+
+    levelLabel_.setText("Level", juce::dontSendNotification);
+    levelLabel_.setJustificationType(juce::Justification::centred);
+    addAndMakeVisible(levelLabel_);
+    setupRotarySlider(levelSlider_);
+    levelSlider_.setTextValueSuffix(" dB");
+    addAndMakeVisible(levelSlider_);
+    levelAttachment_ = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        processor_.getValueTreeState(), "outputLevel", levelSlider_);
 }
 
 ElectricPianoEditor::~ElectricPianoEditor()
@@ -109,7 +118,7 @@ void ElectricPianoEditor::paint(juce::Graphics& g)
     g.setColour(juce::Colour(0xffcccccc));
 
     g.drawText("TONE", 20, 100, 200, 30, juce::Justification::left);
-    g.drawText("EFFECTS", 400, 100, 280, 30, juce::Justification::left);
+    g.drawText("EFFECTS & OUTPUT", 400, 100, 280, 30, juce::Justification::left);
 
     // Dividing lines
     g.setColour(juce::Colour(0xff555555));
@@ -161,6 +170,10 @@ void ElectricPianoEditor::resized()
 
     reverbLabel_.setBounds(410 + spacing, 280, sliderSize, 20);
     reverbSlider_.setBounds(410 + spacing, 305, sliderSize, sliderSize);
+
+    // Output level, in a third column of its own
+    levelLabel_.setBounds(410 + spacing * 2, 150, sliderSize, 20);
+    levelSlider_.setBounds(410 + spacing * 2, 175, sliderSize, sliderSize);
 }
 
 void ElectricPianoEditor::setupRotarySlider(juce::Slider& slider)

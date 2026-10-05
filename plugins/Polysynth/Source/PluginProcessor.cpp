@@ -35,6 +35,10 @@ juce::AudioProcessorValueTreeState::ParameterLayout PolysynthProcessor::createPa
     params.push_back(std::make_unique<juce::AudioParameterFloat>(PARAM_CHORUS_DEPTH, "Chorus Depth", 0.0f, 1.0f, 0.0f));
     params.push_back(std::make_unique<juce::AudioParameterFloat>(PARAM_CHORUS_RATE, "Chorus Rate", 0.1f, 10.0f, 2.0f));
 
+    // Added last, so the parameters before it keep their positions
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(
+        PARAM_OUTPUT_LEVEL, "Output Level", juce::NormalisableRange<float>(-24.0f, 12.0f, 0.1f), 0.0f, "dB"));
+
     return { params.begin(), params.end() };
 }
 
@@ -44,6 +48,8 @@ void PolysynthProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
     for (int i = 0; i < synth_.getNumVoices(); ++i)
         if (auto* voice = dynamic_cast<PolysynthVoice*>(synth_.getVoice(i)))
             voice->prepareToPlay(sampleRate, samplesPerBlock);
+
+    outputGain_ = targetOutputGain();
 }
 
 void PolysynthProcessor::releaseResources() {}
@@ -62,6 +68,16 @@ void PolysynthProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::Mi
     buffer.clear();
     updateVoiceParameters();
     synth_.renderNextBlock(buffer, midiMessages, 0, buffer.getNumSamples());
+
+    // Ramp to the new gain across the block, so turning Output Level does not click
+    const float gain = targetOutputGain();
+    buffer.applyGainRamp(0, buffer.getNumSamples(), outputGain_, gain);
+    outputGain_ = gain;
+}
+
+float PolysynthProcessor::targetOutputGain() const
+{
+    return juce::Decibels::decibelsToGain(apvts_.getRawParameterValue(PARAM_OUTPUT_LEVEL)->load());
 }
 
 void PolysynthProcessor::updateVoiceParameters()
@@ -121,7 +137,9 @@ void PolysynthProcessor::setStateInformation(const void* data, int sizeInBytes)
             presetManager_.loadFromXml(*presetXml);
 }
 
+#ifndef AUDIOFORGE_TESTS
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
     return new PolysynthProcessor();
 }
+#endif

@@ -62,6 +62,11 @@ private:
     // Parameters
     juce::AudioProcessorValueTreeState apvts_;
 
+    // Gain at the end of the previous block, where the next ramp starts.
+    // prepareToPlay sets it; from zero, a host that skips that gets a fade in
+    float outputGain_ = 0.0f;
+    float targetOutputGain() const;
+
     // Parameter IDs
     static constexpr const char* PARAM_MODEL = "model";
     static constexpr const char* PARAM_TONE = "tone";
@@ -72,6 +77,7 @@ private:
     static constexpr const char* PARAM_TREMOLO_RATE = "tremoloRate";
     static constexpr const char* PARAM_CHORUS_DEPTH = "chorusDepth";
     static constexpr const char* PARAM_REVERB_MIX = "reverbMix";
+    static constexpr const char* PARAM_OUTPUT_LEVEL = "outputLevel";
 
     AudioForge::MIDILearnManager midiLearnManager_;
     AudioForge::PresetManager presetManager_;
