@@ -49,6 +49,27 @@ The `Build All Plugins` workflow builds this host in every shard and runs it on 
 
 The host's settings are the same on every run, but a few plugins generate their own unseeded noise, so their peaks move a little from run to run (Shakuhachi has given 6.9 to 7.9). Leave room for that when moving the ceiling.
 
+## Default levels
+
+Every AudioForge instrument is calibrated to the same output level, so that swapping one for another does not change the mix by 20 dB:
+
+> The loudest single full-velocity note, at the default settings, peaks at about -9 dBFS. Anything from -12 to -6 is accepted.
+
+`--levels` measures it. For each instrument it plays seven notes one at a time and reports the loudest, then a four-note chord and three drum notes together. Each single note is played 21 times and the median taken, because instruments excited by random noise (Shakuhachi, Sitar, Koto) differ by several dB from one note to the next:
+
+```bash
+build/stress-host/StressHost_artefacts/Release/StressHost --levels path/to/Plugin.vst3
+
+# Also fail any instrument outside the range
+build/stress-host/StressHost_artefacts/Release/StressHost --levels --level-range -12 -6 path/to/Plugin.vst3
+```
+
+A line reads `Name  LEVEL  note 36  -9.1 dBFS  together  -4.2 dBFS`, or `LEVEL-OUT-OF-RANGE` in place of `LEVEL`. Effects report `EFFECT`. An instrument that makes no sound reports `SILENT` and is not failed, because the pattern generators wait for the host's transport and Sampler has nothing loaded.
+
+An instrument is brought into range with the `outputTrim` constant at the end of its `processBlock`. To recalibrate one, measure it, then scale that constant by the difference from -9 dB.
+
+-9 leaves room for chords: four notes together typically come out 7 to 8 dB above one. CI checks the range for every instrument, with the limits in `LEVEL_LOW` and `LEVEL_HIGH` at the top of `.github/workflows/build-all-plugins.yml`.
+
 ## Reading the results
 
 A peak well above 1.0 is not automatically a bug. Compressors with maximum makeup gain, saturators at full drive, and filters at high resonance are legitimately loud. Look for peaks that are orders of magnitude out, output from an effect that exceeds what its controls could explain, and anything non-finite.

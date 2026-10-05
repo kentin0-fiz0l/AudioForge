@@ -28,6 +28,11 @@ env:
   # plugin (PadSynth, 9.3) and the quietest of the faults the host was written
   # to catch (13.2). See tools/stress-host/README.md.
   STRESS_MAX_PEAK: 12
+  # Every instrument's loudest single full-velocity note at its default
+  # settings has to peak inside this range, in dBFS. They are calibrated
+  # to -9. See tools/stress-host/README.md.
+  LEVEL_LOW: -12
+  LEVEL_HIGH: -6
 
 jobs:
   plan:
@@ -105,13 +110,14 @@ jobs:
           mkdir -p logs
           failed=""
           unsound=""
+          uncalibrated=""
           stress_host="build/stress-host/StressHost_artefacts/$BUILD_TYPE/StressHost"
 
           {
             echo "### Shard $SHARD"
             echo ""
-            echo "| Plugin | Build | Time | Stress | Loudest peak |"
-            echo "|---|---|---|---|---|"
+            echo "| Plugin | Build | Time | Stress | Loudest peak | Default level |"
+            echo "|---|---|---|---|---|---|"
           } >> "$GITHUB_STEP_SUMMARY"
 
           for plugin in $PLUGINS; do
@@ -137,18 +143,34 @@ jobs:
               verdict=$(echo "$result" | cut -f2)
               peak=$(echo "$result" | cut -f3 | sed 's/^peak //')
 
+              # The level run prints one tab-separated line: name, kind (LEVEL,
+              # LEVEL-OUT-OF-RANGE, SILENT or EFFECT), then for the first two
+              # "note N", its level, "together" and that level.
+              timeout 600 "$stress_host" --levels --level-range "$LEVEL_LOW" "$LEVEL_HIGH" "$vst3" > "logs/$plugin-level.log" 2>&1
+              level_status=$?
+              level_line=$(grep -m1 -P '\t(LEVEL|LEVEL-OUT-OF-RANGE|SILENT|EFFECT)(\t|$)' "logs/$plugin-level.log")
+              level=$(echo "$level_line" | cut -f4)
+              level=${level:-$(echo "$level_line" | cut -f2 | tr '[:upper:]' '[:lower:]')}
+
+              if [ $level_status -ne 0 ]; then
+                uncalibrated="$uncalibrated $plugin"
+                level="**${level:-no reading}**"
+                echo "$plugin: DEFAULT LEVEL CHECK FAILED (exit $level_status):"
+                cat "logs/$plugin-level.log"
+              fi
+
               if [ $stress_status -eq 0 ]; then
                 echo "$plugin: stress ok, peak $peak"
-                echo "| $plugin | pass | ${elapsed}s | ok | $peak |" >> "$GITHUB_STEP_SUMMARY"
+                echo "| $plugin | pass | ${elapsed}s | ok | $peak | $level |" >> "$GITHUB_STEP_SUMMARY"
               else
                 unsound="$unsound $plugin"
-                echo "| $plugin | pass | ${elapsed}s | **${verdict:-CRASHED}** | $peak |" >> "$GITHUB_STEP_SUMMARY"
+                echo "| $plugin | pass | ${elapsed}s | **${verdict:-CRASHED}** | $peak | $level |" >> "$GITHUB_STEP_SUMMARY"
                 echo "$plugin: STRESS FAILED (exit $stress_status):"
                 cat "logs/$plugin-stress.log"
               fi
             else
               failed="$failed $plugin"
-              echo "| $plugin | **FAIL** | ${elapsed}s | | |" >> "$GITHUB_STEP_SUMMARY"
+              echo "| $plugin | **FAIL** | ${elapsed}s | | | |" >> "$GITHUB_STEP_SUMMARY"
               echo "$plugin: FAILED after ${elapsed}s. First errors:"
               grep -hE "error:|Error at|fatal error|undefined reference|CMake Error" \
                 "logs/$plugin-configure.log" "logs/$plugin-build.log" 2>/dev/null | head -25
@@ -165,7 +187,10 @@ jobs:
           if [ -n "$unsound" ]; then
             echo "::error::Failed the stress host:$unsound"
           fi
-          [ -z "$failed$unsound" ]
+          if [ -n "$uncalibrated" ]; then
+            echo "::error::Default level check failed ($LEVEL_LOW to $LEVEL_HIGH dBFS):$uncalibrated"
+          fi
+          [ -z "$failed$unsound$uncalibrated" ]
 
       - name: Upload logs on failure
         if: failure()

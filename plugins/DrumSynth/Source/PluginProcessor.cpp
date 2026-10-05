@@ -101,6 +101,10 @@ bool PluginProcessor::isBusesLayoutSupported(const BusesLayout& layouts) const
     return true;
 }
 
+// Output trim: puts the loudest single full-velocity note at the default settings at
+// about -9 dBFS (it was -1.4). Recalibrate with StressHost --levels; see tools/stress-host/README.md.
+static constexpr float outputTrim = 0.417f;  // -7.6 dB
+
 void PluginProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     juce::ScopedNoDenormals noDenormals;
@@ -168,6 +172,8 @@ void PluginProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiB
         if (channelDataR)
             channelDataR[sample] = outputSample;
     }
+
+    buffer.applyGain(outputTrim);
 }
 
 juce::AudioProcessorEditor* PluginProcessor::createEditor()

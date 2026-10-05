@@ -52,6 +52,10 @@ bool KotoProcessor::isBusesLayoutSupported(const BusesLayout& layouts) const
         || layouts.getMainOutputChannelSet() == juce::AudioChannelSet::stereo();
 }
 
+// Output trim: puts the loudest single full-velocity note at the default settings at
+// about -9 dBFS (it was -2.9). Recalibrate with StressHost --levels; see tools/stress-host/README.md.
+static constexpr float outputTrim = 0.495f;  // -6.1 dB
+
 void KotoProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     juce::ScopedNoDenormals noDenormals;
@@ -61,6 +65,8 @@ void KotoProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuf
 
     updateVoiceParameters();
     synth_.renderNextBlock(buffer, midiMessages, 0, buffer.getNumSamples());
+
+    buffer.applyGain(outputTrim);
 }
 
 void KotoProcessor::updateVoiceParameters()

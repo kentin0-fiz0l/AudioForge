@@ -24,10 +24,16 @@ void HiHatProcessor::prepareToPlay(double sr, int sb) {
     for (int i = 0; i < synth_.getNumVoices(); ++i)
         if (auto* v = dynamic_cast<HiHatVoice*>(synth_.getVoice(i))) v->prepareToPlay(sr, sb);
 }
+// Output trim: puts the loudest single full-velocity note at the default settings at
+// about -9 dBFS (it was -6.3). Recalibrate with StressHost --levels; see tools/stress-host/README.md.
+static constexpr float outputTrim = 0.733f;  // -2.7 dB
+
 void HiHatProcessor::processBlock(juce::AudioBuffer<float>& buf, juce::MidiBuffer& midi) {
     for (const auto metadata : midi)
         midiLearnManager_.processMidiMessage(metadata.getMessage());
     buf.clear(); updateVoiceParameters(); synth_.renderNextBlock(buf, midi, 0, buf.getNumSamples());
+
+    buf.applyGain(outputTrim);
 }
 void HiHatProcessor::updateVoiceParameters() {
     float tone = apvts_.getRawParameterValue("tone")->load();

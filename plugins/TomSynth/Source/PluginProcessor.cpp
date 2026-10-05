@@ -25,10 +25,16 @@ void TomProcessor::prepareToPlay(double sr, int sb) {
     for (int i = 0; i < synth_.getNumVoices(); ++i)
         if (auto* v = dynamic_cast<TomVoice*>(synth_.getVoice(i))) v->prepareToPlay(sr, sb);
 }
+// Output trim: puts the loudest single full-velocity note at the default settings at
+// about -9 dBFS (it was -5.2). Recalibrate with StressHost --levels; see tools/stress-host/README.md.
+static constexpr float outputTrim = 0.646f;  // -3.8 dB
+
 void TomProcessor::processBlock(juce::AudioBuffer<float>& buf, juce::MidiBuffer& midi) {
     for (const auto metadata : midi)
         midiLearnManager_.processMidiMessage(metadata.getMessage());
     buf.clear(); updateVoiceParameters(); synth_.renderNextBlock(buf, midi, 0, buf.getNumSamples());
+
+    buf.applyGain(outputTrim);
 }
 void TomProcessor::updateVoiceParameters() {
     float pitch = apvts_.getRawParameterValue("pitch")->load();
