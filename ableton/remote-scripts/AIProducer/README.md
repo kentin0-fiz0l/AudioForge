@@ -117,34 +117,36 @@ This appends the comment to `feedback/log.jsonl`, together with the mixer, the m
 
 ## What Gets Generated
 
+The script loads an instrument onto each track it creates, and onto a template track that has none. It tries an AudioForge plugin first and falls back to a device every edition of Live has, Intro included. A track that already has an instrument keeps it.
+
 ### Track 1: AI Drums
 - Four-on-floor kick (every beat)
-- Snare/clap on 2 and 4
+- Clap on 2 and 4 in house; a snare in the other styles
 - 8th-note hi-hats
 - 72 bars
 
-**Load**: Drum Rack or any drum sampler
+**Instrument**: DrumSynth, or the 909 Core Kit if AudioForge is not installed
 
 ### Track 2: AI Bass
 - Root notes following chord progression
 - Every beat
 - One octave below middle C
 
-**Load**: Wavetable, Analog, or any bass synth
+**Instrument**: BasicSynth on its Bass patch, or Drift
 
 ### Track 3: AI Chords
 - Full chord progression (i-VI-III-VII in A minor)
 - Whole note pads
 - Harmonic foundation
 
-**Load**: Wavetable, Analog, or any pad synth
+**Instrument**: ElectricPiano, or Drift
 
 ### Track 4: AI Lead
 - Pentatonic melody
 - Only during "drop" sections
 - Higher register
 
-**Load**: Wavetable, Analog, or any lead synth
+**Instrument**: Polysynth, or Drift
 
 ---
 

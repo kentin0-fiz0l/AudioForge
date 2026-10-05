@@ -30,7 +30,14 @@ PanUtilEditor::PanUtilEditor(PanUtilProcessor& p)
     widthSlider.setRange(0.0, 2.0, 0.01);
     widthSlider.setValue(1.0);
     widthSlider.setDoubleClickReturnValue(true, 1.0);  // Double-click returns to 100%
-    widthSlider.setTextValueSuffix("%");
+    // The parameter runs from 0 to 2; show it as 0% to 200%
+    widthSlider.textFromValueFunction = [] (double value) { return juce::String(juce::roundToInt(value * 100.0)) + "%"; };
+    widthSlider.valueFromTextFunction = [this] (const juce::String& text)
+    {
+        // Text with no number in it changes nothing; zero would be mono
+        const auto digits = text.retainCharacters("0123456789.");
+        return digits.containsAnyOf("0123456789") ? digits.getDoubleValue() / 100.0 : widthSlider.getValue();
+    };
     addAndMakeVisible(widthSlider);
 
     widthSlider.onValueChange = [this]
@@ -49,7 +56,6 @@ PanUtilEditor::PanUtilEditor(PanUtilProcessor& p)
     // Configure Mode selector
     modeSelector.addItem("Pan", 1);
     modeSelector.addItem("Balance", 2);
-    modeSelector.setSelectedId(1);
     addAndMakeVisible(modeSelector);
 
     modeSelector.onChange = [this]
@@ -65,6 +71,43 @@ PanUtilEditor::PanUtilEditor(PanUtilProcessor& p)
     modeLabel.setJustificationType(juce::Justification::centred);
     modeLabel.setFont(juce::FontOptions(14.0f));
     addAndMakeVisible(modeLabel);
+
+    // Configure Gain slider
+    gainSlider.setSliderStyle(juce::Slider::LinearHorizontal);
+    gainSlider.setTextBoxStyle(juce::Slider::TextBoxRight, false, 70, 20);
+    gainSlider.setRange(-36.0, 24.0, 0.1);
+    gainSlider.setDoubleClickReturnValue(true, 0.0);  // Double-click returns to 0 dB
+    gainSlider.setTextValueSuffix(" dB");
+    addAndMakeVisible(gainSlider);
+
+    gainSlider.onValueChange = [this]
+    {
+        auto* gainParam = dynamic_cast<juce::AudioParameterFloat*>(
+            processor.getParameters()[3]);
+        if (gainParam != nullptr)
+            *gainParam = static_cast<float>(gainSlider.getValue());
+    };
+
+    gainLabel.setText("Gain", juce::dontSendNotification);
+    gainLabel.setJustificationType(juce::Justification::centred);
+    gainLabel.setFont(juce::FontOptions(14.0f));
+    addAndMakeVisible(gainLabel);
+
+    // Configure Mono switch
+    monoButton.setButtonText("Mono");
+    addAndMakeVisible(monoButton);
+
+    monoButton.onClick = [this]
+    {
+        auto* monoParam = dynamic_cast<juce::AudioParameterBool*>(
+            processor.getParameters()[4]);
+        if (monoParam != nullptr)
+            *monoParam = monoButton.getToggleState();
+    };
+
+    // The controls above were given the defaults; show what the processor
+    // has, which differs when a saved set is opened
+    syncFromParameters();
 
     // Start timer for meter updates (30 fps)
     startTimerHz(30);
@@ -93,7 +136,7 @@ void PanUtilEditor::paint(juce::Graphics& g)
     // Subtitle
     g.setFont(juce::FontOptions(12.0f));
     g.setColour(juce::Colour(0xff888888));
-    g.drawText("AudioForge • Stereo Panning Utility", 0, 35, getWidth(), 15,
+    g.drawText("AudioForge Track Utility", 0, 35, getWidth(), 15,
                juce::Justification::centred);
 
     // Draw L/R meters
@@ -167,6 +210,36 @@ void PanUtilEditor::resized()
 
     modeLabel.setBounds(50, 210, 100, 20);
     modeSelector.setBounds(50, 230, 150, 25);
+
+    gainLabel.setBounds(230, 210, 60, 20);
+    gainSlider.setBounds(230, 228, 220, 28);
+
+    monoButton.setBounds(230, 256, 100, 22);
+}
+
+void PanUtilEditor::syncFromParameters()
+{
+    const auto& params = processor.getParameters();
+
+    // The value a parameter's control shows
+    const auto shown = [&params] (int index)
+    {
+        auto* param = dynamic_cast<juce::RangedAudioParameter*>(params[index]);
+        return param != nullptr ? param->convertFrom0to1(param->getValue()) : 0.0f;
+    };
+
+    // A control being dragged is ahead of its parameter, so leave it alone
+    const auto follow = [&shown] (juce::Slider& slider, int index)
+    {
+        if (! slider.isMouseButtonDown())
+            slider.setValue(shown(index), juce::dontSendNotification);
+    };
+
+    follow(panSlider, 0);
+    follow(widthSlider, 1);
+    modeSelector.setSelectedItemIndex(juce::roundToInt(shown(2)), juce::dontSendNotification);
+    follow(gainSlider, 3);
+    monoButton.setToggleState(shown(4) > 0.5f, juce::dontSendNotification);
 }
 
 void PanUtilEditor::timerCallback()
@@ -174,6 +247,9 @@ void PanUtilEditor::timerCallback()
     // Update meters from processor
     leftMeter = processor.getLeftLevel();
     rightMeter = processor.getRightLevel();
+
+    // Follow changes made by the host
+    syncFromParameters();
 
     // Repaint to update visualization
     repaint();

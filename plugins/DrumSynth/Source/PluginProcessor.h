@@ -6,6 +6,7 @@
 #include "KickModule.h"
 #include "SnareModule.h"
 #include "HiHatModule.h"
+#include "ClapModule.h"
 #include "DrumNotes.h"
 
 /**
@@ -57,6 +58,15 @@ private:
     KickModule kickModule;
     SnareModule snareModule;
     HiHatModule hihatModule;
+    ClapModule clapModule;
+
+    // How hard each drum was last hit: 1 at full velocity
+    float kickLevel = 1.0f;
+    float snareLevel = 1.0f;
+    float hihatLevel = 1.0f;
+    float clapLevel = 1.0f;
+
+    void triggerDrum(const juce::MidiMessage& message);
 
     AudioForge::MIDILearnManager midiLearnManager_;
     AudioForge::PresetManager presetManager_;

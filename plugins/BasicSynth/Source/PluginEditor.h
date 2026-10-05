@@ -22,10 +22,16 @@ public:
 private:
     void timerCallback() override;
 
+    // Set every control to the value its parameter has
+    void syncFromParameters();
+
     // Reference to processor
     BasicSynthProcessor& audioProcessor;
 
     // UI Components
+    juce::ComboBox patchSelector;
+    juce::Label patchLabel;
+
     juce::ComboBox waveformSelector;
     juce::Label waveformLabel;
 

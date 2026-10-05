@@ -67,7 +67,7 @@ public:
 
     //==============================================================================
     // DSP (public for visualization access)
-    SpectralProcessor spectralProcessor;
+    SpectralFreezeEngine spectralProcessor;
 
 private:
 

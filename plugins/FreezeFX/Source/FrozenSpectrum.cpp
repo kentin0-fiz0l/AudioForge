@@ -13,18 +13,23 @@ void FrozenSpectrum::unfreeze()
     frozen = false;
 }
 
-void FrozenSpectrum::captureSpectrum(const std::vector<float>& magnitude, const std::vector<float>& phase)
+void FrozenSpectrum::prepare(size_t numBins)
 {
-    frozenMagnitude = magnitude;
-    frozenPhase = phase;
+    frozenMagnitude.assign(numBins, 0.0f);
+    blurScratch.assign(numBins, 0.0f);
 }
 
-void FrozenSpectrum::getSpectrum(std::vector<float>& magnitude, std::vector<float>& phase)
+void FrozenSpectrum::captureSpectrum(const std::vector<float>& magnitude)
+{
+    frozenMagnitude = magnitude;
+    blurScratch.resize(magnitude.size());
+}
+
+void FrozenSpectrum::getSpectrum(std::vector<float>& magnitude)
 {
     if (frozen && !frozenMagnitude.empty())
     {
         magnitude = frozenMagnitude;
-        phase = frozenPhase;
 
         // Apply spectral blur if enabled
         if (blurAmount > 0.0f)
@@ -36,10 +41,7 @@ void FrozenSpectrum::getSpectrum(std::vector<float>& magnitude, std::vector<floa
         for (size_t i = 0; i < magnitude.size(); ++i)
         {
             if (i < static_cast<size_t>(lowBin) || i > static_cast<size_t>(highBin))
-            {
-                magnitude[i] = 0.0f;  // Zero magnitude outside frequency range
-                phase[i] = 0.0f;      // Zero phase as well
-            }
+                magnitude[i] = 0.0f;
         }
     }
 }
@@ -66,8 +68,10 @@ void FrozenSpectrum::applyBlur(std::vector<float>& magnitude)
     if (blurAmount <= 0.0f || magnitude.size() < 3)
         return;
 
-    // Simple box blur (average with neighbors)
-    std::vector<float> blurred = magnitude;
+    // Simple box blur (average with neighbors), into a buffer sized at
+    // capture so that nothing is allocated while audio is running
+    auto& blurred = blurScratch;
+    blurred = magnitude;
 
     int blurRadius = static_cast<int>(blurAmount * 5.0f) + 1;  // 1-6 bins
 

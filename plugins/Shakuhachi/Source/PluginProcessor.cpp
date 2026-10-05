@@ -122,13 +122,16 @@ void ShakuhachiProcessor::setStateInformation(const void* data, int sizeInBytes)
 {
     std::unique_ptr<juce::XmlElement> xmlState(getXmlFromBinary(data, sizeInBytes));
 
-    if (xmlState.get() != nullptr)
-        if (xmlState->hasTagName(apvts_.state.getType()))
-            apvts_.replaceState(juce::ValueTree::fromXml(*xmlState));
-        if (auto* midiXml = xmlState->getChildByName("MIDILearnMappings"))
-            midiLearnManager_.loadFromXml(*midiXml);
-        if (auto* presetXml = xmlState->getChildByName("PresetManagerState"))
-            presetManager_.loadFromXml(*presetXml);
+    // A state that did not parse, or that belongs to something else, is ignored
+    if (xmlState == nullptr || ! xmlState->hasTagName(apvts_.state.getType()))
+        return;
+
+    apvts_.replaceState(juce::ValueTree::fromXml(*xmlState));
+
+    if (auto* midiXml = xmlState->getChildByName("MIDILearnMappings"))
+        midiLearnManager_.loadFromXml(*midiXml);
+    if (auto* presetXml = xmlState->getChildByName("PresetManagerState"))
+        presetManager_.loadFromXml(*presetXml);
 }
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()

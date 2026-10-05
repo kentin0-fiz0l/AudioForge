@@ -15,7 +15,7 @@ juce_add_plugin(StringEnsemble
     PLUGIN_CODE AStr
     FORMATS VST3 AU Standalone
     PRODUCT_NAME "StringEnsemble"
-    PLUGIN_NAME "AudioForge - StringEnsemble"
+    PLUGIN_NAME "StringEnsemble"
     IS_SYNTH TRUE
     NEEDS_MIDI_INPUT TRUE
     NEEDS_MIDI_OUTPUT FALSE

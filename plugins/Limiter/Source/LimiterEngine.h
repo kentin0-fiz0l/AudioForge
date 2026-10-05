@@ -16,6 +16,7 @@
 #include <juce_audio_basics/juce_audio_basics.h>
 #include <juce_core/juce_core.h>
 #include "TruePeakDetector.h"
+#include <vector>
 
 namespace audioforge
 {
@@ -24,7 +25,8 @@ namespace audioforge
  * @brief Professional limiting engine with lookahead and smooth gain reduction
  *
  * Implements a brickwall limiter with:
- * - Lookahead buffer (0-10ms) for smooth gain reduction
+ * - Lookahead (0-10ms): the signal is delayed, so the gain can come down
+ *   gradually ahead of a peak instead of dropping at the instant it arrives
  * - Exponential release envelope (prevents pumping)
  * - Auto makeup gain
  * - True peak detection via TruePeakDetector
@@ -49,6 +51,9 @@ public:
 
     /** Set lookahead time in milliseconds (0 to 10) */
     void setLookahead(float lookaheadMs);
+
+    /** The delay the lookahead adds, in samples */
+    int getLookaheadSamples() const { return lookaheadSamples; }
 
     /** Enable/disable auto makeup gain */
     void setAutoMakeupEnabled(bool enabled) { autoMakeupEnabled = enabled; }
@@ -106,8 +111,31 @@ private:
     // Lookahead delay line (circular buffer)
     juce::AudioBuffer<float> lookaheadBuffer;
     int lookaheadWritePosition = 0;
-    int lookaheadReadPosition = 0;
+    float lookaheadTimeMs = 0.0f;
     int lookaheadSamples = 0;
+
+    // The lowest gain asked for over the last lookahead: a queue of the
+    // samples that can still be that lowest, oldest first, values rising.
+    // It holds at most one lookahead and the current sample.
+    struct HeldGain
+    {
+        float gain;
+        long long sample;
+    };
+    std::vector<HeldGain> heldGains;
+    int heldHead = 0;
+    int heldCount = 0;
+    long long sampleCount = 0;
+
+    // The gain averaged over the last lookahead, which turns the drop
+    // ahead of a peak into a ramp that arrives as the peak does
+    std::vector<float> gainWindow;
+    int gainWindowPosition = 0;
+    double gainWindowSum = 0.0;
+
+    void clearLookahead();
+    float lowestGainOverLookahead(float gain);
+    float averageGainOverLookahead(float gain);
 
     //==============================================================================
     // Parameters (linear gain)

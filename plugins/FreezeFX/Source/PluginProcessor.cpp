@@ -115,28 +115,42 @@ void FreezeFXProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
     spectralProcessor.setOverlapFactor(overlap);
     spectralProcessor.prepare(sampleRate, samplesPerBlock, getTotalNumOutputChannels());
 
-    // Configure phase evolver
-    phaseEvolver.setRandomizationAmount(apvts.getRawParameterValue(PARAM_PHASE_RANDOM)->load());
-    phaseEvolver.setEvolutionSpeed(apvts.getRawParameterValue(PARAM_PHASE_SPEED)->load());
+    // Each channel freezes its own sound
+    int numBins = fftSize / 2 + 1;
+    frozenChannels = std::vector<FrozenChannel>(static_cast<size_t>(juce::jmax(1, getTotalNumOutputChannels())));
 
-    // Configure frozen spectrum
-    frozenSpectrum.setBlurAmount(apvts.getRawParameterValue(PARAM_SPECTRAL_BLUR)->load());
-    frozenSpectrum.setFrequencyRange(
-        apvts.getRawParameterValue(PARAM_HIGH_PASS)->load(),
-        apvts.getRawParameterValue(PARAM_LOW_PASS)->load(),
-        sampleRate,
-        fftSize);
+    for (auto& frozen : frozenChannels)
+    {
+        frozen.phaseEvolver.setRandomizationAmount(apvts.getRawParameterValue(PARAM_PHASE_RANDOM)->load());
+        frozen.phaseEvolver.setEvolutionSpeed(apvts.getRawParameterValue(PARAM_PHASE_SPEED)->load());
+
+        frozen.spectrum.setBlurAmount(apvts.getRawParameterValue(PARAM_SPECTRAL_BLUR)->load());
+        frozen.spectrum.setFrequencyRange(
+            apvts.getRawParameterValue(PARAM_HIGH_PASS)->load(),
+            apvts.getRawParameterValue(PARAM_LOW_PASS)->load(),
+            sampleRate,
+            fftSize);
+
+        frozen.spectrum.prepare(static_cast<size_t>(numBins));
+        frozen.phase.assign(static_cast<size_t>(numBins), 0.0f);
+        frozen.phaseAdvance.assign(static_cast<size_t>(numBins), 0.0f);
+
+        // The evolver sizes itself to the first spectrum it is given. Give
+        // it one now, so that it does not allocate on the first frozen frame.
+        frozen.phaseEvolver.evolvePhase(frozen.phase, 0.0f);
+    }
+
+    wasFrozen = false;
+    frozenForUI.store(false);
 
     // Pre-allocate spectral blending buffers (avoid per-frame allocation)
-    int numBins = fftSize / 2 + 1;
     tempFrozenMagnitude.resize(numBins);
-    tempFrozenPhase.resize(numBins);
 
     // Set up spectral processing callback
     spectralProcessor.setSpectralCallback(
-        [this](std::vector<float>& magnitude, std::vector<float>& phase)
+        [this](int channel, std::vector<float>& magnitude, std::vector<float>& phase)
         {
-            this->processSpectrum(magnitude, phase);
+            this->processSpectrum(channel, magnitude, phase);
         });
 }
 
@@ -169,14 +183,17 @@ void FreezeFXProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::Mid
         return;
     }
 
-    float freezeMix = apvts.getRawParameterValue(PARAM_FREEZE_MIX)->load();
+    // Update phase evolver and frozen spectrum parameters
+    const float phaseRandom = apvts.getRawParameterValue(PARAM_PHASE_RANDOM)->load();
+    const float phaseSpeed = apvts.getRawParameterValue(PARAM_PHASE_SPEED)->load();
+    const float spectralBlur = apvts.getRawParameterValue(PARAM_SPECTRAL_BLUR)->load();
 
-    // Update phase evolver parameters
-    phaseEvolver.setRandomizationAmount(apvts.getRawParameterValue(PARAM_PHASE_RANDOM)->load());
-    phaseEvolver.setEvolutionSpeed(apvts.getRawParameterValue(PARAM_PHASE_SPEED)->load());
-
-    // Update frozen spectrum parameters
-    frozenSpectrum.setBlurAmount(apvts.getRawParameterValue(PARAM_SPECTRAL_BLUR)->load());
+    for (auto& frozen : frozenChannels)
+    {
+        frozen.phaseEvolver.setRandomizationAmount(phaseRandom);
+        frozen.phaseEvolver.setEvolutionSpeed(phaseSpeed);
+        frozen.spectrum.setBlurAmount(spectralBlur);
+    }
 
     // Check for freeze trigger (edge detection)
     if (freeze && !wasFrozen)
@@ -184,18 +201,26 @@ void FreezeFXProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::Mid
         // Capture on freeze toggle. No spectrum has been computed while
         // bypassed, so take it from the first frame analysed from here on:
         // that frame ends within one hop of this moment.
-        capturePending = true;
         spectralProcessor.clearOutput();
-        frozenSpectrum.freeze();
+
+        for (auto& frozen : frozenChannels)
+        {
+            frozen.capturePending = true;
+            frozen.spectrum.freeze();
+        }
     }
     else if (!freeze && wasFrozen)
     {
-        frozenSpectrum.unfreeze();
+        for (auto& frozen : frozenChannels)
+            frozen.spectrum.unfreeze();
+
         wasFrozen = false;  // Reset state
+        frozenForUI.store(false);
         spectralProcessor.pushInput(buffer);
         return;  // Exit early - no processing needed when transitioning to bypass
     }
     wasFrozen = freeze;  // Update state for next block
+    frozenForUI.store(freeze);
 
     // Process through spectral processor (only when freeze is active)
     spectralProcessor.processBlock(buffer);
@@ -229,45 +254,96 @@ void FreezeFXProcessor::setStateInformation(const void* data, int sizeInBytes)
 //==============================================================================
 // Spectral Processing
 
-void FreezeFXProcessor::processSpectrum(std::vector<float>& magnitude, std::vector<float>& phase)
+void FreezeFXProcessor::processSpectrum(int channel, std::vector<float>& magnitude, std::vector<float>& phase)
 {
-    // Get current parameters
-    float freezeMix = apvts.getRawParameterValue(PARAM_FREEZE_MIX)->load();
-    float deltaTime = 1.0f / getSampleRate() * spectralProcessor.getHopSize();
+    if (! juce::isPositiveAndBelow(channel, static_cast<int>(frozenChannels.size())))
+        return;
 
-    if (capturePending)
+    auto& frozen = frozenChannels[static_cast<size_t>(channel)];
+    const size_t numBins = juce::jmin(magnitude.size(), frozen.phase.size(), tempFrozenMagnitude.size());
+    const float twoPi = juce::MathConstants<float>::twoPi;
+    const juce::int64 phaseDriftSeed = 0x46726565;
+
+    if (frozen.capturePending)
     {
-        frozenSpectrum.captureSpectrum(magnitude, phase);
-        capturePending = false;
+        frozen.spectrum.captureSpectrum(magnitude);
+        frozen.capturePending = false;
+        frozen.measurePending = true;
+
+        // Each channel drifts its own way, and the same way on every render
+        frozen.phaseEvolver.restart(phaseDriftSeed + channel);
+
+        // Start from the phase the sound had. Until the next frame says
+        // better, assume each bin holds a tone at the bin's own frequency,
+        // whose phase moves on by bin * hop / fftSize turns in one hop.
+        const size_t hop = static_cast<size_t>(spectralProcessor.getHopSize());
+        const size_t fftSize = static_cast<size_t>(spectralProcessor.getFFTSize());
+
+        for (size_t bin = 0; bin < numBins; ++bin)
+        {
+            const float turns = static_cast<float>((bin * hop) % fftSize) / static_cast<float>(fftSize);
+
+            frozen.phase[bin] = phase[bin];
+            frozen.phaseAdvance[bin] = std::remainder(twoPi * turns, twoPi);
+        }
+    }
+    else if (frozen.spectrum.isFrozen())
+    {
+        // One frame on, the input shows how far each bin's phase really
+        // moves in a hop, which is the exact frequency of what is in it.
+        // Use that wherever the same sound is still there to be measured:
+        // not where it has stopped, and not where something louder has
+        // started.
+        if (frozen.measurePending)
+        {
+            frozen.measurePending = false;
+            const auto& captured = frozen.spectrum.getCapturedMagnitude();
+
+            for (size_t bin = 0; bin < numBins; ++bin)
+                if (captured[bin] > 1.0e-6f && magnitude[bin] > 0.25f * captured[bin] && magnitude[bin] < 4.0f * captured[bin])
+                    frozen.phaseAdvance[bin] = std::remainder(phase[bin] - frozen.phase[bin], twoPi);
+        }
+
+        for (size_t bin = 0; bin < numBins; ++bin)
+            frozen.phase[bin] = std::remainder(frozen.phase[bin] + frozen.phaseAdvance[bin], twoPi);
+
+        // Phase Random lets the frozen sound drift from there; at zero the
+        // evolver leaves the phase alone
+        const float deltaTime = static_cast<float>(spectralProcessor.getHopSize() / getSampleRate());
+        frozen.phaseEvolver.evolvePhase(frozen.phase, deltaTime);
     }
 
-    // If frozen, blend with frozen spectrum
-    if (frozenSpectrum.isFrozen() && freezeMix > 0.0f)
+    const float freezeMix = apvts.getRawParameterValue(PARAM_FREEZE_MIX)->load();
+
+    if (! frozen.spectrum.isFrozen() || freezeMix <= 0.0f)
+        return;
+
+    // The frozen magnitudes, with blur and frequency range applied
+    frozen.spectrum.getSpectrum(tempFrozenMagnitude);
+
+    if (freezeMix >= 1.0f)
     {
-        // Use pre-allocated buffers (no per-frame allocation!)
-        // Get frozen spectrum into temp buffers
-        frozenSpectrum.getSpectrum(tempFrozenMagnitude, tempFrozenPhase);
-
-        // Blend magnitude: live → frozen based on mix
-        for (size_t i = 0; i < magnitude.size(); ++i)
+        for (size_t bin = 0; bin < numBins; ++bin)
         {
-            magnitude[i] = magnitude[i] * (1.0f - freezeMix) + tempFrozenMagnitude[i] * freezeMix;
+            magnitude[bin] = tempFrozenMagnitude[bin];
+            phase[bin] = frozen.phase[bin];
         }
 
-        // Evolve phase if randomization is enabled
-        float phaseRandom = apvts.getRawParameterValue(PARAM_PHASE_RANDOM)->load();
-        if (phaseRandom > 0.0f)
-        {
-            phaseEvolver.evolvePhase(phase, deltaTime);
-        }
-        else
-        {
-            // Use frozen phase
-            for (size_t i = 0; i < phase.size(); ++i)
-            {
-                phase[i] = phase[i] * (1.0f - freezeMix) + tempFrozenPhase[i] * freezeMix;
-            }
-        }
+        return;
+    }
+
+    // Part frozen, part live: add the two as the sounds they are. Blending
+    // magnitudes and phases separately gives neither.
+    for (size_t bin = 0; bin < numBins; ++bin)
+    {
+        const float live = magnitude[bin] * (1.0f - freezeMix);
+        const float held = tempFrozenMagnitude[bin] * freezeMix;
+
+        const float real = live * std::cos(phase[bin]) + held * std::cos(frozen.phase[bin]);
+        const float imaginary = live * std::sin(phase[bin]) + held * std::sin(frozen.phase[bin]);
+
+        magnitude[bin] = std::sqrt(real * real + imaginary * imaginary);
+        phase[bin] = std::atan2(imaginary, real);
     }
 }
 

@@ -4,16 +4,16 @@
 #include <vector>
 
 /**
- * SpectralProcessor
+ * SpectralFreezeEngine
  *
  * Handles FFT analysis, spectral freezing, and manipulation.
  * Uses overlap-add processing for high-quality spectral effects.
  */
-class SpectralProcessor
+class SpectralFreezeEngine
 {
 public:
-    SpectralProcessor();
-    ~SpectralProcessor() = default;
+    SpectralFreezeEngine();
+    ~SpectralFreezeEngine() = default;
 
     //==============================================================================
     // Configuration
@@ -61,8 +61,7 @@ private:
     //==============================================================================
     // FFT Processing
     void processFFT(float* channelData, int numSamples, int channel);
-    void applySpectralEffects(std::vector<float>& magnitude, std::vector<float>& phase);
-    void freezeSpectrum(const std::vector<float>& magnitude, const std::vector<float>& phase);
+    void applySpectralEffects(int channel, std::vector<float>& magnitude, std::vector<float>& phase);
 
     //==============================================================================
     // Spectral Effects
@@ -96,9 +95,32 @@ private:
 
     //==============================================================================
     // Frozen Spectrum
+    // What one channel is holding while frozen. A sound only holds its
+    // level and pitch if its phase keeps turning at the rate it had, so the
+    // phase is carried on from frame to frame instead of being replayed.
+    struct HeldSpectrum
+    {
+        std::vector<float> magnitude;
+        std::vector<float> phase;         // Where each bin's phase has got to
+        std::vector<float> phaseAdvance;  // How far it moves on every frame
+        bool captured = false;
+        bool measurePending = false;      // The frame after the capture shows the true advance
+    };
+    std::vector<HeldSpectrum> held;
+
+    // The first channel's frozen spectrum, for the display and for morphing
     std::vector<float> frozenMagnitude;
-    std::vector<float> frozenPhase;
     bool frozen = false;
+
+    // Scales the overlapped, twice-windowed frames back to the input's level
+    float synthesisScale = 1.0f;
+
+    // Working buffers, sized in prepare() so that nothing is allocated
+    // while audio is running
+    std::vector<float> magnitudeScratch;
+    std::vector<float> phaseScratch;
+    std::vector<float> effectScratch;
+    juce::AudioBuffer<float> dryBuffer;
     bool isPrepared = false;  // Track if prepare() has been called
 
     //==============================================================================
@@ -133,5 +155,5 @@ private:
     std::vector<float> currentPhase;
 
     //==============================================================================
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SpectralProcessor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SpectralFreezeEngine)
 };

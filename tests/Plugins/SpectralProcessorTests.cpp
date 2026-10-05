@@ -134,7 +134,7 @@ private:
         processor.setFFTSize(2048);
         processor.setOverlapFactor(4);
         processor.prepare(48000.0, 512, numChannels);
-        processor.setSpectralCallback([] (std::vector<float>& magnitude, std::vector<float>&)
+        processor.setSpectralCallback([] (int, std::vector<float>& magnitude, std::vector<float>&)
         {
             for (auto& value : magnitude)
                 value *= 0.5f;

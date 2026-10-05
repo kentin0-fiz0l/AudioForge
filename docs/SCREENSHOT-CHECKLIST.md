@@ -69,7 +69,7 @@ Quick reference for capturing all 50 plugin screenshots.
 
 ## 6. SimpleComp ✅
 
-- [ ] `SimpleComp-1-default.png` - -20dB, 2:1, no GR
+- [ ] `SimpleComp-1-default.png` - -12dB, 4:1, no GR
 - [ ] `SimpleComp-2-vocal-compression.png` - -18dB, 3:1, 3-5dB GR
 - [ ] `SimpleComp-3-aggressive.png` - -12dB, 8:1, 8-10dB GR
 - [ ] `SimpleComp-4-subtle-glue.png` - -24dB, 1.5:1, 2-3dB GR

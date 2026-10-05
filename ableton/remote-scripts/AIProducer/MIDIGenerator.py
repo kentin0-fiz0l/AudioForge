@@ -1,5 +1,22 @@
 # MIDI Clip Generator for Ableton Live
+import Live
 from .MusicTheory import MusicTheory, TrackGenerator
+
+
+def write_notes(clip, notes):
+    """Add notes to a clip. Each is (pitch, start, duration, velocity, muted)."""
+    if not notes:
+        return
+
+    # Live 11 and later take note specifications. The older call is still
+    # there but deprecated, and is all a clip has before Live 11.
+    if getattr(clip, 'add_new_notes', None) is not None:
+        clip.add_new_notes(tuple(
+            Live.Clip.MidiNoteSpecification(pitch=pitch, start_time=start, duration=duration,
+                                            velocity=velocity, mute=muted)
+            for pitch, start, duration, velocity, muted in notes))
+    else:
+        clip.set_notes(tuple(notes))
 
 class MIDIClipGenerator:
     """Generates MIDI clips for Ableton Live tracks"""
@@ -31,6 +48,11 @@ class MIDIClipGenerator:
                 time = bar_start + (step * 0.25)
                 notes.append((MusicTheory.SNARE, time, 0.1, 90, False))
 
+            # Clap, in the styles that have one
+            for step in pattern.get('clap', []):
+                time = bar_start + (step * 0.25)
+                notes.append((MusicTheory.CLAP, time, 0.1, 95, False))
+
             # Closed hi-hat
             for step in pattern['hat_closed']:
                 time = bar_start + (step * 0.25)
@@ -41,10 +63,7 @@ class MIDIClipGenerator:
                 time = bar_start + (step * 0.25)
                 notes.append((MusicTheory.OPEN_HAT, time, 0.1, 80, False))
 
-        # Add notes to clip using set_notes (different API for Live 12)
-        if notes:
-            # Use set_notes instead of add_new_notes for Live 12
-            clip.set_notes(tuple(notes))
+        write_notes(clip, notes)
 
         # Set loop length
         clip.loop_end = total_bars * 4.0
@@ -68,8 +87,7 @@ class MIDIClipGenerator:
                 time = bar * 4.0 + beat
                 notes.append((bass_note, time, 0.9, 80, False))
 
-        if notes:
-            clip.set_notes(tuple(notes))
+        write_notes(clip, notes)
 
         clip.loop_end = total_bars * 4.0
 
@@ -102,8 +120,7 @@ class MIDIClipGenerator:
             for note in chord:
                 notes.append((note + 12, time, duration, 60, False))
 
-        if notes:
-            clip.set_notes(tuple(notes))
+        write_notes(clip, notes)
 
         clip.loop_end = total_bars * 4.0
 
@@ -136,7 +153,6 @@ class MIDIClipGenerator:
                         note = scale_notes[i % len(scale_notes)]
                         notes.append((note, time, 0.4, 90, False))
 
-        if notes:
-            clip.set_notes(tuple(notes))
+        write_notes(clip, notes)
 
         clip.loop_end = total_bars * 4.0

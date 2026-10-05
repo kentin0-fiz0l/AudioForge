@@ -40,6 +40,14 @@ private:
     juce::ComboBox modeSelector;
     juce::Label modeLabel;
 
+    juce::Slider gainSlider;
+    juce::Label gainLabel;
+
+    juce::ToggleButton monoButton;
+
+    // Set every control to the value its parameter has
+    void syncFromParameters();
+
     // Meter values
     float leftMeter = 0.0f;
     float rightMeter = 0.0f;

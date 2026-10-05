@@ -51,7 +51,8 @@ float KickModule::processSample(double sampleRate, float pitch, float decay,
     float currentPitch = pitch * (1.0f + pitchSweepAmount * pitchEnvLevel);
 
     // Generate sine wave
-    float sineWave = std::sin(phase * 2.0f * M_PI);
+    const float pi = 3.14159265358979f; // M_PI is not defined by every compiler
+    float sineWave = std::sin(phase * 2.0f * pi);
 
     // Advance phase
     float phaseIncrement = currentPitch / static_cast<float>(sampleRate);

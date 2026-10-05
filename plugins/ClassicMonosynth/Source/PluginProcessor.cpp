@@ -30,7 +30,11 @@ juce::AudioProcessorValueTreeState::ParameterLayout ClassicMonosynthProcessor::c
     params.push_back(std::make_unique<juce::AudioParameterBool>(PARAM_OSC_SYNC, "Osc Sync", false));
 
     // Filter
-    params.push_back(std::make_unique<juce::AudioParameterFloat>(PARAM_FILTER_CUTOFF, "Filter Cutoff", 20.0f, 20000.0f, 1000.0f));
+    // Skewed so that 1 kHz is at the middle of the knob. In a straight line
+    // from 20 Hz to 20 kHz, everything under 2 kHz sat in its bottom tenth.
+    juce::NormalisableRange<float> cutoffRange(20.0f, 20000.0f);
+    cutoffRange.setSkewForCentre(1000.0f);
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(PARAM_FILTER_CUTOFF, "Filter Cutoff", cutoffRange, 1000.0f));
     params.push_back(std::make_unique<juce::AudioParameterFloat>(PARAM_FILTER_RESONANCE, "Filter Resonance", 0.0f, 1.0f, 0.0f));
     params.push_back(std::make_unique<juce::AudioParameterFloat>(PARAM_FILTER_ENV_AMOUNT, "Filter Env Amount", -5000.0f, 5000.0f, 2000.0f));
 
@@ -158,13 +162,16 @@ void ClassicMonosynthProcessor::setStateInformation(const void* data, int sizeIn
 {
     std::unique_ptr<juce::XmlElement> xmlState(getXmlFromBinary(data, sizeInBytes));
 
-    if (xmlState.get() != nullptr)
-        if (xmlState->hasTagName(apvts_.state.getType()))
-            apvts_.replaceState(juce::ValueTree::fromXml(*xmlState));
-        if (auto* midiXml = xmlState->getChildByName("MIDILearnMappings"))
-            midiLearnManager_.loadFromXml(*midiXml);
-        if (auto* presetXml = xmlState->getChildByName("PresetManagerState"))
-            presetManager_.loadFromXml(*presetXml);
+    // A state that did not parse, or that belongs to something else, is ignored
+    if (xmlState == nullptr || ! xmlState->hasTagName(apvts_.state.getType()))
+        return;
+
+    apvts_.replaceState(juce::ValueTree::fromXml(*xmlState));
+
+    if (auto* midiXml = xmlState->getChildByName("MIDILearnMappings"))
+        midiLearnManager_.loadFromXml(*midiXml);
+    if (auto* presetXml = xmlState->getChildByName("PresetManagerState"))
+        presetManager_.loadFromXml(*presetXml);
 }
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()

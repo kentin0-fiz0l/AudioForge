@@ -31,7 +31,7 @@ private:
     Mode mode_ = Mode::VCA;
 
     // Parameters
-    float threshold_ = -20.0f;
+    float threshold_ = -12.0f;
     float ratio_ = 4.0f;
     float attack_ = 10.0f;
     float release_ = 100.0f;

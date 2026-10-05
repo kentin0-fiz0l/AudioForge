@@ -50,7 +50,8 @@ float SnareModule::processSample(double sampleRate, float tune, float snap,
 
     // Generate body tone (sine wave at low frequency)
     float bodyFreq = 150.0f + (tune * 100.0f); // 150-250 Hz range
-    float bodyTone = std::sin(bodyPhase * 2.0f * M_PI);
+    const float pi = 3.14159265358979f; // M_PI is not defined by every compiler
+    float bodyTone = std::sin(bodyPhase * 2.0f * pi);
 
     // Advance body phase
     float phaseIncrement = bodyFreq / static_cast<float>(sampleRate);
@@ -82,7 +83,8 @@ float SnareModule::applyBandpassFilter(float input, float cutoff, double sampleR
 {
     // Simple 2-pole bandpass filter
     float q = 2.0f; // Resonance
-    float w0 = 2.0f * M_PI * cutoff / static_cast<float>(sampleRate);
+    const float pi = 3.14159265358979f; // M_PI is not defined by every compiler
+    float w0 = 2.0f * pi * cutoff / static_cast<float>(sampleRate);
     float alpha = std::sin(w0) / (2.0f * q);
 
     // Coefficients for bandpass

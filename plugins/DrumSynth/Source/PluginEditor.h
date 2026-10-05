@@ -82,6 +82,15 @@ private:
     juce::Label hihatClickLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> hihatClickAttachment;
 
+    // Clap controls
+    juce::Slider clapToneSlider;
+    juce::Label clapToneLabel;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> clapToneAttachment;
+
+    juce::Slider clapDecaySlider;
+    juce::Label clapDecayLabel;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> clapDecayAttachment;
+
     // Helper function
     void setupSlider(juce::Slider& slider, juce::Label& label,
                     const juce::String& labelText,

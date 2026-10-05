@@ -147,6 +147,8 @@ jobs:
               # LEVEL-OUT-OF-RANGE, SILENT or EFFECT). An instrument follows
               # with "note N", its level, "together" and that level; an
               # effect with "gain" and what it does to the level at defaults.
+              # An instrument with factory patches prints a line for each; the
+              # summary shows the first, and the exit status covers them all.
               timeout 600 "$stress_host" --levels --level-range "$LEVEL_LOW" "$LEVEL_HIGH" "$vst3" > "logs/$plugin-level.log" 2>&1
               level_status=$?
               level_line=$(grep -m1 -P '\t(LEVEL|LEVEL-OUT-OF-RANGE|SILENT|EFFECT)(\t|$)' "logs/$plugin-level.log")

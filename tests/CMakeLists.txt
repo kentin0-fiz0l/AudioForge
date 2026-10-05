@@ -20,6 +20,7 @@ add_executable(TestRunner
     Plugins/SimpleGainTests.cpp
     Plugins/PanUtilTests.cpp
     Plugins/BasicSynthTests.cpp
+    Plugins/BasicSynthPatchTests.cpp
     Plugins/CleanDelayTests.cpp
     Plugins/SimpleEQTests.cpp
     Plugins/SimpleCompTests.cpp
@@ -39,6 +40,10 @@ add_executable(TestRunner
     Plugins/LimiterTests.cpp
     Plugins/PlateReverbTests.cpp
     Plugins/OutputLevelTests.cpp
+    Plugins/StateRestoreTests.cpp
+    Plugins/SpectralFreezeTests.cpp
+    Plugins/PolysynthTests.cpp
+    Plugins/EffectDefaultLevelTests.cpp
     Integration/PluginIntegrationTests.cpp)
 
 # Link JUCE libraries
@@ -119,6 +124,11 @@ target_sources(TestRunner PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/../shared/preset/PresetBrowser.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/HiHat/Source/HiHatEngine.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/DrumSynth/Source/HiHatModule.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/DrumSynth/Source/KickModule.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/DrumSynth/Source/SnareModule.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/DrumSynth/Source/ClapModule.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/DrumSynth/Source/PluginProcessor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/DrumSynth/Source/PluginEditor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/Limiter/Source/PluginProcessor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/Limiter/Source/PluginEditor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/Limiter/Source/LimiterEngine.cpp
@@ -132,7 +142,14 @@ target_sources(TestRunner PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/Polysynth/Source/PluginProcessor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/Polysynth/Source/PluginEditor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/Polysynth/Source/PolysynthEngine.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/Polysynth/Source/PolysynthVoice.cpp)
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/Polysynth/Source/PolysynthVoice.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/ShimmerReverb/Source/ShimmerEngine.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/SpectralFreeze/Source/PluginProcessor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/SpectralFreeze/Source/PluginEditor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/SpectralFreeze/Source/SpectralProcessor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/VintageCompressor/Source/PluginProcessor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/VintageCompressor/Source/PluginEditor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/VintageCompressor/Source/CompressorEngine.cpp)
 
 # Compiler definitions
 target_compile_definitions(TestRunner PUBLIC

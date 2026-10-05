@@ -27,18 +27,18 @@ public:
         // Clamp to prevent overflow
         input = std::clamp(input, -3.0f, 3.0f);
 
-        // Soft clipping using polynomial approximation
         // For |x| < 1: pass through
-        // For |x| >= 1: apply smooth saturation approaching ±1.5
+        // For |x| >= 1: bend over smoothly, approaching ±1.5
         const float absInput = std::abs(input);
 
         if (absInput < 1.0f)
             return input;
         else
         {
-            // Smooth saturation curve
+            // Leaves 1.0 at the same height and slope as the straight part
+            // below it, so there is no step or corner where they meet
             const float sign = (input > 0.0f) ? 1.0f : -1.0f;
-            const float saturated = 1.0f - 1.0f / (absInput + 1.0f);
+            const float saturated = 1.5f - 0.5f / (2.0f * absInput - 1.0f);
             return sign * saturated;
         }
     }

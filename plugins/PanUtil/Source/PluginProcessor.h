@@ -7,13 +7,16 @@
 /**
  * PanUtil Audio Processor
  *
- * Stereo panning and width control utility.
+ * A track utility: pan, stereo width, gain and mono in one device.
  *
  * Features:
  * - Pan control (-100% L to +100% R)
  * - Width control (0% = mono, 100% = normal, 200% = wide)
  * - Mode selection (Pan vs Balance)
- * - Constant-power panning algorithm
+ * - Gain (-36 to +24 dB)
+ * - Mono switch, which sums the channels before the pan
+ * - At its default settings the signal passes unchanged
+ * - Constant-power panning in Pan mode; Balance mode only turns one side down
  * - Independent L/R level metering
  */
 class PanUtilProcessor : public juce::AudioProcessor
@@ -27,6 +30,7 @@ public:
     void prepareToPlay(double sampleRate, int samplesPerBlock) override;
     void releaseResources() override;
     void processBlock(juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
+    bool isBusesLayoutSupported(const BusesLayout& layouts) const override;
 
     //==============================================================================
     // Editor
@@ -65,10 +69,13 @@ private:
     juce::AudioParameterFloat* panParam;      // -1.0 (left) to +1.0 (right)
     juce::AudioParameterFloat* widthParam;    // 0.0 to 2.0 (1.0 = normal)
     juce::AudioParameterChoice* modeParam;    // 0 = Pan, 1 = Balance
+    juce::AudioParameterFloat* gainParam;     // dB
+    juce::AudioParameterBool* monoParam;
 
     // Smoothed values for click-free operation (using shared DSP library)
     AudioForge::DSP::ParameterSmoothing<float> smoothedPan;
     AudioForge::DSP::ParameterSmoothing<float> smoothedWidth;
+    AudioForge::DSP::ParameterSmoothing<float> smoothedGain;  // Linear
 
     // Level metering (using shared DSP library)
     AudioForge::DSP::ThreadSafeMeter leftMeter;

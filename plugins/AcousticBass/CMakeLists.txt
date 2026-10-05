@@ -11,7 +11,7 @@ juce_add_plugin(AcousticBass
     PLUGIN_CODE ABas
     FORMATS VST3 AU Standalone
     PRODUCT_NAME "AcousticBass"
-    PLUGIN_NAME "AudioForge - AcousticBass"
+    PLUGIN_NAME "AcousticBass"
     IS_SYNTH TRUE
     NEEDS_MIDI_INPUT TRUE
     NEEDS_MIDI_OUTPUT FALSE

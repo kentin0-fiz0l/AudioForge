@@ -67,18 +67,33 @@ public:
 
     // Access to spectral data (for visualization)
     const SpectralProcessor& getSpectralProcessor() const { return spectralProcessor; }
-    bool isCurrentlyFrozen() const { return frozenSpectrum.isFrozen(); }
+    bool isCurrentlyFrozen() const { return frozenForUI.load(); }
 
 private:
     //==============================================================================
     // Spectral Processing
-    void processSpectrum(std::vector<float>& magnitude, std::vector<float>& phase);
+    void processSpectrum(int channel, std::vector<float>& magnitude, std::vector<float>& phase);
 
     //==============================================================================
     // DSP Components
     SpectralProcessor spectralProcessor;
-    FrozenSpectrum frozenSpectrum;
-    PhaseEvolver phaseEvolver;
+
+    // What one channel is holding while frozen
+    struct FrozenChannel
+    {
+        FrozenSpectrum spectrum;
+        PhaseEvolver phaseEvolver;
+
+        // The phase the frozen sound has reached in each bin, and how far it
+        // moves on every frame. A sound only holds its pitch and level if
+        // its phase keeps turning at the rate it had when it was captured.
+        std::vector<float> phase;
+        std::vector<float> phaseAdvance;
+
+        bool capturePending = false;  // Freeze was just switched on; capture the next frame
+        bool measurePending = false;  // The frame after that one shows how fast each phase turns
+    };
+    std::vector<FrozenChannel> frozenChannels;
 
     //==============================================================================
     // Parameters (managed by AudioProcessorValueTreeState)
@@ -89,12 +104,11 @@ private:
     //==============================================================================
     // State
     bool wasFrozen = false;  // Track previous freeze state for edge detection
-    bool capturePending = false;  // Freeze was just switched on; capture the next frame
+    std::atomic<bool> frozenForUI { false };  // The same, for the editor's thread
 
     //==============================================================================
     // Performance: Pre-allocated buffers for spectral blending (avoid per-frame allocation)
     std::vector<float> tempFrozenMagnitude;
-    std::vector<float> tempFrozenPhase;
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FreezeFXProcessor)

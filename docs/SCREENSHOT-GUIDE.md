@@ -245,7 +245,7 @@ SimpleGain-3-boosting.png
 
 **Screenshot 1: Default State**
 - File: `SimpleComp-1-default.png`
-- Settings: Threshold -20 dB, Ratio 2:1, Attack/Release moderate
+- Settings: Threshold -12 dB, Ratio 4:1, Attack/Release moderate
 - Meters: No gain reduction
 
 **Screenshot 2: Vocal Compression**

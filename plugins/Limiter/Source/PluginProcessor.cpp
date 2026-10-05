@@ -150,6 +150,11 @@ void LimiterAudioProcessor::changeProgramName (int index, const juce::String& ne
 void LimiterAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
     limiterEngine.prepare(sampleRate, samplesPerBlock);
+
+    // The lookahead delays the signal; tell the host by how much, so it
+    // can keep this track in time with the others
+    limiterEngine.setLookahead(lookaheadParam->load());
+    setLatencySamples(limiterEngine.getLookaheadSamples());
 }
 
 void LimiterAudioProcessor::releaseResources()
@@ -192,6 +197,11 @@ void LimiterAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce
     limiterEngine.setLookahead(lookaheadParam->load());
     limiterEngine.setAutoMakeupEnabled(autoMakeupParam->load() > 0.5f);
     limiterEngine.setOutputTrim(outputTrimParam->load());
+
+    // Only when Lookahead is moved. The plugin wrappers pass the news to
+    // the host from the message thread.
+    if (getLatencySamples() != limiterEngine.getLookaheadSamples())
+        setLatencySamples(limiterEngine.getLookaheadSamples());
 
     // Process audio
     limiterEngine.process(buffer);
