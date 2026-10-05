@@ -25,13 +25,16 @@ void LimiterEngine::prepare(double sampleRate, int maxBlockSize)
     // Prepare true peak detector
     truePeakDetector.prepare(sampleRate, maxBlockSize);
 
-    // Allocate lookahead buffer (stereo, 10ms max)
-    int maxLookaheadSamples = static_cast<int>(sampleRate * 0.010); // 10ms
-    lookaheadBuffer.setSize(2, maxLookaheadSamples + maxBlockSize, false, true, false);
-    lookaheadBuffer.clear();
+    // Allocate everything the lookahead needs at its longest (10ms)
+    const int maxLookaheadSamples = static_cast<int>(std::ceil(sampleRate * 0.010));
+    lookaheadBuffer.setSize(2, maxLookaheadSamples + 1, false, true, false);
+    heldGains.assign(static_cast<size_t>(maxLookaheadSamples + 1), { 1.0f, 0 });
+    gainWindow.assign(static_cast<size_t>(maxLookaheadSamples), 1.0f);
 
-    // Calculate release coefficient
+    // Both depend on the sample rate
     setRelease(releaseTimeMs);
+    lookaheadSamples = -1;
+    setLookahead(lookaheadTimeMs);
 
     reset();
 }
@@ -48,16 +51,77 @@ void LimiterEngine::setRelease(float releaseMs)
 
 void LimiterEngine::setLookahead(float lookaheadMs)
 {
-    // Convert milliseconds to samples
-    lookaheadSamples = static_cast<int>((lookaheadMs / 1000.0f) * currentSampleRate);
+    lookaheadTimeMs = lookaheadMs;
 
-    // Clamp to valid range
-    int maxLookahead = static_cast<int>(currentSampleRate * 0.010); // 10ms max
-    lookaheadSamples = juce::jlimit(0, maxLookahead, lookaheadSamples);
+    // Never more than was allocated for, which is 10ms
+    const int samples = juce::jlimit(0, static_cast<int>(gainWindow.size()),
+                                     juce::roundToInt(lookaheadMs * 0.001 * currentSampleRate));
 
-    // Reset read/write positions
+    // The plugin sets this before every block, so only a change may clear
+    // the delay line
+    if (samples == lookaheadSamples)
+        return;
+
+    lookaheadSamples = samples;
+    clearLookahead();
+}
+
+void LimiterEngine::clearLookahead()
+{
+    lookaheadBuffer.clear();
     lookaheadWritePosition = 0;
-    lookaheadReadPosition = 0;
+
+    heldHead = 0;
+    heldCount = 0;
+    sampleCount = 0;
+
+    std::fill(gainWindow.begin(), gainWindow.end(), 1.0f);
+    gainWindowPosition = 0;
+    gainWindowSum = static_cast<double>(lookaheadSamples);
+}
+
+float LimiterEngine::lowestGainOverLookahead(float gain)
+{
+    const int capacity = static_cast<int>(heldGains.size());
+    const auto at = [&] (int offset) -> HeldGain& { return heldGains[static_cast<size_t>((heldHead + offset) % capacity)]; };
+
+    // Drop the oldest once the delayed signal has passed it. This comes
+    // before the new sample goes in: the queue has room for one lookahead
+    // and no more, and a level that keeps falling fills it.
+    if (heldCount > 0 && at(0).sample < sampleCount - lookaheadSamples)
+    {
+        heldHead = (heldHead + 1) % capacity;
+        --heldCount;
+    }
+
+    // A sample asking for less gain outlasts every earlier one asking for more
+    while (heldCount > 0 && at(heldCount - 1).gain >= gain)
+        --heldCount;
+
+    at(heldCount) = { gain, sampleCount };
+    ++heldCount;
+    ++sampleCount;
+    return at(0).gain;
+}
+
+float LimiterEngine::averageGainOverLookahead(float gain)
+{
+    auto& oldest = gainWindow[static_cast<size_t>(gainWindowPosition)];
+    gainWindowSum += static_cast<double>(gain) - static_cast<double>(oldest);
+    oldest = gain;
+
+    if (++gainWindowPosition >= lookaheadSamples)
+    {
+        gainWindowPosition = 0;
+
+        // Add the window up afresh once per pass, so that rounding in the
+        // running sum cannot build up over hours of audio
+        gainWindowSum = 0.0;
+        for (int i = 0; i < lookaheadSamples; ++i)
+            gainWindowSum += static_cast<double>(gainWindow[static_cast<size_t>(i)]);
+    }
+
+    return static_cast<float>(gainWindowSum / lookaheadSamples);
 }
 
 void LimiterEngine::process(juce::AudioBuffer<float>& buffer)
@@ -87,32 +151,43 @@ void LimiterEngine::process(juce::AudioBuffer<float>& buffer)
         float inputLevel = std::max(std::abs(leftIn), std::abs(rightIn));
         inputPeak = std::max(inputPeak * 0.999f, inputLevel);
 
-        // === LOOKAHEAD BUFFER ===
-        // Write current sample to lookahead buffer
-        if (lookaheadSamples > 0)
-        {
-            lookaheadBuffer.setSample(0, lookaheadWritePosition, leftIn);
-            lookaheadBuffer.setSample(1, lookaheadWritePosition, rightIn);
-
-            // Read delayed sample from buffer
-            leftIn = lookaheadBuffer.getSample(0, lookaheadReadPosition);
-            rightIn = lookaheadBuffer.getSample(1, lookaheadReadPosition);
-
-            // Advance circular buffer pointers
-            lookaheadWritePosition = (lookaheadWritePosition + 1) % lookaheadBuffer.getNumSamples();
-            lookaheadReadPosition = (lookaheadReadPosition + 1) % lookaheadBuffer.getNumSamples();
-        }
-
         // === GAIN REDUCTION CALCULATION ===
         // Gain reduction that keeps the level after makeup at or under the ceiling
         targetGainReduction = calculateGainReduction(inputLevel * makeupGain);
 
-        // Smooth gain reduction with exponential release
-        currentGainReduction = smoothGainReduction(targetGainReduction, currentGainReduction);
+        // === LOOKAHEAD ===
+        float gain;
+
+        if (lookaheadSamples > 0)
+        {
+            // Delay the signal by the lookahead
+            const int size = lookaheadBuffer.getNumSamples();
+            const int readPosition = (lookaheadWritePosition + size - lookaheadSamples) % size;
+
+            lookaheadBuffer.setSample(0, lookaheadWritePosition, leftIn);
+            lookaheadBuffer.setSample(1, lookaheadWritePosition, rightIn);
+            leftIn = lookaheadBuffer.getSample(0, readPosition);
+            rightIn = lookaheadBuffer.getSample(1, readPosition);
+            lookaheadWritePosition = (lookaheadWritePosition + 1) % size;
+
+            // Hold the reduction a peak needs from the moment it is seen
+            // until its delayed copy has gone by, release from there, and
+            // average over the lookahead. The average reaches the full
+            // reduction exactly as the peak comes out of the delay.
+            const float held = lowestGainOverLookahead(targetGainReduction);
+            currentGainReduction = smoothGainReduction(held, currentGainReduction);
+            gain = averageGainOverLookahead(currentGainReduction);
+        }
+        else
+        {
+            // No lookahead: the gain drops at the peak itself
+            currentGainReduction = smoothGainReduction(targetGainReduction, currentGainReduction);
+            gain = currentGainReduction;
+        }
 
         // === APPLY GAIN REDUCTION ===
-        float leftOut = leftIn * currentGainReduction;
-        float rightOut = rightIn * currentGainReduction;
+        float leftOut = leftIn * gain;
+        float rightOut = rightIn * gain;
 
         // === AUTO MAKEUP GAIN ===
         leftOut *= makeupGain;
@@ -175,9 +250,7 @@ float LimiterEngine::calculateMakeupGain()
 void LimiterEngine::reset()
 {
     truePeakDetector.reset();
-    lookaheadBuffer.clear();
-    lookaheadWritePosition = 0;
-    lookaheadReadPosition = lookaheadSamples; // Read lags behind write by lookahead amount
+    clearLookahead();
 
     currentGainReduction = 1.0f;
     targetGainReduction = 1.0f;
