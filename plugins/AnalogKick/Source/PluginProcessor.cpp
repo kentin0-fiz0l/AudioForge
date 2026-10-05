@@ -96,12 +96,16 @@ void KickProcessor::getStateInformation(juce::MemoryBlock& destData)
 void KickProcessor::setStateInformation(const void* data, int sizeInBytes)
 {
     std::unique_ptr<juce::XmlElement> xml(getXmlFromBinary(data, sizeInBytes));
-    if (xml && xml->hasTagName(apvts_.state.getType()))
-        apvts_.replaceState(juce::ValueTree::fromXml(*xml));
-        if (auto* midiXml = xml->getChildByName("MIDILearnMappings"))
-            midiLearnManager_.loadFromXml(*midiXml);
-        if (auto* presetXml = xml->getChildByName("PresetManagerState"))
-            presetManager_.loadFromXml(*presetXml);
+    // A state that did not parse, or that belongs to something else, is ignored
+    if (xml == nullptr || ! xml->hasTagName(apvts_.state.getType()))
+        return;
+
+    apvts_.replaceState(juce::ValueTree::fromXml(*xml));
+
+    if (auto* midiXml = xml->getChildByName("MIDILearnMappings"))
+        midiLearnManager_.loadFromXml(*midiXml);
+    if (auto* presetXml = xml->getChildByName("PresetManagerState"))
+        presetManager_.loadFromXml(*presetXml);
 }
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()

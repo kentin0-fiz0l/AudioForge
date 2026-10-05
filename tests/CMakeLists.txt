@@ -40,6 +40,8 @@ add_executable(TestRunner
     Plugins/LimiterTests.cpp
     Plugins/PlateReverbTests.cpp
     Plugins/OutputLevelTests.cpp
+    Plugins/StateRestoreTests.cpp
+    Plugins/PolysynthTests.cpp
     Plugins/EffectDefaultLevelTests.cpp
     Integration/PluginIntegrationTests.cpp)
 

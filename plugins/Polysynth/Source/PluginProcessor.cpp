@@ -25,7 +25,11 @@ juce::AudioProcessorValueTreeState::ParameterLayout PolysynthProcessor::createPa
     params.push_back(std::make_unique<juce::AudioParameterFloat>(PARAM_DETUNE, "Detune", -24.0f, 24.0f, -12.0f));
     params.push_back(std::make_unique<juce::AudioParameterInt>(PARAM_UNISON_VOICES, "Unison Voices", 1, 6, 1));
     params.push_back(std::make_unique<juce::AudioParameterFloat>(PARAM_UNISON_DETUNE, "Unison Detune", 0.0f, 50.0f, 10.0f));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>(PARAM_FILTER_CUTOFF, "Filter Cutoff", 20.0f, 20000.0f, 2000.0f));
+    // Skewed so that 1 kHz is at the middle of the knob. In a straight line
+    // from 20 Hz to 20 kHz, everything under 2 kHz sat in its bottom tenth.
+    juce::NormalisableRange<float> cutoffRange(20.0f, 20000.0f);
+    cutoffRange.setSkewForCentre(1000.0f);
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(PARAM_FILTER_CUTOFF, "Filter Cutoff", cutoffRange, 2000.0f));
     params.push_back(std::make_unique<juce::AudioParameterFloat>(PARAM_FILTER_RESONANCE, "Filter Resonance", 0.0f, 1.0f, 0.0f));
     params.push_back(std::make_unique<juce::AudioParameterFloat>(PARAM_FILTER_MIX, "LP/HP Mix", 0.0f, 1.0f, 0.0f));
     params.push_back(std::make_unique<juce::AudioParameterFloat>(PARAM_ATTACK, "Attack", 0.001f, 2.0f, 0.01f));
@@ -128,13 +132,16 @@ void PolysynthProcessor::getStateInformation(juce::MemoryBlock& destData)
 void PolysynthProcessor::setStateInformation(const void* data, int sizeInBytes)
 {
     std::unique_ptr<juce::XmlElement> xmlState(getXmlFromBinary(data, sizeInBytes));
-    if (xmlState.get() != nullptr)
-        if (xmlState->hasTagName(apvts_.state.getType()))
-            apvts_.replaceState(juce::ValueTree::fromXml(*xmlState));
-        if (auto* midiXml = xmlState->getChildByName("MIDILearnMappings"))
-            midiLearnManager_.loadFromXml(*midiXml);
-        if (auto* presetXml = xmlState->getChildByName("PresetManagerState"))
-            presetManager_.loadFromXml(*presetXml);
+    // A state that did not parse, or that belongs to something else, is ignored
+    if (xmlState == nullptr || ! xmlState->hasTagName(apvts_.state.getType()))
+        return;
+
+    apvts_.replaceState(juce::ValueTree::fromXml(*xmlState));
+
+    if (auto* midiXml = xmlState->getChildByName("MIDILearnMappings"))
+        midiLearnManager_.loadFromXml(*midiXml);
+    if (auto* presetXml = xmlState->getChildByName("PresetManagerState"))
+        presetManager_.loadFromXml(*presetXml);
 }
 
 #ifndef AUDIOFORGE_TESTS

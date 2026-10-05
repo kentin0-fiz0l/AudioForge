@@ -51,11 +51,16 @@ void TremoloVibratoProcessor::getStateInformation(juce::MemoryBlock& d) {
 
 void TremoloVibratoProcessor::setStateInformation(const void* d, int sz) {
     std::unique_ptr<juce::XmlElement> x(getXmlFromBinary(d, sz));
-    if (x && x->hasTagName(apvts_.state.getType())) apvts_.replaceState(juce::ValueTree::fromXml(*x));
-        if (auto* midiXml = x->getChildByName("MIDILearnMappings"))
-            midiLearnManager_.loadFromXml(*midiXml);
-        if (auto* presetXml = x->getChildByName("PresetManagerState"))
-            presetManager_.loadFromXml(*presetXml);
+    // A state that did not parse, or that belongs to something else, is ignored
+    if (x == nullptr || ! x->hasTagName(apvts_.state.getType()))
+        return;
+
+    apvts_.replaceState(juce::ValueTree::fromXml(*x));
+
+    if (auto* midiXml = x->getChildByName("MIDILearnMappings"))
+        midiLearnManager_.loadFromXml(*midiXml);
+    if (auto* presetXml = x->getChildByName("PresetManagerState"))
+        presetManager_.loadFromXml(*presetXml);
 }
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter() { return new TremoloVibratoProcessor(); }
