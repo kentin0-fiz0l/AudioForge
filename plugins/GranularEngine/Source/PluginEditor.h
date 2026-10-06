@@ -79,5 +79,13 @@ private:
     juce::TextButton loadPresetButton;
     juce::Label midiStatusLabel;
 
+    // Declared after the controls, so they are destroyed first
+    std::vector<std::unique_ptr<juce::SliderParameterAttachment>> sliderAttachments;
+    std::vector<std::unique_ptr<juce::ComboBoxParameterAttachment>> comboBoxAttachments;
+
+    juce::RangedAudioParameter& parameter(const juce::String& id);
+    void attach(juce::Slider& slider, const juce::String& id);
+    void attach(juce::ComboBox& comboBox, const juce::String& id);
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(GranularEngineEditor)
 };
