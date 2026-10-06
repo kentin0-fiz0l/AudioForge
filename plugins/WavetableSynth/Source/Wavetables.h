@@ -8,6 +8,9 @@
 namespace Wavetables
 {
 
+// M_PI is not defined by every compiler (Microsoft's does not, without _USE_MATH_DEFINES)
+constexpr float pi = 3.14159265358979f;
+
 constexpr int WAVETABLE_SIZE = 2048;
 constexpr int NUM_WAVETABLES = 32;
 
@@ -75,7 +78,7 @@ private:
         Wavetable table;
         for (int i = 0; i < WAVETABLE_SIZE; ++i)
         {
-            float phase = (2.0f * static_cast<float>(M_PI) * i) / WAVETABLE_SIZE;
+            float phase = (2.0f * pi * i) / WAVETABLE_SIZE;
             table[i] = std::sin(phase);
         }
         return table;
@@ -123,7 +126,7 @@ private:
             float amplitude = 1.0f / harmonic;
             for (int i = 0; i < WAVETABLE_SIZE; ++i)
             {
-                float phase = (2.0f * static_cast<float>(M_PI) * i * harmonic) / WAVETABLE_SIZE;
+                float phase = (2.0f * pi * i * harmonic) / WAVETABLE_SIZE;
                 table[i] += amplitude * std::sin(phase);
             }
         }
@@ -140,7 +143,7 @@ private:
             float amplitude = 1.0f / harmonic;
             for (int i = 0; i < WAVETABLE_SIZE; ++i)
             {
-                float phase = (2.0f * static_cast<float>(M_PI) * i * harmonic) / WAVETABLE_SIZE;
+                float phase = (2.0f * pi * i * harmonic) / WAVETABLE_SIZE;
                 table[i] += amplitude * std::sin(phase);
             }
         }
@@ -157,7 +160,7 @@ private:
             float amplitude = 1.0f / harmonic;
             for (int i = 0; i < WAVETABLE_SIZE; ++i)
             {
-                float phase = (2.0f * static_cast<float>(M_PI) * i * harmonic) / WAVETABLE_SIZE;
+                float phase = (2.0f * pi * i * harmonic) / WAVETABLE_SIZE;
                 table[i] += amplitude * std::sin(phase);
             }
         }
@@ -193,7 +196,7 @@ private:
         // Add slight harmonics for analog character
         for (int i = 0; i < WAVETABLE_SIZE; ++i)
         {
-            float phase = (2.0f * static_cast<float>(M_PI) * i) / WAVETABLE_SIZE;
+            float phase = (2.0f * pi * i) / WAVETABLE_SIZE;
             table[i] += 0.1f * std::sin(phase * 2.0f);
             table[i] += 0.05f * std::sin(phase * 3.0f);
         }
@@ -238,7 +241,7 @@ private:
         Wavetable table;
         for (int i = 0; i < WAVETABLE_SIZE; ++i)
         {
-            float width = 0.5f + 0.3f * std::sin((2.0f * static_cast<float>(M_PI) * i) / WAVETABLE_SIZE);
+            float width = 0.5f + 0.3f * std::sin((2.0f * pi * i) / WAVETABLE_SIZE);
             table[i] = (i < WAVETABLE_SIZE * width) ? 1.0f : -1.0f;
         }
         return table;
@@ -305,7 +308,7 @@ private:
         Wavetable table;
         for (int i = 0; i < WAVETABLE_SIZE; ++i)
         {
-            float phase = (2.0f * static_cast<float>(M_PI) * i) / WAVETABLE_SIZE;
+            float phase = (2.0f * pi * i) / WAVETABLE_SIZE;
             table[i] = std::sin(phase) + 0.5f * std::sin(phase * 7.0f) + 0.3f * std::sin(phase * 13.0f);
         }
         normalize(table);
@@ -317,7 +320,7 @@ private:
         Wavetable table;
         for (int i = 0; i < WAVETABLE_SIZE; ++i)
         {
-            float phase = (2.0f * static_cast<float>(M_PI) * i) / WAVETABLE_SIZE;
+            float phase = (2.0f * pi * i) / WAVETABLE_SIZE;
             table[i] = std::sin(phase * 2.0f) * std::sin(phase * 5.0f);
         }
         normalize(table);
@@ -329,7 +332,7 @@ private:
         Wavetable table;
         for (int i = 0; i < WAVETABLE_SIZE; ++i)
         {
-            float phase = (2.0f * static_cast<float>(M_PI) * i) / WAVETABLE_SIZE;
+            float phase = (2.0f * pi * i) / WAVETABLE_SIZE;
             table[i] = std::tanh(3.0f * std::sin(phase) + std::sin(phase * 3.0f));
         }
         normalize(table);
@@ -345,7 +348,7 @@ private:
         {
             for (int i = 0; i < WAVETABLE_SIZE; ++i)
             {
-                float phase = (2.0f * static_cast<float>(M_PI) * i * formant) / (WAVETABLE_SIZE * 440);
+                float phase = (2.0f * pi * i * formant) / (WAVETABLE_SIZE * 440);
                 table[i] += std::sin(phase);
             }
         }
@@ -367,7 +370,7 @@ private:
         {
             for (int i = 0; i < WAVETABLE_SIZE; ++i)
             {
-                float phase = (2.0f * static_cast<float>(M_PI) * i * ratio) / WAVETABLE_SIZE;
+                float phase = (2.0f * pi * i * ratio) / WAVETABLE_SIZE;
                 table[i] += std::sin(phase) / ratio;
             }
         }
@@ -384,7 +387,7 @@ private:
             float amplitude = 1.0f / (harmonic * harmonic);
             for (int i = 0; i < WAVETABLE_SIZE; ++i)
             {
-                float phase = (2.0f * static_cast<float>(M_PI) * i * harmonic) / WAVETABLE_SIZE;
+                float phase = (2.0f * pi * i * harmonic) / WAVETABLE_SIZE;
                 table[i] += amplitude * std::sin(phase);
             }
         }
@@ -401,7 +404,7 @@ private:
         {
             for (int i = 0; i < WAVETABLE_SIZE; ++i)
             {
-                float phase = (2.0f * static_cast<float>(M_PI) * i * (h + 1)) / WAVETABLE_SIZE;
+                float phase = (2.0f * pi * i * (h + 1)) / WAVETABLE_SIZE;
                 table[i] += drawbars[h] * std::sin(phase);
             }
         }
@@ -424,7 +427,7 @@ private:
         Wavetable table;
         for (int i = 0; i < WAVETABLE_SIZE; ++i)
         {
-            float phase = (2.0f * static_cast<float>(M_PI) * i) / WAVETABLE_SIZE;
+            float phase = (2.0f * pi * i) / WAVETABLE_SIZE;
             table[i] = std::sin(phase) > 0.0f ? 0.7f : -0.7f;
             if (i % 128 < 64)
                 table[i] *= 1.2f;
@@ -442,7 +445,7 @@ private:
         {
             for (int i = 0; i < WAVETABLE_SIZE; ++i)
             {
-                float phase = (2.0f * static_cast<float>(M_PI) * i * ratio) / WAVETABLE_SIZE;
+                float phase = (2.0f * pi * i * ratio) / WAVETABLE_SIZE;
                 table[i] += std::sin(phase) / ratio;
             }
         }
@@ -459,7 +462,7 @@ private:
             float amplitude = 1.0f / (harmonic * harmonic);
             for (int i = 0; i < WAVETABLE_SIZE; ++i)
             {
-                float phase = (2.0f * static_cast<float>(M_PI) * i * harmonic) / WAVETABLE_SIZE;
+                float phase = (2.0f * pi * i * harmonic) / WAVETABLE_SIZE;
                 table[i] += amplitude * std::sin(phase);
             }
         }
