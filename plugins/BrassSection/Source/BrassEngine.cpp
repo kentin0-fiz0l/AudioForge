@@ -111,20 +111,26 @@ float BrassEngine::processSample(float frequency, float velocity, bool isNoteOn,
 
             case Articulation::FallOff:
                 attackRate_ = 0.02f;   // Normal attack
-                releaseRate_ = 0.997f; // Slow release
-                // Pitch bend down at end
-                if (samplesSinceNoteOn > static_cast<int>(sampleRate_ * 0.5f))
-                {
-                    float fallAmount = static_cast<float>(samplesSinceNoteOn - sampleRate_ * 0.5f) / (sampleRate_ * 0.3f);
-                    fallAmount = juce::jlimit(0.0f, 1.0f, fallAmount);
-                    phaseIncrement_ *= (1.0f - fallAmount * 0.1f); // Bend down by up to 10%
-                }
+                // Held at pitch; the fall comes on release, slowly enough to be heard
+                releaseRate_ = std::exp(-1.0f / (FALL_FADE_SECONDS * static_cast<float>(sampleRate_)));
                 break;
         }
+
+        samplesSinceRelease_ = -1;
     }
     else
     {
         targetAmplitude_ = 0.0f;
+
+        // Fall-off: on release the note slides down and fades, as a player
+        // letting go of it does
+        ++samplesSinceRelease_;
+        if (currentArticulation_ == Articulation::FallOff)
+        {
+            const float progress = juce::jmin(1.0f, static_cast<float>(samplesSinceRelease_)
+                                                         / (FALL_SECONDS * static_cast<float>(sampleRate_)));
+            phaseIncrement_ *= std::pow(2.0f, -FALL_SEMITONES * std::pow(progress, 1.5f) / 12.0f);
+        }
     }
 
     // Envelope smoothing
@@ -184,6 +190,7 @@ void BrassEngine::reset()
     currentAmplitude_ = 0.0f;
     targetAmplitude_ = 0.0f;
     vibratoPhase_ = 0.0f;
+    samplesSinceRelease_ = -1;
 }
 
 void BrassEngine::generateTrumpetWavetable()

@@ -32,7 +32,7 @@ public:
         Sustain,    // Smooth, connected notes
         Staccato,   // Short, detached notes
         Marcato,    // Accented, emphasized attack
-        FallOff     // Pitch bend down at end of note
+        FallOff     // Held at pitch, then slides down and fades on release
     };
 
     BrassEngine();
@@ -61,6 +61,10 @@ public:
 
     // Reset on note on
     void reset();
+
+    // True once the envelope has faded out, so a voice can stop. A single
+    // output sample near zero is not enough: every waveform crosses zero.
+    bool isSilent() const { return currentAmplitude_ < 1.0e-4f; }
 
 private:
     // Wavetable generation for different instruments
@@ -91,6 +95,12 @@ private:
     float vibratoRate_ = 0.5f;  // 0-1 maps to 4-8 Hz
     float expression_ = 1.0f;
     int sectionSize_ = 1;
+
+    // Fall-off: how far and how fast the note falls once released
+    static constexpr float FALL_SEMITONES = 5.0f;
+    static constexpr float FALL_SECONDS = 0.35f;
+    static constexpr float FALL_FADE_SECONDS = 0.18f;   // time constant of the fade under the fall
+    int samplesSinceRelease_ = -1;                      // -1 while the note is held
 
     // Envelope
     float currentAmplitude_ = 0.0f;
