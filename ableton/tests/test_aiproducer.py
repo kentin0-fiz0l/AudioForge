@@ -249,27 +249,55 @@ class FakeSong:
         self.view = types.SimpleNamespace(selected_track=None)
         self.is_playing = False
         self.time_listeners = []
-        self.current_song_time = 0.0
         self.insert_marker = 136.0
-        self.cue_points = []
+        self._cue_points = []
+        self._time = 0.0
+        self._pending_time = None
+
+    # Seen in Live 12.4.6: a new song time is applied a moment after it is
+    # set, so a toggle in the same breath lands at the old position. Here
+    # the move lands when time passes, which is when the song is next looked at.
+    @property
+    def current_song_time(self):
+        return self._time
+
+    @current_song_time.setter
+    def current_song_time(self, value):
+        self._pending_time = value
+
+    def _settle(self):
+        if self._pending_time is not None:
+            self._time, self._pending_time = self._pending_time, None
+
+    @property
+    def cue_points(self):
+        self._settle()
+        return self._cue_points
+
+    @cue_points.setter
+    def cue_points(self, value):
+        self._cue_points = value
 
     def set_or_delete_cue(self):
         # As in Live: toggles a locator at the current song time
-        for cue in self.cue_points:
-            if abs(cue.time - self.current_song_time) < 1e-3:
-                self.cue_points.remove(cue)
+        for cue in self._cue_points:
+            if abs(cue.time - self._time) < 1e-3:
+                self._cue_points.remove(cue)
+                self._settle()
                 return
-        self.cue_points.append(types.SimpleNamespace(time=self.current_song_time, name=""))
+        self._cue_points.append(types.SimpleNamespace(time=self._time, name=""))
+        self._settle()
 
     def create_midi_track(self, index):
         self.tracks.insert(index, FakeTrack())
 
     def start_playing(self):
         # As in Live: play starts from the insert marker, wherever that was last clicked
-        self.current_song_time = self.insert_marker
+        self._time, self._pending_time = self.insert_marker, None
         self.is_playing = True
 
     def continue_playing(self):
+        self._settle()
         self.is_playing = True
 
     def stop_playing(self):
@@ -989,18 +1017,49 @@ class TransportTests(LiveControlTestCase):
 
 
 class LocatorTests(LiveControlTestCase):
-    def test_all_locators_can_be_cleared(self):
-        for time in (8.0, 24.0, 360.0):
+    def place_cues(self, *times):
+        for time in times:
             self.song.current_song_time = time
+            self.song.cue_points        # time passes
             self.song.set_or_delete_cue()
-        self.song.current_song_time = 100.0
 
-        reply = self.ask("/live/song/clear_locators")
+    def run_until_done(self, address, *args, limit=40):
+        for _ in range(limit):
+            reply = self.ask(address, *args)
+            self.assertTrue(reply["ok"], reply.get("error"))
+            if reply["done"]:
+                return reply
+        self.fail(f"{address} never finished")
+
+    def test_all_locators_can_be_cleared_a_step_at_a_time(self):
+        self.place_cues(8.0, 24.0, 360.0)
+        self.song.current_song_time = 100.0
+        self.song.cue_points
+
+        first = self.ask("/live/song/clear_locators")
+        self.assertFalse(first["done"], "The playhead has only been sent to the first locator")
+        self.assertEqual(len(self.song.cue_points), 3, "Nothing is toggled until Live has moved the playhead")
+
+        reply = self.run_until_done("/live/song/clear_locators")
 
         self.assertEqual(reply["deleted"], 3)
         self.assertEqual(self.song.cue_points, [])
+        self.song.cue_points
         self.assertEqual(self.song.current_song_time, 100.0, "The playhead goes back where it was")
-        self.assertEqual(self.ask("/live/song/clear_locators")["deleted"], 0)
+        self.assertTrue(self.ask("/live/song/clear_locators")["done"])
+
+    def test_a_locator_is_set_where_asked_and_named(self):
+        self.song.current_song_time = 100.0
+        self.song.cue_points
+
+        reply = self.run_until_done("/live/song/set_locator", 312.0, "Breakdown")
+
+        self.assertEqual([(c.time, c.name) for c in self.song.cue_points], [(312.0, "Breakdown")])
+        self.assertEqual(reply["time"], 312.0)
+
+        # Asking again renames rather than toggling it away
+        self.run_until_done("/live/song/set_locator", 312.0, "Breakdown A")
+        self.assertEqual([(c.time, c.name) for c in self.song.cue_points], [(312.0, "Breakdown A")])
 
 
 class MeterTests(LiveControlTestCase):
