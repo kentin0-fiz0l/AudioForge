@@ -44,6 +44,7 @@ add_executable(TestRunner
     Plugins/SpectralFreezeTests.cpp
     Plugins/PolysynthTests.cpp
     Plugins/EffectDefaultLevelTests.cpp
+    Plugins/GranularEngineTests.cpp
     Integration/PluginIntegrationTests.cpp)
 
 # Link JUCE libraries
@@ -113,6 +114,9 @@ target_sources(TestRunner PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/../shared/dsp/Sidechain.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/GranularEngine/Source/GrainExtractor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/GranularEngine/Source/GrainBuffer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/GranularEngine/Source/GrainScheduler.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/GranularEngine/Source/PluginProcessor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/GranularEngine/Source/PluginEditor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/Koto/Source/KotoEngine.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/FreezeFX/Source/PluginProcessor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/FreezeFX/Source/PluginEditor.cpp
