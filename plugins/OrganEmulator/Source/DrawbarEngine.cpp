@@ -2,6 +2,11 @@
 #include <cstring>
 #include <algorithm>
 
+namespace
+{
+    constexpr float pi = 3.14159265358979f; // M_PI is not defined by every compiler (Microsoft's does not, without _USE_MATH_DEFINES)
+}
+
 DrawbarEngine::DrawbarEngine()
     : baseFrequency(440.0f)
 {
@@ -34,7 +39,7 @@ float DrawbarEngine::processSample(double sampleRate)
         {
             // Generate sine wave at harmonic frequency
             float harmonicFreq = baseFrequency * HARMONIC_RATIOS[i];
-            output += std::sin(phases[i] * 2.0f * M_PI) * drawbarLevels[i];
+            output += std::sin(phases[i] * 2.0f * pi) * drawbarLevels[i];
 
             // Advance phase
             phases[i] += harmonicFreq * invSampleRate;

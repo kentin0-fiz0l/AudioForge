@@ -23,6 +23,9 @@ public:
     void paint(juce::Graphics&) override;
     void resized() override;
 
+    // Where the stereo field is drawn, clear of the controls
+    juce::Rectangle<int> getStereoFieldBounds() const;
+
 private:
     // Timer callback for meter updates
     void timerCallback() override;

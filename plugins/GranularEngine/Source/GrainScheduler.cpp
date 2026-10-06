@@ -116,10 +116,10 @@ void GrainScheduler::processBlock(const GrainBuffer& buffer,
 
                 float sample = sample1 + (sample2 - sample1) * frac;
 
-                // Apply stereo panning (equal power panning)
+                // Equal-power panning, scaled so a centred grain is at its own level
                 float panAngle = grain.panPosition * juce::MathConstants<float>::halfPi;
-                float leftGain = std::cos(panAngle);
-                float rightGain = std::sin(panAngle);
+                float leftGain = juce::MathConstants<float>::sqrt2 * std::cos(panAngle);
+                float rightGain = juce::MathConstants<float>::sqrt2 * std::sin(panAngle);
 
                 leftOutput[i] += sample * leftGain;
                 rightOutput[i] += sample * rightGain;
@@ -163,8 +163,10 @@ void GrainScheduler::processBlock(const GrainBuffer& buffer,
         }
     }
 
-    // Normalize output (divide by max possible overlapping grains)
-    float normalization = 1.0f / std::sqrt((float)MAX_GRAINS);
+    // Grains from different moments add in power, so scale by how many play
+    // at once on average. Sparse grains, under one at a time, are left alone.
+    float grainsAtOnce = extractor.getGrainSize() * grainDensity / (float)sampleRate;
+    float normalization = 1.0f / std::sqrt(juce::jmax(1.0f, grainsAtOnce));
     for (int i = 0; i < numSamples; ++i)
     {
         leftOutput[i] *= normalization;
