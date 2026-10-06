@@ -34,6 +34,7 @@ public:
         testClapSitsWithTheSnare();
         testHitsFollowVelocity();
         testHitsLandWhereTheirNotesAre();
+        testASoftClosedHitChokesTheOpenHatWithoutAStep();
         testNewParametersComeLast();
     }
 
@@ -179,6 +180,42 @@ private:
             sum += samples[i] * samples[i];
 
         return static_cast<float>(std::sqrt(sum / static_cast<double>(to - from)));
+    }
+
+    void testASoftClosedHitChokesTheOpenHatWithoutAStep()
+    {
+        beginTest("A soft closed hit chokes a loud open hat quickly, not in one step");
+
+        PluginProcessor processor;
+        processor.setRateAndBufferSizeDetails(sampleRate, blockSize);
+        processor.prepareToPlay(sampleRate, blockSize);
+
+        // A loud open hat, then two blocks (21 ms) later a very soft closed one
+        std::vector<float> output;
+        juce::AudioBuffer<float> buffer(2, blockSize);
+        for (int block = 0; block < 8; ++block)
+        {
+            juce::MidiBuffer midi;
+            if (block == 0) midi.addEvent(juce::MidiMessage::noteOn(1, 46, static_cast<juce::uint8>(127)), 0);
+            if (block == 2) midi.addEvent(juce::MidiMessage::noteOn(1, 42, static_cast<juce::uint8>(8)), 0);
+
+            buffer.clear();
+            processor.processBlock(buffer, midi);
+            output.insert(output.end(), buffer.getReadPointer(0), buffer.getReadPointer(0) + blockSize);
+        }
+
+        const double chokeMs = 2.0 * blockSize / sampleRate * 1000.0;
+        const float before = rmsBetween(output, chokeMs - 1.0, chokeMs);
+        const float justAfter = rmsBetween(output, chokeMs, chokeMs + 1.0);
+        const float later = rmsBetween(output, chokeMs + 15.0, chokeMs + 20.0);
+
+        // The open hat used to drop straight to the soft hit's level
+        expect(justAfter > 0.5f * before,
+               "The ringing hat fell " + juce::String(juce::Decibels::gainToDecibels(justAfter / before), 1)
+                   + " dB in the first millisecond");
+        expect(later < 0.1f * before,
+               "The open hat is still ringing 15 ms after the choke, at "
+                   + juce::String(juce::Decibels::gainToDecibels(later / before), 1) + " dB");
     }
 
     void testClapPlays()

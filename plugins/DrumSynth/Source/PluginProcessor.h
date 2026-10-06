@@ -63,7 +63,6 @@ private:
     // How hard each drum was last hit: 1 at full velocity
     float kickLevel = 1.0f;
     float snareLevel = 1.0f;
-    float hihatLevel = 1.0f;
     float clapLevel = 1.0f;
 
     void triggerDrum(const juce::MidiMessage& message);
