@@ -7,6 +7,7 @@
 
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "../../plugins/CleanDelay/Source/PluginProcessor.h"
+#include "../../plugins/CleanDelay/Source/PluginEditor.h"
 
 //==============================================================================
 class CleanDelayTests : public juce::UnitTest
@@ -46,6 +47,9 @@ public:
 
         beginTest("Maximum delay handling");
         testMaxDelay();
+
+        beginTest("Feedback and Mix read as percentages, in the window and in the host");
+        testPercentagesReadAsPercentages();
     }
 
 private:
@@ -395,6 +399,36 @@ private:
         expect(magnitude > 0.0f, "Output should have signal");
 
         processor.releaseResources();
+    }
+
+    void testPercentagesReadAsPercentages()
+    {
+        // They are stored from 0 to 1 and used to read "0.69 %"
+        CleanDelayProcessor processor;
+        CleanDelayEditor editor(processor);
+        int checked = 0;
+
+        for (auto* parameter : processor.getParameters())
+        {
+            auto* param = dynamic_cast<juce::RangedAudioParameter*>(parameter);
+            if (param == nullptr
+                || (param->paramID != CleanDelayProcessor::PARAM_FEEDBACK && param->paramID != CleanDelayProcessor::PARAM_MIX))
+                continue;
+
+            ++checked;
+
+            // What a host shows: the text, then the label
+            const float at69 = param->convertTo0to1(0.69f);
+            expectEquals(param->getText(at69, 0) + " " + param->getLabel(), juce::String("69 %"), param->getName(64));
+            expectWithinAbsoluteError(param->getValueForText("69"), at69, 1.0e-4f, param->getName(64) + " typed as 69");
+
+            auto* slider = dynamic_cast<juce::Slider*>(editor.findChildWithID(param->paramID));
+            expect(slider != nullptr);
+            if (slider != nullptr)
+                expectEquals(slider->getTextFromValue(0.69), juce::String("69 %"), param->getName(64) + " in the window");
+        }
+
+        expectEquals(checked, 2, "Feedback and Mix should both be found");
     }
 };
 
