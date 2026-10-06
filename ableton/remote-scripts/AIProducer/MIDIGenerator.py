@@ -78,11 +78,13 @@ class MIDIClipGenerator:
 
         clip.remove_notes_extended(0, 128, 0, total_bars * 4)
 
-        notes = []
-        bass_note = root - 12  # One octave lower
+        # Each bar plays its chord's root an octave down, as create_chord_clip
+        # parses it (that clip then lifts the chords up an octave for pads)
+        chords = MusicTheory.parse_progression(root, structure['scale'], structure['progression'])
 
-        # Simple: bass on every beat
+        notes = []
         for bar in range(total_bars):
+            bass_note = chords[bar % len(chords)][0] - 12
             for beat in range(4):
                 time = bar * 4.0 + beat
                 notes.append((bass_note, time, 0.9, 80, False))
