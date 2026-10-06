@@ -97,7 +97,7 @@ private:
     //==============================================================================
     // Parameters
     double sampleRate = 44100.0;
-    float grainDensity = 10.0f;       // Grains per second
+    float grainDensity = 20.0f;       // Grains per second
     float timeStretch = 1.0f;         // Playback speed multiplier
     float readPosition = 0.5f;        // Read position in buffer (0-1)
     float pitchShift = 0.0f;          // Pitch shift in semitones

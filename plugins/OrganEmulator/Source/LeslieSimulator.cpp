@@ -3,6 +3,11 @@
 #include <cstring>
 #include <algorithm>
 
+namespace
+{
+    constexpr float pi = 3.14159265358979f; // M_PI is not defined by every compiler (Microsoft's does not, without _USE_MATH_DEFINES)
+}
+
 LeslieSimulator::LeslieSimulator()
     : lfoPhase(0.0f)
     , lfoRate(SLOW_SPEED)
@@ -43,7 +48,7 @@ float LeslieSimulator::processSample(float input)
     delayBuffer[delayWritePos] = input;
 
     // Generate LFO (sine wave)
-    float lfo = std::sin(lfoPhase * 2.0f * M_PI);
+    float lfo = std::sin(lfoPhase * 2.0f * pi);
 
     // Modulate delay time (0.5ms to 5ms range)
     float baseDelay = 2.0f; // ms

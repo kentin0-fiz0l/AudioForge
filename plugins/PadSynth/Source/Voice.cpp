@@ -2,6 +2,11 @@
 #include <dsp/WaveformGenerators.h>
 #include <cmath>
 
+namespace
+{
+    constexpr float pi = 3.14159265358979f; // M_PI is not defined by every compiler (Microsoft's does not, without _USE_MATH_DEFINES)
+}
+
 Voice::Voice()
 {
     // Set default envelope
@@ -124,7 +129,7 @@ void Voice::processSample(double sampleRate,
         float pan = unisonVoices[i].getPan();
 
         // Constant power panning
-        float panRadians = (pan + 1.0f) * 0.25f * M_PI; // Map -1..1 to 0..PI/2
+        float panRadians = (pan + 1.0f) * 0.25f * pi; // Map -1..1 to 0..PI/2
         float leftGain = std::cos(panRadians);
         float rightGain = std::sin(panRadians);
 

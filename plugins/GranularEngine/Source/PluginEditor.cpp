@@ -5,7 +5,7 @@ GranularEngineEditor::GranularEngineEditor(GranularEngineProcessor& p)
     : AudioProcessorEditor(&p), audioProcessor(p)
 {
     // Set window size
-    setSize(800, 600);
+    setSize(800, 640);
 
     // Start timer for UI updates (60 FPS)
     startTimerHz(60);
@@ -13,8 +13,6 @@ GranularEngineEditor::GranularEngineEditor(GranularEngineProcessor& p)
     // Grain Size Slider
     grainSizeSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     grainSizeSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
-    grainSizeSlider.setRange(10.0, 500.0, 1.0);
-    grainSizeSlider.setValue(50.0);
     addAndMakeVisible(grainSizeSlider);
 
     grainSizeLabel.setText("Grain Size (ms)", juce::dontSendNotification);
@@ -24,8 +22,6 @@ GranularEngineEditor::GranularEngineEditor(GranularEngineProcessor& p)
     // Dry/Wet Slider
     dryWetSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     dryWetSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
-    dryWetSlider.setRange(0.0, 100.0, 1.0);
-    dryWetSlider.setValue(100.0);
     addAndMakeVisible(dryWetSlider);
 
     dryWetLabel.setText("Dry/Wet (%)", juce::dontSendNotification);
@@ -39,7 +35,6 @@ GranularEngineEditor::GranularEngineEditor(GranularEngineProcessor& p)
     windowTypeCombo.addItem("Tukey", 4);
     windowTypeCombo.addItem("Blackman", 5);
     windowTypeCombo.addItem("Kaiser", 6);
-    windowTypeCombo.setSelectedId(1);
     addAndMakeVisible(windowTypeCombo);
 
     windowTypeLabel.setText("Window", juce::dontSendNotification);
@@ -49,8 +44,6 @@ GranularEngineEditor::GranularEngineEditor(GranularEngineProcessor& p)
     // Window Shape Slider
     windowShapeSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     windowShapeSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
-    windowShapeSlider.setRange(0.0, 1.0, 0.01);
-    windowShapeSlider.setValue(0.5);
     addAndMakeVisible(windowShapeSlider);
 
     windowShapeLabel.setText("Shape", juce::dontSendNotification);
@@ -85,8 +78,6 @@ GranularEngineEditor::GranularEngineEditor(GranularEngineProcessor& p)
     // Grain Density Slider
     grainDensitySlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     grainDensitySlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
-    grainDensitySlider.setRange(1.0, 100.0, 0.1);
-    grainDensitySlider.setValue(10.0);
     addAndMakeVisible(grainDensitySlider);
 
     grainDensityLabel.setText("Density (g/s)", juce::dontSendNotification);
@@ -96,9 +87,6 @@ GranularEngineEditor::GranularEngineEditor(GranularEngineProcessor& p)
     // Time Stretch Slider
     timeStretchSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     timeStretchSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
-    timeStretchSlider.setRange(0.25, 4.0, 0.01);
-    timeStretchSlider.setSkewFactor(0.5);
-    timeStretchSlider.setValue(1.0);
     addAndMakeVisible(timeStretchSlider);
 
     timeStretchLabel.setText("Time Stretch", juce::dontSendNotification);
@@ -108,8 +96,6 @@ GranularEngineEditor::GranularEngineEditor(GranularEngineProcessor& p)
     // Position Slider
     positionSlider.setSliderStyle(juce::Slider::LinearHorizontal);
     positionSlider.setTextBoxStyle(juce::Slider::TextBoxRight, false, 60, 20);
-    positionSlider.setRange(0.0, 1.0, 0.01);
-    positionSlider.setValue(0.5);
     addAndMakeVisible(positionSlider);
 
     positionLabel.setText("Position", juce::dontSendNotification);
@@ -119,8 +105,6 @@ GranularEngineEditor::GranularEngineEditor(GranularEngineProcessor& p)
     // Pitch Shift Slider
     pitchShiftSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     pitchShiftSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
-    pitchShiftSlider.setRange(-24.0, 24.0, 0.1);
-    pitchShiftSlider.setValue(0.0);
     addAndMakeVisible(pitchShiftSlider);
 
     pitchShiftLabel.setText("Pitch (st)", juce::dontSendNotification);
@@ -130,8 +114,6 @@ GranularEngineEditor::GranularEngineEditor(GranularEngineProcessor& p)
     // Spray Slider
     spraySlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     spraySlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
-    spraySlider.setRange(0.0, 100.0, 1.0);
-    spraySlider.setValue(0.0);
     addAndMakeVisible(spraySlider);
 
     sprayLabel.setText("Spray (%)", juce::dontSendNotification);
@@ -141,8 +123,6 @@ GranularEngineEditor::GranularEngineEditor(GranularEngineProcessor& p)
     // Reverse Slider
     reverseSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     reverseSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
-    reverseSlider.setRange(0.0, 100.0, 1.0);
-    reverseSlider.setValue(0.0);
     addAndMakeVisible(reverseSlider);
 
     reverseLabel.setText("Reverse (%)", juce::dontSendNotification);
@@ -152,69 +132,49 @@ GranularEngineEditor::GranularEngineEditor(GranularEngineProcessor& p)
     // Stereo Width Slider
     stereoWidthSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     stereoWidthSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
-    stereoWidthSlider.setRange(0.0, 200.0, 1.0);
-    stereoWidthSlider.setValue(100.0);
     addAndMakeVisible(stereoWidthSlider);
 
     stereoWidthLabel.setText("Width (%)", juce::dontSendNotification);
     stereoWidthLabel.setJustificationType(juce::Justification::centred);
     addAndMakeVisible(stereoWidthLabel);
 
-    // Parameter connections
-    grainSizeSlider.onValueChange = [this]() {
-        auto* param = audioProcessor.getParameters()[0];
-        param->setValueNotifyingHost((grainSizeSlider.getValue() - 10.0f) / 490.0f);
-    };
+    // Each control is attached to its parameter, both ways: it takes the
+    // parameter's range and current value, follows the host's changes, and
+    // sets the parameter when turned
+    using P = GranularEngineProcessor;
+    attach(grainSizeSlider, P::PARAM_GRAIN_SIZE);
+    attach(grainDensitySlider, P::PARAM_GRAIN_DENSITY);
+    attach(timeStretchSlider, P::PARAM_TIME_STRETCH);
+    attach(positionSlider, P::PARAM_POSITION);
+    attach(pitchShiftSlider, P::PARAM_PITCH_SHIFT);
+    attach(spraySlider, P::PARAM_SPRAY);
+    attach(reverseSlider, P::PARAM_REVERSE);
+    attach(stereoWidthSlider, P::PARAM_STEREO_WIDTH);
+    attach(dryWetSlider, P::PARAM_DRY_WET);
+    attach(windowTypeCombo, P::PARAM_WINDOW_TYPE);
+    attach(windowShapeSlider, P::PARAM_WINDOW_SHAPE);
+}
 
-    grainDensitySlider.onValueChange = [this]() {
-        auto* param = audioProcessor.getParameters()[1];
-        param->setValueNotifyingHost((grainDensitySlider.getValue() - 1.0f) / 99.0f);
-    };
+juce::RangedAudioParameter& GranularEngineEditor::parameter(const juce::String& id)
+{
+    for (auto* param : audioProcessor.getParameters())
+        if (auto* ranged = dynamic_cast<juce::RangedAudioParameter*>(param); ranged != nullptr && ranged->paramID == id)
+            return *ranged;
 
-    timeStretchSlider.onValueChange = [this]() {
-        auto* param = audioProcessor.getParameters()[2];
-        param->setValueNotifyingHost((timeStretchSlider.getValue() - 0.25f) / 3.75f);
-    };
+    jassertfalse;  // Every control's parameter exists
+    return *dynamic_cast<juce::RangedAudioParameter*>(audioProcessor.getParameters()[0]);
+}
 
-    positionSlider.onValueChange = [this]() {
-        auto* param = audioProcessor.getParameters()[3];
-        param->setValueNotifyingHost(positionSlider.getValue());
-    };
+void GranularEngineEditor::attach(juce::Slider& slider, const juce::String& id)
+{
+    slider.setComponentID(id);
+    sliderAttachments.push_back(std::make_unique<juce::SliderParameterAttachment>(parameter(id), slider));
+}
 
-    pitchShiftSlider.onValueChange = [this]() {
-        auto* param = audioProcessor.getParameters()[4];
-        param->setValueNotifyingHost((pitchShiftSlider.getValue() + 24.0f) / 48.0f);
-    };
-
-    spraySlider.onValueChange = [this]() {
-        auto* param = audioProcessor.getParameters()[5];
-        param->setValueNotifyingHost(spraySlider.getValue() / 100.0f);
-    };
-
-    reverseSlider.onValueChange = [this]() {
-        auto* param = audioProcessor.getParameters()[6];
-        param->setValueNotifyingHost(reverseSlider.getValue() / 100.0f);
-    };
-
-    stereoWidthSlider.onValueChange = [this]() {
-        auto* param = audioProcessor.getParameters()[7];
-        param->setValueNotifyingHost(stereoWidthSlider.getValue() / 200.0f);
-    };
-
-    dryWetSlider.onValueChange = [this]() {
-        auto* param = audioProcessor.getParameters()[8];
-        param->setValueNotifyingHost(dryWetSlider.getValue() / 100.0f);
-    };
-
-    windowTypeCombo.onChange = [this]() {
-        auto* param = audioProcessor.getParameters()[9];
-        param->setValueNotifyingHost((windowTypeCombo.getSelectedId() - 1) / 5.0f);
-    };
-
-    windowShapeSlider.onValueChange = [this]() {
-        auto* param = audioProcessor.getParameters()[10];
-        param->setValueNotifyingHost(windowShapeSlider.getValue());
-    };
+void GranularEngineEditor::attach(juce::ComboBox& comboBox, const juce::String& id)
+{
+    comboBox.setComponentID(id);
+    comboBoxAttachments.push_back(std::make_unique<juce::ComboBoxParameterAttachment>(parameter(id), comboBox));
 }
 
 GranularEngineEditor::~GranularEngineEditor()
@@ -295,15 +255,15 @@ void GranularEngineEditor::resized()
     windowShapeSlider.setBounds(rightMargin, windowY + 35, sliderSize, sliderSize);
     windowShapeLabel.setBounds(rightMargin, windowY + 35 + sliderSize, sliderSize, 20);
 
-    // Position slider (horizontal at bottom)
-    y = 570;
+    // Position slider (horizontal at bottom, below Row 2's labels)
+    y = 610;
     positionLabel.setBounds(margin, y, 80, 20);
     positionSlider.setBounds(margin + 90, y, 560, 20);
 
-    // Preset buttons and MIDI status (top right)
+    // Preset buttons (top right) and MIDI status (top left, clear of the window shape panel)
     savePresetButton.setBounds(getWidth() - 130, 10, 110, 25);
     loadPresetButton.setBounds(getWidth() - 130, 40, 110, 25);
-    midiStatusLabel.setBounds(getWidth() - 130, 70, 110, 20);
+    midiStatusLabel.setBounds(margin, 25, 110, 20);
 }
 
 //==============================================================================
@@ -567,11 +527,7 @@ void GranularEngineEditor::mouseDown(const juce::MouseEvent& event)
         float newPosition = (event.x - waveformBounds.getX()) / (float)waveformBounds.getWidth();
         newPosition = juce::jlimit(0.0f, 1.0f, newPosition);
 
-        positionSlider.setValue(newPosition);
-
-        // Trigger parameter update
-        auto* param = audioProcessor.getParameters()[3];
-        param->setValueNotifyingHost(newPosition);
+        positionSlider.setValue(newPosition);  // Its attachment sets the parameter
     }
 }
 
@@ -583,9 +539,6 @@ void GranularEngineEditor::mouseDrag(const juce::MouseEvent& event)
         float newPosition = (event.x - waveformBounds.getX()) / (float)waveformBounds.getWidth();
         newPosition = juce::jlimit(0.0f, 1.0f, newPosition);
 
-        positionSlider.setValue(newPosition);
-
-        auto* param = audioProcessor.getParameters()[3];
-        param->setValueNotifyingHost(newPosition);
+        positionSlider.setValue(newPosition);  // Its attachment sets the parameter
     }
 }

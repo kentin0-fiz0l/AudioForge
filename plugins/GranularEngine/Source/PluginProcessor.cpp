@@ -18,7 +18,7 @@ GranularEngineProcessor::GranularEngineProcessor()
         PARAM_GRAIN_DENSITY,
         "Grain Density",
         juce::NormalisableRange<float>(1.0f, 100.0f, 0.1f),
-        10.0f));  // Default: 10 grains/sec
+        20.0f));  // Default: 20 grains/sec, so 50 ms grains just touch
 
     // Time Stretch (0.25x - 4x)
     addParameter(timeStretchParam = new juce::AudioParameterFloat(
@@ -180,11 +180,13 @@ void GranularEngineProcessor::processBlock(juce::AudioBuffer<float>& buffer, juc
 
     float dryWet = dryWetParam->get() / 100.0f;
 
-    // Write input to grain buffer
-    for (int ch = 0; ch < numChannels; ++ch)
+    // Write input to grain buffer: one stream, the channels averaged
+    for (int i = 0; i < numSamples; ++i)
     {
-        const float* input = buffer.getReadPointer(ch);
-        grainBuffer.writeBlock(input, numSamples);
+        float sum = 0.0f;
+        for (int ch = 0; ch < numChannels; ++ch)
+            sum += buffer.getSample(ch, i);
+        grainBuffer.writeSample(numChannels > 0 ? sum / numChannels : 0.0f);
     }
 
     // Process granular synthesis (stereo output)
