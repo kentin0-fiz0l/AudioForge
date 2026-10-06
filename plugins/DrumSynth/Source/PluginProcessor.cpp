@@ -167,8 +167,8 @@ void PluginProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiB
         outputSample += snareLevel * snareModule.processSample(getSampleRate(), snareTune, snareSnap,
                                                                snareTone, snareDecay, snareMix);
 
-        outputSample += hihatLevel * hihatModule.processSample(getSampleRate(), hihatTune, hihatDecay,
-                                                               hihatTone, hihatClick);
+        outputSample += hihatModule.processSample(getSampleRate(), hihatTune, hihatDecay,
+                                                  hihatTone, hihatClick);
 
         outputSample += clapLevel * clapModule.processSample(getSampleRate(), clapTone, clapDecay);
 
@@ -197,8 +197,8 @@ void PluginProcessor::triggerDrum(const juce::MidiMessage& message)
     {
         case Drum::kick:      kickLevel = level;  kickModule.trigger(); break;
         case Drum::snare:     snareLevel = level; snareModule.trigger(); break;
-        case Drum::closedHat: hihatLevel = level; hihatModule.trigger(false); break;
-        case Drum::openHat:   hihatLevel = level; hihatModule.trigger(true); break;
+        case Drum::closedHat: hihatModule.trigger(false, level); break;
+        case Drum::openHat:   hihatModule.trigger(true, level); break;
         case Drum::clap:      clapLevel = level;  clapModule.trigger(); break;
         case Drum::none:      break;
     }

@@ -5,19 +5,29 @@ HiHatModule::HiHatModule()
 {
 }
 
-void HiHatModule::trigger(bool open)
+void HiHatModule::trigger(bool open, float level)
 {
+    // A hat still ringing fades out from where it is. The filter keeps its
+    // state, since the noise it shapes carries on.
+    if (active)
+        chokedLevel += envLevel * hitGain();
+    else
+    {
+        filterState1 = 0.0f;
+        filterState2 = 0.0f;
+    }
+
     active = true;
     playedOpen = open;
+    hitLevel = level;
     envLevel = 1.0f;
-    filterState1 = 0.0f;
-    filterState2 = 0.0f;
 }
 
 void HiHatModule::reset()
 {
     active = false;
     envLevel = 0.0f;
+    chokedLevel = 0.0f;
     filterState1 = 0.0f;
     filterState2 = 0.0f;
 }
@@ -32,9 +42,10 @@ float HiHatModule::processSample(double sampleRate, float tune, float decay,
     float deltaTime = static_cast<float>(1.0 / sampleRate);
     float decayRate = 30.0f / (playedOpen ? decay * openDecayRatio : decay);
     envLevel *= std::exp(-decayRate * deltaTime);
+    chokedLevel *= std::exp(-chokeRate * deltaTime);
 
     // Stop if envelope is very quiet
-    if (envLevel < 0.001f)
+    if (envLevel < 0.001f && chokedLevel < 0.001f)
     {
         active = false;
         return 0.0f;
@@ -57,10 +68,7 @@ float HiHatModule::processSample(double sampleRate, float tune, float decay,
 
     // Add click (sharper attack)
     float clickEnv = (envLevel > 0.95f) ? (envLevel - 0.95f) * 20.0f : 0.0f;
-    float output = filteredNoise * (envLevel + clickEnv * click);
-
-    if (playedOpen)
-        output *= openLevel;
+    float output = filteredNoise * ((envLevel + clickEnv * click) * hitGain() + chokedLevel);
 
     return output * 0.5f; // Scale down to prevent clipping
 }
