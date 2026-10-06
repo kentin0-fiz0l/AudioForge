@@ -1,6 +1,11 @@
 #include "UnisonVoice.h"
 #include <cmath>
 
+namespace
+{
+    constexpr float pi = 3.14159265358979f; // M_PI is not defined by every compiler (Microsoft's does not, without _USE_MATH_DEFINES)
+}
+
 UnisonVoice::UnisonVoice()
 {
 }
@@ -45,7 +50,7 @@ float UnisonVoice::generateSample()
     switch (waveform)
     {
         case 0: // Sine
-            return std::sin(phase * 2.0f * M_PI);
+            return std::sin(phase * 2.0f * pi);
 
         case 1: // Saw
             return 2.0f * phase - 1.0f;

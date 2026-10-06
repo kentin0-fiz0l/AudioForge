@@ -30,6 +30,27 @@ jobs:
 
           echo "✅ Code formatting check complete (informational only)"
 
+  portable-constants:
+    name: Portable Constants
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: No M_PI in plugin or shared code
+        run: |
+          # Microsoft's compiler does not define M_PI, and plugins are only
+          # built on Linux here, so a plugin that uses it would only fail on
+          # a Windows build. Use a local constant or juce::MathConstants.
+          # (Comments that mention it are fine.)
+          if grep -rnw --include='*.cpp' --include='*.h' 'M_PI' plugins shared \
+              | grep -v '//.*M_PI' ; then
+            echo "M_PI is not portable: use juce::MathConstants<float>::pi or a local constant"
+            exit 1
+          fi
+          echo "No M_PI found"
+
   remote-script-tests:
     name: Remote Script Tests
     runs-on: ubuntu-latest
