@@ -31,6 +31,7 @@ public:
         testEditorShowsTheSettingsItOpensWith();
         testEditorFollowsChangesMadeElsewhere();
         testControlsSetTheValuesTheyShow();
+        testNoControlsOverlap();
     }
 
 private:
@@ -223,6 +224,37 @@ private:
         expectWithinAbsoluteError(get(processor, "timeStretch"), 2.0f, 0.01f);
         expectWithinAbsoluteError(get(processor, "stereoWidth"), 150.0f, 0.01f);
         expectWithinAbsoluteError(get(processor, "windowType"), 4.0f, 0.01f, "Blackman");
+    }
+
+    void testNoControlsOverlap()
+    {
+        beginTest("Every control fits in the window without overlapping another");
+
+        GranularEngineProcessor processor;
+        GranularEngineEditor editor(processor);
+
+        juce::Array<juce::Component*> shown;
+        for (auto* child : editor.getChildren())
+            if (child->isVisible())
+                shown.add(child);
+
+        for (int i = 0; i < shown.size(); ++i)
+        {
+            const auto bounds = shown[i]->getBounds();
+            expect(editor.getLocalBounds().contains(bounds), describe(shown[i]) + " runs off the window");
+
+            // The Position slider's label used to sit on the Pitch label
+            for (int j = i + 1; j < shown.size(); ++j)
+                expect(! bounds.intersects(shown[j]->getBounds()),
+                       describe(shown[i]) + " overlaps " + describe(shown[j]));
+        }
+    }
+
+    static juce::String describe(juce::Component* c)
+    {
+        if (auto* label = dynamic_cast<juce::Label*>(c))
+            return "the label '" + label->getText() + "'";
+        return c->getComponentID().isNotEmpty() ? c->getComponentID() : c->getBounds().toString();
     }
 };
 
