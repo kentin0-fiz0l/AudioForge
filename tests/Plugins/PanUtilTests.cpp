@@ -14,6 +14,7 @@
 
 // Include PanUtil plugin headers
 #include "../../plugins/PanUtil/Source/PluginProcessor.h"
+#include "../../plugins/PanUtil/Source/PluginEditor.h"
 
 class PanUtilPluginTests : public juce::UnitTest
 {
@@ -42,6 +43,7 @@ public:
         testChangesGlide();
         testBadNumbersInAStateAreSkipped();
         testNeedsStereo();
+        testStereoFieldIsClearOfTheControls();
     }
 
 private:
@@ -590,6 +592,23 @@ private:
 
         expect(processor.checkBusesLayoutSupported(stereo));
         expect(! processor.checkBusesLayoutSupported(mono), "On one channel it could do nothing, and used to do so silently");
+    }
+
+    void testStereoFieldIsClearOfTheControls()
+    {
+        beginTest("The stereo field is drawn clear of every control");
+
+        PanUtilProcessor processor;
+        PanUtilEditor editor(processor);
+        const auto field = editor.getStereoFieldBounds();
+
+        expect(editor.getLocalBounds().contains(field), "The stereo field is drawn off the edge of the window");
+
+        // It used to sit on top of the Pan and Width sliders
+        for (auto* child : editor.getChildren())
+            if (child->isVisible())
+                expect(! child->getBounds().intersects(field),
+                       "The stereo field is drawn under " + child->getName() + " " + child->getBounds().toString());
     }
 };
 

@@ -178,9 +178,10 @@ void PanUtilEditor::paint(juce::Graphics& g)
                25, meterHeight, juce::Justification::centredRight);
 
     // Draw stereo field visualization (circle)
-    const int circleX = getWidth() / 2;
-    const int circleY = 160;
-    const int circleRadius = 40;
+    const auto field = getStereoFieldBounds();
+    const int circleX = field.getCentreX();
+    const int circleY = field.getCentreY();
+    const int circleRadius = field.getWidth() / 2;
 
     g.setColour(juce::Colour(0xff333333));
     g.drawEllipse(circleX - circleRadius, circleY - circleRadius,
@@ -199,14 +200,20 @@ void PanUtilEditor::paint(juce::Graphics& g)
     g.fillEllipse(dotX - 5, dotY - 5, 10, 10);
 }
 
+juce::Rectangle<int> PanUtilEditor::getStereoFieldBounds() const
+{
+    // To the right of the Pan and Width sliders, level with the gap between them
+    return { 365, 105, 80, 80 };
+}
+
 void PanUtilEditor::resized()
 {
     // Layout UI components
     panLabel.setBounds(50, 70, 100, 20);
-    panSlider.setBounds(50, 90, 400, 40);
+    panSlider.setBounds(50, 90, 280, 40);
 
     widthLabel.setBounds(50, 140, 100, 20);
-    widthSlider.setBounds(50, 160, 400, 40);
+    widthSlider.setBounds(50, 160, 280, 40);
 
     modeLabel.setBounds(50, 210, 100, 20);
     modeSelector.setBounds(50, 230, 150, 25);
