@@ -18,6 +18,9 @@ class MixerControl:
         self.metering = False
         self.meter_peaks = {}
 
+        self._clear_started_at = None
+        self._cleared = 0
+
         self.commands = {
             '/live/mixer': self.get_mixer,
             '/live/meters': self.get_meters,
@@ -29,6 +32,9 @@ class MixerControl:
             '/live/device/params': self.get_device_params,
             '/live/device/set': self.set_device_param,
             '/live/device/delete': self.delete_device,
+            '/live/song/clear_locators': self.clear_locators,
+            '/live/song/set_locator': self.set_locator,
+            '/live/song/jump_to_locator': self.jump_to_locator,
         }
 
     def handles(self, address):
@@ -53,6 +59,10 @@ class MixerControl:
         tracks += [(f'return:{i}', t) for i, t in enumerate(self.song.return_tracks)]
         tracks.append(('master', self.song.master_track))
         return tracks
+
+    def find_track(self, target):
+        """Find a track by index, by 'master', by 'return:N' or by its name"""
+        return self._track(target)
 
     def _track(self, target):
         """Find a track by index, by 'master', by 'return:N' or by its name"""
@@ -196,7 +206,76 @@ class MixerControl:
         return self._set(self._at(sends, send_index, 'send', 'the track'), value)
 
     # ------------------------------------------------------------------
-    # Devices
+    # Locators
+
+    # Live applies a new song time a moment after it is set, so a locator
+    # cannot be toggled in the same call that moves the playhead there: the
+    # toggle would land where the playhead was. These commands take one step
+    # per call, and the caller calls again until the reply says done.
+    CUE_TOLERANCE = 1e-3
+
+    def _cue_at(self, beat):
+        for cue in self.song.cue_points:
+            if abs(cue.time - beat) < self.CUE_TOLERANCE:
+                return cue
+        return None
+
+    def clear_locators(self):
+        """Delete the locators, one step per call; done when none are left"""
+        song = self.song
+        cues = list(song.cue_points)
+        at = song.current_song_time
+        if self._clear_started_at is None:
+            self._clear_started_at = at
+            self._cleared = 0
+
+        if not cues:
+            # Finished: put the playhead back where it was
+            song.current_song_time = self._clear_started_at
+            deleted, self._cleared, self._clear_started_at = self._cleared, 0, None
+            self.log(f"Deleted {deleted} locator(s)")
+            return {'done': True, 'deleted': deleted, 'remaining': 0}
+
+        if self._cue_at(at) is not None:
+            song.set_or_delete_cue()        # the playhead has reached one: delete it
+            self._cleared += 1
+            return {'done': False, 'deleted': self._cleared, 'remaining': len(cues) - 1}
+
+        song.current_song_time = cues[0].time   # send the playhead to the next one
+        return {'done': False, 'deleted': self._cleared, 'remaining': len(cues)}
+
+    def set_locator(self, beat, name=''):
+        """Put a named locator at a beat, one step per call; done when it is there"""
+        beat = float(beat)
+        if not (math.isfinite(beat) and beat >= 0.0):
+            raise ValueError("The beat has to be a number, at or after the start")
+        song = self.song
+        cue = self._cue_at(beat)
+        if cue is not None:
+            if name:
+                cue.name = str(name)
+            return {'done': True, 'time': cue.time, 'name': cue.name}
+
+        if abs(song.current_song_time - beat) < self.CUE_TOLERANCE:
+            song.set_or_delete_cue()        # the playhead is there: make it
+        else:
+            song.current_song_time = beat   # send the playhead there first
+        return {'done': False, 'time': beat}
+
+    def jump_to_locator(self, name):
+        """Put the playhead on a locator, as clicking it in Live does.
+
+        Seen in Live 12.4.6: setting the song time from a script moves the
+        playhead but not the point play starts from, and continuing plays
+        from wherever Live last stopped. Jumping to a locator moves both, so
+        a /live/song/start_playing that follows starts there.
+        """
+        for cue in self.song.cue_points:
+            if cue.name == str(name):
+                cue.jump()
+                self.log(f"Jumped to locator '{cue.name}' at beat {cue.time:g}")
+                return {'locator': cue.name, 'time': cue.time}
+        raise ValueError(f"No locator named '{name}'")
 
     def _device(self, target, device_index):
         return self._at(self._track(target).devices, device_index, 'device', 'the track')
