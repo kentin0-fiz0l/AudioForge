@@ -1005,15 +1005,19 @@ class ClipTests(LiveControlTestCase):
 
 
 class TransportTests(LiveControlTestCase):
-    def test_play_from_starts_at_the_beat_asked_for(self):
-        reply = self.ask("/live/song/play_from", 72.0)
+    def test_jumping_to_a_locator_sets_where_play_starts(self):
+        cue = types.SimpleNamespace(time=88.0, name="Drop", jump=lambda: setattr(self.song, "insert_marker", 88.0))
+        self.song.cue_points = [cue]
 
+        reply = self.ask("/live/song/jump_to_locator", "Drop")
+        self.assertEqual(reply["time"], 88.0)
+
+        self.song.start_playing()      # what /live/song/start_playing does
         self.assertTrue(self.song.is_playing)
-        self.assertEqual(self.song.current_song_time, 72.0, "Not from the insert marker")
-        self.assertEqual(reply["from"], 72.0)
+        self.assertEqual(self.song.current_song_time, 88.0, "Play starts at the locator")
 
-        bad = self.ask("/live/song/play_from", -1.0)
-        self.assertFalse(bad["ok"])
+        missing = self.ask("/live/song/jump_to_locator", "Nowhere")
+        self.assertFalse(missing["ok"])
 
 
 class LocatorTests(LiveControlTestCase):

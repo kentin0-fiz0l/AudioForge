@@ -34,7 +34,7 @@ class MixerControl:
             '/live/device/delete': self.delete_device,
             '/live/song/clear_locators': self.clear_locators,
             '/live/song/set_locator': self.set_locator,
-            '/live/song/play_from': self.play_from,
+            '/live/song/jump_to_locator': self.jump_to_locator,
         }
 
     def handles(self, address):
@@ -262,20 +262,20 @@ class MixerControl:
             song.current_song_time = beat   # send the playhead there first
         return {'done': False, 'time': beat}
 
-    def play_from(self, beat):
-        """Start playback at a beat.
+    def jump_to_locator(self, name):
+        """Put the playhead on a locator, as clicking it in Live does.
 
-        Live's own play starts from the insert marker, wherever it was last
-        clicked, not from the playhead; continuing from a moved playhead
-        starts where asked.
+        Seen in Live 12.4.6: setting the song time from a script moves the
+        playhead but not the point play starts from, and continuing plays
+        from wherever Live last stopped. Jumping to a locator moves both, so
+        a /live/song/start_playing that follows starts there.
         """
-        beat = float(beat)
-        if not (math.isfinite(beat) and beat >= 0.0):
-            raise ValueError("The beat has to be a number, at or after the start")
-        self.song.current_song_time = beat
-        self.song.continue_playing()
-        self.log(f"Playing from beat {beat:g}")
-        return {'playing': True, 'from': beat}
+        for cue in self.song.cue_points:
+            if cue.name == str(name):
+                cue.jump()
+                self.log(f"Jumped to locator '{cue.name}' at beat {cue.time:g}")
+                return {'locator': cue.name, 'time': cue.time}
+        raise ValueError(f"No locator named '{name}'")
 
     def _device(self, target, device_index):
         return self._at(self._track(target).devices, device_index, 'device', 'the track')
