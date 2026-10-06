@@ -5,7 +5,7 @@ GranularEngineEditor::GranularEngineEditor(GranularEngineProcessor& p)
     : AudioProcessorEditor(&p), audioProcessor(p)
 {
     // Set window size
-    setSize(800, 600);
+    setSize(800, 640);
 
     // Start timer for UI updates (60 FPS)
     startTimerHz(60);
@@ -255,15 +255,15 @@ void GranularEngineEditor::resized()
     windowShapeSlider.setBounds(rightMargin, windowY + 35, sliderSize, sliderSize);
     windowShapeLabel.setBounds(rightMargin, windowY + 35 + sliderSize, sliderSize, 20);
 
-    // Position slider (horizontal at bottom)
-    y = 570;
+    // Position slider (horizontal at bottom, below Row 2's labels)
+    y = 610;
     positionLabel.setBounds(margin, y, 80, 20);
     positionSlider.setBounds(margin + 90, y, 560, 20);
 
-    // Preset buttons and MIDI status (top right)
+    // Preset buttons (top right) and MIDI status (top left, clear of the window shape panel)
     savePresetButton.setBounds(getWidth() - 130, 10, 110, 25);
     loadPresetButton.setBounds(getWidth() - 130, 40, 110, 25);
-    midiStatusLabel.setBounds(getWidth() - 130, 70, 110, 20);
+    midiStatusLabel.setBounds(margin, 25, 110, 20);
 }
 
 //==============================================================================
