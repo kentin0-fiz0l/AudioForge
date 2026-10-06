@@ -14,6 +14,7 @@
 #include <cmath>
 
 #include "../../plugins/GranularEngine/Source/PluginProcessor.h"
+#include "../../plugins/GranularEngine/Source/PluginEditor.h"
 
 class GranularEngineTests : public juce::UnitTest
 {
@@ -27,6 +28,9 @@ public:
     {
         testDefaultsKeepTheLevel();
         testStereoInputIsOneStream();
+        testEditorShowsTheSettingsItOpensWith();
+        testEditorFollowsChangesMadeElsewhere();
+        testControlsSetTheValuesTheyShow();
     }
 
 private:
@@ -140,6 +144,85 @@ private:
         expect(total > 0.0, "The grains are silent");
         expect(near / total > 0.95,
                "Only " + juce::String(100.0 * near / total, 1) + "% of the output is near the tone");
+    }
+
+    //==========================================================================
+    // The editor
+
+    static void set(juce::AudioProcessor& processor, const juce::String& id, float value)
+    {
+        for (auto* param : processor.getParameters())
+            if (auto* ranged = dynamic_cast<juce::RangedAudioParameter*>(param); ranged != nullptr && ranged->paramID == id)
+                ranged->setValueNotifyingHost(ranged->convertTo0to1(value));
+    }
+
+    static float get(juce::AudioProcessor& processor, const juce::String& id)
+    {
+        for (auto* param : processor.getParameters())
+            if (auto* ranged = dynamic_cast<juce::RangedAudioParameter*>(param); ranged != nullptr && ranged->paramID == id)
+                return ranged->convertFrom0to1(ranged->getValue());
+        return std::nanf("");
+    }
+
+    template <typename Control>
+    Control& find(juce::Component& editor, const juce::String& id)
+    {
+        auto* control = dynamic_cast<Control*>(editor.findChildWithID(id));
+        expect(control != nullptr, "No control for " + id);
+        static Control missing;
+        return control != nullptr ? *control : missing;
+    }
+
+    void testEditorShowsTheSettingsItOpensWith()
+    {
+        beginTest("The editor opens showing the plugin's settings, not its defaults");
+
+        // As after a saved session is loaded
+        GranularEngineProcessor processor;
+        set(processor, "grainSize", 120.0f);
+        set(processor, "grainDensity", 55.0f);
+        set(processor, "timeStretch", 2.0f);
+        set(processor, "dryWet", 40.0f);
+        set(processor, "windowType", 3.0f);
+
+        GranularEngineEditor editor(processor);
+
+        expectWithinAbsoluteError(find<juce::Slider>(editor, "grainSize").getValue(), 120.0, 0.01);
+        expectWithinAbsoluteError(find<juce::Slider>(editor, "grainDensity").getValue(), 55.0, 0.01);
+        expectWithinAbsoluteError(find<juce::Slider>(editor, "timeStretch").getValue(), 2.0, 0.01);
+        expectWithinAbsoluteError(find<juce::Slider>(editor, "dryWet").getValue(), 40.0, 0.01);
+        expectEquals(find<juce::ComboBox>(editor, "windowType").getText(), juce::String("Tukey"));
+    }
+
+    void testEditorFollowsChangesMadeElsewhere()
+    {
+        beginTest("The editor follows changes made by the host while it is open");
+
+        GranularEngineProcessor processor;
+        GranularEngineEditor editor(processor);
+
+        set(processor, "pitchShift", -7.0f);
+        set(processor, "spray", 30.0f);
+
+        expectWithinAbsoluteError(find<juce::Slider>(editor, "pitchShift").getValue(), -7.0, 0.01);
+        expectWithinAbsoluteError(find<juce::Slider>(editor, "spray").getValue(), 30.0, 0.01);
+    }
+
+    void testControlsSetTheValuesTheyShow()
+    {
+        beginTest("Turning a control sets the value it shows");
+
+        GranularEngineProcessor processor;
+        GranularEngineEditor editor(processor);
+
+        // Time Stretch is skewed, so a straight line from 0.25 to 4 missed it
+        find<juce::Slider>(editor, "timeStretch").setValue(2.0, juce::sendNotificationSync);
+        find<juce::Slider>(editor, "stereoWidth").setValue(150.0, juce::sendNotificationSync);
+        find<juce::ComboBox>(editor, "windowType").setSelectedId(5, juce::sendNotificationSync);
+
+        expectWithinAbsoluteError(get(processor, "timeStretch"), 2.0f, 0.01f);
+        expectWithinAbsoluteError(get(processor, "stereoWidth"), 150.0f, 0.01f);
+        expectWithinAbsoluteError(get(processor, "windowType"), 4.0f, 0.01f, "Blackman");
     }
 };
 
