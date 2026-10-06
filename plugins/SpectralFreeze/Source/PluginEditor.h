@@ -1,6 +1,7 @@
 #pragma once
 
 #include "PluginProcessor.h"
+#include "../../shared/ui/ParameterAttachments.h"
 #include <juce_audio_processors/juce_audio_processors.h>
 
 /**
@@ -79,6 +80,9 @@ private:
     juce::TextButton loadPresetButton;
     juce::ComboBox factoryPresetsCombo;
     juce::Label presetsLabel;
+
+    // Declared after the controls, so it is destroyed first
+    AudioForge::ParameterAttachments attachments { audioProcessor };
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SpectralFreezeEditor)
 };

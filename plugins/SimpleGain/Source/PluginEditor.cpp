@@ -8,21 +8,12 @@ SimpleGainEditor::SimpleGainEditor(SimpleGainProcessor& p)
     // Configure gain slider
     gainSlider.setSliderStyle(juce::Slider::RotaryVerticalDrag);
     gainSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
-    gainSlider.setRange(-60.0, 12.0, 0.1);
-    gainSlider.setValue(0.0);
     gainSlider.setTextValueSuffix(" dB");
     gainSlider.setNumDecimalPlacesToDisplay(1);
     addAndMakeVisible(gainSlider);
 
     // Connect slider to parameter
-    gainSlider.onValueChange = [this]
-    {
-        // Direct parameter access (alternative to value tree state)
-        auto* gainParam = dynamic_cast<juce::AudioParameterFloat*>(
-            processor.getParameters()[0]);
-        if (gainParam != nullptr)
-            *gainParam = static_cast<float>(gainSlider.getValue());
-    };
+    attachments.attach(gainSlider, "gain");
 
     // Configure gain label
     gainLabel.setText("Gain", juce::dontSendNotification);

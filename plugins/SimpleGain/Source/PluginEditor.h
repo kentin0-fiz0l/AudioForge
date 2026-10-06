@@ -1,6 +1,7 @@
 #pragma once
 
 #include "PluginProcessor.h"
+#include "../../shared/ui/ParameterAttachments.h"
 #include <juce_gui_basics/juce_gui_basics.h>
 
 /**
@@ -38,6 +39,9 @@ private:
 
     // Meter value
     float meterLevel = 0.0f;
+
+    // Declared after the controls, so it is destroyed first
+    AudioForge::ParameterAttachments attachments { processor };
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SimpleGainEditor)
 };

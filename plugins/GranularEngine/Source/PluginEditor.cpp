@@ -138,43 +138,19 @@ GranularEngineEditor::GranularEngineEditor(GranularEngineProcessor& p)
     stereoWidthLabel.setJustificationType(juce::Justification::centred);
     addAndMakeVisible(stereoWidthLabel);
 
-    // Each control is attached to its parameter, both ways: it takes the
-    // parameter's range and current value, follows the host's changes, and
-    // sets the parameter when turned
+    // Each control is attached to its parameter, both ways
     using P = GranularEngineProcessor;
-    attach(grainSizeSlider, P::PARAM_GRAIN_SIZE);
-    attach(grainDensitySlider, P::PARAM_GRAIN_DENSITY);
-    attach(timeStretchSlider, P::PARAM_TIME_STRETCH);
-    attach(positionSlider, P::PARAM_POSITION);
-    attach(pitchShiftSlider, P::PARAM_PITCH_SHIFT);
-    attach(spraySlider, P::PARAM_SPRAY);
-    attach(reverseSlider, P::PARAM_REVERSE);
-    attach(stereoWidthSlider, P::PARAM_STEREO_WIDTH);
-    attach(dryWetSlider, P::PARAM_DRY_WET);
-    attach(windowTypeCombo, P::PARAM_WINDOW_TYPE);
-    attach(windowShapeSlider, P::PARAM_WINDOW_SHAPE);
-}
-
-juce::RangedAudioParameter& GranularEngineEditor::parameter(const juce::String& id)
-{
-    for (auto* param : audioProcessor.getParameters())
-        if (auto* ranged = dynamic_cast<juce::RangedAudioParameter*>(param); ranged != nullptr && ranged->paramID == id)
-            return *ranged;
-
-    jassertfalse;  // Every control's parameter exists
-    return *dynamic_cast<juce::RangedAudioParameter*>(audioProcessor.getParameters()[0]);
-}
-
-void GranularEngineEditor::attach(juce::Slider& slider, const juce::String& id)
-{
-    slider.setComponentID(id);
-    sliderAttachments.push_back(std::make_unique<juce::SliderParameterAttachment>(parameter(id), slider));
-}
-
-void GranularEngineEditor::attach(juce::ComboBox& comboBox, const juce::String& id)
-{
-    comboBox.setComponentID(id);
-    comboBoxAttachments.push_back(std::make_unique<juce::ComboBoxParameterAttachment>(parameter(id), comboBox));
+    attachments.attach(grainSizeSlider, P::PARAM_GRAIN_SIZE);
+    attachments.attach(grainDensitySlider, P::PARAM_GRAIN_DENSITY);
+    attachments.attach(timeStretchSlider, P::PARAM_TIME_STRETCH);
+    attachments.attach(positionSlider, P::PARAM_POSITION);
+    attachments.attach(pitchShiftSlider, P::PARAM_PITCH_SHIFT);
+    attachments.attach(spraySlider, P::PARAM_SPRAY);
+    attachments.attach(reverseSlider, P::PARAM_REVERSE);
+    attachments.attach(stereoWidthSlider, P::PARAM_STEREO_WIDTH);
+    attachments.attach(dryWetSlider, P::PARAM_DRY_WET);
+    attachments.attach(windowTypeCombo, P::PARAM_WINDOW_TYPE);
+    attachments.attach(windowShapeSlider, P::PARAM_WINDOW_SHAPE);
 }
 
 GranularEngineEditor::~GranularEngineEditor()

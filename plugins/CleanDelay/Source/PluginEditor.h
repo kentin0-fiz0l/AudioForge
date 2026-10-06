@@ -1,6 +1,7 @@
 #pragma once
 
 #include "PluginProcessor.h"
+#include "../../shared/ui/ParameterAttachments.h"
 #include <juce_audio_processors/juce_audio_processors.h>
 
 /**
@@ -41,6 +42,9 @@ private:
     // Level meter displays
     float displayInputLevel = 0.0f;
     float displayOutputLevel = 0.0f;
+
+    // Declared after the controls, so it is destroyed first
+    AudioForge::ParameterAttachments attachments { audioProcessor };
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(CleanDelayEditor)
 };

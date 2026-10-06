@@ -17,21 +17,11 @@ CleanDelayEditor::CleanDelayEditor(CleanDelayProcessor& p)
 
     delayTimeSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     delayTimeSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
-    delayTimeSlider.setRange(0.001, 2.0, 0.001);
-    delayTimeSlider.setValue(0.25);
-    delayTimeSlider.setSkewFactorFromMidPoint(0.25);  // Log scale with 250ms midpoint
     delayTimeSlider.setTextValueSuffix(" s");
     delayTimeSlider.setColour(juce::Slider::rotarySliderFillColourId, juce::Colour(0xff9f7aea));
     delayTimeSlider.setColour(juce::Slider::thumbColourId, juce::Colour(0xff805ad5));
     delayTimeSlider.setColour(juce::Slider::textBoxTextColourId, juce::Colour(0xffedf2f7));
     delayTimeSlider.setColour(juce::Slider::textBoxBackgroundColourId, juce::Colour(0xff2d3748));
-    delayTimeSlider.onValueChange = [this]
-    {
-        auto* param = audioProcessor.getParameters()[0];
-        auto* floatParam = dynamic_cast<juce::AudioParameterFloat*>(param);
-        if (floatParam != nullptr)
-            floatParam->setValueNotifyingHost(floatParam->convertTo0to1(delayTimeSlider.getValue()));
-    };
     addAndMakeVisible(delayTimeSlider);
 
     // Feedback slider
@@ -43,20 +33,11 @@ CleanDelayEditor::CleanDelayEditor(CleanDelayProcessor& p)
 
     feedbackSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     feedbackSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
-    feedbackSlider.setRange(0.0, 0.99, 0.01);
-    feedbackSlider.setValue(0.3);
     feedbackSlider.setTextValueSuffix(" %");
     feedbackSlider.setColour(juce::Slider::rotarySliderFillColourId, juce::Colour(0xfffbd38d));
     feedbackSlider.setColour(juce::Slider::thumbColourId, juce::Colour(0xfff6ad55));
     feedbackSlider.setColour(juce::Slider::textBoxTextColourId, juce::Colour(0xffedf2f7));
     feedbackSlider.setColour(juce::Slider::textBoxBackgroundColourId, juce::Colour(0xff2d3748));
-    feedbackSlider.onValueChange = [this]
-    {
-        auto* param = audioProcessor.getParameters()[1];
-        auto* floatParam = dynamic_cast<juce::AudioParameterFloat*>(param);
-        if (floatParam != nullptr)
-            floatParam->setValueNotifyingHost(floatParam->convertTo0to1(feedbackSlider.getValue()));
-    };
     addAndMakeVisible(feedbackSlider);
 
     // Mix slider
@@ -68,20 +49,11 @@ CleanDelayEditor::CleanDelayEditor(CleanDelayProcessor& p)
 
     mixSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     mixSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
-    mixSlider.setRange(0.0, 1.0, 0.01);
-    mixSlider.setValue(0.5);
     mixSlider.setTextValueSuffix(" %");
     mixSlider.setColour(juce::Slider::rotarySliderFillColourId, juce::Colour(0xff63b3ed));
     mixSlider.setColour(juce::Slider::thumbColourId, juce::Colour(0xff4299e1));
     mixSlider.setColour(juce::Slider::textBoxTextColourId, juce::Colour(0xffedf2f7));
     mixSlider.setColour(juce::Slider::textBoxBackgroundColourId, juce::Colour(0xff2d3748));
-    mixSlider.onValueChange = [this]
-    {
-        auto* param = audioProcessor.getParameters()[2];
-        auto* floatParam = dynamic_cast<juce::AudioParameterFloat*>(param);
-        if (floatParam != nullptr)
-            floatParam->setValueNotifyingHost(floatParam->convertTo0to1(mixSlider.getValue()));
-    };
     addAndMakeVisible(mixSlider);
 
     // Ping-Pong button
@@ -91,14 +63,12 @@ CleanDelayEditor::CleanDelayEditor(CleanDelayProcessor& p)
     addAndMakeVisible(pingPongLabel);
 
     pingPongButton.setButtonText("");
-    pingPongButton.onClick = [this]
-    {
-        auto* param = audioProcessor.getParameters()[3];
-        auto* boolParam = dynamic_cast<juce::AudioParameterBool*>(param);
-        if (boolParam != nullptr)
-            boolParam->setValueNotifyingHost(pingPongButton.getToggleState() ? 1.0f : 0.0f);
-    };
     addAndMakeVisible(pingPongButton);
+
+    attachments.attach(delayTimeSlider, CleanDelayProcessor::PARAM_DELAY_TIME);
+    attachments.attach(feedbackSlider, CleanDelayProcessor::PARAM_FEEDBACK);
+    attachments.attach(mixSlider, CleanDelayProcessor::PARAM_MIX);
+    attachments.attach(pingPongButton, CleanDelayProcessor::PARAM_PINGPONG);
 
     // Start timer for level meter updates (30 Hz)
     startTimer(33);
