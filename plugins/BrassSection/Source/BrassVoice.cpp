@@ -64,8 +64,10 @@ void BrassVoice::renderNextBlock(juce::AudioBuffer<float>& outputBuffer,
 
         samplesSinceNoteOn_++;
 
-        // Stop voice if amplitude has decayed to near zero and note is off
-        if (!isNoteOn_ && std::abs(currentSample) < 0.001f)
+        // Stop the voice once the released note's envelope has faded. (A single
+        // sample near zero is not enough: every waveform crosses zero, which cut
+        // release tails, and a fall-off, short.)
+        if (!isNoteOn_ && engine_.isSilent())
         {
             clearCurrentNote();
             break;
