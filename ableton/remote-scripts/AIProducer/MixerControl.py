@@ -30,6 +30,7 @@ class MixerControl:
             '/live/device/set': self.set_device_param,
             '/live/device/delete': self.delete_device,
             '/live/song/clear_locators': self.clear_locators,
+            '/live/song/play_from': self.play_from,
         }
 
     def handles(self, address):
@@ -222,6 +223,22 @@ class MixerControl:
 
     # ------------------------------------------------------------------
     # Devices
+
+
+    def play_from(self, beat):
+        """Start playback at a beat.
+
+        Live's own play starts from the insert marker, wherever it was last
+        clicked, not from the playhead; continuing from a moved playhead
+        starts where asked.
+        """
+        beat = float(beat)
+        if not (math.isfinite(beat) and beat >= 0.0):
+            raise ValueError("The beat has to be a number, at or after the start")
+        self.song.current_song_time = beat
+        self.song.continue_playing()
+        self.log(f"Playing from beat {beat:g}")
+        return {'playing': True, 'from': beat}
 
     def _device(self, target, device_index):
         return self._at(self._track(target).devices, device_index, 'device', 'the track')

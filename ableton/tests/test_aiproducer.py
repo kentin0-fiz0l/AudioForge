@@ -250,6 +250,7 @@ class FakeSong:
         self.is_playing = False
         self.time_listeners = []
         self.current_song_time = 0.0
+        self.insert_marker = 136.0
         self.cue_points = []
 
     def set_or_delete_cue(self):
@@ -264,6 +265,11 @@ class FakeSong:
         self.tracks.insert(index, FakeTrack())
 
     def start_playing(self):
+        # As in Live: play starts from the insert marker, wherever that was last clicked
+        self.current_song_time = self.insert_marker
+        self.is_playing = True
+
+    def continue_playing(self):
         self.is_playing = True
 
     def stop_playing(self):
@@ -968,6 +974,18 @@ class ClipTests(LiveControlTestCase):
         # The master's slots launch scenes; they never hold a clip
         master = self.ask("/live/clip/info", "master", 0)
         self.assertFalse(master["ok"])
+
+
+class TransportTests(LiveControlTestCase):
+    def test_play_from_starts_at_the_beat_asked_for(self):
+        reply = self.ask("/live/song/play_from", 72.0)
+
+        self.assertTrue(self.song.is_playing)
+        self.assertEqual(self.song.current_song_time, 72.0, "Not from the insert marker")
+        self.assertEqual(reply["from"], 72.0)
+
+        bad = self.ask("/live/song/play_from", -1.0)
+        self.assertFalse(bad["ok"])
 
 
 class LocatorTests(LiveControlTestCase):
