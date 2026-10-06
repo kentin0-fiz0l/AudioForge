@@ -434,6 +434,28 @@ class GenerationTests(AIProducerTestCase):
                 self.script.generate_track(genre)
                 self.assertEqual(self.kick_steps_in_first_bar(), kicks)
 
+    def test_the_bass_follows_the_chords(self):
+        # It used to play the key's root on every beat for the whole track
+        # (288 notes, all A1), while the chords moved
+        for genre in self.GENRES:
+            with self.subTest(genre=genre):
+                self.song.tracks.clear()
+                self.script.generate_track(genre)
+                clips = self.clips_by_track()
+
+                roots = []
+                for bar in range(4):
+                    # The chords clip writes each triad root first, an octave up
+                    chord = [p for p, start, *_ in clips["AI Chords"].notes if start == bar * 4.0]
+                    bass = {p for p, start, *_ in clips["AI Bass"].notes if bar * 4.0 <= start < (bar + 1) * 4.0}
+                    self.assertTrue(chord and bass, f"bar {bar} has no chord or no bass")
+                    root = chord[0] - 12
+                    roots.append(root)
+                    self.assertEqual(bass, {root - 12}, f"bar {bar}: the bass should be the chord's root, an octave down")
+
+                # It moves exactly when the chords do (techno's i-i-i-i stays put by design)
+                self.assertEqual(len({p for p, *_ in clips["AI Bass"].notes}), len(set(roots)))
+
     def test_house_has_a_clap_on_two_and_four(self):
         self.script.generate_track("house")
         drums = self.clips_by_track()["AI Drums"]
