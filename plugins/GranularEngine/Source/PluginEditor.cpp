@@ -86,7 +86,7 @@ GranularEngineEditor::GranularEngineEditor(GranularEngineProcessor& p)
     grainDensitySlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     grainDensitySlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
     grainDensitySlider.setRange(1.0, 100.0, 0.1);
-    grainDensitySlider.setValue(10.0);
+    grainDensitySlider.setValue(20.0);
     addAndMakeVisible(grainDensitySlider);
 
     grainDensityLabel.setText("Density (g/s)", juce::dontSendNotification);
