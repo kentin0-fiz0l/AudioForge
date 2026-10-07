@@ -1438,7 +1438,7 @@ if (freeze) {
       'Create rhythmic stutter effects and glitches',
       'Generate ambient soundscapes from any source',
       'Melodic granular synthesis via MIDI',
-      'Time-stretching and pitch-shifting effects',
+      'Slow-motion scanning and pitch-shifting effects',
       'Sound design for film and game audio'
     ],
     screenshots: [],
