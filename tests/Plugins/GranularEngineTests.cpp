@@ -29,6 +29,7 @@ public:
         testDefaultsKeepTheLevel();
         testStereoInputIsOneStream();
         testWidthSpreadsTheGrains();
+        testReverseSetsTheShareOfBackwardGrains();
         testEditorShowsTheSettingsItOpensWith();
         testEditorFollowsChangesMadeElsewhere();
         testControlsSetTheValuesTheyShow();
@@ -204,6 +205,71 @@ private:
         expect(atDefault > 0.1, "At 100% only " + juce::String(100.0 * atDefault, 1) + "% of the output is stereo");
         expect(atZero < 1.0e-6, "At 0% " + juce::String(100.0 * atZero, 3) + "% of the output is stereo");
         expect(atFull > atDefault, "200% should be wider than 100%");
+    }
+
+    // The share of grains played backwards, read from a sawtooth input: it
+    // rises slowly and drops sharply, so a grain played forwards keeps its
+    // sharp drops and one played backwards turns them into sharp rises
+    static double backwardShare(float reversePercent)
+    {
+        GranularEngineProcessor processor;
+        processor.setRateAndBufferSizeDetails(sampleRate, blockSize);
+        processor.prepareToPlay(sampleRate, blockSize);
+        set(processor, "reverse", reversePercent);
+        set(processor, "stereoWidth", 0.0f);   // Every grain on both sides
+
+        constexpr double period = 240.0;       // 200 Hz
+        juce::AudioBuffer<float> buffer(2, blockSize);
+        juce::MidiBuffer midi;
+        int up = 0, down = 0;
+        float previous = 0.0f;
+
+        // Five seconds, about a hundred grains, so chance alone moves the
+        // share at 50% by only about 0.05
+        const int blocks = settledBlock + 5 * static_cast<int>(sampleRate / blockSize);
+        for (int block = 0; block < blocks; ++block)
+        {
+            for (int i = 0; i < blockSize; ++i)
+            {
+                const double phase = std::fmod(block * blockSize + i, period) / period;
+                const float x = 0.3f * static_cast<float>(2.0 * phase - 1.0);
+                buffer.setSample(0, i, x);
+                buffer.setSample(1, i, x);
+            }
+
+            processor.processBlock(buffer, midi);
+
+            for (int i = 0; i < blockSize; ++i)
+            {
+                const float y = buffer.getSample(0, i);
+                if (block >= settledBlock)
+                {
+                    // A jump many times the slow slope's 0.0025 per sample
+                    if (y - previous > 0.05f) ++up;
+                    if (previous - y > 0.05f) ++down;
+                }
+                previous = y;
+            }
+        }
+
+        return up + down > 0 ? static_cast<double>(up) / (up + down) : std::nan("");
+    }
+
+    void testReverseSetsTheShareOfBackwardGrains()
+    {
+        beginTest("Reverse sets the share of grains played backwards");
+
+        // It used to do nothing: every grain played forwards
+        const double atNone = backwardShare(0.0f);
+        const double atHalf = backwardShare(50.0f);
+        const double atAll = backwardShare(100.0f);
+
+        logMessage("Backward share at 0, 50, 100%: " + juce::String(atNone, 2) + ", "
+                   + juce::String(atHalf, 2) + ", " + juce::String(atAll, 2));
+
+        expect(atNone < 0.05, "At 0% " + juce::String(100.0 * atNone, 1) + "% of grains played backwards");
+        expect(atHalf > 0.3 && atHalf < 0.7, "At 50% " + juce::String(100.0 * atHalf, 1) + "% of grains played backwards");
+        expect(atAll > 0.95, "At 100% only " + juce::String(100.0 * atAll, 1) + "% of grains played backwards");
     }
 
     //==========================================================================
