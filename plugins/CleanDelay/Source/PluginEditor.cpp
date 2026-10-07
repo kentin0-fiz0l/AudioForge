@@ -88,9 +88,6 @@ void CleanDelayEditor::paint(juce::Graphics& g)
     // Title bar (standardized)
     Layout::drawTitleBar(g, "AudioForge CleanDelay", Categories::Delay, getWidth());
 
-    g.setColour(juce::Colour(0xff9f7aea));
-    g.drawText("CleanDelay", 20, 10, getWidth() - 40, 40, juce::Justification::centred);
-
     // Level meters
     int meterX = 20;
     int meterY = getHeight() - 60;
@@ -140,7 +137,7 @@ void CleanDelayEditor::resized()
     const int controlHeight = 100;
     const int margin = 20;
 
-    int y = 70;
+    int y = 85;   // Room above for each knob's label, below the title bar's subtitle
 
     // Controls in a row
     int x = margin + 50;
