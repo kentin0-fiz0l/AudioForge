@@ -20,12 +20,13 @@ GranularEngineProcessor::GranularEngineProcessor()
         juce::NormalisableRange<float>(1.0f, 100.0f, 0.1f),
         20.0f));  // Default: 20 grains/sec, so 50 ms grains just touch
 
-    // Time Stretch (0.25x - 4x)
+    // Scan Speed (0.25x - 4x): how fast the grains move through the input.
+    // Its ID stays timeStretch so saved sessions keep their setting.
     addParameter(timeStretchParam = new juce::AudioParameterFloat(
         PARAM_TIME_STRETCH,
-        "Time Stretch",
+        "Scan Speed",
         juce::NormalisableRange<float>(0.25f, 4.0f, 0.01f, 0.5f),
-        1.0f));  // Default: 1x (normal speed)
+        1.0f));  // Default: 1x, keeps pace with the input
 
     // Position (0-1: where in buffer to read)
     addParameter(positionParam = new juce::AudioParameterFloat(

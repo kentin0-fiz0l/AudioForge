@@ -32,6 +32,7 @@ void GrainScheduler::reset()
     }
 
     grainTimer = 0.0f;
+    scanDrift = 0.0f;
 }
 
 void GrainScheduler::setGrainDensity(float grainsPerSecond)
@@ -92,6 +93,9 @@ void GrainScheduler::processBlock(const GrainBuffer& buffer,
     // Process each sample
     for (int i = 0; i < numSamples; ++i)
     {
+        // The input moves on one sample; the read point moves on timeStretch
+        scanDrift += 1.0f - timeStretch;
+
         // Check if we should trigger a new grain
         grainTimer += 1.0f;
         if (grainTimer >= samplesPerGrain)
@@ -196,8 +200,24 @@ void GrainScheduler::triggerGrain(const GrainBuffer& buffer, GrainExtractor& ext
         basePosition = juce::jlimit(0.0f, 1.0f, basePosition + sprayOffset);
     }
 
-    int samplesBack = (int)((1.0f - basePosition) * samplesAvailable);
-    int readPos = writePos - samplesBack;
+    // How far back the grain starts. It must start at least a grain's length
+    // back, so that it ends at the newest sample rather than reading on into
+    // the oldest. Scan drift moves it further back or forward, and when it
+    // runs off either end of the buffer it wraps round to the other.
+    const int grainSize = extractor.getGrainSize();
+    const float lagRange = (float)(samplesAvailable - grainSize);
+    float lag = juce::jlimit((float)grainSize, (float)samplesAvailable,
+                             (1.0f - basePosition) * samplesAvailable);
+    if (lagRange > 0.0f)
+    {
+        scanDrift = std::fmod(scanDrift, lagRange);
+        lag += scanDrift;
+        if (lag > (float)samplesAvailable)
+            lag -= lagRange;
+        else if (lag < (float)grainSize)
+            lag += lagRange;
+    }
+    int readPos = writePos - (int)lag;
 
     // Extract grain from buffer
     extractor.extractGrain(buffer, readPos, grain->samples.data());
