@@ -15,7 +15,7 @@ const faqs: FAQItem[] = [
   },
   {
     question: 'What DAWs are supported?',
-    answer: 'AudioForge plugins work in any DAW that supports VST3 format (Ableton Live, FL Studio, Reaper, Bitwig, etc.) or AU format on macOS (Logic Pro, GarageBand, Ableton, etc.). Standalone versions are also available.',
+    answer: 'AudioForge plugins work in any DAW that supports VST3 format (Ableton Live, FL Studio, Reaper, Bitwig, etc.) or AU format on macOS (Logic Pro, GarageBand, Ableton, etc.). Standalone versions are also available. The eight MIDI tools (Arpeggiator, Chord Generator, Harmonizer and the rest) are MIDI effects, which Ableton Live does not load from third parties; use them in Logic Pro, Reaper or Bitwig.',
   },
   {
     question: 'Do I need to create an account to download?',
