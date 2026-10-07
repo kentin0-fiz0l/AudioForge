@@ -1,6 +1,7 @@
 #pragma once
 
 #include "PluginProcessor.h"
+#include "../../shared/ui/ParameterAttachments.h"
 #include <juce_audio_processors/juce_audio_processors.h>
 
 /**
@@ -22,8 +23,8 @@ public:
 private:
     void timerCallback() override;
 
-    // Set every control to the value its parameter has
-    void syncFromParameters();
+    // Show the processor's current patch in the patch menu
+    void showCurrentPatch();
 
     // Reference to processor
     BasicSynthProcessor& audioProcessor;
@@ -111,6 +112,9 @@ private:
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> saturationDriveAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> saturationMixAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> saturationTypeAttachment;
+
+    // Declared after the controls, so it is destroyed first
+    AudioForge::ParameterAttachments attachments { audioProcessor };
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(BasicSynthEditor)
 };
