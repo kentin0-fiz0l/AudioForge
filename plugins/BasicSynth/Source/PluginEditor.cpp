@@ -16,18 +16,6 @@ BasicSynthEditor::BasicSynthEditor(BasicSynthProcessor& p)
     waveformSelector.addItem("Sine", 1);
     waveformSelector.addItem("Sawtooth", 2);
     waveformSelector.addItem("Square", 3);
-    waveformSelector.setSelectedId(1);
-    waveformSelector.onChange = [this]
-    {
-        auto* param = audioProcessor.getParameters()[0];
-        auto* choiceParam = dynamic_cast<juce::AudioParameterChoice*>(param);
-        if (choiceParam != nullptr)
-        {
-            float normalizedValue = static_cast<float>(waveformSelector.getSelectedId() - 1) /
-                                  (waveformSelector.getNumItems() - 1);
-            choiceParam->setValueNotifyingHost(normalizedValue);
-        }
-    };
     addAndMakeVisible(waveformSelector);
 
     // Volume slider
@@ -39,19 +27,10 @@ BasicSynthEditor::BasicSynthEditor(BasicSynthProcessor& p)
 
     volumeSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     volumeSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
-    volumeSlider.setRange(0.0, 1.0, 0.01);
-    volumeSlider.setValue(0.7);
     volumeSlider.setColour(juce::Slider::rotarySliderFillColourId, juce::Colour(0xff63b3ed));
     volumeSlider.setColour(juce::Slider::thumbColourId, juce::Colour(0xff4299e1));
     volumeSlider.setColour(juce::Slider::textBoxTextColourId, juce::Colour(0xffedf2f7));
     volumeSlider.setColour(juce::Slider::textBoxBackgroundColourId, juce::Colour(0xff2d3748));
-    volumeSlider.onValueChange = [this]
-    {
-        auto* param = audioProcessor.getParameters()[1];
-        auto* floatParam = dynamic_cast<juce::AudioParameterFloat*>(param);
-        if (floatParam != nullptr)
-            floatParam->setValueNotifyingHost(floatParam->convertTo0to1(volumeSlider.getValue()));
-    };
     addAndMakeVisible(volumeSlider);
 
     // Attack slider
@@ -63,21 +42,11 @@ BasicSynthEditor::BasicSynthEditor(BasicSynthProcessor& p)
 
     attackSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     attackSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
-    attackSlider.setRange(0.001, 2.0, 0.001);
-    attackSlider.setValue(0.01);
-    attackSlider.setSkewFactorFromMidPoint(0.1);
     attackSlider.setTextValueSuffix(" s");
     attackSlider.setColour(juce::Slider::rotarySliderFillColourId, juce::Colour(0xff68d391));
     attackSlider.setColour(juce::Slider::thumbColourId, juce::Colour(0xff48bb78));
     attackSlider.setColour(juce::Slider::textBoxTextColourId, juce::Colour(0xffedf2f7));
     attackSlider.setColour(juce::Slider::textBoxBackgroundColourId, juce::Colour(0xff2d3748));
-    attackSlider.onValueChange = [this]
-    {
-        auto* param = audioProcessor.getParameters()[2];
-        auto* floatParam = dynamic_cast<juce::AudioParameterFloat*>(param);
-        if (floatParam != nullptr)
-            floatParam->setValueNotifyingHost(floatParam->convertTo0to1(attackSlider.getValue()));
-    };
     addAndMakeVisible(attackSlider);
 
     // Decay slider
@@ -89,21 +58,11 @@ BasicSynthEditor::BasicSynthEditor(BasicSynthProcessor& p)
 
     decaySlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     decaySlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
-    decaySlider.setRange(0.001, 2.0, 0.001);
-    decaySlider.setValue(0.1);
-    decaySlider.setSkewFactorFromMidPoint(0.1);
     decaySlider.setTextValueSuffix(" s");
     decaySlider.setColour(juce::Slider::rotarySliderFillColourId, juce::Colour(0xfffbd38d));
     decaySlider.setColour(juce::Slider::thumbColourId, juce::Colour(0xfff6ad55));
     decaySlider.setColour(juce::Slider::textBoxTextColourId, juce::Colour(0xffedf2f7));
     decaySlider.setColour(juce::Slider::textBoxBackgroundColourId, juce::Colour(0xff2d3748));
-    decaySlider.onValueChange = [this]
-    {
-        auto* param = audioProcessor.getParameters()[3];
-        auto* floatParam = dynamic_cast<juce::AudioParameterFloat*>(param);
-        if (floatParam != nullptr)
-            floatParam->setValueNotifyingHost(floatParam->convertTo0to1(decaySlider.getValue()));
-    };
     addAndMakeVisible(decaySlider);
 
     // Sustain slider
@@ -115,19 +74,10 @@ BasicSynthEditor::BasicSynthEditor(BasicSynthProcessor& p)
 
     sustainSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     sustainSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
-    sustainSlider.setRange(0.0, 1.0, 0.01);
-    sustainSlider.setValue(0.7);
     sustainSlider.setColour(juce::Slider::rotarySliderFillColourId, juce::Colour(0xfffc8181));
     sustainSlider.setColour(juce::Slider::thumbColourId, juce::Colour(0xfff56565));
     sustainSlider.setColour(juce::Slider::textBoxTextColourId, juce::Colour(0xffedf2f7));
     sustainSlider.setColour(juce::Slider::textBoxBackgroundColourId, juce::Colour(0xff2d3748));
-    sustainSlider.onValueChange = [this]
-    {
-        auto* param = audioProcessor.getParameters()[4];
-        auto* floatParam = dynamic_cast<juce::AudioParameterFloat*>(param);
-        if (floatParam != nullptr)
-            floatParam->setValueNotifyingHost(floatParam->convertTo0to1(sustainSlider.getValue()));
-    };
     addAndMakeVisible(sustainSlider);
 
     // Release slider
@@ -139,21 +89,11 @@ BasicSynthEditor::BasicSynthEditor(BasicSynthProcessor& p)
 
     releaseSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     releaseSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
-    releaseSlider.setRange(0.001, 5.0, 0.001);
-    releaseSlider.setValue(0.3);
-    releaseSlider.setSkewFactorFromMidPoint(0.3);
     releaseSlider.setTextValueSuffix(" s");
     releaseSlider.setColour(juce::Slider::rotarySliderFillColourId, juce::Colour(0xffb794f4));
     releaseSlider.setColour(juce::Slider::thumbColourId, juce::Colour(0xff9f7aea));
     releaseSlider.setColour(juce::Slider::textBoxTextColourId, juce::Colour(0xffedf2f7));
     releaseSlider.setColour(juce::Slider::textBoxBackgroundColourId, juce::Colour(0xff2d3748));
-    releaseSlider.onValueChange = [this]
-    {
-        auto* param = audioProcessor.getParameters()[5];
-        auto* floatParam = dynamic_cast<juce::AudioParameterFloat*>(param);
-        if (floatParam != nullptr)
-            floatParam->setValueNotifyingHost(floatParam->convertTo0to1(releaseSlider.getValue()));
-    };
     addAndMakeVisible(releaseSlider);
 
     // Filter Cutoff slider
@@ -165,21 +105,11 @@ BasicSynthEditor::BasicSynthEditor(BasicSynthProcessor& p)
 
     filterCutoffSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     filterCutoffSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
-    filterCutoffSlider.setRange(20.0, 20000.0, 1.0);
-    filterCutoffSlider.setValue(20000.0);
-    filterCutoffSlider.setSkewFactorFromMidPoint(1000.0);  // Log scale with 1kHz midpoint
     filterCutoffSlider.setTextValueSuffix(" Hz");
     filterCutoffSlider.setColour(juce::Slider::rotarySliderFillColourId, juce::Colour(0xff81e6d9));
     filterCutoffSlider.setColour(juce::Slider::thumbColourId, juce::Colour(0xff4fd1c5));
     filterCutoffSlider.setColour(juce::Slider::textBoxTextColourId, juce::Colour(0xffedf2f7));
     filterCutoffSlider.setColour(juce::Slider::textBoxBackgroundColourId, juce::Colour(0xff2d3748));
-    filterCutoffSlider.onValueChange = [this]
-    {
-        auto* param = audioProcessor.getParameters()[6];
-        auto* floatParam = dynamic_cast<juce::AudioParameterFloat*>(param);
-        if (floatParam != nullptr)
-            floatParam->setValueNotifyingHost(floatParam->convertTo0to1(filterCutoffSlider.getValue()));
-    };
     addAndMakeVisible(filterCutoffSlider);
 
     // Filter Resonance slider
@@ -191,19 +121,10 @@ BasicSynthEditor::BasicSynthEditor(BasicSynthProcessor& p)
 
     filterResonanceSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     filterResonanceSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
-    filterResonanceSlider.setRange(0.5, 10.0, 0.1);
-    filterResonanceSlider.setValue(0.707);
     filterResonanceSlider.setColour(juce::Slider::rotarySliderFillColourId, juce::Colour(0xfffbb6ce));
     filterResonanceSlider.setColour(juce::Slider::thumbColourId, juce::Colour(0xfff687b3));
     filterResonanceSlider.setColour(juce::Slider::textBoxTextColourId, juce::Colour(0xffedf2f7));
     filterResonanceSlider.setColour(juce::Slider::textBoxBackgroundColourId, juce::Colour(0xff2d3748));
-    filterResonanceSlider.onValueChange = [this]
-    {
-        auto* param = audioProcessor.getParameters()[7];
-        auto* floatParam = dynamic_cast<juce::AudioParameterFloat*>(param);
-        if (floatParam != nullptr)
-            floatParam->setValueNotifyingHost(floatParam->convertTo0to1(filterResonanceSlider.getValue()));
-    };
     addAndMakeVisible(filterResonanceSlider);
 
     // Filter Type selector
@@ -215,18 +136,6 @@ BasicSynthEditor::BasicSynthEditor(BasicSynthProcessor& p)
     filterTypeSelector.addItem("High-pass", 2);
     filterTypeSelector.addItem("Band-pass", 3);
     filterTypeSelector.addItem("Notch", 4);
-    filterTypeSelector.setSelectedId(1);
-    filterTypeSelector.onChange = [this]
-    {
-        auto* param = audioProcessor.getParameters()[8];
-        auto* choiceParam = dynamic_cast<juce::AudioParameterChoice*>(param);
-        if (choiceParam != nullptr)
-        {
-            float normalizedValue = static_cast<float>(filterTypeSelector.getSelectedId() - 1) /
-                                  (filterTypeSelector.getNumItems() - 1);
-            choiceParam->setValueNotifyingHost(normalizedValue);
-        }
-    };
     addAndMakeVisible(filterTypeSelector);
 
     // Chorus Mix slider
@@ -238,19 +147,10 @@ BasicSynthEditor::BasicSynthEditor(BasicSynthProcessor& p)
 
     chorusMixSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     chorusMixSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
-    chorusMixSlider.setRange(0.0, 1.0, 0.01);
-    chorusMixSlider.setValue(0.3);
     chorusMixSlider.setColour(juce::Slider::rotarySliderFillColourId, juce::Colour(0xffa78bfa));
     chorusMixSlider.setColour(juce::Slider::thumbColourId, juce::Colour(0xff9f7aea));
     chorusMixSlider.setColour(juce::Slider::textBoxTextColourId, juce::Colour(0xffedf2f7));
     chorusMixSlider.setColour(juce::Slider::textBoxBackgroundColourId, juce::Colour(0xff2d3748));
-    chorusMixSlider.onValueChange = [this]
-    {
-        auto* param = audioProcessor.getParameters()[11];
-        auto* floatParam = dynamic_cast<juce::AudioParameterFloat*>(param);
-        if (floatParam != nullptr)
-            floatParam->setValueNotifyingHost(floatParam->convertTo0to1(chorusMixSlider.getValue()));
-    };
     addAndMakeVisible(chorusMixSlider);
 
     // Reverb Mix slider
@@ -262,19 +162,10 @@ BasicSynthEditor::BasicSynthEditor(BasicSynthProcessor& p)
 
     reverbMixSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     reverbMixSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
-    reverbMixSlider.setRange(0.0, 1.0, 0.01);
-    reverbMixSlider.setValue(0.3);
     reverbMixSlider.setColour(juce::Slider::rotarySliderFillColourId, juce::Colour(0xff90cdf4));
     reverbMixSlider.setColour(juce::Slider::thumbColourId, juce::Colour(0xff63b3ed));
     reverbMixSlider.setColour(juce::Slider::textBoxTextColourId, juce::Colour(0xffedf2f7));
     reverbMixSlider.setColour(juce::Slider::textBoxBackgroundColourId, juce::Colour(0xff2d3748));
-    reverbMixSlider.onValueChange = [this]
-    {
-        auto* param = audioProcessor.getParameters()[14];
-        auto* floatParam = dynamic_cast<juce::AudioParameterFloat*>(param);
-        if (floatParam != nullptr)
-            floatParam->setValueNotifyingHost(floatParam->convertTo0to1(reverbMixSlider.getValue()));
-    };
     addAndMakeVisible(reverbMixSlider);
 
     // Saturation Drive slider
@@ -286,19 +177,10 @@ BasicSynthEditor::BasicSynthEditor(BasicSynthProcessor& p)
 
     saturationDriveSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     saturationDriveSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
-    saturationDriveSlider.setRange(0.0, 1.0, 0.01);
-    saturationDriveSlider.setValue(0.0);
     saturationDriveSlider.setColour(juce::Slider::rotarySliderFillColourId, juce::Colour(0xfffc8181));
     saturationDriveSlider.setColour(juce::Slider::thumbColourId, juce::Colour(0xfff56565));
     saturationDriveSlider.setColour(juce::Slider::textBoxTextColourId, juce::Colour(0xffedf2f7));
     saturationDriveSlider.setColour(juce::Slider::textBoxBackgroundColourId, juce::Colour(0xff2d3748));
-    saturationDriveSlider.onValueChange = [this]
-    {
-        auto* param = audioProcessor.getParameters()[15];
-        auto* floatParam = dynamic_cast<juce::AudioParameterFloat*>(param);
-        if (floatParam != nullptr)
-            floatParam->setValueNotifyingHost(floatParam->convertTo0to1(saturationDriveSlider.getValue()));
-    };
     addAndMakeVisible(saturationDriveSlider);
 
     // Patch selector: the factory patches, which the host sees as programs
@@ -312,15 +194,26 @@ BasicSynthEditor::BasicSynthEditor(BasicSynthProcessor& p)
     {
         audioProcessor.setCurrentProgram(patchSelector.getSelectedId() - 1);
         audioProcessor.updateHostDisplay(juce::AudioProcessor::ChangeDetails().withProgramChanged(true));
-        syncFromParameters();
     };
     addAndMakeVisible(patchSelector);
 
-    // The controls above were given the defaults. Show what the processor
-    // has, which differs when a saved set is opened or a patch was chosen.
-    syncFromParameters();
+    // Each control is attached to its parameter, both ways, so it shows a
+    // saved set's values and follows a patch change or automation by itself
+    attachments.attach(waveformSelector, BasicSynthProcessor::PARAM_WAVEFORM);
+    attachments.attach(volumeSlider, BasicSynthProcessor::PARAM_VOLUME);
+    attachments.attach(attackSlider, BasicSynthProcessor::PARAM_ATTACK);
+    attachments.attach(decaySlider, BasicSynthProcessor::PARAM_DECAY);
+    attachments.attach(sustainSlider, BasicSynthProcessor::PARAM_SUSTAIN);
+    attachments.attach(releaseSlider, BasicSynthProcessor::PARAM_RELEASE);
+    attachments.attach(filterCutoffSlider, BasicSynthProcessor::PARAM_FILTER_CUTOFF);
+    attachments.attach(filterResonanceSlider, BasicSynthProcessor::PARAM_FILTER_RESONANCE);
+    attachments.attach(filterTypeSelector, BasicSynthProcessor::PARAM_FILTER_TYPE);
+    attachments.attach(chorusMixSlider, BasicSynthProcessor::PARAM_CHORUS_MIX);
+    attachments.attach(reverbMixSlider, BasicSynthProcessor::PARAM_REVERB_MIX);
+    attachments.attach(saturationDriveSlider, BasicSynthProcessor::PARAM_SATURATION_DRIVE);
+    showCurrentPatch();
 
-    // Start timer for the level meter and for following the parameters (30 Hz)
+    // Start timer for the level meter and the patch shown (30 Hz)
     startTimer(33);
 }
 
@@ -461,47 +354,13 @@ void BasicSynthEditor::timerCallback()
     // Update level meter display
     displayLevel = audioProcessor.getCurrentLevel();
 
-    // Follow changes made by the host: automation, or a patch chosen there
-    syncFromParameters();
+    // The host can choose a patch
+    showCurrentPatch();
 
     repaint();
 }
 
-void BasicSynthEditor::syncFromParameters()
+void BasicSynthEditor::showCurrentPatch()
 {
-    const auto& params = audioProcessor.getParameters();
-
-    // The value a parameter's control shows: seconds, Hz, or a choice's index
-    const auto shown = [&params] (int index)
-    {
-        auto* param = dynamic_cast<juce::RangedAudioParameter*>(params[index]);
-        return param != nullptr ? param->convertFrom0to1(param->getValue()) : 0.0f;
-    };
-
-    // A control being dragged is ahead of its parameter, so leave it alone
-    const auto follow = [&shown] (juce::Slider& slider, int index)
-    {
-        if (! slider.isMouseButtonDown())
-            slider.setValue(shown(index), juce::dontSendNotification);
-    };
-
-    const auto followChoice = [&shown] (juce::ComboBox& selector, int index)
-    {
-        selector.setSelectedId(juce::roundToInt(shown(index)) + 1, juce::dontSendNotification);
-    };
-
-    followChoice(waveformSelector, 0);
-    follow(volumeSlider, 1);
-    follow(attackSlider, 2);
-    follow(decaySlider, 3);
-    follow(sustainSlider, 4);
-    follow(releaseSlider, 5);
-    follow(filterCutoffSlider, 6);
-    follow(filterResonanceSlider, 7);
-    followChoice(filterTypeSelector, 8);
-    follow(chorusMixSlider, 11);
-    follow(reverbMixSlider, 14);
-    follow(saturationDriveSlider, 15);
-
     patchSelector.setSelectedId(audioProcessor.getCurrentProgram() + 1, juce::dontSendNotification);
 }

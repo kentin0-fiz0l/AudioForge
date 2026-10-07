@@ -8,14 +8,20 @@
  * to their parameters, and two of them (SpectralFreeze's Low Cut and High
  * Cut) wrote the wrong values, mapping a skewed range as if it were linear.
  *
- * Each control carries its parameter's ID as its component ID.
+ * Each control carries its parameter's ID as its component ID. BasicSynth
+ * and PanUtil already followed their parameters, by reading them all thirty
+ * times a second; they now use the same attachments as the rest.
  */
 
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <cmath>
 
+#include "../../plugins/BasicSynth/Source/PluginProcessor.h"
+#include "../../plugins/BasicSynth/Source/PluginEditor.h"
 #include "../../plugins/CleanDelay/Source/PluginProcessor.h"
 #include "../../plugins/CleanDelay/Source/PluginEditor.h"
+#include "../../plugins/PanUtil/Source/PluginProcessor.h"
+#include "../../plugins/PanUtil/Source/PluginEditor.h"
 #include "../../plugins/SimpleGain/Source/PluginProcessor.h"
 #include "../../plugins/SimpleGain/Source/PluginEditor.h"
 #include "../../plugins/SpectralFreeze/Source/PluginProcessor.h"
@@ -31,7 +37,11 @@ public:
 
     void runTest() override
     {
+        // BasicSynth has six parameters its window has no control for
+        check<BasicSynthProcessor>("BasicSynth", { "chorusRate", "chorusDepth", "reverbSize",
+                                                   "reverbDamping", "saturationMix", "saturationType" });
         check<CleanDelayProcessor>("CleanDelay");
+        check<PanUtilProcessor>("PanUtil");
         check<SimpleGainProcessor>("SimpleGain");
         check<SpectralFreezeProcessor>("SpectralFreeze");
     }
@@ -53,6 +63,8 @@ private:
             return slider->getValue();
         if (auto* button = dynamic_cast<juce::Button*>(&control))
             return button->getToggleState() ? 1.0 : 0.0;
+        if (auto* comboBox = dynamic_cast<juce::ComboBox*>(&control))
+            return comboBox->getSelectedItemIndex();   // A choice's value is its index
         return std::nan("");
     }
 
@@ -63,6 +75,8 @@ private:
             slider->setValue(value, juce::sendNotificationSync);
         else if (auto* button = dynamic_cast<juce::Button*>(&control))
             button->setToggleState(value > 0.5, juce::sendNotificationSync);
+        else if (auto* comboBox = dynamic_cast<juce::ComboBox*>(&control))
+            comboBox->setSelectedItemIndex(juce::roundToInt(value), juce::sendNotificationSync);
     }
 
     // Close enough: within half a step of the parameter's range, so on the
@@ -75,7 +89,7 @@ private:
     }
 
     template <typename Processor>
-    void check(const juce::String& plugin)
+    void check(const juce::String& plugin, const juce::StringArray& withoutControls = {})
     {
         beginTest(plugin + ": the editor opens showing the plugin's settings");
         {
@@ -89,6 +103,11 @@ private:
             for (auto* param : parametersOf(processor))
             {
                 auto* control = editor->findChildWithID(param->paramID);
+                if (withoutControls.contains(param->paramID))
+                {
+                    expect(control == nullptr, param->paramID + " has a control now; take it off the list");
+                    continue;
+                }
                 expect(control != nullptr, "No control for " + param->paramID);
                 if (control != nullptr)
                     expectShows(shown(*control), *param, param->convertFrom0to1(param->getValue()), "on opening");

@@ -6,18 +6,8 @@ PanUtilEditor::PanUtilEditor(PanUtilProcessor& p)
     // Configure Pan slider
     panSlider.setSliderStyle(juce::Slider::LinearHorizontal);
     panSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
-    panSlider.setRange(-1.0, 1.0, 0.01);
-    panSlider.setValue(0.0);
     panSlider.setDoubleClickReturnValue(true, 0.0);  // Double-click returns to center
     addAndMakeVisible(panSlider);
-
-    panSlider.onValueChange = [this]
-    {
-        auto* panParam = dynamic_cast<juce::AudioParameterFloat*>(
-            processor.getParameters()[0]);
-        if (panParam != nullptr)
-            *panParam = static_cast<float>(panSlider.getValue());
-    };
 
     panLabel.setText("Pan", juce::dontSendNotification);
     panLabel.setJustificationType(juce::Justification::centred);
@@ -27,26 +17,9 @@ PanUtilEditor::PanUtilEditor(PanUtilProcessor& p)
     // Configure Width slider
     widthSlider.setSliderStyle(juce::Slider::LinearHorizontal);
     widthSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
-    widthSlider.setRange(0.0, 2.0, 0.01);
-    widthSlider.setValue(1.0);
     widthSlider.setDoubleClickReturnValue(true, 1.0);  // Double-click returns to 100%
-    // The parameter runs from 0 to 2; show it as 0% to 200%
-    widthSlider.textFromValueFunction = [] (double value) { return juce::String(juce::roundToInt(value * 100.0)) + "%"; };
-    widthSlider.valueFromTextFunction = [this] (const juce::String& text)
-    {
-        // Text with no number in it changes nothing; zero would be mono
-        const auto digits = text.retainCharacters("0123456789.");
-        return digits.containsAnyOf("0123456789") ? digits.getDoubleValue() / 100.0 : widthSlider.getValue();
-    };
+    widthSlider.setTextValueSuffix("%");  // The parameter shows 0 to 200
     addAndMakeVisible(widthSlider);
-
-    widthSlider.onValueChange = [this]
-    {
-        auto* widthParam = dynamic_cast<juce::AudioParameterFloat*>(
-            processor.getParameters()[1]);
-        if (widthParam != nullptr)
-            *widthParam = static_cast<float>(widthSlider.getValue());
-    };
 
     widthLabel.setText("Width", juce::dontSendNotification);
     widthLabel.setJustificationType(juce::Justification::centred);
@@ -58,15 +31,6 @@ PanUtilEditor::PanUtilEditor(PanUtilProcessor& p)
     modeSelector.addItem("Balance", 2);
     addAndMakeVisible(modeSelector);
 
-    modeSelector.onChange = [this]
-    {
-        auto* modeParam = dynamic_cast<juce::AudioParameterChoice*>(
-            processor.getParameters()[2]);
-        if (modeParam != nullptr)
-            *modeParam = static_cast<float>(modeSelector.getSelectedItemIndex()) /
-                        (modeParam->choices.size() - 1);
-    };
-
     modeLabel.setText("Mode", juce::dontSendNotification);
     modeLabel.setJustificationType(juce::Justification::centred);
     modeLabel.setFont(juce::FontOptions(14.0f));
@@ -75,18 +39,9 @@ PanUtilEditor::PanUtilEditor(PanUtilProcessor& p)
     // Configure Gain slider
     gainSlider.setSliderStyle(juce::Slider::LinearHorizontal);
     gainSlider.setTextBoxStyle(juce::Slider::TextBoxRight, false, 70, 20);
-    gainSlider.setRange(-36.0, 24.0, 0.1);
     gainSlider.setDoubleClickReturnValue(true, 0.0);  // Double-click returns to 0 dB
     gainSlider.setTextValueSuffix(" dB");
     addAndMakeVisible(gainSlider);
-
-    gainSlider.onValueChange = [this]
-    {
-        auto* gainParam = dynamic_cast<juce::AudioParameterFloat*>(
-            processor.getParameters()[3]);
-        if (gainParam != nullptr)
-            *gainParam = static_cast<float>(gainSlider.getValue());
-    };
 
     gainLabel.setText("Gain", juce::dontSendNotification);
     gainLabel.setJustificationType(juce::Justification::centred);
@@ -97,17 +52,19 @@ PanUtilEditor::PanUtilEditor(PanUtilProcessor& p)
     monoButton.setButtonText("Mono");
     addAndMakeVisible(monoButton);
 
-    monoButton.onClick = [this]
-    {
-        auto* monoParam = dynamic_cast<juce::AudioParameterBool*>(
-            processor.getParameters()[4]);
-        if (monoParam != nullptr)
-            *monoParam = monoButton.getToggleState();
-    };
+    // Each control is attached to its parameter, both ways
+    attachments.attach(panSlider, "pan");
+    attachments.attach(widthSlider, "width");
+    attachments.attach(modeSelector, "mode");
+    attachments.attach(gainSlider, "gain");
+    attachments.attach(monoButton, "mono");
 
-    // The controls above were given the defaults; show what the processor
-    // has, which differs when a saved set is opened
-    syncFromParameters();
+    // Typed text with no number in it changes nothing; zero would be mono
+    widthSlider.valueFromTextFunction = [this] (const juce::String& text)
+    {
+        const auto digits = text.retainCharacters("0123456789.");
+        return digits.containsAnyOf("0123456789") ? digits.getDoubleValue() / 100.0 : widthSlider.getValue();
+    };
 
     // Start timer for meter updates (30 fps)
     startTimerHz(30);
@@ -224,39 +181,11 @@ void PanUtilEditor::resized()
     monoButton.setBounds(230, 256, 100, 22);
 }
 
-void PanUtilEditor::syncFromParameters()
-{
-    const auto& params = processor.getParameters();
-
-    // The value a parameter's control shows
-    const auto shown = [&params] (int index)
-    {
-        auto* param = dynamic_cast<juce::RangedAudioParameter*>(params[index]);
-        return param != nullptr ? param->convertFrom0to1(param->getValue()) : 0.0f;
-    };
-
-    // A control being dragged is ahead of its parameter, so leave it alone
-    const auto follow = [&shown] (juce::Slider& slider, int index)
-    {
-        if (! slider.isMouseButtonDown())
-            slider.setValue(shown(index), juce::dontSendNotification);
-    };
-
-    follow(panSlider, 0);
-    follow(widthSlider, 1);
-    modeSelector.setSelectedItemIndex(juce::roundToInt(shown(2)), juce::dontSendNotification);
-    follow(gainSlider, 3);
-    monoButton.setToggleState(shown(4) > 0.5f, juce::dontSendNotification);
-}
-
 void PanUtilEditor::timerCallback()
 {
     // Update meters from processor
     leftMeter = processor.getLeftLevel();
     rightMeter = processor.getRightLevel();
-
-    // Follow changes made by the host
-    syncFromParameters();
 
     // Repaint to update visualization
     repaint();

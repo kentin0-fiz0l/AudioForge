@@ -25,7 +25,12 @@ PanUtilProcessor::PanUtilProcessor()
         "width",
         "Width",
         juce::NormalisableRange<float>(0.0f, 2.0f, 0.01f),
-        1.0f));
+        1.0f,
+        // Stored from 0 to 2, shown and typed as 0% to 200%
+        juce::AudioParameterFloatAttributes()
+            .withLabel("%")
+            .withStringFromValueFunction([] (float value, int) { return juce::String(juce::roundToInt(value * 100.0f)); })
+            .withValueFromStringFunction([] (const juce::String& text) { return text.getFloatValue() / 100.0f; })));
 
     // Mode parameter: Pan or Balance. Balance is the default because it
     // leaves a centred signal at its own level; the pan law takes 3 dB off.

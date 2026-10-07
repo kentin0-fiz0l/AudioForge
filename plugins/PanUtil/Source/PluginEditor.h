@@ -1,6 +1,7 @@
 #pragma once
 
 #include "PluginProcessor.h"
+#include "../../shared/ui/ParameterAttachments.h"
 #include <juce_gui_basics/juce_gui_basics.h>
 
 /**
@@ -48,12 +49,12 @@ private:
 
     juce::ToggleButton monoButton;
 
-    // Set every control to the value its parameter has
-    void syncFromParameters();
-
     // Meter values
     float leftMeter = 0.0f;
     float rightMeter = 0.0f;
+
+    // Declared after the controls, so it is destroyed first
+    AudioForge::ParameterAttachments attachments { processor };
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PanUtilEditor)
 };
