@@ -206,50 +206,22 @@ void GrainScheduler::triggerGrain(const GrainBuffer& buffer, GrainExtractor& ext
     // 12 semitones = 1 octave = 2x playback rate
     grain->playbackRate = std::pow(2.0f, pitchShift / 12.0f);
 
-    // Determine grain playback direction
-    if (grainDirection == 0)  // Forward
-    {
-        grain->reverse = false;
-        grain->pingpong = false;
-        grain->playbackPosition = 0.0f;
-    }
-    else if (grainDirection == 1)  // Backward
-    {
+    // Determine grain playback direction. Forward, the default, plays each
+    // grain backwards with the chance the Reverse parameter sets.
+    grain->pingpong = (grainDirection == 2);
+    if (grainDirection == 1)  // Backward
         grain->reverse = true;
-        grain->pingpong = false;
-        grain->playbackPosition = (float)grain->samples.size() - 1.0f;
-    }
-    else if (grainDirection == 2)  // Pingpong
-    {
-        grain->reverse = false;  // Start forward
-        grain->pingpong = true;
-        grain->playbackPosition = 0.0f;
-    }
-    else  // Fallback to random reversal based on probability
-    {
+    else if (grainDirection == 2)  // Pingpong: starts forward
+        grain->reverse = false;
+    else  // Forward
         grain->reverse = (random.nextFloat() < reverseProbability);
-        grain->pingpong = false;
 
-        if (grain->reverse)
-            grain->playbackPosition = (float)grain->samples.size() - 1.0f;
-        else
-            grain->playbackPosition = 0.0f;
-    }
+    grain->playbackPosition = grain->reverse ? (float)grain->samples.size() - 1.0f : 0.0f;
 
-    // Set stereo pan position (0.5 = center, apply stereo width)
-    float centerPan = 0.5f;
-    if (stereoWidth != 1.0f)
-    {
-        // Random pan position
-        float randomPan = random.nextFloat();
-        // Apply stereo width: 0 = mono center, 1 = normal stereo, 2 = ultra-wide
-        float panOffset = (randomPan - 0.5f) * stereoWidth;
-        grain->panPosition = juce::jlimit(0.0f, 1.0f, centerPan + panOffset);
-    }
-    else
-    {
-        grain->panPosition = centerPan;
-    }
+    // Random pan around the centre, as wide as the stereo width:
+    // 0 = mono center, 1 = normal stereo, 2 = ultra-wide
+    float panOffset = (random.nextFloat() - 0.5f) * stereoWidth;
+    grain->panPosition = juce::jlimit(0.0f, 1.0f, 0.5f + panOffset);
 
     // Activate grain
     grain->active = true;

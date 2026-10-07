@@ -1,6 +1,18 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
+namespace
+{
+    // Stored from 0 to 1, shown and typed as a percentage: "69 %"
+    juce::AudioParameterFloatAttributes asPercent()
+    {
+        return juce::AudioParameterFloatAttributes()
+            .withLabel("%")
+            .withStringFromValueFunction([] (float value, int) { return juce::String(juce::roundToInt(value * 100.0f)); })
+            .withValueFromStringFunction([] (const juce::String& text) { return text.getFloatValue() / 100.0f; });
+    }
+}
+
 CleanDelayProcessor::CleanDelayProcessor()
     : AudioProcessor(BusesProperties()
                      .withInput("Input", juce::AudioChannelSet::stereo(), true)
@@ -20,7 +32,7 @@ CleanDelayProcessor::CleanDelayProcessor()
         "Feedback",
         juce::NormalisableRange<float>(0.0f, 0.99f, 0.01f),
         0.3f,   // Default: 30%
-        ""));
+        asPercent()));
 
     // Mix parameter (0% to 100% wet)
     addParameter(mixParam = new juce::AudioParameterFloat(
@@ -28,7 +40,7 @@ CleanDelayProcessor::CleanDelayProcessor()
         "Mix",
         juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f),
         0.5f,   // Default: 50% wet
-        ""));
+        asPercent()));
 
     // Ping-Pong mode toggle
     addParameter(pingPongParam = new juce::AudioParameterBool(
