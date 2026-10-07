@@ -44,6 +44,7 @@ add_executable(TestRunner
     Plugins/SpectralFreezeTests.cpp
     Plugins/PolysynthTests.cpp
     Plugins/EffectDefaultLevelTests.cpp
+    Plugins/EditorParameterTests.cpp
     Plugins/GranularEngineTests.cpp
     Integration/PluginIntegrationTests.cpp)
 

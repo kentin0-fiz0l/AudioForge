@@ -9,14 +9,7 @@ SpectralFreezeEditor::SpectralFreezeEditor(SpectralFreezeProcessor& p)
 
     // Freeze Button
     freezeButton.setButtonText("FREEZE");
-    freezeButton.setToggleState(false, juce::dontSendNotification);
     freezeButton.setTooltip("Capture and hold the current spectrum indefinitely");
-    freezeButton.onClick = [this]() {
-        if (audioProcessor.getParameters().size() > 0) {
-            auto* param = audioProcessor.getParameters()[0];
-            if (param) param->setValueNotifyingHost(freezeButton.getToggleState() ? 1.0f : 0.0f);
-        }
-    };
     addAndMakeVisible(freezeButton);
 
     freezeLabel.setText("Spectral Freeze", juce::dontSendNotification);
@@ -26,15 +19,7 @@ SpectralFreezeEditor::SpectralFreezeEditor(SpectralFreezeProcessor& p)
     // Blur Slider
     blurSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     blurSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
-    blurSlider.setRange(0.0, 100.0, 1.0);
-    blurSlider.setValue(0.0);
     blurSlider.setTooltip("Gaussian smoothing across frequency bins (0-100%)");
-    blurSlider.onValueChange = [this]() {
-        if (audioProcessor.getParameters().size() > 1) {
-            auto* param = audioProcessor.getParameters()[1];
-            if (param) param->setValueNotifyingHost(blurSlider.getValue() / 100.0f);
-        }
-    };
     addAndMakeVisible(blurSlider);
 
     blurLabel.setText("Blur", juce::dontSendNotification);
@@ -44,16 +29,7 @@ SpectralFreezeEditor::SpectralFreezeEditor(SpectralFreezeProcessor& p)
     // Low-Cut Slider
     lowCutSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     lowCutSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
-    lowCutSlider.setRange(20.0, 20000.0, 1.0);
-    lowCutSlider.setSkewFactor(0.3);
-    lowCutSlider.setValue(20.0);
     lowCutSlider.setTooltip("High-pass filter frequency (20-20000 Hz)");
-    lowCutSlider.onValueChange = [this]() {
-        if (audioProcessor.getParameters().size() > 2) {
-            auto* param = audioProcessor.getParameters()[2];
-            if (param) param->setValueNotifyingHost((lowCutSlider.getValue() - 20.0) / 19980.0);
-        }
-    };
     addAndMakeVisible(lowCutSlider);
 
     lowCutLabel.setText("Low Cut", juce::dontSendNotification);
@@ -63,16 +39,7 @@ SpectralFreezeEditor::SpectralFreezeEditor(SpectralFreezeProcessor& p)
     // High-Cut Slider
     highCutSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     highCutSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
-    highCutSlider.setRange(20.0, 20000.0, 1.0);
-    highCutSlider.setSkewFactor(0.3);
-    highCutSlider.setValue(20000.0);
     highCutSlider.setTooltip("Low-pass filter frequency (20-20000 Hz)");
-    highCutSlider.onValueChange = [this]() {
-        if (audioProcessor.getParameters().size() > 3) {
-            auto* param = audioProcessor.getParameters()[3];
-            if (param) param->setValueNotifyingHost((highCutSlider.getValue() - 20.0) / 19980.0);
-        }
-    };
     addAndMakeVisible(highCutSlider);
 
     highCutLabel.setText("High Cut", juce::dontSendNotification);
@@ -82,15 +49,7 @@ SpectralFreezeEditor::SpectralFreezeEditor(SpectralFreezeProcessor& p)
     // Dry/Wet Slider
     dryWetSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     dryWetSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
-    dryWetSlider.setRange(0.0, 100.0, 1.0);
-    dryWetSlider.setValue(100.0);
     dryWetSlider.setTooltip("Blend between dry (0%) and wet (100%) signal");
-    dryWetSlider.onValueChange = [this]() {
-        if (audioProcessor.getParameters().size() > 4) {
-            auto* param = audioProcessor.getParameters()[4];
-            if (param) param->setValueNotifyingHost(dryWetSlider.getValue() / 100.0f);
-        }
-    };
     addAndMakeVisible(dryWetSlider);
 
     dryWetLabel.setText("Dry/Wet", juce::dontSendNotification);
@@ -102,15 +61,7 @@ SpectralFreezeEditor::SpectralFreezeEditor(SpectralFreezeProcessor& p)
     // Stretch Slider
     stretchSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     stretchSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
-    stretchSlider.setRange(0.0, 100.0, 1.0);
-    stretchSlider.setValue(0.0);
     stretchSlider.setTooltip("Time-stretch the frozen spectrum (1x to 5x slower)");
-    stretchSlider.onValueChange = [this]() {
-        if (audioProcessor.getParameters().size() > 5) {
-            auto* param = audioProcessor.getParameters()[5];
-            if (param) param->setValueNotifyingHost(stretchSlider.getValue() / 100.0f);
-        }
-    };
     addAndMakeVisible(stretchSlider);
 
     stretchLabel.setText("Stretch", juce::dontSendNotification);
@@ -120,15 +71,7 @@ SpectralFreezeEditor::SpectralFreezeEditor(SpectralFreezeProcessor& p)
     // Shift Slider
     shiftSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     shiftSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
-    shiftSlider.setRange(-100.0, 100.0, 1.0);
-    shiftSlider.setValue(0.0);
     shiftSlider.setTooltip("Shift frequencies up/down (±100 bins, ~2 octaves)");
-    shiftSlider.onValueChange = [this]() {
-        if (audioProcessor.getParameters().size() > 6) {
-            auto* param = audioProcessor.getParameters()[6];
-            if (param) param->setValueNotifyingHost((shiftSlider.getValue() + 100.0) / 200.0);
-        }
-    };
     addAndMakeVisible(shiftSlider);
 
     shiftLabel.setText("Shift", juce::dontSendNotification);
@@ -138,15 +81,7 @@ SpectralFreezeEditor::SpectralFreezeEditor(SpectralFreezeProcessor& p)
     // Morph Slider
     morphSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     morphSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
-    morphSlider.setRange(0.0, 100.0, 1.0);
-    morphSlider.setValue(0.0);
     morphSlider.setTooltip("Blend between live and frozen spectrum (0-100%)");
-    morphSlider.onValueChange = [this]() {
-        if (audioProcessor.getParameters().size() > 7) {
-            auto* param = audioProcessor.getParameters()[7];
-            if (param) param->setValueNotifyingHost(morphSlider.getValue() / 100.0f);
-        }
-    };
     addAndMakeVisible(morphSlider);
 
     morphLabel.setText("Morph", juce::dontSendNotification);
@@ -156,15 +91,7 @@ SpectralFreezeEditor::SpectralFreezeEditor(SpectralFreezeProcessor& p)
     // Gate Slider
     gateSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     gateSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
-    gateSlider.setRange(0.0, 100.0, 1.0);
-    gateSlider.setValue(0.0);
     gateSlider.setTooltip("Silence bins below threshold (relative to max)");
-    gateSlider.onValueChange = [this]() {
-        if (audioProcessor.getParameters().size() > 8) {
-            auto* param = audioProcessor.getParameters()[8];
-            if (param) param->setValueNotifyingHost(gateSlider.getValue() / 100.0f);
-        }
-    };
     addAndMakeVisible(gateSlider);
 
     gateLabel.setText("Gate", juce::dontSendNotification);
@@ -174,15 +101,7 @@ SpectralFreezeEditor::SpectralFreezeEditor(SpectralFreezeProcessor& p)
     // Randomize Slider
     randomizeSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     randomizeSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
-    randomizeSlider.setRange(0.0, 100.0, 1.0);
-    randomizeSlider.setValue(0.0);
     randomizeSlider.setTooltip("Randomize phase for granular texture (0-100%)");
-    randomizeSlider.onValueChange = [this]() {
-        if (audioProcessor.getParameters().size() > 9) {
-            auto* param = audioProcessor.getParameters()[9];
-            if (param) param->setValueNotifyingHost(randomizeSlider.getValue() / 100.0f);
-        }
-    };
     addAndMakeVisible(randomizeSlider);
 
     randomizeLabel.setText("Randomize", juce::dontSendNotification);
@@ -203,6 +122,17 @@ SpectralFreezeEditor::SpectralFreezeEditor(SpectralFreezeProcessor& p)
 
     // Start 60 FPS visualization timer
     startTimerHz(60);
+
+    attachments.attach(freezeButton, SpectralFreezeProcessor::PARAM_FREEZE);
+    attachments.attach(blurSlider, SpectralFreezeProcessor::PARAM_BLUR);
+    attachments.attach(lowCutSlider, SpectralFreezeProcessor::PARAM_LOW_CUT);
+    attachments.attach(highCutSlider, SpectralFreezeProcessor::PARAM_HIGH_CUT);
+    attachments.attach(dryWetSlider, SpectralFreezeProcessor::PARAM_DRY_WET);
+    attachments.attach(stretchSlider, SpectralFreezeProcessor::PARAM_STRETCH);
+    attachments.attach(shiftSlider, SpectralFreezeProcessor::PARAM_SHIFT);
+    attachments.attach(morphSlider, SpectralFreezeProcessor::PARAM_MORPH);
+    attachments.attach(gateSlider, SpectralFreezeProcessor::PARAM_GATE);
+    attachments.attach(randomizeSlider, SpectralFreezeProcessor::PARAM_RANDOMIZE);
 
     // Phase 4: Preset Controls
 
