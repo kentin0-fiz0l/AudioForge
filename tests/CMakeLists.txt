@@ -46,6 +46,7 @@ add_executable(TestRunner
     Plugins/EffectDefaultLevelTests.cpp
     Plugins/EditorParameterTests.cpp
     Plugins/GranularEngineTests.cpp
+    Plugins/PhaserEngineTests.cpp
     Integration/PluginIntegrationTests.cpp)
 
 # Link JUCE libraries
@@ -119,6 +120,7 @@ target_sources(TestRunner PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/GranularEngine/Source/PluginProcessor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/GranularEngine/Source/PluginEditor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/Koto/Source/KotoEngine.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/PhaserFlanger/Source/ModulationEngine.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/FreezeFX/Source/PluginProcessor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/FreezeFX/Source/PluginEditor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/FreezeFX/Source/SpectralProcessor.cpp

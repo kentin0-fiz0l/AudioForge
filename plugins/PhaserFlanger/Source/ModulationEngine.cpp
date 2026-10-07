@@ -10,7 +10,8 @@ void ModulationEngine::prepareToPlay(double sr, int sb) {
     lfoPhase_ = 0.0f;
     for (int ch = 0; ch < 2; ++ch)
         for (int i = 0; i < NUM_STAGES; ++i)
-            apFilters_[ch][i].z1 = 0.0f;
+            apFilters_[ch][i].state = 0.0f;
+    phaserFeedbackState_[0] = phaserFeedbackState_[1] = 0.0f;
 }
 
 void ModulationEngine::processBlock(juce::AudioBuffer<float>& buf) {
@@ -30,30 +31,41 @@ float ModulationEngine::getLFOValue() {
 
 void ModulationEngine::processPhaser(juce::AudioBuffer<float>& buf) {
     const int numSamples = buf.getNumSamples();
-    const int numChannels = buf.getNumChannels();
+    const int numChannels = juce::jmin(buf.getNumChannels(), 2);
+    const float sr = static_cast<float>(sampleRate_);
+    const float wetGain = feedbackWetGain();
 
     for (int sample = 0; sample < numSamples; ++sample) {
+        // Sweep the break frequency up to two octaves either side of the centre
         float lfo = getLFOValue();
-        // Map LFO to all-pass coefficient (affects phase shift frequency)
-        float normalizedFreq = (centreFreq_ / static_cast<float>(sampleRate_)) * (1.0f + depth_ * lfo);
-        float coeff = (1.0f - normalizedFreq) / (1.0f + normalizedFreq);
-        coeff = juce::jlimit(-0.95f, 0.95f, coeff);
+        float breakFreq = centreFreq_ * std::exp2(2.0f * depth_ * lfo);
+        breakFreq = juce::jlimit(20.0f, 0.45f * sr, breakFreq);
+        float t = std::tan(juce::MathConstants<float>::pi * breakFreq / sr);
+        float a = (t - 1.0f) / (t + 1.0f);
 
         for (int ch = 0; ch < numChannels; ++ch) {
             float input = buf.getSample(ch, sample);
-            float output = input;
 
-            // Cascade all-pass filters
+            // Feedback: the last stage's previous output goes back into the first
+            float output = input + feedback_ * phaserFeedbackState_[ch];
             for (int stage = 0; stage < NUM_STAGES; ++stage)
-                output = apFilters_[ch][stage].processSample(output, coeff);
+                output = apFilters_[ch][stage].processSample(output, a);
+            phaserFeedbackState_[ch] = output;
 
-            // Feedback
-            output = output + (input * feedback_);
-
-            // Mix
-            buf.setSample(ch, sample, input * (1.0f - mix_) + output * mix_);
+            buf.setSample(ch, sample, input * (1.0f - mix_) + output * wetGain * mix_);
         }
     }
+}
+
+// Gain applied to the wet signal to keep feedback's resonance in check.
+// Around the loop the all-pass stages have unity gain, so at the frequencies
+// where the feedback comes back in phase the wet path peaks at 1 / (1 - |fb|):
+// +6 dB at 0.5, +20 dB at 0.9. Without compensation, turning Feedback up makes
+// the effect much louder. The square root meets it halfway: the peaks rise by
+// half as many decibels (+10 dB at 0.9) and broadband level holds up better
+// than a full 1 - |fb| would leave it.
+float ModulationEngine::feedbackWetGain() const {
+    return std::sqrt(1.0f - std::abs(feedback_));
 }
 
 void ModulationEngine::processFlanger(juce::AudioBuffer<float>& buf) {
