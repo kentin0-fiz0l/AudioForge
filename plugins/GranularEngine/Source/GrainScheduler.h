@@ -47,7 +47,8 @@ struct Grain
  * GrainScheduler
  *
  * Schedules and plays back multiple overlapping grains.
- * Implements grain density control and time-stretching.
+ * Implements grain density control and scan speed: how fast the point the
+ * grains are cut from moves through the buffered input.
  */
 class GrainScheduler
 {
@@ -63,7 +64,7 @@ public:
     //==============================================================================
     // Parameters
     void setGrainDensity(float grainsPerSecond);  // How many grains to trigger per second
-    void setTimeStretch(float factor);            // Playback speed (0.25-4x)
+    void setTimeStretch(float factor);            // Scan speed through the input (0.25-4x)
     void setReadPosition(float position);         // Where to read from buffer (0-1)
     void setPitchShift(float semitones);          // Pitch shift in semitones (-24 to +24)
     void setSprayAmount(float amount);            // Position randomization (0-1)
@@ -98,7 +99,7 @@ private:
     // Parameters
     double sampleRate = 44100.0;
     float grainDensity = 20.0f;       // Grains per second
-    float timeStretch = 1.0f;         // Playback speed multiplier
+    float timeStretch = 1.0f;         // Scan speed: 1 keeps pace with the input
     float readPosition = 0.5f;        // Read position in buffer (0-1)
     float pitchShift = 0.0f;          // Pitch shift in semitones
     float sprayAmount = 0.0f;         // Position randomization (0-1)
@@ -115,6 +116,7 @@ private:
     // Scheduling
     float grainTimer = 0.0f;       // Timer for next grain trigger
     float samplesPerGrain = 0.0f;  // Samples between grain triggers
+    float scanDrift = 0.0f;        // How far the read point has fallen behind (+) or run ahead (-), in samples
 
     //==============================================================================
     // Random Number Generator

@@ -84,12 +84,12 @@ GranularEngineEditor::GranularEngineEditor(GranularEngineProcessor& p)
     grainDensityLabel.setJustificationType(juce::Justification::centred);
     addAndMakeVisible(grainDensityLabel);
 
-    // Time Stretch Slider
+    // Scan Speed Slider
     timeStretchSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     timeStretchSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
     addAndMakeVisible(timeStretchSlider);
 
-    timeStretchLabel.setText("Time Stretch", juce::dontSendNotification);
+    timeStretchLabel.setText("Scan Speed", juce::dontSendNotification);
     timeStretchLabel.setJustificationType(juce::Justification::centred);
     addAndMakeVisible(timeStretchLabel);
 
@@ -473,8 +473,8 @@ void GranularEngineEditor::paintGrainActivity(juce::Graphics& g, juce::Rectangle
     g.drawText("Pitch: " + juce::String(pitchShiftSlider.getValue(), 1) + " st",
                bounds.getX() + 220, infoY, 200, 15, juce::Justification::centredLeft);
 
-    // Time stretch
-    g.drawText("Time: " + juce::String(timeStretchSlider.getValue(), 2) + "x",
+    // Scan speed
+    g.drawText("Scan: " + juce::String(timeStretchSlider.getValue(), 2) + "x",
                bounds.getX() + 430, infoY, 200, 15, juce::Justification::centredLeft);
 
     // Reverse probability

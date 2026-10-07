@@ -30,6 +30,7 @@ public:
         testStereoInputIsOneStream();
         testWidthSpreadsTheGrains();
         testReverseSetsTheShareOfBackwardGrains();
+        testScanSpeedSetsHowFastGrainsMoveThroughTheInput();
         testEditorShowsTheSettingsItOpensWith();
         testEditorFollowsChangesMadeElsewhere();
         testControlsSetTheValuesTheyShow();
@@ -297,6 +298,67 @@ private:
         expect(control != nullptr, "No control for " + id);
         static Control missing;
         return control != nullptr ? *control : missing;
+    }
+
+    // How fast the output rises, per second, when the input is a slow ramp:
+    // each grain comes out at the level of the moment it was cut from, so
+    // this is how fast the grains move through the input
+    static double rampSlopeOut(float scanSpeed)
+    {
+        GranularEngineProcessor processor;
+        processor.setRateAndBufferSizeDetails(sampleRate, blockSize);
+        processor.prepareToPlay(sampleRate, blockSize);
+        set(processor, "timeStretch", scanSpeed);
+        set(processor, "position", 1.0f);      // The newest audio
+        set(processor, "stereoWidth", 0.0f);   // Every grain on both sides
+
+        const int blocks = 3 * static_cast<int>(sampleRate / blockSize);
+        const double rampPerSample = 0.3 / (blocks * blockSize);
+        juce::AudioBuffer<float> buffer(2, blockSize);
+        juce::MidiBuffer midi;
+
+        // Mean output over a quarter second, from 1 s and from 2.5 s; a
+        // quarter second holds five whole grains, so their windows average out
+        auto windowMean = [](const std::vector<float>& x, double startSeconds)
+        {
+            const int start = static_cast<int>(startSeconds * sampleRate);
+            const int length = static_cast<int>(0.25 * sampleRate);
+            double sum = 0.0;
+            for (int i = start; i < start + length; ++i)
+                sum += x[(size_t) i];
+            return sum / length;
+        };
+
+        std::vector<float> output;
+        for (int block = 0; block < blocks; ++block)
+        {
+            for (int i = 0; i < blockSize; ++i)
+            {
+                const float x = static_cast<float>(0.1 + rampPerSample * (block * blockSize + i));
+                buffer.setSample(0, i, x);
+                buffer.setSample(1, i, x);
+            }
+            processor.processBlock(buffer, midi);
+            output.insert(output.end(), buffer.getReadPointer(0), buffer.getReadPointer(0) + blockSize);
+        }
+        return (windowMean(output, 2.5) - windowMean(output, 1.0)) / 1.5;
+    }
+
+    void testScanSpeedSetsHowFastGrainsMoveThroughTheInput()
+    {
+        beginTest("Scan speed sets how fast the grains move through the input");
+
+        // It was stored and never used, so every speed gave the same slope
+        const double atOne = rampSlopeOut(1.0f);
+        const double atHalf = rampSlopeOut(0.5f) / atOne;
+        const double atQuarter = rampSlopeOut(0.25f) / atOne;
+        logMessage("Against 1x: 0.5x moves at " + juce::String(atHalf, 3) + ", 0.25x at " + juce::String(atQuarter, 3));
+
+        expect(atOne > 0.0, "At 1x the grains should follow the input");
+        expect(std::abs(atHalf - 0.5) < 0.1,
+               "At 0.5x the grains should move through the input at half speed, got " + juce::String(atHalf, 2));
+        expect(std::abs(atQuarter - 0.25) < 0.07,
+               "At 0.25x the grains should move through the input at quarter speed, got " + juce::String(atQuarter, 2));
     }
 
     void testEditorShowsTheSettingsItOpensWith()
