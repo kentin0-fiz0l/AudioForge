@@ -10,6 +10,11 @@ name: Build All Plugins
 # Each plugin compiles its own copy of the JUCE modules, so building all of
 # them in one job would take hours. They are split into shards that run in
 # parallel instead.
+#
+# A pull request builds only the plugins it changes, unless it changes
+# something they all build from (shared/, JUCE, cmake/, the stress host...),
+# when it builds them all; see .github/scripts/plugins-to-build.sh. A push to
+# main always builds every plugin.
 
 on:
   push:
@@ -19,7 +24,9 @@ on:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  # A newer push to a pull request replaces its older run. On main each
+  # merge keeps its own run, so every merge gets checked in full.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   BUILD_TYPE: Release
@@ -40,9 +47,14 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.shards.outputs.matrix }}
+      count: ${{ steps.shards.outputs.count }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          # A pull request is checked out as its merge into main; the first
+          # parent is main, so the second commit gives what the PR changes
+          fetch-depth: 2
 
       - name: Split plugins into shards
         id: shards
@@ -50,9 +62,26 @@ jobs:
           # Every directory directly under plugins/ that has a CMakeLists.txt.
           # Names are restricted to a safe character set because they end up
           # in shell commands in the build job.
-          matrix=$(find plugins -mindepth 2 -maxdepth 2 -name CMakeLists.txt \
+          mapfile -t all < <(find plugins -mindepth 2 -maxdepth 2 -name CMakeLists.txt \
             | xargs -n1 dirname | xargs -n1 basename \
-            | grep -E '^[A-Za-z0-9_-]+$' | sort \
+            | grep -E '^[A-Za-z0-9_-]+$' | sort)
+
+          if [ "$GITHUB_EVENT_NAME" = pull_request ]; then
+            git diff --name-only HEAD^1 HEAD > changed.txt
+            mapfile -t plugins < <(.github/scripts/plugins-to-build.sh "${all[@]}" < changed.txt)
+          else
+            plugins=("${all[@]}")
+          fi
+
+          if [ ${#plugins[@]} -eq ${#all[@]} ]; then
+            summary="Building all ${#all[@]} plugins"
+          else
+            summary="Building ${#plugins[@]} of ${#all[@]} plugins, from what this pull request changes: ${plugins[*]:-none}"
+          fi
+          echo "$summary" | tee -a "$GITHUB_STEP_SUMMARY"
+          echo "count=${#plugins[@]}" >> "$GITHUB_OUTPUT"
+
+          matrix=$(printf '%s\n' "${plugins[@]}" \
             | jq -R -s -c --argjson size "$PLUGINS_PER_SHARD" '
                 split("\n") | map(select(length > 0)) as $plugins
                 | {include: [range(0; $plugins | length; $size) as $i
@@ -63,6 +92,7 @@ jobs:
   build:
     name: Shard ${{ matrix.shard }}
     needs: plan
+    if: needs.plan.outputs.count != '0'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
