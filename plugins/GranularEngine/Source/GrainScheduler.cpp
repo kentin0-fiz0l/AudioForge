@@ -236,20 +236,10 @@ void GrainScheduler::triggerGrain(const GrainBuffer& buffer, GrainExtractor& ext
             grain->playbackPosition = 0.0f;
     }
 
-    // Set stereo pan position (0.5 = center, apply stereo width)
-    float centerPan = 0.5f;
-    if (stereoWidth != 1.0f)
-    {
-        // Random pan position
-        float randomPan = random.nextFloat();
-        // Apply stereo width: 0 = mono center, 1 = normal stereo, 2 = ultra-wide
-        float panOffset = (randomPan - 0.5f) * stereoWidth;
-        grain->panPosition = juce::jlimit(0.0f, 1.0f, centerPan + panOffset);
-    }
-    else
-    {
-        grain->panPosition = centerPan;
-    }
+    // Random pan around the centre, as wide as the stereo width:
+    // 0 = mono center, 1 = normal stereo, 2 = ultra-wide
+    float panOffset = (random.nextFloat() - 0.5f) * stereoWidth;
+    grain->panPosition = juce::jlimit(0.0f, 1.0f, 0.5f + panOffset);
 
     // Activate grain
     grain->active = true;

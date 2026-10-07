@@ -28,6 +28,7 @@ public:
     {
         testDefaultsKeepTheLevel();
         testStereoInputIsOneStream();
+        testWidthSpreadsTheGrains();
         testEditorShowsTheSettingsItOpensWith();
         testEditorFollowsChangesMadeElsewhere();
         testControlsSetTheValuesTheyShow();
@@ -44,7 +45,7 @@ private:
     // Runs two seconds of input, the same on both channels, and returns the
     // left channel's output over the second second
     template <typename Source>
-    static std::vector<float> run(Source&& source, std::vector<float>* inputOut = nullptr)
+    static std::vector<float> run(Source&& source)
     {
         GranularEngineProcessor processor;
         processor.setRateAndBufferSizeDetails(sampleRate, blockSize);
@@ -61,9 +62,6 @@ private:
                 const float x = source(block * blockSize + i);
                 buffer.setSample(0, i, x);
                 buffer.setSample(1, i, x);
-
-                if (inputOut != nullptr && block >= settledBlock)
-                    inputOut->push_back(x);
             }
 
             processor.processBlock(buffer, midi);
@@ -87,19 +85,16 @@ private:
     {
         beginTest("At its defaults the grains come out near the level that went in");
 
-        juce::Random random(7);
-        std::vector<float> input;
-        const auto output = run([&] (int) { return calibratedPeak * (2.0f * random.nextFloat() - 1.0f); }, &input);
+        // Both sides together: the grains are panned at random, so one side
+        // alone gets more or less of them from run to run
+        const auto [left, right] = runStereo(100.0f);
+        const double inputMeanSquare = calibratedPeak * calibratedPeak / 3.0;   // Of the uniform noise runStereo plays
+        const float levelChangeDb = static_cast<float>(10.0 * std::log10(0.5 * (meanSquare(left) + meanSquare(right)) / inputMeanSquare));
 
-        const float levelChangeDb = static_cast<float>(10.0 * std::log10(meanSquare(output) / meanSquare(input)));
-
-        float inputPeak = 0.0f, outputPeak = 0.0f;
-        for (size_t i = 0; i < input.size(); ++i)
-        {
-            inputPeak = juce::jmax(inputPeak, std::abs(input[i]));
-            outputPeak = juce::jmax(outputPeak, std::abs(output[i]));
-        }
-        const float peakChangeDb = juce::Decibels::gainToDecibels(outputPeak / inputPeak);
+        float outputPeak = 0.0f;
+        for (size_t i = 0; i < left.size(); ++i)
+            outputPeak = juce::jmax(outputPeak, std::abs(left[i]), std::abs(right[i]));
+        const float peakChangeDb = juce::Decibels::gainToDecibels(outputPeak / calibratedPeak);
 
         logMessage("Level " + juce::String(levelChangeDb, 1) + " dB, peak " + juce::String(peakChangeDb, 1) + " dB");
 
@@ -107,7 +102,10 @@ private:
         // shaped by its window, so it is not the full level, but near it.
         expect(levelChangeDb > -6.0f && levelChangeDb < 1.0f,
                "Level changed by " + juce::String(levelChangeDb, 1) + " dB");
-        expect(peakChangeDb < 3.0f,
+
+        // A grain panned hard to one side is 3 dB up on that side, and
+        // nothing on the other, as equal-power panning keeps its power
+        expect(peakChangeDb < 4.0f,
                "Peak rose by " + juce::String(peakChangeDb, 1) + " dB");
     }
 
@@ -145,6 +143,67 @@ private:
         expect(total > 0.0, "The grains are silent");
         expect(near / total > 0.95,
                "Only " + juce::String(100.0 * near / total, 1) + "% of the output is near the tone");
+    }
+
+    // Left and right output of a mono noise input, over the second second
+    static std::pair<std::vector<float>, std::vector<float>> runStereo(float width)
+    {
+        GranularEngineProcessor processor;
+        processor.setRateAndBufferSizeDetails(sampleRate, blockSize);
+        processor.prepareToPlay(sampleRate, blockSize);
+        set(processor, "stereoWidth", width);
+
+        juce::Random random(11);
+        juce::AudioBuffer<float> buffer(2, blockSize);
+        juce::MidiBuffer midi;
+        std::vector<float> left, right;
+
+        for (int block = 0; block < numBlocks; ++block)
+        {
+            for (int i = 0; i < blockSize; ++i)
+            {
+                const float x = calibratedPeak * (2.0f * random.nextFloat() - 1.0f);
+                buffer.setSample(0, i, x);
+                buffer.setSample(1, i, x);
+            }
+
+            processor.processBlock(buffer, midi);
+
+            if (block >= settledBlock)
+            {
+                left.insert(left.end(), buffer.getReadPointer(0), buffer.getReadPointer(0) + blockSize);
+                right.insert(right.end(), buffer.getReadPointer(1), buffer.getReadPointer(1) + blockSize);
+            }
+        }
+
+        return { left, right };
+    }
+
+    // How much of the output differs between the sides: 0 for mono
+    static double sideShare(const std::pair<std::vector<float>, std::vector<float>>& lr)
+    {
+        double mid = 0.0, side = 0.0;
+        for (size_t i = 0; i < lr.first.size(); ++i)
+        {
+            const double m = 0.5 * (lr.first[i] + lr.second[i]), s = 0.5 * (lr.first[i] - lr.second[i]);
+            mid += m * m;
+            side += s * s;
+        }
+        return side / (mid + side);
+    }
+
+    void testWidthSpreadsTheGrains()
+    {
+        beginTest("Width spreads the grains across the stereo field, and at zero keeps them in the centre");
+
+        // At its default of 100% every grain used to land in the centre
+        const double atDefault = sideShare(runStereo(100.0f));
+        const double atZero = sideShare(runStereo(0.0f));
+        const double atFull = sideShare(runStereo(200.0f));
+
+        expect(atDefault > 0.1, "At 100% only " + juce::String(100.0 * atDefault, 1) + "% of the output is stereo");
+        expect(atZero < 1.0e-6, "At 0% " + juce::String(100.0 * atZero, 3) + "% of the output is stereo");
+        expect(atFull > atDefault, "200% should be wider than 100%");
     }
 
     //==========================================================================
