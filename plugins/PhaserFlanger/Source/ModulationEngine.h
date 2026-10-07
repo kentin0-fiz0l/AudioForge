@@ -27,17 +27,20 @@ private:
     double sampleRate_ = 44100.0;
     float lfoPhase_ = 0.0f;
 
-    // Phaser: all-pass filters
+    // Phaser: first-order all-pass stages, y = a*x + x1 - a*y1, in transposed
+    // form. Level is flat at every frequency; the phase turns from 0 to -180
+    // degrees around the break frequency set by a.
     static constexpr int NUM_STAGES = 6;
     struct AllPassFilter {
-        float z1 = 0.0f;
-        float processSample(float input, float coeff) {
-            float output = -input + (coeff * (input + z1));
-            z1 = output;
+        float state = 0.0f;
+        float processSample(float input, float a) {
+            float output = a * input + state;
+            state = input - a * output;
             return output;
         }
     };
     AllPassFilter apFilters_[2][NUM_STAGES]; // stereo
+    float phaserFeedbackState_[2] = { 0.0f, 0.0f }; // last output per channel
 
     // Flanger: delay line
     static constexpr int MAX_DELAY_SAMPLES = 4410; // 100ms at 44.1kHz
@@ -47,4 +50,5 @@ private:
     float getLFOValue();
     void processPhaser(juce::AudioBuffer<float>& buffer);
     void processFlanger(juce::AudioBuffer<float>& buffer);
+    float feedbackWetGain() const;
 };
