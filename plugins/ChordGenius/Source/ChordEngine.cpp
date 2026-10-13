@@ -4,6 +4,7 @@
 
 #include "ChordEngine.h"
 #include <algorithm>
+#include <cctype>
 
 // Static member definitions
 const std::vector<int> ChordEngine::MAJOR_SCALE = {0, 2, 4, 5, 7, 9, 11};
@@ -103,9 +104,8 @@ ChordEngine::Chord ChordEngine::createChord(int degree, bool major,
 {
     Chord chord;
 
-    // Get root note from scale degree
-    int scaleNote = currentKey_.scale[degree % 7];
-    chord.root = currentKey_.root + scaleNote;
+    // Get root note from scale degree (the scale already starts on the key's root)
+    chord.root = currentKey_.scale[degree % 7];
 
     // Build triad
     chord.notes.push_back(chord.root);                      // Root
@@ -146,16 +146,19 @@ std::vector<int> ChordEngine::getScale(int root, bool major)
 
 int ChordEngine::romanToScaleDegree(const std::string& roman)
 {
-    // Convert roman numeral to scale degree (0-6)
-    std::string upper = roman;
-    std::transform(upper.begin(), upper.end(), upper.begin(), ::toupper);
+    // Convert roman numeral to scale degree (0-6). Read only the numeral itself,
+    // in either case, so a suffix such as "7" is ignored and "IV" is not taken for "V".
+    static const std::vector<std::string> numerals = {"I", "II", "III", "IV", "V", "VI", "VII"};
 
-    if (upper.find("VII") != std::string::npos) return 6;
-    if (upper.find("VI") != std::string::npos) return 5;
-    if (upper.find("V") != std::string::npos) return 4;
-    if (upper.find("IV") != std::string::npos) return 3;
-    if (upper.find("III") != std::string::npos) return 2;
-    if (upper.find("II") != std::string::npos) return 1;
+    std::string numeral;
+    for (char c : roman)
+    {
+        const char upper = static_cast<char>(std::toupper(static_cast<unsigned char>(c)));
+        if (upper != 'I' && upper != 'V')
+            break;
+        numeral += upper;
+    }
 
-    return 0;  // I
+    auto it = std::find(numerals.begin(), numerals.end(), numeral);
+    return it != numerals.end() ? static_cast<int>(it - numerals.begin()) : 0;
 }

@@ -5,24 +5,77 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
+namespace
+{
+
+// Genre templates in ChordEngine, with the names shown to the user
+struct Genre { const char* id; const char* name; };
+constexpr Genre kGenres[] = {
+    { "pop", "Pop" }, { "rock", "Rock" }, { "jazz", "Jazz" }, { "blues", "Blues" },
+    { "edm", "EDM" }, { "emotional", "Emotional" }, { "happy", "Happy" }, { "sad", "Sad" }
+};
+static_assert (std::size (kGenres) == ChordGeniusProcessor::kNumGenres, "One entry per genre");
+
+constexpr int kLowestKeyRoot = 60;   // Middle C: keys run from C4 to B4
+constexpr juce::uint8 kVelocity = 100;
+constexpr int kMidiChannel = 1;
+
+// A host's reported position can differ from where the last block ended by
+// rounding or tempo automation; anything beyond this is a loop or a seek.
+constexpr double kJumpToleranceInQuarterNotes = 1.0e-3;
+
+} // namespace
+
 ChordGeniusProcessor::ChordGeniusProcessor()
     : AudioProcessor (BusesProperties()
                      .withInput  ("Input",  juce::AudioChannelSet::stereo(), true)
-                     .withOutput ("Output", juce::AudioChannelSet::stereo(), true))
+                     .withOutput ("Output", juce::AudioChannelSet::stereo(), true)),
+      parameters_ (*this, nullptr, "ChordGenius", createParameterLayout())
 {
-    // Initialize with C Major
-    chordEngine_.setKey(60, true);
+    keyParam_ = dynamic_cast<juce::AudioParameterChoice*> (parameters_.getParameter ("key"));
+    modeParam_ = dynamic_cast<juce::AudioParameterChoice*> (parameters_.getParameter ("mode"));
+    genreParam_ = dynamic_cast<juce::AudioParameterChoice*> (parameters_.getParameter ("genre"));
 
-    // Generate initial pop progression
-    currentProgression_ = chordEngine_.generateProgression("pop", 4);
+    for (int mode = 0; mode < 2; ++mode)
+    {
+        chordEngine_.setKey (kLowestKeyRoot, mode == 0);
+
+        for (int genre = 0; genre < kNumGenres; ++genre)
+        {
+            const auto chords = chordEngine_.generateProgression (kGenres[genre].id, kChordsPerProgression);
+            jassert (chords.size() == kChordsPerProgression);
+
+            for (size_t i = 0; i < chords.size(); ++i)
+                std::copy_n (chords[i].notes.begin(), 3, progressionsInC_[(size_t) mode][(size_t) genre][i].begin());
+        }
+    }
 }
 
 ChordGeniusProcessor::~ChordGeniusProcessor()
 {
 }
 
-void ChordGeniusProcessor::prepareToPlay (double, int)
+juce::AudioProcessorValueTreeState::ParameterLayout ChordGeniusProcessor::createParameterLayout()
 {
+    juce::StringArray genreNames;
+    for (const auto& genre : kGenres)
+        genreNames.add (genre.name);
+
+    juce::AudioProcessorValueTreeState::ParameterLayout layout;
+    layout.add (std::make_unique<juce::AudioParameterChoice> (
+        juce::ParameterID { "key", 1 }, "Key",
+        juce::StringArray { "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B" }, 0));
+    layout.add (std::make_unique<juce::AudioParameterChoice> (
+        juce::ParameterID { "mode", 1 }, "Mode", juce::StringArray { "Major", "Minor" }, 0));
+    layout.add (std::make_unique<juce::AudioParameterChoice> (
+        juce::ParameterID { "genre", 1 }, "Genre", genreNames, 0));
+    return layout;
+}
+
+void ChordGeniusProcessor::prepareToPlay (double sampleRate, int)
+{
+    sampleRate_ = sampleRate;
+    wasPlaying_ = false;
 }
 
 void ChordGeniusProcessor::releaseResources()
@@ -33,9 +86,89 @@ void ChordGeniusProcessor::processBlock (juce::AudioBuffer<float>& buffer,
                                          juce::MidiBuffer& midiMessages)
 {
     buffer.clear();
+    midiMessages.clear(); // This plugin only outputs the chords it plays
 
-    // Pass through MIDI (for now)
-    // In a future version, we can add real-time chord generation
+    const int numSamples = buffer.getNumSamples();
+
+    // Follow the host transport: one chord per bar, with bar 1 at PPQ 0
+    bool isPlaying = false;
+    double blockStartPpq = 0.0;
+    double bpm = 120.0;
+    double quarterNotesPerBar = 4.0;
+
+    if (auto* playHead = getPlayHead())
+    {
+        if (auto position = playHead->getPosition())
+        {
+            isPlaying = position->getIsPlaying();
+            blockStartPpq = position->getPpqPosition().orFallback (0.0);
+            bpm = position->getBpm().orFallback (120.0);
+
+            if (auto timeSignature = position->getTimeSignature())
+                quarterNotesPerBar = timeSignature->numerator * 4.0 / timeSignature->denominator;
+        }
+    }
+
+    if (!isPlaying)
+    {
+        releaseChord (midiMessages, 0); // Transport stopped: silence what is sounding
+        wasPlaying_ = false;
+        return;
+    }
+
+    const double ppqPerSample = bpm / (60.0 * sampleRate_);
+    const double blockEndPpq = blockStartPpq + numSamples * ppqPerSample;
+
+    // Starting, looping or seeking: release what is sounding and come in with
+    // this bar's chord. Before bar 1 (a count-in) we wait for bar 1.
+    const bool isContinuous = wasPlaying_
+                              && std::abs (blockStartPpq - nextBlockStartPpq_) < kJumpToleranceInQuarterNotes;
+    if (!isContinuous)
+    {
+        releaseChord (midiMessages, 0);
+        const auto bar = (juce::int64) std::floor (blockStartPpq / quarterNotesPerBar);
+        nextBar_ = juce::jmax ((juce::int64) 0, bar);
+
+        if (bar >= 0)
+            startChord (midiMessages, nextBar_++, 0);
+    }
+
+    wasPlaying_ = true;
+    nextBlockStartPpq_ = blockEndPpq;
+
+    for (; nextBar_ * quarterNotesPerBar < blockEndPpq; ++nextBar_)
+    {
+        const int sample = juce::jlimit (0, numSamples - 1,
+            juce::roundToInt ((nextBar_ * quarterNotesPerBar - blockStartPpq) / ppqPerSample));
+        releaseChord (midiMessages, sample);
+        startChord (midiMessages, nextBar_, sample);
+    }
+}
+
+void ChordGeniusProcessor::startChord (juce::MidiBuffer& midi, juce::int64 bar, int samplePosition)
+{
+    const auto mode = (size_t) modeParam_->getIndex();
+    const auto genre = (size_t) genreParam_->getIndex();
+    const auto chord = (size_t) (bar % kChordsPerProgression);
+    const int transpose = keyParam_->getIndex();
+
+    soundingNotes_ = progressionsInC_[mode][genre][chord];
+    for (int& note : soundingNotes_)
+    {
+        note += transpose;
+        midi.addEvent (juce::MidiMessage::noteOn (kMidiChannel, note, kVelocity), samplePosition);
+    }
+    chordSounding_ = true;
+}
+
+void ChordGeniusProcessor::releaseChord (juce::MidiBuffer& midi, int samplePosition)
+{
+    if (!chordSounding_)
+        return;
+
+    for (int note : soundingNotes_)
+        midi.addEvent (juce::MidiMessage::noteOff (kMidiChannel, note), samplePosition);
+    chordSounding_ = false;
 }
 
 juce::AudioProcessorEditor* ChordGeniusProcessor::createEditor()
@@ -45,23 +178,21 @@ juce::AudioProcessorEditor* ChordGeniusProcessor::createEditor()
 
 void ChordGeniusProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
-    // Save state (key, progression, etc.)
+    if (auto xml = parameters_.copyState().createXml())
+        copyXmlToBinary (*xml, destData);
 }
 
 void ChordGeniusProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
-    // Restore state
+    if (auto xml = getXmlFromBinary (data, sizeInBytes))
+        if (xml->hasTagName (parameters_.state.getType()))
+            parameters_.replaceState (juce::ValueTree::fromXml (*xml));
 }
 
-void ChordGeniusProcessor::generateNewProgression(const std::string& genre)
+std::vector<ChordEngine::Chord> ChordGeniusProcessor::getCurrentProgression()
 {
-    currentProgression_ = chordEngine_.generateProgression(genre, 4);
-}
-
-void ChordGeniusProcessor::playChord(const ChordEngine::Chord& chord)
-{
-    // This would send MIDI notes to the host DAW
-    // Implementation depends on MIDI timing
+    chordEngine_.setKey (kLowestKeyRoot + keyParam_->getIndex(), modeParam_->getIndex() == 0);
+    return chordEngine_.generateProgression (kGenres[genreParam_->getIndex()].id, kChordsPerProgression);
 }
 
 void ChordGeniusProcessor::exportToMidiFile(const juce::File& file)
@@ -77,7 +208,7 @@ void ChordGeniusProcessor::exportToMidiFile(const juce::File& file)
     int ticksPerBeat = 480;
     int currentBeat = 0;
 
-    for (const auto& chord : currentProgression_) {
+    for (const auto& chord : getCurrentProgression()) {
         int timeStamp = currentBeat * ticksPerBeat;
 
         // Add all notes in the chord
@@ -99,7 +230,9 @@ void ChordGeniusProcessor::exportToMidiFile(const juce::File& file)
 }
 
 // This creates new instances of the plugin
+#ifndef AUDIOFORGE_TESTS
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
     return new ChordGeniusProcessor();
 }
+#endif
