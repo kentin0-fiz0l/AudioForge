@@ -10,6 +10,8 @@
 
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <cmath>
+#include <thread>
+#include <atomic>
 
 #include "../../plugins/BassLine/Source/PluginProcessor.h"
 
@@ -91,6 +93,8 @@ public:
         testEveryBarInTheSameRegister();
         testStateRoundTrip();
         testIgnoresStateItCannotRead();
+        testDamagedSessionIsMadeSafe();
+        testSavingWhileTheLineChanges();
         testOpeningEditorKeepsSession();
     }
 
@@ -195,6 +199,89 @@ private:
         expectEquals(processor.getWaveform(), 2);
         expectEquals(processor.getFilterCutoff(), 400.0f);
         expectEquals(static_cast<int>(processor.getCurrentBassLine().size()), static_cast<int>(lineBefore));
+    }
+
+    // A project file is outside the plugin's control: a damaged or hand-edited one must not put
+    // out-of-range notes, timings or settings into the audio thread, or allocate without bound
+    void testDamagedSessionIsMadeSafe()
+    {
+        beginTest("A damaged session is clamped to safe values");
+
+        juce::XmlElement xml("BassLineState");
+        xml.setAttribute("attack", -5.0);
+        xml.setAttribute("decay", 1.0e9);
+        xml.setAttribute("sustain", 7.0);
+        xml.setAttribute("release", "nan");
+        xml.setAttribute("filterCutoff", 1.0e12);
+        xml.setAttribute("reverbMix", -1.0);
+        xml.setAttribute("delayMix", 50.0);
+        xml.setAttribute("keyRoot", 5000);
+        xml.setAttribute("style", "<not a style>");
+        auto* notes = xml.createNewChildElement("Notes");
+        // pitch, start, duration, velocity: two with usable timings, two with impossible ones
+        const double rows[][4] = { { -40, 1.0, 0.5, 999 }, { 300, 2.0, 1.0e30, -7 },
+                                   { 64, std::nan(""), 1.0, 64 }, { 64, -3.0, -1.0, 64 } };
+        for (int i = 0; i < 100000; ++i)
+        {
+            auto* n = notes->createNewChildElement("Note");
+            n->setAttribute("pitch", static_cast<int>(rows[i % 4][0]));
+            n->setAttribute("start", rows[i % 4][1]);
+            n->setAttribute("duration", rows[i % 4][2]);
+            n->setAttribute("velocity", static_cast<int>(rows[i % 4][3]));
+        }
+        juce::MemoryBlock damaged;
+        juce::AudioProcessor::copyXmlToBinary(xml, damaged);
+
+        BassLineProcessor processor;
+        processor.setStateInformation(damaged.getData(), static_cast<int>(damaged.getSize()));
+
+        auto inRange = [](float v, float lo, float hi) { return std::isfinite(v) && v >= lo && v <= hi; };
+        expect(inRange(processor.getAttack(), 0.001f, 0.5f), "Attack " + juce::String(processor.getAttack()));
+        expect(inRange(processor.getDecay(), 0.001f, 1.0f), "Decay " + juce::String(processor.getDecay()));
+        expect(inRange(processor.getSustain(), 0.0f, 1.0f), "Sustain " + juce::String(processor.getSustain()));
+        expect(inRange(processor.getRelease(), 0.001f, 1.0f), "Release " + juce::String(processor.getRelease()));
+        expect(inRange(processor.getFilterCutoff(), 100.0f, 2000.0f), "Cutoff " + juce::String(processor.getFilterCutoff()));
+        expect(inRange(processor.getReverbMix(), 0.0f, 1.0f), "Reverb mix " + juce::String(processor.getReverbMix()));
+        expect(inRange(processor.getDelayMix(), 0.0f, 1.0f), "Delay mix " + juce::String(processor.getDelayMix()));
+        expect(processor.getKeyRoot() >= 0 && processor.getKeyRoot() <= 127, "Key root " + juce::String(processor.getKeyRoot()));
+        expectEquals(juce::String(processor.getStyle()), juce::String("Rock"), "An unknown style should be ignored");
+
+        const auto line = processor.getCurrentBassLine();
+        expect(! line.empty(), "Notes with usable timings should be kept, clamped");
+        expect(line.size() <= 4096, "The line should be capped, not " + juce::String((int) line.size()) + " notes");
+        for (const auto& note : line)
+        {
+            expect(note.pitch >= 0 && note.pitch <= 127, "Pitch out of range: " + juce::String(note.pitch));
+            expect(note.velocity >= 1 && note.velocity <= 127, "Velocity out of range: " + juce::String(note.velocity));
+            expect(std::isfinite(note.startTime) && note.startTime >= 0.0f, "Bad start time");
+            expect(std::isfinite(note.duration) && note.duration > 0.0f && note.duration <= 64.0f, "Bad duration");
+        }
+    }
+
+    // Hosts may save, or load, from a background thread while the line is being replaced
+    void testSavingWhileTheLineChanges()
+    {
+        beginTest("Saving on another thread while the bass line is replaced is safe");
+
+        BassLineProcessor processor;
+        std::atomic<bool> done { false };
+        std::atomic<int> saves { 0 };
+        std::thread saver([&] {
+            while (! done.load())
+            {
+                juce::MemoryBlock state;
+                processor.getStateInformation(state);
+                saves.fetch_add(1);
+            }
+        });
+
+        const char* styles[] = { "Rock", "Funk", "Jazz", "EDM" };
+        for (int i = 0; i < 2000; ++i)
+            processor.generateNewBassLine(styles[i % 4], 4);
+
+        done.store(true);
+        saver.join();
+        expect(saves.load() > 0, "The saving thread should have run");
     }
 
     void testOpeningEditorKeepsSession()

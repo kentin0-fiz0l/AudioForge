@@ -3,6 +3,7 @@
 */
 
 #include "PluginProcessor.h"
+#include <cmath>
 #include "PluginEditor.h"
 #include "../../../shared/dsp/ReverbLevels.h"
 
@@ -323,6 +324,7 @@ void BassLineProcessor::getStateInformation (juce::MemoryBlock& destData)
     // The line itself is saved, not just the settings that made it: it is
     // randomly humanised, so regenerating it would not sound the same.
     auto* notes = xml.createNewChildElement ("Notes");
+    const juce::ScopedLock edit (lineEditLock_);
     for (const auto& note : currentBassLine_)
     {
         auto* n = notes->createNewChildElement ("Note");
@@ -344,41 +346,70 @@ void BassLineProcessor::setStateInformation (const void* data, int sizeInBytes)
     if (xml == nullptr || ! xml->hasTagName ("BassLineState"))
         return;
 
+    // A project file can be damaged or hand-edited, so nothing from it reaches the audio thread
+    // unchecked: settings are kept to their controls' ranges (a non-finite one is ignored), only
+    // known styles are taken, notes with impossible timings are dropped and the rest clamped,
+    // and the line is capped.
+    static const juce::StringArray styles { "Rock", "Funk", "Jazz", "EDM", "Reggae", "Latin", "Blues" };
+    constexpr std::size_t maxNotes = 4096;
+    constexpr double maxStartBeats = 1024.0, maxDurationBeats = 64.0;
+    auto setting = [&xml] (const char* name, float current, float low, float high)
+    {
+        const double v = xml->getDoubleAttribute (name, current);
+        return std::isfinite (v) ? juce::jlimit (low, high, static_cast<float> (v)) : current;
+    };
+
     setWaveform (xml->getIntAttribute ("waveform", waveform_));
-    attack_ = static_cast<float> (xml->getDoubleAttribute ("attack", attack_));
-    decay_ = static_cast<float> (xml->getDoubleAttribute ("decay", decay_));
-    sustain_ = static_cast<float> (xml->getDoubleAttribute ("sustain", sustain_));
-    release_ = static_cast<float> (xml->getDoubleAttribute ("release", release_));
-    filterCutoff_ = static_cast<float> (xml->getDoubleAttribute ("filterCutoff", filterCutoff_));
+    attack_ = setting ("attack", attack_, 0.001f, 0.5f);
+    decay_ = setting ("decay", decay_, 0.001f, 1.0f);
+    sustain_ = setting ("sustain", sustain_, 0.0f, 1.0f);
+    release_ = setting ("release", release_, 0.001f, 1.0f);
+    filterCutoff_ = setting ("filterCutoff", filterCutoff_, 100.0f, 2000.0f);
     octave_ = juce::jlimit (1, 3, xml->getIntAttribute ("octave", octave_));
-    keyRoot_ = xml->getIntAttribute ("keyRoot", keyRoot_);
+    keyRoot_ = juce::jlimit (0, 127, xml->getIntAttribute ("keyRoot", keyRoot_));
     keyIsMajor_ = xml->getBoolAttribute ("keyIsMajor", keyIsMajor_);
-    reverbMix_ = static_cast<float> (xml->getDoubleAttribute ("reverbMix", reverbMix_));
-    delayMix_ = static_cast<float> (xml->getDoubleAttribute ("delayMix", delayMix_));
+    reverbMix_ = setting ("reverbMix", reverbMix_, 0.0f, 1.0f);
+    delayMix_ = setting ("delayMix", delayMix_, 0.0f, 1.0f);
     bassEnabled_ = xml->getBoolAttribute ("bassEnabled", bassEnabled_);
-    style_ = xml->getStringAttribute ("style", style_).toStdString();
+    if (const auto style = xml->getStringAttribute ("style"); styles.contains (style))
+        style_ = style.toStdString();
 
     if (auto* notes = xml->getChildByName ("Notes"))
     {
         std::vector<BassEngine::Note> line;
         for (auto* n : notes->getChildWithTagNameIterator ("Note"))
+        {
+            if (line.size() >= maxNotes)
+                break;
+            const double start = n->getDoubleAttribute ("start"), duration = n->getDoubleAttribute ("duration");
+            if (! std::isfinite (start) || start < 0.0 || start > maxStartBeats
+                || ! std::isfinite (duration) || duration <= 0.0)
+                continue;
             line.push_back ({ juce::jlimit (0, 127, n->getIntAttribute ("pitch")),
-                              static_cast<float> (n->getDoubleAttribute ("start")),
-                              static_cast<float> (n->getDoubleAttribute ("duration")),
-                              juce::jlimit (0, 127, n->getIntAttribute ("velocity")),
+                              static_cast<float> (start),
+                              static_cast<float> (juce::jmin (duration, maxDurationBeats)),
+                              juce::jlimit (1, 127, n->getIntAttribute ("velocity")),
                               n->getBoolAttribute ("isRoot") });
+        }
         setBassLine (std::move (line));
     }
 }
 
+std::vector<BassEngine::Note> BassLineProcessor::getCurrentBassLine() const
+{
+    const juce::ScopedLock edit (lineEditLock_);
+    return currentBassLine_;
+}
+
 void BassLineProcessor::setBassLine (std::vector<BassEngine::Note>&& line)
 {
+    const juce::ScopedLock edit (lineEditLock_);
     {
         // Swap rather than assign, so the audio thread never waits on an allocation
         const juce::SpinLock::ScopedLockType lock (bassLineLock_);
         currentBassLine_.swap (line);
     }
-    // The old line is freed here, outside the lock
+    // The old line is freed here, outside the audio thread's lock
 }
 
 void BassLineProcessor::generateNewBassLine(const std::string& style, int numBars)
@@ -412,6 +443,7 @@ void BassLineProcessor::exportToMidiFile(const juce::File& file)
 
     int ticksPerBeat = 480;
 
+    const juce::ScopedLock edit (lineEditLock_);
     for (const auto& note : currentBassLine_) {
         int velocity = note.velocity;
         int timeStamp = static_cast<int>(note.startTime * ticksPerBeat);

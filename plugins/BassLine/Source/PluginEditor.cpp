@@ -332,7 +332,7 @@ void BassLineEditor::comboBoxChanged (juce::ComboBox* comboBox)
 
         processor_.generateNewBassLine(style, 4);
 
-        auto& bassLine = processor_.getCurrentBassLine();
+        const auto bassLine = processor_.getCurrentBassLine();
         juce::String keyName = keySelector_.getText();
         juce::String scaleName = scaleSelector_.getText();
         juce::String stats = juce::String(static_cast<int>(bassLine.size())) + " notes | " +
@@ -369,7 +369,7 @@ void BassLineEditor::comboBoxChanged (juce::ComboBox* comboBox)
         processor_.generateNewBassLine(style, 4);
 
         // Update stats
-        auto& bassLine = processor_.getCurrentBassLine();
+        const auto bassLine = processor_.getCurrentBassLine();
         juce::String keyName = keySelector_.getText();
         juce::String scaleName = scaleSelector_.getText();
         juce::String stats = juce::String(static_cast<int>(bassLine.size())) + " notes | " +
@@ -400,7 +400,7 @@ void BassLineEditor::buttonClicked (juce::Button* button)
         processor_.generateNewBassLine(style, 4);
 
         // Update stats
-        auto& bassLine = processor_.getCurrentBassLine();
+        const auto bassLine = processor_.getCurrentBassLine();
         juce::String keyName = keySelector_.getText();
         juce::String scaleName = scaleSelector_.getText();
         juce::String stats = juce::String(static_cast<int>(bassLine.size())) + " notes | " +

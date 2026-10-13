@@ -38,7 +38,8 @@ public:
 
     // BassLine specific
     BassEngine& getBassEngine() { return bassEngine_; }
-    std::vector<BassEngine::Note>& getCurrentBassLine() { return currentBassLine_; }
+    // A copy, taken under the edit lock: the line may be replaced from another thread
+    std::vector<BassEngine::Note> getCurrentBassLine() const;
 
     void generateNewBassLine(const std::string& style, int numBars = 4);
     const std::string& getStyle() const { return style_; }
@@ -84,6 +85,9 @@ private:
     BassEngine bassEngine_;
     std::vector<BassEngine::Note> currentBassLine_;
     juce::SpinLock bassLineLock_;  // processBlock reads the line; the message thread replaces it
+    // Held by everything outside the audio thread that replaces the line or reads it (saving,
+    // export, the window): a host can save or load from a background thread
+    juce::CriticalSection lineEditLock_;
 
     double sampleRate_ = 44100.0;
     bool bassEnabled_ = true;
