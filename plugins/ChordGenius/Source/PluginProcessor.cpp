@@ -90,22 +90,31 @@ void ChordGeniusProcessor::processBlock (juce::AudioBuffer<float>& buffer,
 
     const int numSamples = buffer.getNumSamples();
 
-    // Follow the host transport: one chord per bar, with bar 1 at PPQ 0
+    // Follow the host transport: one chord per bar, with bar 1 at PPQ 0.
+    // Without a musical position there is no bar grid, so treat that as stopped.
     bool isPlaying = false;
     double blockStartPpq = 0.0;
     double bpm = 120.0;
     double quarterNotesPerBar = 4.0;
+    double loopEndPpq = std::numeric_limits<double>::max();
 
     if (auto* playHead = getPlayHead())
     {
         if (auto position = playHead->getPosition())
         {
-            isPlaying = position->getIsPlaying();
-            blockStartPpq = position->getPpqPosition().orFallback (0.0);
+            const auto ppq = position->getPpqPosition();
+            isPlaying = position->getIsPlaying() && ppq.hasValue();
+            blockStartPpq = ppq.orFallback (0.0);
             bpm = position->getBpm().orFallback (120.0);
 
             if (auto timeSignature = position->getTimeSignature())
                 quarterNotesPerBar = timeSignature->numerator * 4.0 / timeSignature->denominator;
+
+            // Some hosts (Live) don't split a block at the loop end. A bar line
+            // at or past it belongs to the next pass, which starts at the loop start.
+            if (auto loop = position->getLoopPoints())
+                if (position->getIsLooping() && loop->ppqEnd > loop->ppqStart && blockStartPpq < loop->ppqEnd)
+                    loopEndPpq = loop->ppqEnd;
         }
     }
 
@@ -115,6 +124,9 @@ void ChordGeniusProcessor::processBlock (juce::AudioBuffer<float>& buffer,
         wasPlaying_ = false;
         return;
     }
+
+    if (numSamples == 0)
+        return;
 
     const double ppqPerSample = bpm / (60.0 * sampleRate_);
     const double blockEndPpq = blockStartPpq + numSamples * ppqPerSample;
@@ -132,17 +144,32 @@ void ChordGeniusProcessor::processBlock (juce::AudioBuffer<float>& buffer,
         if (bar >= 0)
             startChord (midiMessages, nextBar_++, 0);
     }
+    else
+    {
+        // A meter change moves the bar grid. Go to the new grid's next bar line
+        // rather than playing every bar line it puts behind the playhead.
+        const auto firstBarLine = (juce::int64) std::ceil ((blockStartPpq - kJumpToleranceInQuarterNotes) / quarterNotesPerBar);
+        const auto lastBarLine = (juce::int64) std::floor (blockStartPpq / quarterNotesPerBar) + 1;
+        nextBar_ = juce::jmax ((juce::int64) 0, juce::jlimit (firstBarLine, lastBarLine, nextBar_));
+    }
 
     wasPlaying_ = true;
     nextBlockStartPpq_ = blockEndPpq;
 
-    for (; nextBar_ * quarterNotesPerBar < blockEndPpq; ++nextBar_)
+    for (; nextBar_ * quarterNotesPerBar < juce::jmin (blockEndPpq, loopEndPpq); ++nextBar_)
     {
         const int sample = juce::jlimit (0, numSamples - 1,
             juce::roundToInt ((nextBar_ * quarterNotesPerBar - blockStartPpq) / ppqPerSample));
         releaseChord (midiMessages, sample);
         startChord (midiMessages, nextBar_, sample);
     }
+}
+
+void ChordGeniusProcessor::processBlockBypassed (juce::AudioBuffer<float>&, juce::MidiBuffer& midiMessages)
+{
+    // Bypassed: MIDI passes through, but a chord we started must not hang
+    releaseChord (midiMessages, 0);
+    wasPlaying_ = false;
 }
 
 void ChordGeniusProcessor::startChord (juce::MidiBuffer& midi, juce::int64 bar, int samplePosition)
