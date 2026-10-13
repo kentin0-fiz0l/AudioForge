@@ -110,6 +110,8 @@ void VocalCompressorProcessor::setStateInformation(const void* data, int sizeInB
 }
 
 // Create plugin instance
+#ifndef AUDIOFORGE_TESTS
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter() {
     return new VocalCompressorProcessor();
 }
+#endif

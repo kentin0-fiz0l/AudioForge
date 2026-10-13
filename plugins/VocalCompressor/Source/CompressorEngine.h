@@ -7,14 +7,14 @@
  * Vocal Compressor Engine
  *
  * Full-band compressor optimized for vocal processing with:
- * - RMS/Peak detection
+ * - RMS/Peak detection, linked across channels (the louder channel drives both)
  * - Soft/hard knee
  * - Parallel compression
- * - Auto makeup gain
+ * - Manual makeup gain
  */
-class CompressorEngine {
+class VocalCompressorEngine {
 public:
-    CompressorEngine();
+    VocalCompressorEngine();
 
     void prepare(double sampleRate, int samplesPerBlock);
     void process(juce::AudioBuffer<float>& buffer);
@@ -47,7 +47,9 @@ private:
     float envelope_;
     float attackCoeff_;
     float releaseCoeff_;
-    float rmsWindow_[512];
+    static constexpr int kMaxChannels = 2;
+    static constexpr int kRmsWindowSize = 512;
+    float rmsWindow_[kMaxChannels][kRmsWindowSize];
     int rmsIndex_;
 
     double sampleRate_;
@@ -57,7 +59,6 @@ private:
     juce::AudioBuffer<float> dryBuffer_;
 
     // Helper functions
-    float detectLevel(float sample);
+    float detectLevel(int channel, float sample);
     float calculateGainReduction(float level);
-    float applyKnee(float inputDb, float thresholdDb, float kneeDb);
 };
