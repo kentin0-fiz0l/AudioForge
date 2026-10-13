@@ -7,6 +7,80 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+### In Progress (Phase 4)
+- Advanced Modulation System (4 LFOs + 2 ADSRs per plugin)
+- Modulation matrix
+- MPE (MIDI Polyphonic Expression) support
+- Visualization components (spectrum analyzer, oscilloscope)
+
+### Under Consideration
+- Plugin collaboration features
+
+---
+
+## [2.1.0] - 2026-10-13
+
+### Highlights
+- **Installers for macOS, Windows and Linux.** Every release now carries a macOS `.pkg`
+  (universal: Apple Silicon and Intel, macOS 11+), a Windows `Setup.exe` and a Linux
+  `.tar.gz` with `install.sh`, plus `.zip` versions to copy by hand. All 60 plugins: VST3
+  everywhere, AU on macOS, and standalone apps for 53 of them. The installers are not
+  code-signed, so macOS asks for "Open Anyway" and Windows for "Run anyway" once.
+- **Every instrument at the same level.** The instruments were up to 24 dB apart; they are
+  now calibrated to one output level, and effects no longer change the level when loaded.
+- **AI Producer for Ableton Live** grew from a track generator into a way to drive a Live
+  set from outside: mixer and devices, clips and warping, the Arrangement, locators and
+  playback. Its bass now follows the chords.
+
+### Added
+- DrumSynth: an open hi-hat and a clap, so it covers a whole house or techno kit, and it
+  now follows velocity and timing.
+- PanUtil is now a track utility: gain and mono alongside pan and width.
+- BasicSynth: bass, pad and lead patches.
+- ElectricPiano and Polysynth: an Output Level control.
+- AI Producer (`ableton/remote-scripts/AIProducer`, see its README):
+  - control Live's mixer, devices and meters from outside, and record listening feedback
+    with what Live was doing at the time
+  - read clips, set their warping and markers, copy them to the Arrangement and clear it
+  - place, list and jump to locators, and move the playhead
+  - load instruments it can count on in Live Intro
+
+### Changed
+- **Some sessions will sound different:**
+  - instrument and effect levels (see Highlights)
+  - PhaserFlanger's phaser mode is now a real phaser with feedback
+  - BrassSection's Fall-off falls on release
+  - GranularEngine: its Time Stretch control is now Scan Speed (saved values are kept), its
+    default level went from -28 dB to -4 dB, and its grains spread across the stereo field
+- Four plugins have plain names in your DAW's list instead of "AudioForge - Name".
+- CleanDelay shows Feedback and Mix as percentages.
+
+### Fixed
+- Plugins that were silent or nearly silent: HiHat, FreezeFX's Freeze and SpectralFreeze.
+- FreezeFX now holds the level and pitch it froze.
+- Limiter: it went over its ceiling, and its lookahead did nothing.
+- PlateReverb doubled its input.
+- BrassSection produced invalid output on loud Marcato notes.
+- 18 plugins read saved settings without checking them.
+- Controls that showed the defaults instead of the real settings in CleanDelay, SimpleGain,
+  SpectralFreeze, GranularEngine, BasicSynth and PanUtil.
+- DrumSynth: a choked hi-hat fades out instead of stepping down.
+- GranularEngine's Reverse now plays grains backwards.
+- Layout overlaps in PanUtil and GranularEngine.
+- Windows builds of OrganEmulator, PadSynth and WavetableSynth.
+- AI Producer: Live could not load or trigger it; it now follows Live's transport; clips Live
+  warps again after analysing them are kept unwarped; locators off Live's grid no longer
+  loop forever.
+
+### Technical Details
+- CI builds every plugin on macOS, Windows and Linux, and runs each through a stress host at
+  extreme settings and a level check; pull requests build only what they change.
+- Releases are built by `.github/workflows/release.yml`; see `DEPLOYMENT.md`.
+
+---
+
 ## [2.0.0] - 2026-09-11
 
 ### 🎉 Major Features
@@ -106,27 +180,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [Unreleased]
-
-### In Progress (Phase 4)
-- Advanced Modulation System (4 LFOs + 2 ADSRs per plugin)
-- Modulation matrix
-- MPE (MIDI Polyphonic Expression) support
-- Visualization components (spectrum analyzer, oscilloscope)
-
-### Under Consideration
-- Windows VST3 builds
-- Linux VST3 builds  
-- Audio Units (AU) format
-- Standalone applications
-- Plugin collaboration features
-
----
-
 ## Version History
 
 | Version | Date | Major Changes |
 |---------|------|---------------|
+| **2.1.0** | 2026-10-13 | Installers for macOS, Windows and Linux; calibrated levels; AI Producer drives Live |
 | **2.0.0** | 2026-09-11 | Preset Management + MIDI Learn |
 | **1.0.0** | 2026-08-31 | Initial release with 51 plugins |
 
