@@ -1,16 +1,20 @@
 #include "ArpEngine.h"
 
-ArpEngine::ArpEngine() {}
+ArpEngine::ArpEngine() {
+    heldNotes_.reserve(maxHeldNotes);
+    baseNotes_.reserve(maxHeldNotes);
+    currentPattern_.reserve(maxHeldNotes * 4 * 2); // 4 octaves, up and back down
+}
 
-void ArpEngine::prepareToPlay(double sampleRate, int samplesPerBlock) {
+void ArpEngine::prepareToPlay(double sampleRate, int /*samplesPerBlock*/) {
     sampleRate_ = sampleRate;
-    totalSamplesProcessed_ = 0;
-    nextStepSample_ = 0;
+    outputMidi_.ensureSize(4096);
+    wasRunning_ = false;
 }
 
 void ArpEngine::processBlock(juce::MidiBuffer& midiMessages, int numSamples,
                               const juce::AudioPlayHead::PositionInfo& posInfo) {
-    juce::MidiBuffer processedMidi;
+    outputMidi_.clear();
 
     // Process incoming MIDI to update held notes
     for (const auto metadata : midiMessages) {
@@ -22,30 +26,71 @@ void ArpEngine::processBlock(juce::MidiBuffer& midiMessages, int numSamples,
         }
     }
 
-    // Generate arpeggio notes
-    if (!heldNotes_.empty() || latchEnabled_) {
-        generateArpeggioNotes(processedMidi, 0, numSamples, posInfo);
-    }
+    generateArpeggioNotes(outputMidi_, numSamples, posInfo);
 
     // Replace input MIDI with generated arpeggio
-    midiMessages.swapWith(processedMidi);
-    totalSamplesProcessed_ += numSamples;
+    midiMessages.swapWith(outputMidi_);
+}
+
+void ArpEngine::setPattern(Pattern p) {
+    if (p == pattern_) return;
+    pattern_ = p;
+    updatePattern(); // takes effect from the next step
+}
+
+void ArpEngine::setOctaves(int octaves) {
+    octaves = juce::jlimit(1, 4, octaves);
+    if (octaves == octaves_) return;
+    octaves_ = octaves;
+    updatePattern();
+}
+
+void ArpEngine::setLatch(bool enabled) {
+    if (enabled == latchEnabled_) return;
+    latchEnabled_ = enabled;
+
+    if (!enabled) {
+        // Drop the latched notes whose keys are no longer down
+        heldNotes_.erase(
+            std::remove_if(heldNotes_.begin(), heldNotes_.end(),
+                [this](const HeldNote& n) { return !keyDown_[n.channel - 1][n.noteNumber]; }),
+            heldNotes_.end()
+        );
+        updatePattern();
+    }
 }
 
 void ArpEngine::handleNoteOn(int noteNumber, int velocity, int channel) {
+    // With latch on, the first key of a fresh chord replaces the latched one
+    if (latchEnabled_ && numKeysDown_ == 0)
+        heldNotes_.clear();
+
+    auto& keyDown = keyDown_[channel - 1][noteNumber];
+    if (!keyDown) {
+        keyDown = true;
+        ++numKeysDown_;
+    }
+
     // Check if note already held
     for (const auto& note : heldNotes_) {
         if (note.noteNumber == noteNumber && note.channel == channel)
             return;
     }
 
-    // Add new note
-    heldNotes_.push_back({noteNumber, velocity, channel, noteOrderCounter_++});
-    currentChannel_ = channel;
+    if ((int)heldNotes_.size() < maxHeldNotes) {
+        heldNotes_.push_back({noteNumber, velocity, channel, noteOrderCounter_++});
+        currentChannel_ = channel;
+    }
     updatePattern();
 }
 
 void ArpEngine::handleNoteOff(int noteNumber, int channel) {
+    auto& keyDown = keyDown_[channel - 1][noteNumber];
+    if (keyDown) {
+        keyDown = false;
+        --numKeysDown_;
+    }
+
     if (latchEnabled_) return; // Latch mode keeps notes
 
     // Remove note
@@ -57,21 +102,18 @@ void ArpEngine::handleNoteOff(int noteNumber, int channel) {
         heldNotes_.end()
     );
 
-    if (heldNotes_.empty()) {
-        currentStep_ = 0;
-        currentPattern_.clear();
-    } else {
-        updatePattern();
-    }
+    updatePattern();
 }
 
 void ArpEngine::updatePattern() {
     if (heldNotes_.empty()) {
         currentPattern_.clear();
+        currentStep_ = 0;
         return;
     }
 
-    std::vector<int> baseNotes;
+    auto& baseNotes = baseNotes_;
+    baseNotes.clear();
     for (const auto& note : heldNotes_)
         baseNotes.push_back(note.noteNumber);
 
@@ -125,25 +167,45 @@ void ArpEngine::updatePattern() {
         currentStep_ = 0;
 }
 
-void ArpEngine::generateArpeggioNotes(juce::MidiBuffer& output, int startSample, int endSample,
+void ArpEngine::generateArpeggioNotes(juce::MidiBuffer& output, int numSamples,
                                        const juce::AudioPlayHead::PositionInfo& posInfo) {
-    if (currentPattern_.empty()) return;
+    if (currentPattern_.empty()) {
+        stopCurrentNote(output, 0);
+        wasRunning_ = false;
+        return;
+    }
 
-    double bpm = posInfo.getBpm().orFallback(120.0);
-    int samplesPerStep = getSamplesPerStep(bpm);
-    int gateLength = (int)(samplesPerStep * gate_);
+    const double samplesPerBeat = sampleRate_ * 60.0 / posInfo.getBpm().orFallback(120.0);
+    const double stepBeats = getStepLengthInBeats();
+    const auto hostPpq = posInfo.getPpqPosition();
+    const bool hostPlaying = posInfo.getIsPlaying() && hostPpq.hasValue();
 
-    while (totalSamplesProcessed_ + nextStepSample_ < totalSamplesProcessed_ + endSample) {
-        int stepStartSample = (int)(nextStepSample_ - totalSamplesProcessed_);
+    // Re-lock to the grid when the arp starts, the transport starts or stops, the
+    // rate changes, or the host jumps (loop, seek). Free-running starts at beat 0.
+    bool resync = !wasRunning_ || hostPlaying != wasHostPlaying_ || stepBeats != lastStepBeats_;
+    if (!hostPlaying && resync)
+        freeRunBeat_ = 0.0;
 
-        if (stepStartSample < 0) stepStartSample = 0;
-        if (stepStartSample >= endSample) break;
+    const double blockBeat = hostPlaying ? *hostPpq : freeRunBeat_;
+    resync = resync || std::abs(blockBeat - expectedBlockBeat_) > 1.0e-3;
 
-        // Note off for previous note
-        if (currentNoteOn_ >= 0) {
-            output.addEvent(juce::MidiMessage::noteOff(currentChannel_, currentNoteOn_),
-                          stepStartSample);
-        }
+    if (resync) {
+        stopCurrentNote(output, 0);
+        lastStepIndex_ = (int64_t)std::ceil(blockBeat / stepBeats - 1.0e-9) - 1;
+    }
+
+    auto sampleAt = [&](double beat) { return (int)std::round((beat - blockBeat) * samplesPerBeat); };
+    const double swingBeats = swing_ * 0.5 * stepBeats; // off-beats move up to half a step late
+
+    while (true) {
+        const int64_t stepIndex = lastStepIndex_ + 1;
+        const double stepBeat = (double)stepIndex * stepBeats + ((stepIndex & 1) ? swingBeats : 0.0);
+        const int stepSample = juce::jmax(0, sampleAt(stepBeat));
+        if (stepSample >= numSamples) break;
+
+        // Note off for previous note, at the end of its gate or at the latest now
+        if (currentNoteOn_ >= 0)
+            stopCurrentNote(output, juce::jlimit(0, stepSample, sampleAt(noteOffBeat_)));
 
         // Note on for current step
         int noteToPlay = currentPattern_[currentStep_];
@@ -154,42 +216,48 @@ void ArpEngine::generateArpeggioNotes(juce::MidiBuffer& output, int startSample,
         int velocity = getVelocityForNote();
         float normalizedVelocity = velocity / 127.0f; // JUCE uses 0.0-1.0 for velocity
         output.addEvent(juce::MidiMessage::noteOn(currentChannel_, noteToPlay, normalizedVelocity),
-                       stepStartSample);
+                        stepSample);
         currentNoteOn_ = noteToPlay;
-
-        // Schedule note off
-        int noteOffSample = stepStartSample + gateLength;
-        if (noteOffSample < endSample) {
-            output.addEvent(juce::MidiMessage::noteOff(currentChannel_, noteToPlay),
-                          noteOffSample);
-            currentNoteOn_ = -1;
-        }
+        noteOffBeat_ = stepBeat + gate_ * stepBeats;
 
         // Advance to next step
-        currentStep_ = (currentStep_ + 1) % currentPattern_.size();
-        nextStepSample_ += samplesPerStep;
+        currentStep_ = (currentStep_ + 1) % (int)currentPattern_.size();
+        lastStepIndex_ = stepIndex;
     }
+
+    // Note off that falls in this block after the last step
+    if (currentNoteOn_ >= 0) {
+        const int noteOffSample = sampleAt(noteOffBeat_);
+        if (noteOffSample < numSamples)
+            stopCurrentNote(output, juce::jmax(0, noteOffSample));
+    }
+
+    expectedBlockBeat_ = blockBeat + numSamples / samplesPerBeat;
+    freeRunBeat_ = expectedBlockBeat_;
+    lastStepBeats_ = stepBeats;
+    wasHostPlaying_ = hostPlaying;
+    wasRunning_ = true;
 }
 
-int ArpEngine::getSamplesPerStep(double bpm) const {
-    double beatsPerSecond = bpm / 60.0;
-    double secondsPerBeat = 1.0 / beatsPerSecond;
-    double secondsPerStep = secondsPerBeat;
+void ArpEngine::stopCurrentNote(juce::MidiBuffer& output, int samplePosition) {
+    if (currentNoteOn_ < 0) return;
+    output.addEvent(juce::MidiMessage::noteOff(currentChannel_, currentNoteOn_), samplePosition);
+    currentNoteOn_ = -1;
+}
 
-    // Calculate step duration based on rate
+double ArpEngine::getStepLengthInBeats() const {
     switch (rate_) {
-        case Rate::Whole:      secondsPerStep = secondsPerBeat * 4.0; break;
-        case Rate::Half:       secondsPerStep = secondsPerBeat * 2.0; break;
-        case Rate::Quarter:    secondsPerStep = secondsPerBeat; break;
-        case Rate::Eighth:     secondsPerStep = secondsPerBeat / 2.0; break;
-        case Rate::Sixteenth:  secondsPerStep = secondsPerBeat / 4.0; break;
-        case Rate::ThirtySecond: secondsPerStep = secondsPerBeat / 8.0; break;
-        case Rate::QuarterTriplet: secondsPerStep = secondsPerBeat * (2.0 / 3.0); break;
-        case Rate::EighthTriplet:  secondsPerStep = secondsPerBeat / 3.0; break;
-        case Rate::SixteenthTriplet: secondsPerStep = secondsPerBeat / 6.0; break;
+        case Rate::Whole:            return 4.0;
+        case Rate::Half:             return 2.0;
+        case Rate::Quarter:          return 1.0;
+        case Rate::Eighth:           return 1.0 / 2.0;
+        case Rate::Sixteenth:        return 1.0 / 4.0;
+        case Rate::ThirtySecond:     return 1.0 / 8.0;
+        case Rate::QuarterTriplet:   return 2.0 / 3.0;
+        case Rate::EighthTriplet:    return 1.0 / 3.0;
+        case Rate::SixteenthTriplet: return 1.0 / 6.0;
     }
-
-    return (int)(secondsPerStep * sampleRate_);
+    return 1.0 / 4.0;
 }
 
 int ArpEngine::getVelocityForNote() const {

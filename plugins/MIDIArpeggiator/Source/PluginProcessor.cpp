@@ -62,11 +62,13 @@ void MIDIArpeggiatorProcessor::processBlock(juce::AudioBuffer<float>& buffer,
     // Update engine with current parameters
     updateEngineParameters();
 
-    // Get playhead info for tempo sync
-    auto posInfo = getPlayHead()->getPosition();
-    if (posInfo.hasValue()) {
-        engine_.processBlock(midiMessages, buffer.getNumSamples(), *posInfo);
-    }
+    // Get playhead info for tempo sync; without it the engine free-runs at 120 BPM
+    juce::AudioPlayHead::PositionInfo posInfo;
+    if (auto* playHead = getPlayHead())
+        if (auto position = playHead->getPosition())
+            posInfo = *position;
+
+    engine_.processBlock(midiMessages, buffer.getNumSamples(), posInfo);
 
     // Clear audio buffer (MIDI effect, no audio processing)
     buffer.clear();
@@ -110,6 +112,8 @@ void MIDIArpeggiatorProcessor::setStateInformation(const void* data, int sizeInB
     }
 }
 
+#ifndef AUDIOFORGE_TESTS
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter() {
     return new MIDIArpeggiatorProcessor();
 }
+#endif
