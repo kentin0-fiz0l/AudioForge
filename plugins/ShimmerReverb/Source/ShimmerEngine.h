@@ -30,4 +30,5 @@ private:
     // Shimmer from the previous sample, fed back into the reverb input
     float feedbackSample_[2] = {0.0f, 0.0f};
     juce::dsp::IIR::Filter<float> feedbackHighPass_[2];
+    juce::dsp::IIR::Filter<float> feedbackLowPass_[2];
 };

@@ -42,6 +42,7 @@ private:
     {
         float size = 0.5f, damping = 0.5f, shimmer = 1.0f, feedback = 0.0f, mix = 1.0f;
         int pitchMode = up;
+        double rate = sampleRate;
     };
 
     static void set(ShimmerProcessor& processor, const char* id, float value)
@@ -58,8 +59,8 @@ private:
         set(processor, "pitchMode", static_cast<float>(settings.pitchMode));
         set(processor, "feedback", settings.feedback);
         set(processor, "mix", settings.mix);
-        processor.setRateAndBufferSizeDetails(sampleRate, blockSize);
-        processor.prepareToPlay(sampleRate, blockSize);
+        processor.setRateAndBufferSizeDetails(settings.rate, blockSize);
+        processor.prepareToPlay(settings.rate, blockSize);
     }
 
     // Plays `input` (the same on both channels) through the plugin and
@@ -206,9 +207,9 @@ private:
         ShimmerProcessor processor;
         prepare(processor, settings);
 
-        std::vector<float> input(static_cast<size_t>(20.5 * sampleRate), 0.0f);
+        std::vector<float> input(static_cast<size_t>(20.5 * settings.rate), 0.0f);
         juce::Random random(3);
-        for (size_t i = 0; i < static_cast<size_t>(0.5 * sampleRate); ++i)
+        for (size_t i = 0; i < static_cast<size_t>(0.5 * settings.rate); ++i)
             input[i] = 2.0f * random.nextFloat() - 1.0f;
 
         const auto output = process(processor, input);
@@ -217,7 +218,7 @@ private:
         {
             peaks.finite = peaks.finite && std::isfinite(output[i]);
             peaks.overall = juce::jmax(peaks.overall, std::abs(output[i]));
-            if (i + static_cast<size_t>(sampleRate) >= output.size())
+            if (i + static_cast<size_t>(settings.rate) >= output.size())
                 peaks.lastSecond = juce::jmax(peaks.lastSecond, std::abs(output[i]));
         }
         return peaks;
@@ -225,26 +226,37 @@ private:
 
     void testMaximumFeedbackDiesAway()
     {
-        beginTest("At the highest settings the shimmer stays bounded and dies away");
+        beginTest("At the highest feedback the shimmer stays bounded and dies away at every size and rate");
 
+        // Damping 0 leaves the most high end in the loop, where repeated
+        // octave-up shifts would otherwise build up.
         Settings settings;
-        settings.size = 1.0f;
         settings.damping = 0.0f;
-        settings.shimmer = 0.0f;
-        const float reverbPeak = playBurst(settings).overall;
-
-        settings.shimmer = 1.0f;
-        settings.feedback = 0.85f;
-        for (int mode : { up, down, both })
+        for (double rate : { 44100.0, 48000.0, 96000.0 })
         {
-            settings.pitchMode = mode;
-            const auto peaks = playBurst(settings);
+            settings.rate = rate;
+            for (float size : { 0.0f, 0.25f, 0.5f, 0.75f, 0.85f, 1.0f })
+            {
+                settings.size = size;
+                settings.shimmer = 0.0f;
+                settings.feedback = 0.0f;
+                const float reverbPeak = playBurst(settings).overall;
 
-            const juce::String name = mode == up ? "Up" : mode == down ? "Down" : "Both";
-            expect(peaks.finite, name + ": output is not finite");
-            expect(peaks.overall < 1.5f * reverbPeak,
-                   name + ": peak is " + ratio(peaks.overall, reverbPeak) + " above the reverb alone");
-            expect(peaks.lastSecond < 0.01f, name + ": still at " + juce::String(peaks.lastSecond) + " after 20 s");
+                settings.shimmer = 1.0f;
+                settings.feedback = 0.85f;
+                for (int mode : { up, down, both })
+                {
+                    settings.pitchMode = mode;
+                    const auto peaks = playBurst(settings);
+
+                    const juce::String name = juce::String(mode == up ? "Up" : mode == down ? "Down" : "Both")
+                                            + " at " + juce::String(rate / 1000.0, 1) + " kHz, size " + juce::String(size, 2);
+                    expect(peaks.finite, name + ": output is not finite");
+                    expect(peaks.overall < 1.5f * reverbPeak,
+                           name + ": peak is " + ratio(peaks.overall, reverbPeak) + " above the reverb alone");
+                    expect(peaks.lastSecond < 0.01f, name + ": still at " + juce::String(peaks.lastSecond) + " after 20 s");
+                }
+            }
         }
     }
 };

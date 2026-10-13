@@ -3,6 +3,7 @@
 namespace {
 constexpr float grainSeconds = 0.08f;       // Length of one pitch-shifter grain
 constexpr double feedbackLowCutHz = 80.0;   // Stops octave-down feedback piling up below the audio band
+constexpr double feedbackHighCutHz = 6000.0; // Stops octave-up feedback piling up at the top
 }
 
 void ShimmerEngine::prepareToPlay(double sr, int) {
@@ -15,10 +16,13 @@ void ShimmerEngine::prepareToPlay(double sr, int) {
     pitchWritePos_ = 0;
     pitchPhase_[0] = pitchPhase_[1] = 0.0f;
     auto highPass = juce::dsp::IIR::Coefficients<float>::makeFirstOrderHighPass(sr, feedbackLowCutHz);
+    auto lowPass = juce::dsp::IIR::Coefficients<float>::makeLowPass(sr, feedbackHighCutHz);
     for (int ch = 0; ch < 2; ++ch) {
         feedbackSample_[ch] = 0.0f;
         feedbackHighPass_[ch].coefficients = highPass;
         feedbackHighPass_[ch].reset();
+        feedbackLowPass_[ch].coefficients = lowPass;
+        feedbackLowPass_[ch].reset();
     }
 }
 
@@ -74,8 +78,12 @@ void ShimmerEngine::processBlock(juce::AudioBuffer<float>& buf) {
     // A bigger room makes the reverb louder: its combs feed back by
     // 0.7 + 0.28 * size, and for noise the level goes as 1 / sqrt(1 - g^2),
     // about 0.64 / sqrt(1 - g^2) on a signal that is the same in both channels.
-    // Scaling by the inverse keeps each pass round the loop at or below
-    // `feedback_`, so the shimmer builds but always dies away.
+    // Scaling by the inverse keeps the average level of each pass round the
+    // loop near `feedback_`. That is an estimate, not a bound: the octave-up
+    // shifter folds its top octave back into the audio band, and without the
+    // feedback low-pass that build-up kept the tail going forever (44.1 kHz,
+    // Size 0.75, Damping 0). The low-pass is what makes the tail die away;
+    // the tests check it across sizes, modes and sample rates.
     const float combFeedback = 0.7f + 0.28f * size_;
     const float loopGain = feedback_ * std::sqrt(1.0f - combFeedback * combFeedback) / 0.64f;
 
@@ -94,8 +102,9 @@ void ShimmerEngine::processBlock(juce::AudioBuffer<float>& buf) {
 
         for (int ch = 0; ch < 2; ++ch) {
             const float shimmer = shift(ch, wet[ch]) * shimmer_;
-            // Soft-clipped so the loop can never run away
-            feedbackSample_[ch] = std::tanh(feedbackHighPass_[ch].processSample(shimmer * loopGain));
+            // Band-limited so the loop decays, and soft-clipped to cap its level
+            feedbackSample_[ch] = std::tanh(feedbackLowPass_[ch].processSample(
+                feedbackHighPass_[ch].processSample(shimmer * loopGain)));
             wet[ch] += shimmer;
         }
         pitchWritePos_ = (pitchWritePos_ + 1) % bufSize;
