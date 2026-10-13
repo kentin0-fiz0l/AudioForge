@@ -1,5 +1,12 @@
 name: Release
 
+# Builds every plugin on macOS (universal), Windows and Linux, makes an installer for each
+# platform, and attaches them to a GitHub release.
+#   - Pushing a tag vX.Y.Z publishes release vX.Y.Z.
+#   - Running it by hand makes a draft release (only collaborators can see it) unless
+#     "publish" is ticked; that is how to test a change to this workflow.
+# The installers are not code-signed: there is no Apple Developer ID or Windows certificate.
+
 on:
   push:
     tags:
@@ -7,243 +14,263 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version to release (e.g., 1.0.0)'
+        description: 'Version, e.g. 2.1.0 (the release is tagged v<version>)'
         required: true
+      publish:
+        description: 'Publish the release (otherwise it stays a draft)'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
 
 env:
-  BUILD_TYPE: Release
+  PLUGINS_PER_SHARD: 6
 
 jobs:
-  create-release:
-    name: Create GitHub Release
+  plan:
+    name: Plan
     runs-on: ubuntu-latest
     outputs:
-      upload_url: ${{ steps.create_release.outputs.upload_url }}
-      version: ${{ steps.get_version.outputs.version }}
+      version: ${{ steps.version.outputs.version }}
+      matrix: ${{ steps.shards.outputs.matrix }}
+      count: ${{ steps.shards.outputs.count }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+      - uses: actions/checkout@v4
 
-      - name: Get version
-        id: get_version
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
-          else
-            echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Generate changelog
-        id: changelog
-        run: |
-          if [ -f CHANGELOG.md ]; then
-            # Extract changelog for this version
-            sed -n "/## \[${{ steps.get_version.outputs.version }}\]/,/## \[/p" CHANGELOG.md | sed '$d' > /tmp/changelog.txt
-            echo "changelog<<EOF" >> $GITHUB_OUTPUT
-            cat /tmp/changelog.txt >> $GITHUB_OUTPUT
-            echo "EOF" >> $GITHUB_OUTPUT
-          else
-            echo "changelog=Release ${{ steps.get_version.outputs.version }}" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
+      - name: Version
+        id: version
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: v${{ steps.get_version.outputs.version }}
-          release_name: AudioForge v${{ steps.get_version.outputs.version }}
-          body: |
-            # AudioForge v${{ steps.get_version.outputs.version }}
+          INPUT_VERSION: ${{ github.event.inputs.version }}
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ]; then
+            version="${INPUT_VERSION#v}"
+          else
+            version="${GITHUB_REF_NAME#v}"
+          fi
+          if ! [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$ ]]; then
+            echo "::error::'$version' is not a version like 2.1.0"
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Releasing AudioForge $version" >> "$GITHUB_STEP_SUMMARY"
 
-            ${{ steps.changelog.outputs.changelog }}
+      - name: Split plugins into shards
+        id: shards
+        run: |
+          mapfile -t plugins < <(find plugins -mindepth 2 -maxdepth 2 -name CMakeLists.txt \
+            | xargs -n1 dirname | xargs -n1 basename | grep -E '^[A-Za-z0-9_-]+$' | sort)
+          echo "count=${#plugins[@]}" >> "$GITHUB_OUTPUT"
+          matrix=$(printf '%s\n' "${plugins[@]}" | jq -R -s -c --argjson size "$PLUGINS_PER_SHARD" '
+            split("\n") | map(select(length > 0)) as $p
+            | [range(0; $p | length; $size) as $i | {shard: ($i / $size + 1), plugins: ($p[$i:$i + $size] | join(" "))}]')
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+          echo "${#plugins[@]} plugins in $(echo "$matrix" | jq length) shards" >> "$GITHUB_STEP_SUMMARY"
 
-            ## Installation
-
-            1. Download the ZIP file for your platform
-            2. Extract the contents
-            3. Copy the `.vst3` files to your DAW's plugin folder:
-               - **macOS**: `~/Library/Audio/Plug-Ins/VST3/`
-               - **Windows**: `C:\Program Files\Common Files\VST3\`
-               - **Linux**: `~/.vst3/`
-
-            ## Included Plugins
-
-            - **SimpleGain** - Clean gain/volume control with metering
-            - **PanUtil** - Stereo panning utility with balance and width controls
-            - **BasicSynth** - Simple subtractive synthesizer with ADSR envelope and filter
-            - **CleanDelay** - Stereo delay effect with ping-pong mode and tempo sync
-            - **SimpleEQ** - 3-band parametric EQ with high/low-pass filters
-            - **SimpleComp** - Compressor with auto makeup gain and soft/hard knee modes
-
-            ## Platform Support
-
-            - macOS 10.13+
-            - Windows 10+
-            - Linux (Ubuntu 20.04+, or equivalent)
-
-            ## Requirements
-
-            - VST3 compatible DAW
-          draft: false
-          prerelease: false
-
-  build-release:
-    name: Build ${{ matrix.name }}
-    needs: create-release
-    runs-on: ${{ matrix.os }}
+  build:
+    name: Build ${{ matrix.os.name }} ${{ matrix.shard.shard }}
+    needs: plan
+    runs-on: ${{ matrix.os.runner }}
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - name: macOS
-            os: macos-latest
-            archive_name: macOS
-            vst3_ext: vst3
-
-          - name: Windows
-            os: windows-latest
-            archive_name: Windows
-            vst3_ext: vst3
-
-          - name: Linux
-            os: ubuntu-latest
-            archive_name: Linux
-            vst3_ext: vst3
-
+        os:
+          - { name: macOS, runner: macos-14 }
+          - { name: Windows, runner: windows-2022 }
+          - { name: Linux, runner: ubuntu-22.04 }   # older glibc, so the build runs on more distributions
+        shard: ${{ fromJson(needs.plan.outputs.matrix) }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
-
-      # CMake is deliberately not pinned; see build-test.yml
 
       - name: Install Linux dependencies
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y \
-            libasound2-dev \
-            libcurl4-openssl-dev \
-            libfontconfig1-dev \
-            libfreetype-dev \
-            libgl1-mesa-dev \
-            libjack-jackd2-dev \
-            libx11-dev \
-            libxcomposite-dev \
-            libxcursor-dev \
-            libxext-dev \
-            libxi-dev \
-            libxinerama-dev \
-            libxrandr-dev \
-            libxrender-dev \
+          sudo apt-get install -y libasound2-dev libcurl4-openssl-dev libfontconfig1-dev \
+            libfreetype-dev libgl1-mesa-dev libjack-jackd2-dev libx11-dev libxcomposite-dev \
+            libxcursor-dev libxext-dev libxi-dev libxinerama-dev libxrandr-dev libxrender-dev \
             mesa-common-dev
 
-      - name: Cache JUCE build
-        uses: actions/cache@v4
+      - name: Build
+        shell: bash
+        run: .github/scripts/build-release-shard.sh stage ${{ matrix.shard.plugins }}
+
+      - name: Upload build logs
+        if: failure()
+        uses: actions/upload-artifact@v4
         with:
-          path: |
-            plugins/*/build/_deps
-            plugins/*/build/JUCE
-            tests/build/_deps
-            tests/build/JUCE
-          key: ${{ runner.os }}-juce-release-${{ hashFiles('JUCE/**') }}
-          restore-keys: |
-            ${{ runner.os }}-juce-release-
-            ${{ runner.os }}-juce-
+          name: logs-${{ matrix.os.name }}-${{ matrix.shard.shard }}
+          path: logs/
 
-      - name: Build all plugins
+      - name: Upload stage
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage-${{ matrix.os.name }}-${{ matrix.shard.shard }}
+          path: stage/
+          if-no-files-found: error
+          retention-days: 3
+
+  package-macos:
+    name: Package macOS
+    needs: [plan, build]
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: stage-macOS-*
+          path: stage
+          merge-multiple: true
+      - name: Check the build is universal
         run: |
-          # Use the package-releases.sh script to build all plugins
-          chmod +x package-releases.sh
-          ./package-releases.sh
-
-      - name: Build and Run Tests
-        working-directory: tests
-        run: |
-          cmake -B build -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}
-          cmake --build build --config ${{ env.BUILD_TYPE }} --parallel 4
-          echo "::group::Running tests before release"
-          if [ "${{ runner.os }}" = "Windows" ]; then
-            ./build/${{ env.BUILD_TYPE }}/TestRunner.exe || {
-              echo "::error::Tests failed - aborting release"
-              exit 1
-            }
-          else
-            ./build/TestRunner || {
-              echo "::error::Tests failed - aborting release"
-              exit 1
-            }
-          fi
-          echo "::endgroup::"
-          echo "✅ All tests passed - proceeding with release"
-
-      - name: Package plugins (Unix)
-        if: runner.os != 'Windows'
-        run: |
-          mkdir -p release_artifacts
-
-          # The package-releases.sh script already created releases/*.zip
-          # Copy and rename them for the platform
-          for zip in releases/*.zip; do
-            if [ -f "$zip" ]; then
-              filename=$(basename "$zip")
-              pluginname="${filename%-v*}"
-              cp "$zip" "release_artifacts/${pluginname}-${{ needs.create-release.outputs.version }}-${{ matrix.archive_name }}.zip"
-            fi
+          bad=0
+          for bundle in stage/VST3/*.vst3 stage/AU/*.component stage/Standalone/*.app; do
+            [ -e "$bundle" ] || continue
+            binary=$(find "$bundle/Contents/MacOS" -type f | head -1)
+            archs=$(lipo -archs "$binary")
+            case "$archs" in *arm64*x86_64*|*x86_64*arm64*) ;; *) echo "::error::$bundle is $archs"; bad=1 ;; esac
           done
+          exit $bad
+      - name: Make installer
+        env:
+          VERSION: ${{ needs.plan.outputs.version }}
+        run: installers/macos/make-pkg.sh stage "$VERSION" dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist-macOS
+          path: dist/
 
-          # Create combined bundle
-          mkdir -p AudioForge
-          for plugin in SimpleGain PanUtil BasicSynth CleanDelay SimpleEQ SimpleComp; do
-            cp -r plugins/$plugin/build/${plugin}_artefacts/*/VST3/${plugin}.vst3 AudioForge/ 2>/dev/null || true
-          done
-          cd release_artifacts
-          zip -r "AudioForge-${{ needs.create-release.outputs.version }}-${{ matrix.archive_name }}.zip" ../AudioForge
-
-          ls -lh *.zip
-
-      - name: Package plugins (Windows)
-        if: runner.os == 'Windows'
+  package-windows:
+    name: Package Windows
+    needs: [plan, build]
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: stage-Windows-*
+          path: stage
+          merge-multiple: true
+      - name: Make installer and zip
         shell: pwsh
+        env:
+          VERSION: ${{ needs.plan.outputs.version }}
         run: |
-          New-Item -ItemType Directory -Force -Path release_artifacts
-
-          # The package-releases.sh script already created releases/*.zip
-          # Copy and rename them for the platform
-          Get-ChildItem releases\*.zip | ForEach-Object {
-            $filename = $_.BaseName -replace '-v.*$', ''
-            Copy-Item $_.FullName "release_artifacts\$filename-${{ needs.create-release.outputs.version }}-${{ matrix.archive_name }}.zip"
-          }
-
-          # Create combined bundle
-          New-Item -ItemType Directory -Force -Path AudioForge
-          $plugins = @('SimpleGain', 'PanUtil', 'BasicSynth', 'CleanDelay', 'SimpleEQ', 'SimpleComp')
-          foreach ($plugin in $plugins) {
-            $vst3Path = "..\plugins\$plugin\build\${plugin}_artefacts\*\VST3\$plugin.vst3"
-            Copy-Item $vst3Path AudioForge\ -Recurse -ErrorAction SilentlyContinue
-          }
-          Set-Location release_artifacts
-          Compress-Archive -Path ..\AudioForge -DestinationPath "AudioForge-${{ needs.create-release.outputs.version }}-${{ matrix.archive_name }}.zip"
-
-          Get-ChildItem *.zip
-
-      - name: Upload all plugin releases
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          Copy-Item installers\README-install.txt stage\README.txt
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          $stage = (Resolve-Path stage).Path
+          $exe = Join-Path (Resolve-Path dist).Path "AudioForge-$env:VERSION-Windows-Setup.exe"
+          $makensis = (Get-Command makensis -ErrorAction SilentlyContinue).Source
+          if (-not $makensis) { $makensis = "${env:ProgramFiles(x86)}\NSIS\makensis.exe" }
+          & $makensis /V2 "/DVERSION=$env:VERSION" "/DSTAGE=$stage" "/DOUTFILE=$exe" installers\windows\AudioForge.nsi
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $folder = "AudioForge-$env:VERSION-Windows"
+          New-Item -ItemType Directory -Force -Path "zip\$folder" | Out-Null
+          Copy-Item -Recurse stage\* "zip\$folder\"
+          Compress-Archive -Path "zip\$folder" -DestinationPath "dist\$folder.zip"
+          Get-ChildItem dist | Format-Table Name, Length
+      - uses: actions/upload-artifact@v4
         with:
-          upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: ./release_artifacts/*.zip
-          asset_content_type: application/zip
+          name: dist-Windows
+          path: dist/
 
-      - name: Upload releases to GitHub
-        uses: softprops/action-gh-release@v1
+  package-linux:
+    name: Package Linux
+    needs: [plan, build]
+    runs-on: ubuntu-22.04
+    env:
+      FOLDER: AudioForge-${{ needs.plan.outputs.version }}-Linux-x86_64
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
         with:
-          files: release_artifacts/*.zip
+          pattern: stage-Linux-*
+          path: stage
+          merge-multiple: true
+      - name: Make tarball
+        run: |
+          mkdir -p "pkg/$FOLDER" dist
+          cp -R stage/. "pkg/$FOLDER/"
+          rmdir "pkg/$FOLDER/AU" 2>/dev/null || true
+          chmod +x "pkg/$FOLDER"/Standalone/* 2>/dev/null || true
+          cp installers/README-install.txt "pkg/$FOLDER/README.txt"
+          cp installers/linux/install.sh "pkg/$FOLDER/"
+          tar -C pkg -czf "dist/$FOLDER.tar.gz" "$FOLDER"
+          ls -lh dist
+      - name: Check install.sh works
+        run: |
+          tmp=$(mktemp -d)
+          tar -C "$tmp" -xzf "dist/$FOLDER.tar.gz"
+          export VST3_DIR="$tmp/vst3" BIN_DIR="$tmp/bin"
+          "$tmp/$FOLDER/install.sh"
+          test "$(ls "$VST3_DIR" | wc -l)" -gt 0
+          "$tmp/$FOLDER/install.sh" --uninstall
+          test "$(ls "$VST3_DIR" | wc -l)" -eq 0
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist-Linux
+          path: dist/
+
+  release:
+    name: Publish release
+    needs: [plan, package-macos, package-windows, package-linux]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: dist-*
+          path: dist
+          merge-multiple: true
+      - name: Release notes
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ needs.plan.outputs.version }}
+          COUNT: ${{ needs.plan.outputs.count }}
+        run: |
+          (cd dist && sha256sum * > SHA256SUMS.txt)
+          # This version's CHANGELOG section, if it has one
+          awk -v v="$VERSION" '$0 ~ "^## \\[" v "\\]" {on=1; next} /^## \[/ {on=0} on' CHANGELOG.md > changes.md
+          # The fixed part of the notes, with this version filled in
+          cat > template.md <<'EOF'
+          ## Download
+
+          | Platform | Installer | Or copy by hand |
+          |---|---|---|
+          | macOS 11+ (Apple Silicon and Intel) | `AudioForge-VERSION-macOS.pkg` | `AudioForge-VERSION-macOS.zip` |
+          | Windows 10/11 (64-bit) | `AudioForge-VERSION-Windows-Setup.exe` | `AudioForge-VERSION-Windows.zip` |
+          | Linux x86_64 | `AudioForge-VERSION-Linux-x86_64.tar.gz` (run `./install.sh`) | |
+
+          VST3 on every platform, AU on macOS, and standalone apps for most plugins.
+
+          ## The installers are not code-signed
+
+          AudioForge has no Apple Developer ID or Windows signing certificate, so your system asks once:
+          - **macOS:** if the installer won't open, go to System Settings > Privacy & Security and click **Open Anyway**.
+          - **Windows:** if SmartScreen appears, click **More info**, then **Run anyway**.
+
+          Check a download against `SHA256SUMS.txt` if you want to be sure it is the file built here.
+          EOF
+          {
+            echo "AudioForge $VERSION: $COUNT free, open-source plugins (MIT License)."
+            echo
+            if [ -s changes.md ]; then cat changes.md; echo; fi
+            sed "s/VERSION/$VERSION/g" template.md
+          } > notes.md
+          cat notes.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.plan.outputs.version }}
+          PUBLISH: ${{ github.event_name == 'push' || github.event.inputs.publish == 'true' }}
+        run: |
+          draft=()
+          [ "$PUBLISH" = true ] || draft=(--draft)
+          gh release create "v$VERSION" dist/* --title "AudioForge $VERSION" --notes-file notes.md \
+            --target "$GITHUB_SHA" "${draft[@]}"
+          echo "Release v$VERSION $([ "$PUBLISH" = true ] && echo published || echo 'saved as a draft')" >> "$GITHUB_STEP_SUMMARY"

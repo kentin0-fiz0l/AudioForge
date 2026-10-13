@@ -109,21 +109,12 @@ This creates:
 - `audioforge-1.8.1-1.x86_64.rpm` (Fedora/RHEL)
 - `AudioForge-1.8.1.AppImage` (Universal)
 
-## GitHub Actions Status
+## GitHub Actions
 
-**Current State**: Workflow created but requires iterative dependency fixing.
-
-**Workflow File**: `.github/workflows/build-linux-packages.yml`
-
-**Known Issues**:
-- Dependencies must be discovered incrementally (each missing library = 8-10 min rebuild)
-- All dependencies listed above are now in the workflow
-- Should work on next run (untested as of 2026-09-03)
-
-**To Run Manually**:
-```bash
-gh workflow run build-linux-packages.yml -f version=1.8.1
-```
+Releases are built by `.github/workflows/release.yml`, which builds every plugin on
+Ubuntu 22.04 and attaches `AudioForge-<version>-Linux-x86_64.tar.gz` (with `install.sh`)
+to the release. The old `build-linux-packages.yml` (.deb, .rpm, AppImage) was retired on
+2026-10-13; it had failed on every tag.
 
 ## Testing Packages
 

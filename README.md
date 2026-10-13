@@ -9,11 +9,14 @@ Professional-quality DAW plugins, free and open source.
 
 ## 📦 Download
 
-**[Download Latest Release](https://github.com/kentin0-fiz0l/AudioForge/releases/latest)** - v1.9.0
+**[Download the latest release](https://github.com/kentin0-fiz0l/AudioForge/releases/latest)**
 
-- **macOS**: Signed & notarized DMG (VST3 + AU) - **Available now!**
-- **Windows**: NSIS installer (VST3) - *Coming in v2.0.0*
-- **Linux**: .deb, .rpm, AppImage (VST3) - *Coming in v2.0.0*
+- **macOS 11+** (Apple Silicon and Intel): `.pkg` installer, VST3 + AU + standalone apps
+- **Windows 10/11**: `Setup.exe` installer, VST3 + standalone apps
+- **Linux x86_64**: `.tar.gz` with `install.sh`, VST3 + standalone apps
+
+The installers are not code-signed: macOS asks you to choose "Open Anyway" (System Settings >
+Privacy & Security), and Windows SmartScreen "More info" > "Run anyway". See the release notes.
 
 ## Overview
 
