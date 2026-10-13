@@ -28,6 +28,9 @@ public:
         testHalfMixIsHalfTheFrozenSound();
         testTheSameFreezeSoundsTheSameTwice();
         testChannelsAreFrozenSeparately();
+        testFrequencyRangeFollowsLiveChanges();
+        testFrameSizeFollowsLiveChanges();
+        testOverlapFollowsLiveChanges();
     }
 
 private:
@@ -291,6 +294,157 @@ private:
             else
                 expectWithinAbsoluteError(level, 0.0f, 0.001f);
         }
+    }
+
+    // Feeds the same signal to both channels, a block at a time, and
+    // returns the left channel of what came out
+    static std::vector<float> run(FreezeFXProcessor& processor, const std::vector<float>& input)
+    {
+        std::vector<float> output;
+        juce::MidiBuffer midi;
+
+        for (size_t start = 0; start < input.size(); start += blockSize)
+        {
+            juce::AudioBuffer<float> buffer(2, blockSize);
+            buffer.clear();
+
+            for (int i = 0; i < blockSize && start + static_cast<size_t>(i) < input.size(); ++i)
+            {
+                buffer.setSample(0, i, input[start + static_cast<size_t>(i)]);
+                buffer.setSample(1, i, input[start + static_cast<size_t>(i)]);
+            }
+
+            processor.processBlock(buffer, midi);
+            output.insert(output.end(), buffer.getReadPointer(0), buffer.getReadPointer(0) + blockSize);
+        }
+
+        return output;
+    }
+
+    static std::vector<float> silence(double seconds)
+    {
+        return std::vector<float>(static_cast<size_t>(seconds * sampleRate / blockSize) * blockSize, 0.0f);
+    }
+
+    static void setHz(FreezeFXProcessor& processor, const char* parameter, float hz)
+    {
+        auto* p = processor.getAPVTS().getParameter(parameter);
+        p->setValueNotifyingHost(p->convertTo0to1(hz));
+    }
+
+    void testFrequencyRangeFollowsLiveChanges()
+    {
+        beginTest("High Pass and Low Pass act on a frozen sound as they are turned");
+
+        // They used to be read only when playback started, so turning them
+        // while the plugin was running did nothing
+        FreezeFXProcessor processor;
+        set(processor, FreezeFXProcessor::PARAM_PHASE_RANDOM, 0.0f);
+        prepare(processor);
+
+        process(processor, 0.5, true);
+        setFreeze(processor, true);
+        process(processor, 0.1, true);
+
+        auto heldLevel = [&]
+        {
+            const auto frozen = process(processor, 0.5, false);
+            return rms(frozen, frozen.size() / 2);
+        };
+
+        expect(heldLevel() > 0.25f, "The 1 kHz tone should be held");
+
+        setHz(processor, FreezeFXProcessor::PARAM_HIGH_PASS, 5000.0f);
+        const float highPassed = heldLevel();
+        expect(highPassed < 0.001f, "A 5 kHz high pass should remove the held 1 kHz tone: RMS " + juce::String(highPassed, 4));
+
+        setHz(processor, FreezeFXProcessor::PARAM_HIGH_PASS, 20.0f);
+        expect(heldLevel() > 0.25f, "Opening the high pass again should bring the held tone back");
+
+        setHz(processor, FreezeFXProcessor::PARAM_LOW_PASS, 200.0f);
+        const float lowPassed = heldLevel();
+        expect(lowPassed < 0.001f, "A 200 Hz low pass should remove the held 1 kHz tone: RMS " + juce::String(lowPassed, 4));
+    }
+
+    // With Freeze on and Freeze Mix at zero, the sound goes through the
+    // analysis and back out unchanged, a frame length (less one sample) late.
+    // An impulse shows how long that frame is.
+    int frozenPassThroughDelay(FreezeFXProcessor& processor)
+    {
+        set(processor, FreezeFXProcessor::PARAM_FREEZE_MIX, 0.0f);
+        setFreeze(processor, true);
+        run(processor, silence(0.1));
+
+        auto input = silence(0.5);
+        input[1000] = 1.0f;
+        const auto output = run(processor, input);
+
+        setFreeze(processor, false);
+        run(processor, silence(0.1));
+
+        size_t peak = 0;
+        for (size_t i = 0; i < output.size(); ++i)
+            if (std::abs(output[i]) > std::abs(output[peak]))
+                peak = i;
+
+        return static_cast<int>(peak) - 1000;
+    }
+
+    void testFrameSizeFollowsLiveChanges()
+    {
+        beginTest("FFT Size takes effect while the plugin is running");
+
+        FreezeFXProcessor processor;
+        prepare(processor);
+        run(processor, silence(0.2));
+
+        expectEquals(frozenPassThroughDelay(processor), 2048 - 1);
+
+        // Smaller, then larger than what the plugin was prepared with
+        for (int choice : { 0, 3 })
+        {
+            set(processor, FreezeFXProcessor::PARAM_FFT_SIZE, static_cast<float>(choice) / 3.0f);
+            run(processor, silence(0.1));
+
+            expectEquals(frozenPassThroughDelay(processor), (1024 << choice) - 1);
+        }
+    }
+
+    // Freeze holds the first frame that ends after it is switched on, and a
+    // frame ends every hop: every fftSize / overlap samples. A tone that
+    // starts 300 samples after Freeze is switched on is inside that frame
+    // with a hop of 512 (2048 at 4x), but not with a hop of 256 (8x).
+    float levelHeldFromToneAfterFreeze(bool overlapEightTimes)
+    {
+        FreezeFXProcessor processor;
+        set(processor, FreezeFXProcessor::PARAM_PHASE_RANDOM, 0.0f);
+        prepare(processor);
+        run(processor, silence(0.2));
+
+        if (overlapEightTimes)
+            set(processor, FreezeFXProcessor::PARAM_OVERLAP, 1.0f);
+
+        run(processor, silence(0.1));
+        setFreeze(processor, true);
+
+        auto input = silence(1.0);
+        for (size_t i = 300; i < input.size(); ++i)
+            input[i] = toneLevel * std::sin(juce::MathConstants<float>::twoPi * toneHz
+                                            * static_cast<float>(i) / static_cast<float>(sampleRate));
+
+        const auto output = run(processor, input);
+        return rms(output, output.size() / 2);
+    }
+
+    void testOverlapFollowsLiveChanges()
+    {
+        beginTest("Overlap takes effect while the plugin is running");
+
+        const float atFourTimes = levelHeldFromToneAfterFreeze(false);
+        const float atEightTimes = levelHeldFromToneAfterFreeze(true);
+
+        expect(atFourTimes > 0.001f, "At 4x the frame held should include the start of the tone: RMS " + juce::String(atFourTimes, 5));
+        expect(atEightTimes < 1.0e-5f, "At 8x the frame held should end before the tone starts: RMS " + juce::String(atEightTimes, 6));
     }
 
     juce::int64 samplesFed = 0;

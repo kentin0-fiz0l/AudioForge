@@ -74,6 +74,9 @@ private:
     // Spectral Processing
     void processSpectrum(int channel, std::vector<float>& magnitude, std::vector<float>& phase);
 
+    // Applies FFT Size and Overlap if they have changed, without allocating
+    void updateFrameSettings();
+
     //==============================================================================
     // DSP Components
     SpectralProcessor spectralProcessor;
