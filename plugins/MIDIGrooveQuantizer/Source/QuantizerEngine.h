@@ -42,7 +42,10 @@ private:
         int size;
     };
 
-    static constexpr int maxPendingEvents = 1024;
+    // Known limit: the lookahead can reach 131072 samples (1/4 grid, 60 BPM, 192 kHz).
+    // A denser stream than this many events in that window (heavy CC / MPE data)
+    // makes the oldest queued events come out early rather than be dropped.
+    static constexpr int maxPendingEvents = 4096;
     std::array<PendingEvent, maxPendingEvents> pending_;
     int numPending_ = 0;
 
@@ -65,6 +68,7 @@ private:
 
     void updateLatency(double bpm, bool isPlaying);
     void schedule(const juce::MidiMessage& msg, int64_t dueSample);
+    void flushPending();
     double quantizeOffsetInBeats(double ppq);
     double getGridSizeInBeats() const;
     int calculateHumanizedVelocity(int originalVelocity);

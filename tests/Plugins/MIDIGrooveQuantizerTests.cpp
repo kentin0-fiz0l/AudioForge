@@ -8,6 +8,9 @@
  * - The lookahead is reported as latency
  * - A flood of notes never loses a note-off (bounded queue)
  * - With the transport stopped, MIDI passes straight through
+ * - A repeated note never has its new note-on cut by the previous note-off
+ * - A host tempo of 0 is treated as no tempo
+ * - Stopping never releases a zero-length note
  */
 
 #include <juce_audio_processors/juce_audio_processors.h>
@@ -28,13 +31,14 @@ namespace
         {
             PositionInfo info;
             info.setIsPlaying(playing);
-            info.setBpm(bpm);
+            info.setBpm(tempo);
             info.setPpqPosition(ppq);
             info.setTimeInSamples(timeInSamples);
             return info;
         }
 
         bool playing = true;
+        double tempo = bpm;
         double ppq = 0.0;
         int64_t timeInSamples = 0;
     };
@@ -61,13 +65,14 @@ namespace
         }
 
         // Feeds each input event in the block that contains it, runs numBlocks blocks,
-        // and returns every output event with its absolute sample time.
+        // and returns every output event with its absolute sample time. Successive
+        // calls continue the same timeline.
         std::vector<OutEvent> run(const std::vector<OutEvent>& input, int numBlocks)
         {
             std::vector<OutEvent> out;
-            for (int b = 0; b < numBlocks; ++b)
+            for (int b = 0; b < numBlocks; ++b, ++blocksDone)
             {
-                const int64_t blockStart = (int64_t) b * blockSize;
+                const int64_t blockStart = blocksDone * blockSize;
                 juce::MidiBuffer midi;
                 for (const auto& e : input)
                     if (e.time >= blockStart && e.time < blockStart + blockSize)
@@ -88,6 +93,7 @@ namespace
         MIDIGrooveQuantizerProcessor processor;
         FakePlayHead playHead;
         juce::AudioBuffer<float> audio { 2, blockSize };
+        int64_t blocksDone = 0;
     };
 
     juce::MidiMessage on(int note) { return juce::MidiMessage::noteOn(1, note, (juce::uint8) 100); }
@@ -120,6 +126,10 @@ public:
         testLatencyReported();
         testFloodKeepsNoteOffs();
         testStoppedTransportPassesThrough();
+        testRepeatedNoteNotCutByPreviousNoteOff();
+        testZeroTempoPassesThrough();
+        testPassThroughNoteOnClearsShift();
+        testStopDropsNotesNotYetStarted();
     }
 
 private:
@@ -233,6 +243,89 @@ private:
 
         expectEquals(timeOf(out, 60, true), (int64_t) 5000);
         expectEquals(timeOf(out, 60, false), (int64_t) 5300);
+    }
+
+    void testRepeatedNoteNotCutByPreviousNoteOff()
+    {
+        beginTest("A repeated note is not cut short by the previous note's note-off");
+
+        // First A is late (4000 -> 6000), so its note-off moves 11800 -> 13800.
+        // Second A is early (14000 -> 12000), before that note-off.
+        Harness h;
+        auto out = h.run({ { 4000, on(60) }, { 11800, off(60) },
+                           { 14000, on(60) }, { 17000, off(60) } }, 60);
+        const int64_t latency = h.processor.getLatencySamples();
+
+        std::vector<OutEvent> notes;
+        for (const auto& e : out)
+            if (e.message.isNoteOnOrOff() && e.message.getNoteNumber() == 60)
+                notes.push_back(e);
+
+        expectEquals((int) notes.size(), 4);
+        if (notes.size() != 4)
+            return;
+        expect(notes[0].message.isNoteOn() && notes[1].message.isNoteOff()
+               && notes[2].message.isNoteOn() && notes[3].message.isNoteOff(),
+               "order is on, off, on, off");
+        expectEquals(notes[2].time, 2 * sixteenth + latency, "second note still on the grid");
+        expect(notes[1].time <= notes[2].time, "first note-off comes before the second note-on");
+        expectEquals(notes[3].time, (int64_t) 15000 + latency, "second note keeps its length");
+    }
+
+    void testZeroTempoPassesThrough()
+    {
+        beginTest("A host tempo of 0 passes MIDI through");
+
+        Harness h;
+        h.playHead.tempo = 0.0;
+        auto out = h.run({ { 5000, on(60) }, { 5300, off(60) } }, 20);
+
+        expectEquals(timeOf(out, 60, true), (int64_t) 5000);
+        expectEquals(timeOf(out, 60, false), (int64_t) 5300);
+        const int latency = h.processor.getLatencySamples();
+        expect(latency > 0 && latency <= 65536, "latency " + juce::String(latency));
+    }
+
+    void testPassThroughNoteOnClearsShift()
+    {
+        beginTest("A note played while stopped keeps its length when play starts before its note-off");
+
+        Harness h;
+        // While playing, a late note on 60 is moved 1000 samples earlier
+        h.run({ { 7000, on(60) }, { 8000, off(60) } }, 40);
+
+        h.playHead.playing = false;
+        h.run({ { 21000, on(60) } }, 4);   // passes through unmoved
+
+        h.playHead.playing = true;
+        auto out = h.run({ { 23000, off(60) } }, 40);
+        const int64_t latency = h.processor.getLatencySamples();
+
+        expectEquals(timeOf(out, 60, false), (int64_t) 23000 + latency,
+                     "note-off is not moved by the earlier note's shift");
+    }
+
+    void testStopDropsNotesNotYetStarted()
+    {
+        beginTest("Stopping never releases a zero-length note");
+
+        Harness h;
+        // Note 60 is fully queued when the transport stops; note 62 is held (no note-off yet)
+        auto out = h.run({ { 100, on(60) }, { 300, off(60) }, { 400, on(62) } }, 1);
+        h.playHead.playing = false;
+        auto stopped = h.run({ { 1000, off(62) } }, 4);
+        out.insert(out.end(), stopped.begin(), stopped.end());
+
+        int ons60 = 0, offs60 = 0;
+        for (const auto& e : out)
+            if (e.message.getNoteNumber() == 60)
+                (e.message.isNoteOn() ? ons60 : offs60) += 1;
+        expectEquals(ons60, offs60, "no stuck note");
+        if (ons60 > 0)
+            expect(timeOf(out, 60, false) > timeOf(out, 60, true), "note 60 has a length");
+
+        expect(timeOf(out, 62, true) >= 0, "held note is still played");
+        expect(timeOf(out, 62, false) > timeOf(out, 62, true), "held note is released after it starts");
     }
 };
 

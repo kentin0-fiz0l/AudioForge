@@ -1,5 +1,17 @@
 #include "QuantizerEngine.h"
 
+namespace {
+    // Note-on/off checks on a raw short message: -1 if it is not that kind of message,
+    // else channel * 128 + note.
+    int noteKey(const juce::uint8* data, int size, bool noteOn) {
+        if (size != 3) return -1;
+        const int type = data[0] & 0xf0;
+        const bool isOn = type == 0x90 && data[2] > 0;
+        const bool isOff = type == 0x80 || (type == 0x90 && data[2] == 0);
+        return (noteOn ? isOn : isOff) ? (data[0] & 0x0f) * 128 + data[1] : -1;
+    }
+}
+
 QuantizerEngine::QuantizerEngine()
     : randomGen_(std::random_device{}()),
       randomDist_(-1.0f, 1.0f) {}
@@ -21,7 +33,8 @@ void QuantizerEngine::processBlock(juce::MidiBuffer& midiMessages, int numSample
     output_.clear();
 
     const bool hasTempo = posInfo.hasValue() && posInfo->getBpm().hasValue()
-                          && posInfo->getPpqPosition().hasValue();
+                          && posInfo->getPpqPosition().hasValue()
+                          && std::isfinite(*posInfo->getBpm()) && *posInfo->getBpm() > 0.0;
     const bool isPlaying = hasTempo && posInfo->getIsPlaying();
 
     if (hasTempo)
@@ -30,12 +43,15 @@ void QuantizerEngine::processBlock(juce::MidiBuffer& midiMessages, int numSample
     if (!isPlaying) {
         // No running beat grid to quantize against: release anything still
         // delayed, then pass the input straight through.
-        for (int i = 0; i < numPending_; ++i)
-            output_.addEvent(pending_[(size_t) i].data, pending_[(size_t) i].size, 0);
-        numPending_ = 0;
+        flushPending();
 
-        for (const auto metadata : midiMessages)
+        for (const auto metadata : midiMessages) {
+            // A note-off for this note must not reuse an older note's shift if play starts
+            const int key = noteKey(metadata.data, metadata.numBytes, true);
+            if (key >= 0)
+                noteShift_[(size_t) key / 128][(size_t) key % 128] = 0;
             output_.addEvent(metadata.data, metadata.numBytes, metadata.samplePosition);
+        }
     } else {
         const double samplesPerBeat = sampleRate_ * 60.0 / *posInfo->getBpm();
         const double blockStartPpq = *posInfo->getPpqPosition();
@@ -91,10 +107,45 @@ void QuantizerEngine::schedule(const juce::MidiMessage& msg, int64_t dueSample) 
         --numPending_;
     }
 
+    // A note-on moved earlier than the previous same-pitch note's queued note-off
+    // would be cut short by it: pull that note-off back to the new note-on. It is
+    // earlier in the queue, so at the same sample it still comes out first.
+    const int key = noteKey(msg.getRawData(), msg.getRawDataSize(), true);
+    if (key >= 0)
+        for (int i = 0; i < numPending_; ++i) {
+            auto& queued = pending_[(size_t) i];
+            if (queued.dueSample > dueSample && noteKey(queued.data, queued.size, false) == key)
+                queued.dueSample = dueSample;
+        }
+
     auto& event = pending_[(size_t) numPending_++];
     event.dueSample = dueSample;
     event.size = msg.getRawDataSize();
     std::copy_n(msg.getRawData(), event.size, event.data);
+}
+
+void QuantizerEngine::flushPending() {
+    // A note whose note-on and note-off are both still queued has not started yet.
+    // Releasing both at once would make a zero-length note, so drop the pair.
+    // Walk backwards, remembering the nearest later queued note-off of each note.
+    std::array<int16_t, 16 * 128> laterOff;
+    laterOff.fill(-1);
+    for (int i = numPending_ - 1; i >= 0; --i) {
+        auto& event = pending_[(size_t) i];
+        if (const int offKey = noteKey(event.data, event.size, false); offKey >= 0) {
+            laterOff[(size_t) offKey] = (int16_t) i;
+        } else if (const int onKey = noteKey(event.data, event.size, true);
+                   onKey >= 0 && laterOff[(size_t) onKey] >= 0) {
+            pending_[(size_t) laterOff[(size_t) onKey]].size = 0;
+            event.size = 0;
+            laterOff[(size_t) onKey] = -1;
+        }
+    }
+
+    for (int i = 0; i < numPending_; ++i)
+        if (pending_[(size_t) i].size > 0)
+            output_.addEvent(pending_[(size_t) i].data, pending_[(size_t) i].size, 0);
+    numPending_ = 0;
 }
 
 void QuantizerEngine::updateLatency(double bpm, bool isPlaying) {
