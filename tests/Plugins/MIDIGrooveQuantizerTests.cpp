@@ -9,7 +9,9 @@
  * - A flood of notes never loses a note-off (bounded queue)
  * - With the transport stopped, MIDI passes straight through
  * - A repeated note never has its new note-on cut by the previous note-off
- * - A host tempo of 0 is treated as no tempo
+ * - Same-pitch notes always come out as on, off, on, off, even when quantizing
+ *   moves a later note-on before an earlier one
+ * - A host tempo of 0 or below 1 BPM is treated as no tempo
  * - Stopping never releases a zero-length note
  */
 
@@ -127,6 +129,7 @@ public:
         testFloodKeepsNoteOffs();
         testStoppedTransportPassesThrough();
         testRepeatedNoteNotCutByPreviousNoteOff();
+        testSwappedRepeatedNotesStayValid();
         testZeroTempoPassesThrough();
         testPassThroughNoteOnClearsShift();
         testStopDropsNotesNotYetStarted();
@@ -272,18 +275,50 @@ private:
         expectEquals(notes[3].time, (int64_t) 15000 + latency, "second note keeps its length");
     }
 
+    void testSwappedRepeatedNotesStayValid()
+    {
+        beginTest("Same-pitch notes stay on, off, on, off when a later note-on is moved before an earlier one");
+
+        // 1/4 grid. The host loops from beat 3.55 back to beat 0 after the first block.
+        // The first A (beat 3.554) moves ~10700 samples later, to beat 4. The second A,
+        // played after it at beat 0.004, moves 88 samples earlier, to beat 0: ahead of the first.
+        Harness h(3.55);
+        h.setParam("gridResolution", 0.0f);
+        auto out = h.run({ { 100, on(60) }, { 300, off(60) } }, 1);
+        h.playHead.ppq = 0.0;
+        auto rest = h.run({ { 600, on(60) }, { 800, off(60) } }, 60);
+        out.insert(out.end(), rest.begin(), rest.end());
+
+        std::vector<OutEvent> notes;
+        for (const auto& e : out)
+            if (e.message.isNoteOnOrOff() && e.message.getNoteNumber() == 60)
+                notes.push_back(e);
+
+        expectEquals((int) notes.size(), 4);
+        for (size_t i = 0; i < notes.size(); ++i)
+        {
+            expect(notes[i].message.isNoteOn() == (i % 2 == 0), "event " + juce::String((int) i) + " alternates on/off");
+            if (i % 2 == 1)
+                expect(notes[i].time > notes[i - 1].time, "note " + juce::String((int) i / 2) + " has a positive length");
+        }
+    }
+
     void testZeroTempoPassesThrough()
     {
-        beginTest("A host tempo of 0 passes MIDI through");
+        for (double tempo : { 0.0, 0.001 })
+        {
+            beginTest("A host tempo of " + juce::String(tempo) + " BPM passes MIDI through");
 
-        Harness h;
-        h.playHead.tempo = 0.0;
-        auto out = h.run({ { 5000, on(60) }, { 5300, off(60) } }, 20);
+            Harness h;
+            h.setParam("gridResolution", 0.0f);   // 1/4: the largest lookahead
+            h.playHead.tempo = tempo;
+            auto out = h.run({ { 5000, on(60) }, { 5300, off(60) } }, 20);
 
-        expectEquals(timeOf(out, 60, true), (int64_t) 5000);
-        expectEquals(timeOf(out, 60, false), (int64_t) 5300);
-        const int latency = h.processor.getLatencySamples();
-        expect(latency > 0 && latency <= 65536, "latency " + juce::String(latency));
+            expectEquals(timeOf(out, 60, true), (int64_t) 5000);
+            expectEquals(timeOf(out, 60, false), (int64_t) 5300);
+            const int latency = h.processor.getLatencySamples();
+            expect(latency > 0 && latency <= 65536, "latency " + juce::String(latency));
+        }
     }
 
     void testPassThroughNoteOnClearsShift()

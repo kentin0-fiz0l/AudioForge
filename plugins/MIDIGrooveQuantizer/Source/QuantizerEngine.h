@@ -1,6 +1,7 @@
 #pragma once
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <array>
+#include <limits>
 #include <random>
 
 // Quantizes note-ons to a beat grid taken from the host's PPQ position.
@@ -51,6 +52,10 @@ private:
 
     // How far each sounding note's note-on was moved, so its note-off moves the same.
     std::array<std::array<int64_t, 128>, 16> noteShift_ {};
+
+    // When each channel * 128 + note's latest note-on is due, so a later one is never due before it.
+    static constexpr int64_t noNoteOn = std::numeric_limits<int64_t>::min() / 2;
+    std::array<int64_t, 16 * 128> lastNoteOnDue_;
 
     juce::MidiBuffer output_;
     int64_t samplesElapsed_ = 0;

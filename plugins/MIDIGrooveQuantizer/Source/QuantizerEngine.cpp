@@ -21,6 +21,7 @@ void QuantizerEngine::prepareToPlay(double sampleRate, int samplesPerBlock) {
     numPending_ = 0;
     samplesElapsed_ = 0;
     noteShift_ = {};
+    lastNoteOnDue_.fill(noNoteOn);
     output_.ensureSize((size_t) (maxPendingEvents + samplesPerBlock) * 16);
     updateLatency(120.0, false);  // first guess until the host reports a tempo
 }
@@ -34,7 +35,7 @@ void QuantizerEngine::processBlock(juce::MidiBuffer& midiMessages, int numSample
 
     const bool hasTempo = posInfo.hasValue() && posInfo->getBpm().hasValue()
                           && posInfo->getPpqPosition().hasValue()
-                          && std::isfinite(*posInfo->getBpm()) && *posInfo->getBpm() > 0.0;
+                          && std::isfinite(*posInfo->getBpm()) && *posInfo->getBpm() >= 1.0;
     const bool isPlaying = hasTempo && posInfo->getIsPlaying();
 
     if (hasTempo)
@@ -64,12 +65,19 @@ void QuantizerEngine::processBlock(juce::MidiBuffer& midiMessages, int numSample
             }
 
             auto msg = metadata.getMessage();
+            const int64_t inputDue = blockStart + metadata.samplePosition + latencySamples_;
             int64_t shift = 0;
 
             if (msg.isNoteOn()) {
                 const double ppq = blockStartPpq + metadata.samplePosition / samplesPerBeat;
                 shift = juce::jmax((int64_t) -latencySamples_,
                                    (int64_t) std::llround(quantizeOffsetInBeats(ppq) * samplesPerBeat));
+
+                // Never move a note-on to or before the previous same-pitch note-on
+                // (humanized timing or a host loop can swap them), so that note keeps a length
+                const auto key = (size_t) (msg.getChannel() - 1) * 128 + (size_t) msg.getNoteNumber();
+                shift = juce::jmax(shift, lastNoteOnDue_[key] + 1 - inputDue);
+                lastNoteOnDue_[key] = inputDue + shift;
                 noteShift_[(size_t) msg.getChannel() - 1][(size_t) msg.getNoteNumber()] = shift;
 
                 if (humanizeVelocity_ > 0.0f)
@@ -80,7 +88,7 @@ void QuantizerEngine::processBlock(juce::MidiBuffer& midiMessages, int numSample
                 shift = noteShift_[(size_t) msg.getChannel() - 1][(size_t) msg.getNoteNumber()];
             }
 
-            schedule(msg, blockStart + metadata.samplePosition + latencySamples_ + shift);
+            schedule(msg, inputDue + shift);
         }
 
         // Emit events due in this block; keep the rest, in order
@@ -109,7 +117,8 @@ void QuantizerEngine::schedule(const juce::MidiMessage& msg, int64_t dueSample) 
 
     // A note-on moved earlier than the previous same-pitch note's queued note-off
     // would be cut short by it: pull that note-off back to the new note-on. It is
-    // earlier in the queue, so at the same sample it still comes out first.
+    // earlier in the queue, so at the same sample it still comes out first, and it
+    // stays after its own note-on, which is always due before this one.
     const int key = noteKey(msg.getRawData(), msg.getRawDataSize(), true);
     if (key >= 0)
         for (int i = 0; i < numPending_; ++i) {
@@ -125,6 +134,12 @@ void QuantizerEngine::schedule(const juce::MidiMessage& msg, int64_t dueSample) 
 }
 
 void QuantizerEngine::flushPending() {
+    if (numPending_ == 0)
+        return;
+
+    // Everything queued comes out now, so no queued note-on limits later ones
+    lastNoteOnDue_.fill(noNoteOn);
+
     // A note whose note-on and note-off are both still queued has not started yet.
     // Releasing both at once would make a zero-length note, so drop the pair.
     // Walk backwards, remembering the nearest later queued note-off of each note.
