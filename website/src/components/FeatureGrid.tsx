@@ -45,7 +45,7 @@ const features: Feature[] = [
       </svg>
     ),
     title: 'High Performance',
-    description: 'Optimized algorithms with no CPU spikes or crashes. Extensively tested with 100% test coverage.',
+    description: 'Every plugin is built and stress-tested at extreme settings, and 290+ automated tests run on every change.',
   },
   {
     icon: (
@@ -63,7 +63,7 @@ const features: Feature[] = [
       </svg>
     ),
     title: 'Cross-Platform',
-    description: 'Works on macOS, Windows, and Linux. VST3 support with AU and AAX formats coming soon.',
+    description: 'Builds on macOS, Windows and Linux. VST3 everywhere, AU on macOS.',
   },
 ];
 

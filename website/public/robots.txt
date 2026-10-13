@@ -2,4 +2,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://audioforge.dev/sitemap.xml
+Sitemap: https://fluxstudio-audioforge-y59di.ondigitalocean.app/sitemap.xml

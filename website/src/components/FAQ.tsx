@@ -18,16 +18,16 @@ const faqs: FAQItem[] = [
     answer: 'AudioForge plugins work in any DAW that supports VST3 format (Ableton Live, FL Studio, Reaper, Bitwig, etc.) or AU format on macOS (Logic Pro, GarageBand, Ableton, etc.). Standalone versions are also available. The eight MIDI tools (Arpeggiator, Chord Generator, Harmonizer and the rest) are MIDI effects, which Ableton Live does not load from third parties; use them in Logic Pro, Reaper or Bitwig.',
   },
   {
-    question: 'Do I need to create an account to download?',
-    answer: 'No account required! Just click download and you\'ll get the plugins immediately. We respect your privacy and don\'t collect personal information.',
+    question: 'Is there a download yet?',
+    answer: 'Not yet. Ready-made installers are on the way; for now you build the plugins from the source code, which takes a few commands (see Getting Started in the docs). No account is needed, and nothing collects personal information.',
   },
   {
     question: 'How do I install the plugins?',
-    answer: 'Download the installer for your platform, run it, and the plugins will be automatically placed in your system plugin folder. Restart your DAW and rescan plugins. Detailed installation guides are available for each platform.',
+    answer: 'Build them from source (see Getting Started in the docs): the build copies each plugin into your system plugin folder. Then restart your DAW and rescan plugins.',
   },
   {
     question: 'Are the plugins compatible with Apple Silicon (M1/M2/M3)?',
-    answer: 'Yes! Our macOS builds are universal binaries that run natively on both Intel and Apple Silicon Macs, providing optimal performance on all systems.',
+    answer: 'Yes. A build runs natively on the kind of Mac it is built on, Apple Silicon or Intel.',
   },
   {
     question: 'Can I use AudioForge plugins commercially?',
@@ -35,7 +35,7 @@ const faqs: FAQItem[] = [
   },
   {
     question: 'How are these different from paid plugins?',
-    answer: 'AudioForge plugins focus on essential, well-executed features with clean code and 100% test coverage. While paid plugins might have more complex UIs or exotic features, our plugins excel at core DSP tasks with professional quality.',
+    answer: 'AudioForge plugins focus on essential, well-executed features with clean, tested code. While paid plugins might have more complex UIs or exotic features, our plugins excel at core DSP tasks with professional quality.',
   },
   {
     question: 'Can I contribute to the project?',
@@ -43,11 +43,11 @@ const faqs: FAQItem[] = [
   },
   {
     question: 'Will you add AAX support for Pro Tools?',
-    answer: 'AAX support is planned for v1.5.0. It requires an iLok developer account and additional certification. Follow our roadmap or star the repo on GitHub to stay updated.',
+    answer: 'Not at the moment. AAX needs an Avid developer account and PACE signing, which the project does not have. Pro Tools users can still use the Standalone versions.',
   },
   {
     question: 'How stable are the plugins?',
-    answer: 'Very stable. Every change runs more than 280 automated test suites on macOS, Windows, and Linux, and every plugin is built and stress-tested at extreme settings before it is merged. Our code signing ensures integrity.',
+    answer: 'Very stable. Every change runs more than 280 automated test suites on macOS, Windows, and Linux, and every plugin is built and stress-tested at extreme settings before it is merged.',
   },
 ];
 

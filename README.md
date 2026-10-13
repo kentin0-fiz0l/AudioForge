@@ -97,7 +97,7 @@ AudioForge is a collection of high-quality audio plugins for music production. S
 - ✅ **Responsive design** - Mobile, tablet, desktop optimized
 - ✅ **Stats section** highlighting validation achievement
 - ✅ **Live deployment** on DigitalOcean Spaces with CDN
-- 🔗 [Visit Website](https://audioforge-site.sfo3.cdn.digitaloceanspaces.com/index.html)
+- 🔗 [Visit Website](https://fluxstudio-audioforge-y59di.ondigitalocean.app/)
 
 ### Planned (v2.0.0+)
 - Video tutorial series (5 videos scripted, ready to record)
@@ -313,7 +313,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed contribution guidelines.
 
 - **Discussions**: [GitHub Discussions](https://github.com/kentin0-fiz0l/AudioForge/discussions) - Ask questions, share tips
 - **Issues**: [GitHub Issues](https://github.com/kentin0-fiz0l/AudioForge/issues) - Report bugs, request features
-- **Website**: [AudioForge Website](https://audioforge-site.sfo3.cdn.digitaloceanspaces.com/index.html) - Downloads and documentation
+- **Website**: [AudioForge Website](https://fluxstudio-audioforge-y59di.ondigitalocean.app/) - Downloads and documentation
 
 ## License
 

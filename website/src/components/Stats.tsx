@@ -12,7 +12,7 @@ interface Stat {
 
 const stats: Stat[] = [
   {
-    value: '39',
+    value: '60',
     label: 'Plugins',
     description: 'VST3 & AU formats',
     icon: (
@@ -22,9 +22,9 @@ const stats: Stat[] = [
     ),
   },
   {
-    value: '100%',
-    label: 'Preset Coverage',
-    description: 'Universal system',
+    value: '290+',
+    label: 'Automated Tests',
+    description: 'Run on every change',
     icon: (
       <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
@@ -32,9 +32,9 @@ const stats: Stat[] = [
     ),
   },
   {
-    value: '100%',
-    label: 'MIDI Learn',
-    description: 'All parameters',
+    value: '3',
+    label: 'Platforms',
+    description: 'macOS, Windows, Linux',
     icon: (
       <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0121 12a11.955 11.955 0 01-2.382 7.016m-4.846 1.966A7.955 7.955 0 0112 21a7.955 7.955 0 01-1.772-.203m2.5-8.333V5" />

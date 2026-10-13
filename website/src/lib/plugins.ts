@@ -88,8 +88,7 @@ export const plugins: Plugin[] = [
       'Thread-safe communication (atomics)'
     ],
     screenshots: ['/screenshots/plugins/SimpleGain/simplegain-main.png'],
-    downloadUrl: '/downloads/SimpleGain-v1.0.0',
-    docsUrl: '/docs/plugins/simplegain',
+    docsUrl: '/plugins/simplegain/',
     graphic: '/plugin-graphics/simplegain.svg'
   },
   {
@@ -178,8 +177,7 @@ R = mid - side;`
       }
     ],
     screenshots: [],
-    downloadUrl: '/downloads/PanUtil-v1.0.0',
-    docsUrl: '/docs/plugins/panutil',
+    docsUrl: '/plugins/panutil/',
     graphic: '/plugin-graphics/panutil.svg'
   },
   {
@@ -306,8 +304,7 @@ voice.noteOn(midiNote, velocity, sampleRate);`
       }
     ],
     screenshots: [],
-    downloadUrl: '/downloads/BasicSynth-v0.1.0',
-    docsUrl: '/docs/plugins/basicsynth',
+    docsUrl: '/plugins/basicsynth/',
     graphic: '/plugin-graphics/basicsynth.svg'
   },
   {
@@ -411,8 +408,7 @@ rightDelayBuffer[writePos] = rightInput + (rightFeedback * feedback);`
       }
     ],
     screenshots: [],
-    downloadUrl: '/downloads/CleanDelay-v0.1.0',
-    docsUrl: '/docs/plugins/cleandelay',
+    docsUrl: '/plugins/cleandelay/',
     graphic: '/plugin-graphics/cleandelay.svg'
   },
   {
@@ -550,8 +546,7 @@ b2 = (1.0 - alpha*A) / a0;`
       }
     ],
     screenshots: [],
-    downloadUrl: '/downloads/SimpleEQ-v0.1.0',
-    docsUrl: '/docs/plugins/simpleeq',
+    docsUrl: '/plugins/simpleeq/',
     graphic: '/plugin-graphics/simpleeq.svg'
   },
   {
@@ -646,8 +641,7 @@ b2 = (1.0 - alpha*A) / a0;`
       }
     ],
     screenshots: [],
-    downloadUrl: '/downloads/SimpleComp-v1.0.0',
-    docsUrl: '/docs/plugins/simplecomp',
+    docsUrl: '/plugins/simplecomp/',
     graphic: '/plugin-graphics/simplecomp.svg'
   },
   {
@@ -780,8 +774,7 @@ else
       }
     ],
     screenshots: [],
-    downloadUrl: '/downloads/WaveShaper-v1.0.0',
-    docsUrl: '/docs/plugins/waveshaper',
+    docsUrl: '/plugins/waveshaper/',
     graphic: '/plugin-graphics/waveshaper.svg'
   },
   {
@@ -944,8 +937,7 @@ oversampler->processSamplesDown(outputBlock);`
       }
     ],
     screenshots: [],
-    downloadUrl: '/downloads/Saturation-v1.0.0',
-    docsUrl: '/docs/plugins/saturation',
+    docsUrl: '/plugins/saturation/',
     graphic: '/plugin-graphics/saturation.svg'
   },
   {
@@ -1116,8 +1108,7 @@ if (lfoPhaseRight >= 1.0f) lfoPhaseRight -= 1.0f;`
       }
     ],
     screenshots: [],
-    downloadUrl: '/downloads/ChorusFlanger-v1.0.0',
-    docsUrl: '/docs/plugins/chorusflanger',
+    docsUrl: '/plugins/chorusflanger/',
     graphic: '/plugin-graphics/chorusflanger.svg'
   },
   {
@@ -1309,8 +1300,7 @@ if (freeze) {
       }
     ],
     screenshots: [],
-    downloadUrl: '/downloads/Reverb-v1.0.0',
-    docsUrl: '/docs/plugins/reverb',
+    docsUrl: '/plugins/reverb/',
     graphic: '/plugin-graphics/reverb.svg'
   },
   {
@@ -1362,8 +1352,7 @@ if (freeze) {
       'Drone and atmospheric effects'
     ],
     screenshots: [],
-    downloadUrl: '/downloads/FreezeFX-v1.0.0',
-    docsUrl: '/docs/plugins/freezefx',
+    docsUrl: '/plugins/freezefx/',
     graphic: '/plugin-graphics/freezefx.svg',
     badges: ['experimental']
   },
@@ -1442,8 +1431,7 @@ if (freeze) {
       'Sound design for film and game audio'
     ],
     screenshots: [],
-    downloadUrl: '/downloads/GranularEngine-v1.2.0',
-    docsUrl: '/docs/plugins/granularengine',
+    docsUrl: '/plugins/granularengine/',
     graphic: '/plugin-graphics/granularengine.svg'
   },
   {
@@ -1526,10 +1514,8 @@ if (freeze) {
       'Morphing between different sonic characters'
     ],
     screenshots: [],
-    downloadUrl: '/downloads/SpectralFreeze-v1.2.0',
-    docsUrl: '/docs/plugins/spectralfreeze',
-    graphic: '/plugin-graphics/spectralfreeze.svg',
-    badges: ['fixed']
+    docsUrl: '/plugins/spectralfreeze/',
+    graphic: '/plugin-graphics/spectralfreeze.svg'
   },
   {
     id: 'limiter',
@@ -1600,10 +1586,7 @@ if (freeze) {
       'Protect downstream equipment from excessive levels'
     ],
     screenshots: ['/screenshots/plugins/Limiter/limiter-main.png'],
-    downloadUrl: '/downloads/Limiter-v1.6.0',
-    docsUrl: '/docs/plugins/limiter',
-    graphic: '/plugin-graphics/limiter.svg',
-    badges: ['new']
+    docsUrl: '/plugins/limiter/'
   },
   {
     id: 'gate',
@@ -1699,10 +1682,7 @@ if (freeze) {
       'Creative ducking - Invert gate for reverse ducking effects'
     ],
     screenshots: ['/screenshots/plugins/Gate/gate-main.png'],
-    downloadUrl: '/downloads/Gate-v1.7.0',
-    docsUrl: '/docs/plugins/gate',
-    graphic: '/plugin-graphics/gate.svg',
-    badges: ['new']
+    docsUrl: '/plugins/gate/'
   },
   {
     id: 'multibandcompressor',
@@ -1793,10 +1773,7 @@ if (freeze) {
       'Stereo widening - Use M/S mode to compress side differently from mid'
     ],
     screenshots: ['/screenshots/plugins/MultibandCompressor/multiband-main.png'],
-    downloadUrl: '/downloads/MultibandCompressor-v1.9.0',
-    docsUrl: '/docs/plugins/multibandcompressor',
-    graphic: '/plugin-graphics/multibandcompressor.svg',
-    badges: ['new']
+    docsUrl: '/plugins/multibandcompressor/'
   },
   {
     id: 'fmsynth',
@@ -1861,9 +1838,7 @@ if (freeze) {
       'Aggressive leads - High modulation depth for screaming leads'
     ],
     screenshots: [],
-    downloadUrl: '/downloads/FMSynth-v0.2.0',
-    docsUrl: '/docs/plugins/fmsynth',
-    graphic: '/plugin-graphics/fmsynth.svg'
+    docsUrl: '/plugins/fmsynth/'
   },
   {
     id: 'wavetablesynth',
@@ -1928,9 +1903,7 @@ if (freeze) {
       'Cinematic textures - Long attack with wavetable morphing'
     ],
     screenshots: [],
-    downloadUrl: '/downloads/WavetableSynth-v0.3.0',
-    docsUrl: '/docs/plugins/wavetablesynth',
-    graphic: '/plugin-graphics/wavetablesynth.svg'
+    docsUrl: '/plugins/wavetablesynth/'
   },
   {
     id: 'padsynth',
@@ -1995,9 +1968,7 @@ if (freeze) {
       'Cinematic soundscapes - Layer multiple instances'
     ],
     screenshots: [],
-    downloadUrl: '/downloads/PadSynth-v0.2.0',
-    docsUrl: '/docs/plugins/padsynth',
-    graphic: '/plugin-graphics/padsynth.svg'
+    docsUrl: '/plugins/padsynth/'
   },
   {
     id: 'drumsynth',
@@ -2062,9 +2033,7 @@ if (freeze) {
       'Live performance - Trigger drums via MIDI controller'
     ],
     screenshots: [],
-    downloadUrl: '/downloads/DrumSynth-v0.2.0',
-    docsUrl: '/docs/plugins/drumsynth',
-    graphic: '/plugin-graphics/drumsynth.svg'
+    docsUrl: '/plugins/drumsynth/'
   },
   {
     id: 'organemulator',
@@ -2129,9 +2098,7 @@ if (freeze) {
       'Blues organ - Warm drawbar blend with percussion'
     ],
     screenshots: [],
-    downloadUrl: '/downloads/OrganEmulator-v0.2.0',
-    docsUrl: '/docs/plugins/organemulator',
-    graphic: '/plugin-graphics/organemulator.svg'
+    docsUrl: '/plugins/organemulator/'
   },
   {
     id: 'samplerplugin',
@@ -2201,299 +2168,83 @@ if (freeze) {
       'Sound design - Process samples with filter and envelope'
     ],
     screenshots: [],
-    downloadUrl: '/downloads/Sampler-v0.3.0',
-    docsUrl: '/docs/plugins/samplerplugin',
-    graphic: '/plugin-graphics/samplerplugin.svg',
-    badges: ['fixed']
+    docsUrl: '/plugins/samplerplugin/'
   }
 ];
 
 /**
- * Roadmap phases with timeline and goals
+ * Roadmap phases and their goals
  */
 export interface RoadmapPhase {
   id: string;
   name: string;
   status: 'complete' | 'current' | 'planned';
   goal: string;
-  timeline?: string;
   items: {
     name: string;
     status: 'complete' | 'in-progress' | 'planned';
     features?: string[];
   }[];
-  successMetrics?: string[];
 }
 
 export const roadmap: RoadmapPhase[] = [
   {
-    id: 'phase-1',
-    name: 'Phase 1: Infrastructure Foundation',
+    id: 'suite',
+    name: 'The plugin suite',
     status: 'complete',
-    goal: 'Build 3 simple plugins to learn JUCE and DSP fundamentals',
+    goal: '60 plugins built with JUCE and modern C++17',
     items: [
-      {
-        name: 'Project setup with JUCE',
-        status: 'complete'
-      },
-      {
-        name: 'SimpleGain plugin',
-        status: 'complete',
-        features: ['Gain control', 'Level meter', 'Parameter smoothing', 'Clean UI']
-      },
-      {
-        name: 'PanUtil plugin',
-        status: 'complete',
-        features: ['Pan control', 'Width control', 'Dual modes', 'Visual feedback']
-      },
-      {
-        name: 'Shared DSP library',
-        status: 'complete',
-        features: ['5 reusable components']
-      },
-      {
-        name: 'Testing framework',
-        status: 'complete',
-        features: ['JUCE UnitTestRunner', '67 test suites', '100% pass rate']
-      },
-      {
-        name: 'CI/CD pipeline',
-        status: 'complete',
-        features: ['GitHub Actions', 'Multi-platform builds']
-      },
-      {
-        name: 'Documentation',
-        status: 'complete'
-      }
+      { name: 'Effects', status: 'complete', features: ['EQ, compressors, limiter, gate, multiband', 'Delays, reverbs, modulation, saturation', 'Granular and spectral effects', 'Vocal tools: compressor, de-esser, doubler, harmonizer, vocoder'] },
+      { name: 'Synths and instruments', status: 'complete', features: ['Subtractive, FM, wavetable, pad and mono synths', 'Drum and percussion synths', 'Acoustic models: bass, brass, strings, electric piano, organ, koto, sitar, shakuhachi'] },
+      { name: 'MIDI tools', status: 'complete', features: ['Arpeggiator, chord generator, harmonizer, groove quantizer and more'] },
+      { name: 'Formats', status: 'complete', features: ['VST3 on macOS, Windows and Linux', 'AU on macOS', 'Standalone apps'] },
     ],
-    successMetrics: [
-      '3 working plugins',
-      'Understanding of core DSP concepts',
-      'Comfortable with JUCE framework'
-    ]
   },
   {
-    id: 'phase-2',
-    name: 'Phase 2: Core Plugin Suite',
+    id: 'quality',
+    name: 'Testing and quality',
     status: 'complete',
-    goal: 'Build useful, professional-quality effects',
-    timeline: '2-3 months',
+    goal: 'Every change is built and tested before it is merged',
     items: [
-      {
-        name: 'BasicSynth',
-        status: 'complete',
-        features: [
-          '3 oscillator waveforms (sine, sawtooth, square)',
-          'ADSR envelope generator',
-          'Resonant low-pass filter (cutoff + Q)',
-          'MIDI note handling with velocity',
-          '8-voice polyphony with round-robin voice stealing',
-          'Per-voice filtering and envelope',
-          'Real-time output metering'
-        ]
-      },
-      {
-        name: 'CleanDelay',
-        status: 'complete',
-        features: [
-          'Delay time (1ms - 2 seconds) with log scaling',
-          'Feedback control (0-99%)',
-          'Wet/dry mix (0-100%)',
-          'Stereo ping-pong mode (alternating L/R)',
-          'Input/output level metering',
-          'Circular buffer implementation (192k samples)'
-        ]
-      },
-      {
-        name: 'SimpleEQ',
-        status: 'complete',
-        features: [
-          'Low shelf (20Hz-500Hz, ±12dB)',
-          'Parametric mid band (200Hz-5kHz, ±12dB, Q=1.0)',
-          'High shelf (2kHz-20kHz, ±12dB)',
-          'Optional high-pass filter (20Hz-500Hz, 12dB/oct)',
-          'Optional low-pass filter (2kHz-20kHz, 12dB/oct)',
-          'Biquad filter cascading with coefficient caching',
-          'Per-channel filter state for stereo processing'
-        ]
-      },
-      {
-        name: 'SimpleComp',
-        status: 'complete',
-        features: [
-          'Threshold (-60dB to 0dB), Ratio (1:1 to 20:1)',
-          'Attack (0.1-100ms), Release (10-1000ms)',
-          'Envelope follower with exponential coefficients',
-          'Hard and soft knee modes (6dB soft knee)',
-          'Automatic makeup gain (50% compensation)',
-          'Real-time gain reduction metering (thread-safe)',
-          'Professional gradient UI with vertical sliders and rotary knobs'
-        ]
-      }
+      { name: 'Automated tests', status: 'complete', features: ['290+ test suites on macOS, Windows and Linux for every change', 'Every plugin stress-tested at extreme settings'] },
+      { name: 'Tuned from real sessions', status: 'complete', features: ['Feedback from using the plugins in Ableton Live is logged and drives fixes'] },
     ],
-    successMetrics: [
-      'Plugins that sound professional',
-      'No CPU spikes or crashes',
-      'Positive feedback from beta testers'
-    ]
   },
   {
-    id: 'phase-3',
-    name: 'Phase 3: Distribution & Expansion',
+    id: 'ai-producer',
+    name: 'AI Producer for Ableton Live',
+    status: 'complete',
+    goal: 'A Live control script that builds and edits sessions on request',
+    items: [
+      { name: 'Generate tracks', status: 'complete', features: ['Drums, bass that follows the chords, chords and lead'] },
+      { name: 'Control Live', status: 'complete', features: ['Mixer, devices and meters', 'Clips, warping and Arrangement edits', 'Locators and playback position'] },
+    ],
+  },
+  {
+    id: 'distribution',
+    name: 'Getting the plugins to people',
     status: 'current',
-    goal: 'Expand plugin suite and improve distribution',
-    timeline: '3-6 months',
+    goal: 'Install AudioForge without building it yourself',
     items: [
-      {
-        name: 'WaveShaper',
-        status: 'complete',
-        features: [
-          '5 waveshaping modes (Soft Clip, Hard Clip, Tanh, Cubic, Asymmetric)',
-          'Drive control (0-10x multiplier)',
-          'Real-time curve visualization',
-          'Mix control for parallel processing',
-          'Tone filter (500Hz-20kHz)',
-          'Output gain compensation (-12 to +12 dB)',
-          'DC blocker and input/output metering'
-        ]
-      },
-      {
-        name: 'Saturation',
-        status: 'complete',
-        features: [
-          '5 saturation modes (Tape, Tube, Transistor, Transformer, Diode)',
-          'Drive control (0-10x multiplier)',
-          'Real-time harmonic analyzer (H1-H8 visualization)',
-          'Oversampling (Off/2x/4x) for aliasing reduction',
-          'Dual tone controls (±12dB low/high shelves)',
-          'Mix control for parallel processing',
-          'DC blocker and input/output metering'
-        ]
-      },
-      {
-        name: 'Chorus/Flanger',
-        status: 'complete',
-        features: [
-          'Dual effect modes (Chorus and Flanger)',
-          'Adjustable LFO rate (0.1-10 Hz) and depth (0-100%)',
-          'Real-time LFO visualizer with L/R phase indicators',
-          'Two LFO waveforms (Sine and Triangle)',
-          'Stereo width control (0-100% phase offset)',
-          'Feedback control (0-95%) for flanger resonance',
-          'Mix control for parallel processing'
-        ]
-      },
-      {
-        name: 'Website with downloads',
-        status: 'in-progress',
-        features: ['Simple static site']
-      },
-      {
-        name: 'User documentation',
-        status: 'planned',
-        features: ['User documentation for each plugin']
-      },
-      {
-        name: 'Video tutorials',
-        status: 'planned',
-        features: ['YouTube tutorials']
-      },
-      {
-        name: 'Code-signing certificates',
-        status: 'planned',
-        features: ['macOS + Windows signing']
-      },
-      {
-        name: 'Installers',
-        status: 'planned',
-        features: ['macOS .pkg', 'Windows .exe']
-      },
-      {
-        name: 'AU support',
-        status: 'planned',
-        features: ['Audio Units for macOS']
-      },
-      {
-        name: 'Linux builds',
-        status: 'planned'
-      },
-      {
-        name: 'Beta testing program',
-        status: 'planned'
-      }
+      { name: 'Website with the full catalog', status: 'in-progress', features: ['A page for every one of the 60 plugins'] },
+      { name: 'Installers attached to every release', status: 'in-progress', features: ['macOS, Windows and Linux'] },
+      { name: 'Code signing and notarization', status: 'planned' },
+      { name: 'A user guide for each plugin', status: 'planned' },
     ],
-    successMetrics: [
-      '100+ downloads in first month',
-      'Active user feedback/bug reports',
-      'Small community forming'
-    ]
   },
   {
-    id: 'phase-4',
-    name: 'Phase 4: Advanced Plugins',
+    id: 'next-plugins',
+    name: 'Next plugins',
     status: 'planned',
-    goal: 'Build unique, creative tools',
+    goal: 'Gaps found while producing real shows with AudioForge',
     items: [
-      {
-        name: 'Granular synthesis plugin',
-        status: 'planned'
-      },
-      {
-        name: 'Convolution reverb',
-        status: 'planned'
-      },
-      {
-        name: 'Spectral processing tools',
-        status: 'planned'
-      },
-      {
-        name: 'Creative modulation effects',
-        status: 'planned'
-      },
-      {
-        name: 'Wavetable synthesizer',
-        status: 'planned'
-      }
-    ]
-  },
-  {
-    id: 'phase-5',
-    name: 'Phase 5: Monetization',
-    status: 'planned',
-    goal: 'Generate revenue while keeping core plugins free',
-    items: [
-      {
-        name: 'Free Tier',
-        status: 'planned',
-        features: [
-          'SimpleGain, PanUtil, BasicSynth stay free forever',
-          'CleanDelay, SimpleEQ, SimpleComp free'
-        ]
-      },
-      {
-        name: 'Premium Tier ($29-49)',
-        status: 'planned',
-        features: [
-          'Advanced synths and effects',
-          'Expansion packs (presets, wavetables)',
-          'Early access to new plugins'
-        ]
-      }
+      { name: 'Hand and Latin percussion', status: 'planned' },
+      { name: 'Tempo-synced pattern gate', status: 'planned' },
+      { name: 'Riser and build generator', status: 'planned' },
+      { name: '808 with glide, and a supersaw', status: 'planned' },
     ],
-    successMetrics: [
-      'First paying customer',
-      '$100/month revenue by month 6',
-      '$500/month revenue by end of year 1'
-    ]
-  }
+  },
 ];
-
-/**
- * Get plugins by status
- */
-export function getPluginsByStatus(status: Plugin['status']): Plugin[] {
-  return plugins.filter(p => p.status === status);
-}
 
 /**
  * Get plugin by ID
@@ -2508,24 +2259,3 @@ export function getPluginById(id: string): Plugin | undefined {
 export function getCurrentPhase(): RoadmapPhase | undefined {
   return roadmap.find(p => p.status === 'current');
 }
-
-/**
- * Project information
- */
-export const projectInfo = {
-  name: 'AudioForge',
-  tagline: 'Professional-quality DAW plugins, free and open source',
-  description: 'AudioForge is a collection of high-quality audio plugins for music production. Starting with essential utilities and effects, we\'re building a suite of tools that producers actually want to use.',
-  techStack: {
-    framework: 'JUCE 7.x',
-    language: 'C++17',
-    formats: ['VST3', 'AU (macOS)', 'Standalone', 'AAX (coming)'],
-    platforms: ['macOS', 'Windows', 'Linux']
-  },
-  github: 'https://github.com/kentin0-fiz0l/AudioForge',
-  license: 'MIT',
-  testCoverage: '100%',
-  totalTests: 136,
-  totalPlugins: plugins.length,
-  releasedPlugins: getPluginsByStatus('released').length
-};

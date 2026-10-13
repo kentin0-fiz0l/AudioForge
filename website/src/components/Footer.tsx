@@ -39,18 +39,18 @@ export const Footer: React.FC = () => {
               <h3 className="text-foreground font-semibold mb-4 font-display">Resources</h3>
               <ul className="space-y-2">
                 <li>
-                  <a href="/docs" className="text-foreground-muted hover:text-primary transition-colors text-sm">
+                  <a href="/docs/" className="text-foreground-muted hover:text-primary transition-colors text-sm">
                     Documentation
                   </a>
                 </li>
                 <li>
-                  <a href="/roadmap" className="text-foreground-muted hover:text-primary transition-colors text-sm">
+                  <a href="/roadmap/" className="text-foreground-muted hover:text-primary transition-colors text-sm">
                     Roadmap
                   </a>
                 </li>
                 <li>
                   <a
-                    href="https://github.com/kentin0-fiz0l/AudioForge/releases/latest"
+                    href="/docs/#getting-started"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-foreground-muted hover:text-primary transition-colors text-sm"
