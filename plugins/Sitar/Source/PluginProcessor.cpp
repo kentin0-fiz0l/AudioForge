@@ -48,6 +48,16 @@ void SitarProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 
 void SitarProcessor::releaseResources() {}
 
+// The host stopped or jumped: cut every note and the drone that rings after them
+void SitarProcessor::reset()
+{
+    for (int i = 0; i < synth_.getNumVoices(); ++i)
+        if (auto* voice = synth_.getVoice(i); voice->isVoiceActive())
+            voice->stopNote(0.0f, false);
+
+    drone_.reset();
+}
+
 bool SitarProcessor::isBusesLayoutSupported(const BusesLayout& layouts) const
 {
     return layouts.getMainOutputChannelSet() == juce::AudioChannelSet::mono()

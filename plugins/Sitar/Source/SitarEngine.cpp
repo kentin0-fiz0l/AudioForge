@@ -2,9 +2,10 @@
 
 namespace
 {
-    // Share of each sample the string loops blend with the one before: enough
-    // to darken the tone as it rings, little enough to keep the bright attack
-    constexpr float stringDamping = 0.25f;
+    // Damping of the string loops, in hertz: enough to darken the tone as it
+    // rings, little enough to keep the bright attack. An A3's 8th harmonic
+    // fades about 9 dB a second faster than its fundamental.
+    constexpr float stringDampingHz = 17600.0f;
 
     // A released note fades 60 dB over this many seconds
     constexpr float releaseSeconds = 1.0f;
@@ -19,7 +20,7 @@ namespace
 
 SitarEngine::SitarEngine()
 {
-    mainString_.damping = stringDamping;
+    mainString_.dampingHz = stringDampingHz;
     updateSympatheticTuning();
 }
 
@@ -84,7 +85,7 @@ float SitarEngine::processSample(float baseFrequency, float velocity, bool noteO
     for (int i = 0; i < NUM_SYMPATHETIC_STRINGS; ++i)
     {
         float sympatheticFreq = baseFrequency * sympatheticTuning_[i];
-        sympatheticStrings_[i].delayLength = static_cast<float>(sampleRate_) / sympatheticFreq;
+        sympatheticStrings_[i].setFrequency(sympatheticFreq, sampleRate_);
         sympatheticStrings_[i].feedback = 0.998f; // High feedback for long sustain
 
         // Feed main string output into sympathetic strings
@@ -160,13 +161,23 @@ std::array<float, SitarEngine::NUM_SYMPATHETIC_STRINGS> SitarEngine::getScaleRat
 void SitarDrone::prepareToPlay(double sampleRate)
 {
     sampleRate_ = sampleRate;
+
+    for (auto& string : strings_)
+    {
+        string.loop.dampingHz = stringDampingHz;
+        string.loop.tune(string.frequency, 0.001f, droneRingSeconds, sampleRate);
+    }
+
+    reset();
+}
+
+void SitarDrone::reset()
+{
     cycling_ = false;
 
     for (auto& string : strings_)
     {
         string.loop.reset();
-        string.loop.damping = stringDamping;
-        string.loop.tune(string.frequency, 0.001f, droneRingSeconds, sampleRate);
         string.samplesToPluck = 0;
         string.excitationLeft = 0;
     }
