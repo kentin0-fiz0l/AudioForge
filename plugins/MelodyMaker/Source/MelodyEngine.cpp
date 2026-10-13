@@ -39,21 +39,7 @@ std::vector<MelodyEngine::Note> MelodyEngine::generateMelody(
 
     auto scale = getScaleNotes(keyRoot, isMajor);
 
-    // Generate based on style
-    std::string style = params.style;
-    std::transform(style.begin(), style.end(), style.begin(), ::tolower);
-
-    if (style == "pop" || style == "rock") {
-        melody = generatePopMelody(scale, numBars);
-    } else if (style == "jazz") {
-        melody = generateJazzMelody(scale, numBars);
-    } else if (style == "edm" || style == "funk") {
-        melody = generateEDMMelody(scale, numBars);
-    } else if (style == "ballad" || style == "classical") {
-        melody = generateBalladMelody(scale, numBars);
-    } else {
-        melody = generatePopMelody(scale, numBars);
-    }
+    melody = generateStyleMelody(params.style, scale, numBars);
 
     // Apply contour and constraints
     constrainToRange(melody, params.minPitch, params.maxPitch);
@@ -72,9 +58,27 @@ std::vector<MelodyEngine::Note> MelodyEngine::generateMelodyInScale(
     int numBars)
 {
     auto scale = getScaleNotes(rootNote, isMajor);
-    auto melody = generatePopMelody(scale, numBars);
+    auto melody = generateStyleMelody(params.style, scale, numBars);
     constrainToRange(melody, params.minPitch, params.maxPitch);
     return melody;
+}
+
+std::vector<MelodyEngine::Note> MelodyEngine::generateStyleMelody(
+    std::string style,
+    const std::vector<int>& scale,
+    int numBars)
+{
+    std::transform(style.begin(), style.end(), style.begin(), ::tolower);
+
+    if (style == "jazz")
+        return generateJazzMelody(scale, numBars);
+    if (style == "edm" || style == "funk")
+        return generateEDMMelody(scale, numBars);
+    if (style == "ballad" || style == "classical")
+        return generateBalladMelody(scale, numBars);
+
+    // Pop, Rock, and Blues, which has no generator of its own
+    return generatePopMelody(scale, numBars);
 }
 
 void MelodyEngine::humanize(std::vector<Note>& melody, float amount)

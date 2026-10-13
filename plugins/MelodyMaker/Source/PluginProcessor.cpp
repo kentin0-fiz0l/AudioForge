@@ -124,7 +124,19 @@ struct SineWaveSound : public juce::SynthesiserSound
 
 MelodyMakerProcessor::MelodyMakerProcessor()
     : AudioProcessor (BusesProperties()
-                     .withOutput ("Output", juce::AudioChannelSet::stereo(), true))
+                     .withOutput ("Output", juce::AudioChannelSet::stereo(), true)),
+      apvts_ (*this, nullptr, "MelodyMaker", createParameterLayout()),
+      waveform_ (apvts_.getRawParameterValue ("waveform")),
+      attack_ (apvts_.getRawParameterValue ("attack")),
+      decay_ (apvts_.getRawParameterValue ("decay")),
+      sustain_ (apvts_.getRawParameterValue ("sustain")),
+      release_ (apvts_.getRawParameterValue ("release")),
+      reverbMix_ (apvts_.getRawParameterValue ("reverbMix")),
+      delayTime_ (apvts_.getRawParameterValue ("delayTime")),
+      delayFeedback_ (apvts_.getRawParameterValue ("delayFeedback")),
+      delayMix_ (apvts_.getRawParameterValue ("delayMix")),
+      filterCutoff_ (apvts_.getRawParameterValue ("filterCutoff")),
+      filterResonance_ (apvts_.getRawParameterValue ("filterResonance"))
 {
     // Initialize synthesizer with 8 voices
     for (int i = 0; i < 8; ++i)
@@ -133,20 +145,35 @@ MelodyMakerProcessor::MelodyMakerProcessor()
     synth_.addSound(new SineWaveSound());
 
     // Generate initial melody
-    MelodyEngine::MelodyParams params;
-    params.style = "Pop";
-    params.noteDensity = 5;
-    params.minPitch = 60;
-    params.maxPitch = 84;
-    params.rhythmComplexity = 5;
-    params.useChordTones = true;
-    params.useSyncopation = false;
-
-    currentMelody_ = melodyEngine_.generateMelodyInScale(60, true, params, 4);
+    generateNewMelody(style_);
 }
 
 MelodyMakerProcessor::~MelodyMakerProcessor()
 {
+}
+
+juce::AudioProcessorValueTreeState::ParameterLayout MelodyMakerProcessor::createParameterLayout()
+{
+    using Range = juce::NormalisableRange<float>;
+    std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
+
+    params.push_back(std::make_unique<juce::AudioParameterChoice>(
+        "waveform", "Waveform", juce::StringArray { "Sine", "Saw", "Square", "Triangle" }, 0));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("attack", "Attack", Range (0.001f, 2.0f, 0.001f), 0.01f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("decay", "Decay", Range (0.001f, 2.0f, 0.001f), 0.1f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("sustain", "Sustain", Range (0.0f, 1.0f, 0.01f), 0.7f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("release", "Release", Range (0.001f, 3.0f, 0.001f), 0.3f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("reverbMix", "Reverb Mix", Range (0.0f, 1.0f, 0.01f), 0.0f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("delayTime", "Delay Time", Range (0.01f, maxDelaySeconds, 0.001f), 0.25f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("delayFeedback", "Delay Feedback", Range (0.0f, 0.95f, 0.01f), 0.3f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("delayMix", "Delay Mix", Range (0.0f, 1.0f, 0.01f), 0.0f));
+
+    Range cutoffRange (200.0f, 20000.0f, 1.0f);
+    cutoffRange.setSkewForCentre (2000.0f);
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("filterCutoff", "Filter Cutoff", cutoffRange, 20000.0f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("filterResonance", "Filter Resonance", Range (0.1f, 5.0f, 0.01f), 0.7f));
+
+    return { params.begin(), params.end() };
 }
 
 void MelodyMakerProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
@@ -160,23 +187,21 @@ void MelodyMakerProcessor::prepareToPlay (double sampleRate, int samplesPerBlock
     spec.maximumBlockSize = static_cast<juce::uint32>(samplesPerBlock);
     spec.numChannels = 2;
 
+    // Room for the longest Delay Time at this sample rate
+    delayLine_.setMaximumDelayInSamples(static_cast<int>(std::ceil(sampleRate * maxDelaySeconds)));
     delayLine_.prepare(spec);
-    delayLine_.setDelay(static_cast<float>(sampleRate * delayTime_));
 
+    // Cutoff, resonance, and delay time are set at the start of each block
     filter_.prepare(spec);
     filter_.setType(juce::dsp::StateVariableTPTFilterType::lowpass);
-    filter_.setCutoffFrequency(static_cast<float>(filterCutoff_));
-    filter_.setResonance(filterResonance_);
 
     juce::dsp::Reverb::Parameters reverbParams;
     reverbParams.roomSize = 0.5f;
     reverbParams.damping = 0.5f;
-    const auto reverbLevels = AudioForge::DSP::reverbLevelsForMix(reverbMix_);
+    const auto reverbLevels = AudioForge::DSP::reverbLevelsForMix(reverbMix_->load());
     reverbParams.wetLevel = reverbLevels.wet;
     reverbParams.dryLevel = reverbLevels.dry;
     reverb_.setParameters(reverbParams);
-
-    delayBuffer_.setSize(2, samplesPerBlock);
 }
 
 void MelodyMakerProcessor::releaseResources()
@@ -196,8 +221,12 @@ void MelodyMakerProcessor::processBlock (juce::AudioBuffer<float>& buffer,
         auto position = playHead->getPosition();
         if (position.hasValue())
         {
+            // The message thread can replace the melody (Generate, or a session
+            // being loaded); rather than wait for it, skip scheduling this block
+            const juce::SpinLock::ScopedTryLockType melodyLock (melodyLock_);
+
             auto isPlaying = position->getIsPlaying();
-            if (isPlaying && melodyEnabled_)
+            if (isPlaying && melodyEnabled_ && melodyLock.isLocked())
             {
                 // Get tempo and beat position
                 auto bpm = position->getBpm();
@@ -259,6 +288,14 @@ void MelodyMakerProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     // Apply effects chain: Filter → Delay → Reverb
     int numSamples = buffer.getNumSamples();
     int numChannels = buffer.getNumChannels();
+    const float delayFeedback = delayFeedback_->load();
+    const float delayMix = delayMix_->load();
+    const float reverbMix = reverbMix_->load();
+
+    // Follow the knobs, which can move at any time
+    filter_.setCutoffFrequency(juce::jmin(filterCutoff_->load(), static_cast<float>(sampleRate_ * 0.45)));
+    filter_.setResonance(filterResonance_->load());
+    delayLine_.setDelay(static_cast<float>(sampleRate_ * delayTime_->load()));
 
     // 1. Filter
     for (int channel = 0; channel < numChannels; ++channel) {
@@ -269,30 +306,28 @@ void MelodyMakerProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     }
 
     // 2. Delay
-    if (delayMix_ > 0.0f) {
-        delayBuffer_.makeCopyOf(buffer, true);
+    if (delayMix > 0.0f) {
         for (int channel = 0; channel < numChannels; ++channel) {
             auto* channelData = buffer.getWritePointer(channel);
-            auto* delayData = delayBuffer_.getWritePointer(channel);
 
             for (int sample = 0; sample < numSamples; ++sample) {
                 float delaySample = delayLine_.popSample(channel);
-                float input = channelData[sample] + delaySample * delayFeedback_;
+                float input = channelData[sample] + delaySample * delayFeedback;
                 delayLine_.pushSample(channel, input);
-                channelData[sample] += delaySample * delayMix_;
+                channelData[sample] += delaySample * delayMix;
             }
         }
     }
 
     // 3. Reverb
-    if (reverbMix_ > 0.0f) {
+    if (reverbMix > 0.0f) {
         juce::dsp::AudioBlock<float> block(buffer);
         juce::dsp::ProcessContextReplacing<float> context(block);
 
         juce::dsp::Reverb::Parameters params;
         params.roomSize = 0.5f;
         params.damping = 0.5f;
-        const auto reverbLevels = AudioForge::DSP::reverbLevelsForMix(reverbMix_);
+        const auto reverbLevels = AudioForge::DSP::reverbLevelsForMix(reverbMix);
         params.wetLevel = reverbLevels.wet;
         params.dryLevel = reverbLevels.dry;
         reverb_.setParameters(params);
@@ -306,14 +341,58 @@ juce::AudioProcessorEditor* MelodyMakerProcessor::createEditor()
     return new MelodyMakerEditor (*this);
 }
 
-void MelodyMakerProcessor::getStateInformation (juce::MemoryBlock&)
+// The state holds the parameters, the style and key the melody was generated
+// in, and the melody itself, so a reopened session plays the same notes
+void MelodyMakerProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
-    // Save state
+    auto state = apvts_.copyState();
+    state.setProperty ("style", juce::String (style_), nullptr);
+    state.setProperty ("keyRoot", keyRoot_, nullptr);
+    state.setProperty ("keyIsMajor", keyIsMajor_, nullptr);
+
+    auto melody = state.getOrCreateChildWithName ("Melody", nullptr);
+    melody.removeAllChildren (nullptr);
+    for (const auto& note : currentMelody_)
+    {
+        juce::ValueTree noteTree ("Note");
+        noteTree.setProperty ("pitch", note.pitch, nullptr);
+        noteTree.setProperty ("start", note.startTime, nullptr);
+        noteTree.setProperty ("duration", note.duration, nullptr);
+        noteTree.setProperty ("velocity", note.velocity, nullptr);
+        noteTree.setProperty ("chordTone", note.isChordTone, nullptr);
+        melody.appendChild (noteTree, nullptr);
+    }
+
+    if (auto xml = state.createXml())
+        copyXmlToBinary (*xml, destData);
 }
 
-void MelodyMakerProcessor::setStateInformation (const void*, int)
+void MelodyMakerProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
-    // Restore state
+    // A state that did not parse, or that belongs to something else, is ignored
+    std::unique_ptr<juce::XmlElement> xml (getXmlFromBinary (data, sizeInBytes));
+    if (xml == nullptr || ! xml->hasTagName (apvts_.state.getType()))
+        return;
+
+    const auto state = juce::ValueTree::fromXml (*xml);
+    apvts_.replaceState (state);
+
+    style_ = state.getProperty ("style", juce::String (style_)).toString().toStdString();
+    keyRoot_ = state.getProperty ("keyRoot", keyRoot_);
+    keyIsMajor_ = state.getProperty ("keyIsMajor", keyIsMajor_);
+
+    std::vector<MelodyEngine::Note> melody;
+    for (const auto& noteTree : state.getChildWithName ("Melody"))
+        melody.push_back ({ noteTree["pitch"], noteTree["start"], noteTree["duration"],
+                            noteTree["velocity"], noteTree["chordTone"] });
+    if (! melody.empty())
+        setMelody (std::move (melody));
+}
+
+void MelodyMakerProcessor::setMelody (std::vector<MelodyEngine::Note> melody)
+{
+    const juce::SpinLock::ScopedLockType lock (melodyLock_);
+    currentMelody_.swap (melody);
 }
 
 void MelodyMakerProcessor::generateNewMelody(const std::string& style, int numBars)
@@ -327,12 +406,8 @@ void MelodyMakerProcessor::generateNewMelody(const std::string& style, int numBa
     params.useChordTones = true;
     params.useSyncopation = (style == "Jazz" || style == "Funk");
 
-    currentMelody_ = melodyEngine_.generateMelodyInScale(keyRoot_, keyIsMajor_, params, numBars);
-}
-
-void MelodyMakerProcessor::setWaveform(int waveform)
-{
-    waveform_ = juce::jlimit(0, 3, waveform);
+    style_ = style;
+    setMelody(melodyEngine_.generateMelodyInScale(keyRoot_, keyIsMajor_, params, numBars));
 }
 
 void MelodyMakerProcessor::exportToMidiFile(const juce::File& file)
@@ -369,15 +444,18 @@ void MelodyMakerProcessor::exportToMidiFile(const juce::File& file)
     track.updateMatchedPairs();
     midiFile.addTrack(track);
 
-    // Write to file
+    // Write to file, replacing it if it exists: a FileOutputStream on an
+    // existing file starts at its end
     juce::FileOutputStream stream(file);
-    if (stream.openedOk()) {
+    if (stream.openedOk() && stream.setPosition(0) && stream.truncate().wasOk()) {
         midiFile.writeTo(stream);
     }
 }
 
+#ifndef AUDIOFORGE_TESTS
 // This creates new instances of the plugin
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
     return new MelodyMakerProcessor();
 }
+#endif

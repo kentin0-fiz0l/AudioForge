@@ -36,11 +36,15 @@ public:
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
 
+    juce::AudioProcessorValueTreeState& getValueTreeState() { return apvts_; }
+
     // MelodyMaker specific
     MelodyEngine& getMelodyEngine() { return melodyEngine_; }
-    std::vector<MelodyEngine::Note>& getCurrentMelody() { return currentMelody_; }
+    // For the message thread; the audio thread reads the melody under melodyLock_
+    const std::vector<MelodyEngine::Note>& getCurrentMelody() const { return currentMelody_; }
 
     void generateNewMelody(const std::string& style, int numBars = 4);
+    const std::string& getStyle() const { return style_; }
     void setMelodyEnabled(bool enabled) { melodyEnabled_ = enabled; }
     bool isMelodyEnabled() const { return melodyEnabled_; }
 
@@ -51,64 +55,44 @@ public:
     // MIDI export
     void exportToMidiFile(const juce::File& file);
 
-    // Synth parameters
-    void setWaveform(int waveform);
-    int getWaveform() const { return waveform_; }
-
-    void setAttack(float attack) { attack_ = attack; }
-    void setDecay(float decay) { decay_ = decay; }
-    void setSustain(float sustain) { sustain_ = sustain; }
-    void setRelease(float release) { release_ = release; }
-
-    float getAttack() const { return attack_; }
-    float getDecay() const { return decay_; }
-    float getSustain() const { return sustain_; }
-    float getRelease() const { return release_; }
-
-    // Effects parameters
-    void setReverbMix(float mix) { reverbMix_ = mix; }
-    float getReverbMix() const { return reverbMix_; }
-
-    void setDelayTime(float time) { delayTime_ = time; }
-    float getDelayTime() const { return delayTime_; }
-
-    void setDelayFeedback(float feedback) { delayFeedback_ = feedback; }
-    float getDelayFeedback() const { return delayFeedback_; }
-
-    void setDelayMix(float mix) { delayMix_ = mix; }
-    float getDelayMix() const { return delayMix_; }
-
-    void setFilterCutoff(float cutoff) { filterCutoff_ = cutoff; }
-    float getFilterCutoff() const { return filterCutoff_; }
-
-    void setFilterResonance(float res) { filterResonance_ = res; }
-    float getFilterResonance() const { return filterResonance_; }
+    // Synth parameters, read by the voices
+    int getWaveform() const { return static_cast<int>(waveform_->load()); }
+    float getAttack() const { return attack_->load(); }
+    float getDecay() const { return decay_->load(); }
+    float getSustain() const { return sustain_->load(); }
+    float getRelease() const { return release_->load(); }
 
 private:
+    juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
+    void setMelody(std::vector<MelodyEngine::Note> melody);
+
+    juce::AudioProcessorValueTreeState apvts_;
+
     MelodyEngine melodyEngine_;
     std::vector<MelodyEngine::Note> currentMelody_;
+    juce::SpinLock melodyLock_;
 
     double sampleRate_ = 44100.0;
     bool melodyEnabled_ = true;
     int melodyLengthInBeats_ = 16; // 4 bars at 4/4
 
+    std::string style_ = "Pop";
     int keyRoot_ = 60;       // C4
     bool keyIsMajor_ = true; // Major scale
 
-    // Synth parameters
-    int waveform_ = 0;       // 0=Sine, 1=Saw, 2=Square, 3=Triangle
-    float attack_ = 0.01f;
-    float decay_ = 0.1f;
-    float sustain_ = 0.7f;
-    float release_ = 0.3f;
-
-    // Effects parameters
-    float reverbMix_ = 0.0f;
-    float delayTime_ = 0.25f;
-    float delayFeedback_ = 0.3f;
-    float delayMix_ = 0.0f;
-    float filterCutoff_ = 20000.0f;
-    float filterResonance_ = 0.7f;
+    // Parameters
+    static constexpr float maxDelaySeconds = 1.0f;
+    std::atomic<float>* waveform_;  // 0=Sine, 1=Saw, 2=Square, 3=Triangle
+    std::atomic<float>* attack_;
+    std::atomic<float>* decay_;
+    std::atomic<float>* sustain_;
+    std::atomic<float>* release_;
+    std::atomic<float>* reverbMix_;
+    std::atomic<float>* delayTime_;
+    std::atomic<float>* delayFeedback_;
+    std::atomic<float>* delayMix_;
+    std::atomic<float>* filterCutoff_;
+    std::atomic<float>* filterResonance_;
 
     // Synthesizer
     juce::Synthesiser synth_;
@@ -118,7 +102,6 @@ private:
     juce::dsp::Reverb reverb_;
     juce::dsp::DelayLine<float> delayLine_{48000};
     juce::dsp::StateVariableTPTFilter<float> filter_;
-    juce::AudioBuffer<float> delayBuffer_;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MelodyMakerProcessor)
 };

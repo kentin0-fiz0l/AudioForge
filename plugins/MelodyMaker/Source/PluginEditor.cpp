@@ -25,7 +25,6 @@ MelodyMakerEditor::MelodyMakerEditor (MelodyMakerProcessor& p)
     styleSelector_.addItem ("Ballad", 6);
     styleSelector_.addItem ("Funk", 7);
     styleSelector_.addItem ("Classical", 8);
-    styleSelector_.setSelectedId (1);
     addAndMakeVisible (styleSelector_);
 
     // Key selector (root note)
@@ -41,16 +40,23 @@ MelodyMakerEditor::MelodyMakerEditor (MelodyMakerProcessor& p)
     keySelector_.addItem ("A", 10);
     keySelector_.addItem ("A#", 11);
     keySelector_.addItem ("B", 12);
-    keySelector_.setSelectedId (1); // C
     keySelector_.addListener (this);
     addAndMakeVisible (keySelector_);
 
     // Scale selector (Major/Minor)
     scaleSelector_.addItem ("Major", 1);
     scaleSelector_.addItem ("Minor", 2);
-    scaleSelector_.setSelectedId (1); // Major
     scaleSelector_.addListener (this);
     addAndMakeVisible (scaleSelector_);
+
+    // Show the melody's style and key without generating a new one, which
+    // would replace the melody of a session that was just reopened
+    styleSelector_.setText (processor_.getStyle(), juce::dontSendNotification);
+    keySelector_.setSelectedId ((processor_.getKeyRoot() - 60) % 12 + 1, juce::dontSendNotification);
+    scaleSelector_.setSelectedId (processor_.getKeyIsMajor() ? 1 : 2, juce::dontSendNotification);
+    styleSelector_.setComponentID ("style");
+    keySelector_.setComponentID ("key");
+    scaleSelector_.setComponentID ("scale");
 
     // Generate button
     generateButton_.setButtonText ("Generate Melody");
@@ -63,7 +69,7 @@ MelodyMakerEditor::MelodyMakerEditor (MelodyMakerProcessor& p)
     addAndMakeVisible (exportButton_);
 
     // Stats label
-    statsLabel_.setText ("8 notes | C Major", juce::dontSendNotification);
+    updateStats();
     statsLabel_.setFont (juce::Font (14.0f));
     addAndMakeVisible (statsLabel_);
 
@@ -76,8 +82,6 @@ MelodyMakerEditor::MelodyMakerEditor (MelodyMakerProcessor& p)
     waveformSelector_.addItem ("Saw", 2);
     waveformSelector_.addItem ("Square", 3);
     waveformSelector_.addItem ("Triangle", 4);
-    waveformSelector_.setSelectedId (1);
-    waveformSelector_.addListener (this);
     addAndMakeVisible (waveformSelector_);
 
     // ADSR label
@@ -86,32 +90,20 @@ MelodyMakerEditor::MelodyMakerEditor (MelodyMakerProcessor& p)
     addAndMakeVisible (adsrLabel_);
 
     // ADSR sliders
-    attackSlider_.setRange (0.001, 2.0, 0.001);
-    attackSlider_.setValue (0.01);
     attackSlider_.setSliderStyle (juce::Slider::Rotary);
     attackSlider_.setTextBoxStyle (juce::Slider::TextBoxBelow, false, 50, 20);
-    attackSlider_.addListener (this);
     addAndMakeVisible (attackSlider_);
 
-    decaySlider_.setRange (0.001, 2.0, 0.001);
-    decaySlider_.setValue (0.1);
     decaySlider_.setSliderStyle (juce::Slider::Rotary);
     decaySlider_.setTextBoxStyle (juce::Slider::TextBoxBelow, false, 50, 20);
-    decaySlider_.addListener (this);
     addAndMakeVisible (decaySlider_);
 
-    sustainSlider_.setRange (0.0, 1.0, 0.01);
-    sustainSlider_.setValue (0.7);
     sustainSlider_.setSliderStyle (juce::Slider::Rotary);
     sustainSlider_.setTextBoxStyle (juce::Slider::TextBoxBelow, false, 50, 20);
-    sustainSlider_.addListener (this);
     addAndMakeVisible (sustainSlider_);
 
-    releaseSlider_.setRange (0.001, 3.0, 0.001);
-    releaseSlider_.setValue (0.3);
     releaseSlider_.setSliderStyle (juce::Slider::Rotary);
     releaseSlider_.setTextBoxStyle (juce::Slider::TextBoxBelow, false, 50, 20);
-    releaseSlider_.addListener (this);
     addAndMakeVisible (releaseSlider_);
 
     // ADSR knob labels
@@ -141,11 +133,8 @@ MelodyMakerEditor::MelodyMakerEditor (MelodyMakerProcessor& p)
     addAndMakeVisible (effectsLabel_);
 
     // Reverb slider
-    reverbSlider_.setRange (0.0, 1.0, 0.01);
-    reverbSlider_.setValue (0.0);
     reverbSlider_.setSliderStyle (juce::Slider::Rotary);
     reverbSlider_.setTextBoxStyle (juce::Slider::TextBoxBelow, false, 50, 20);
-    reverbSlider_.addListener (this);
     addAndMakeVisible (reverbSlider_);
 
     reverbLabel_.setText ("Reverb", juce::dontSendNotification);
@@ -154,11 +143,8 @@ MelodyMakerEditor::MelodyMakerEditor (MelodyMakerProcessor& p)
     addAndMakeVisible (reverbLabel_);
 
     // Delay Mix slider
-    delayMixSlider_.setRange (0.0, 1.0, 0.01);
-    delayMixSlider_.setValue (0.0);
     delayMixSlider_.setSliderStyle (juce::Slider::Rotary);
     delayMixSlider_.setTextBoxStyle (juce::Slider::TextBoxBelow, false, 50, 20);
-    delayMixSlider_.addListener (this);
     addAndMakeVisible (delayMixSlider_);
 
     delayLabel_.setText ("Delay", juce::dontSendNotification);
@@ -167,18 +153,34 @@ MelodyMakerEditor::MelodyMakerEditor (MelodyMakerProcessor& p)
     addAndMakeVisible (delayLabel_);
 
     // Filter Cutoff slider
-    filterCutoffSlider_.setRange (200.0, 20000.0, 1.0);
-    filterCutoffSlider_.setValue (20000.0);
     filterCutoffSlider_.setSliderStyle (juce::Slider::Rotary);
     filterCutoffSlider_.setTextBoxStyle (juce::Slider::TextBoxBelow, false, 50, 20);
-    filterCutoffSlider_.setSkewFactorFromMidPoint (2000.0);
-    filterCutoffSlider_.addListener (this);
     addAndMakeVisible (filterCutoffSlider_);
 
     filterLabel_.setText ("Filter", juce::dontSendNotification);
     filterLabel_.setFont (juce::Font (11.0f));
     filterLabel_.setJustificationType (juce::Justification::centred);
     addAndMakeVisible (filterLabel_);
+
+    // Each control follows its parameter (range, value, and host automation)
+    // and carries the parameter's ID
+    auto& apvts = processor_.getValueTreeState();
+    auto attach = [&apvts] (juce::Slider& slider, const juce::String& paramID)
+    {
+        slider.setComponentID (paramID);
+        return std::make_unique<SliderAttachment> (apvts, paramID, slider);
+    };
+    attackAttachment_ = attach (attackSlider_, "attack");
+    decayAttachment_ = attach (decaySlider_, "decay");
+    sustainAttachment_ = attach (sustainSlider_, "sustain");
+    releaseAttachment_ = attach (releaseSlider_, "release");
+    reverbAttachment_ = attach (reverbSlider_, "reverbMix");
+    delayMixAttachment_ = attach (delayMixSlider_, "delayMix");
+    filterCutoffAttachment_ = attach (filterCutoffSlider_, "filterCutoff");
+
+    waveformSelector_.setComponentID ("waveform");
+    waveformAttachment_ = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment> (
+        apvts, "waveform", waveformSelector_);
 
     // Start timer for animation (optional)
     startTimer (100);
@@ -264,114 +266,56 @@ void MelodyMakerEditor::timerCallback()
     repaint();
 }
 
-void MelodyMakerEditor::sliderValueChanged (juce::Slider* slider)
-{
-    if (slider == &attackSlider_)
-        processor_.setAttack((float)attackSlider_.getValue());
-    else if (slider == &decaySlider_)
-        processor_.setDecay((float)decaySlider_.getValue());
-    else if (slider == &sustainSlider_)
-        processor_.setSustain((float)sustainSlider_.getValue());
-    else if (slider == &releaseSlider_)
-        processor_.setRelease((float)releaseSlider_.getValue());
-    else if (slider == &reverbSlider_)
-        processor_.setReverbMix((float)reverbSlider_.getValue());
-    else if (slider == &delayMixSlider_)
-        processor_.setDelayMix((float)delayMixSlider_.getValue());
-    else if (slider == &filterCutoffSlider_)
-        processor_.setFilterCutoff((float)filterCutoffSlider_.getValue());
-}
-
 void MelodyMakerEditor::comboBoxChanged (juce::ComboBox* comboBox)
 {
-    if (comboBox == &waveformSelector_)
+    if (comboBox == &keySelector_ || comboBox == &scaleSelector_)
     {
-        processor_.setWaveform(waveformSelector_.getSelectedId() - 1);
-    }
-    else if (comboBox == &keySelector_ || comboBox == &scaleSelector_)
-    {
-        // Get selected key (C=0, C#=1, D=2, etc.)
-        int keyId = keySelector_.getSelectedId() - 1; // Convert to 0-11
-        int rootNote = 60 + keyId; // C4 = 60
-
-        // Get selected scale
-        bool isMajor = (scaleSelector_.getSelectedId() == 1);
-
-        // Update processor
-        processor_.setKey(rootNote, isMajor);
-
         // Auto-generate new melody in the new key
-        int styleId = styleSelector_.getSelectedId();
-        std::string style = "Pop";
-        switch (styleId) {
-            case 1: style = "Pop"; break;
-            case 2: style = "Rock"; break;
-            case 3: style = "Jazz"; break;
-            case 4: style = "Blues"; break;
-            case 5: style = "EDM"; break;
-            case 6: style = "Ballad"; break;
-            case 7: style = "Funk"; break;
-            case 8: style = "Classical"; break;
-        }
-
-        processor_.generateNewMelody(style, 4);
-
-        // Update stats display
-        auto& melody = processor_.getCurrentMelody();
-        juce::String keyName = keySelector_.getText();
-        juce::String scaleName = scaleSelector_.getText();
-        juce::String stats = juce::String(melody.size()) + " notes | " + keyName + " " + scaleName;
-        statsLabel_.setText (stats, juce::dontSendNotification);
-
-        repaint();
+        generateMelody();
     }
+}
+
+// Generates a melody in the selected style and key
+void MelodyMakerEditor::generateMelody()
+{
+    // Get selected key (C=0, C#=1, D=2, etc.), C4 = 60
+    int rootNote = 60 + keySelector_.getSelectedId() - 1;
+    bool isMajor = (scaleSelector_.getSelectedId() == 1);
+    processor_.setKey(rootNote, isMajor);
+
+    processor_.generateNewMelody(styleSelector_.getText().toStdString(), 4);
+
+    updateStats();
+    repaint();
+}
+
+void MelodyMakerEditor::updateStats()
+{
+    juce::String stats = juce::String(processor_.getCurrentMelody().size()) + " notes | "
+                       + keySelector_.getText() + " " + scaleSelector_.getText();
+    statsLabel_.setText (stats, juce::dontSendNotification);
 }
 
 void MelodyMakerEditor::buttonClicked (juce::Button* button)
 {
     if (button == &generateButton_)
     {
-        // Get selected style
-        int selectedId = styleSelector_.getSelectedId();
-        std::string style = "Pop";
-
-        switch (selectedId)
-        {
-            case 1: style = "Pop"; break;
-            case 2: style = "Rock"; break;
-            case 3: style = "Jazz"; break;
-            case 4: style = "Blues"; break;
-            case 5: style = "EDM"; break;
-            case 6: style = "Ballad"; break;
-            case 7: style = "Funk"; break;
-            case 8: style = "Classical"; break;
-        }
-
-        // Generate new melody
-        processor_.generateNewMelody(style, 4);
-
-        // Update stats
-        auto& melody = processor_.getCurrentMelody();
-        juce::String keyName = keySelector_.getText();
-        juce::String scaleName = scaleSelector_.getText();
-        juce::String stats = juce::String(melody.size()) + " notes | " + keyName + " " + scaleName;
-        statsLabel_.setText (stats, juce::dontSendNotification);
-
-        repaint();
+        generateMelody();
     }
     else if (button == &exportButton_)
     {
         // Export MIDI dialog
-        auto fileChooser = std::make_unique<juce::FileChooser>(
+        fileChooser_ = std::make_unique<juce::FileChooser>(
             "Export MIDI File",
             juce::File::getSpecialLocation(juce::File::userDocumentsDirectory),
             "*.mid"
         );
 
         auto chooserFlags = juce::FileBrowserComponent::saveMode |
-                           juce::FileBrowserComponent::canSelectFiles;
+                           juce::FileBrowserComponent::canSelectFiles |
+                           juce::FileBrowserComponent::warnAboutOverwriting;
 
-        fileChooser->launchAsync(chooserFlags, [this](const juce::FileChooser& chooser) {
+        fileChooser_->launchAsync(chooserFlags, [this](const juce::FileChooser& chooser) {
             auto file = chooser.getResult();
             if (file != juce::File()) {
                 if (!file.hasFileExtension(".mid"))

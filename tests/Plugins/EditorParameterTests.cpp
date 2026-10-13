@@ -26,6 +26,8 @@
 #include "../../plugins/SimpleGain/Source/PluginEditor.h"
 #include "../../plugins/SpectralFreeze/Source/PluginProcessor.h"
 #include "../../plugins/SpectralFreeze/Source/PluginEditor.h"
+#include "../../plugins/MelodyMaker/Source/PluginProcessor.h"
+#include "../../plugins/MelodyMaker/Source/PluginEditor.h"
 
 class EditorParameterTests : public juce::UnitTest
 {
@@ -44,6 +46,8 @@ public:
         check<PanUtilProcessor>("PanUtil");
         check<SimpleGainProcessor>("SimpleGain");
         check<SpectralFreezeProcessor>("SpectralFreeze");
+        // MelodyMaker's window has no Delay Time, Delay Feedback, or Resonance knob
+        check<MelodyMakerProcessor>("MelodyMaker", { "delayTime", "delayFeedback", "filterResonance" });
     }
 
 private:
