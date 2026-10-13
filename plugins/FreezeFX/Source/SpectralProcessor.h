@@ -35,8 +35,13 @@ public:
 
     //==============================================================================
     // FFT Configuration
+    // Both can be changed while audio is running: nothing is allocated, and
+    // the input already analysed is kept, so the next frame still sees the
+    // audio that led up to it. Output from earlier frames is dropped.
     void setFFTSize(int size);           // 1024, 2048, 4096, 8192
     void setOverlapFactor(int factor);   // 2, 4, 8 (higher = smoother, more CPU)
+
+    static constexpr int maxFFTSize = 8192;
 
     int getFFTSize() const { return fftSize; }
     int getOverlapFactor() const { return overlapFactor; }
@@ -71,9 +76,10 @@ private:
     void reconstructComplex(float* complexData, int numBins);
 
     //==============================================================================
-    // FFT Objects
-    std::unique_ptr<juce::dsp::FFT> forwardFFT;
-    std::unique_ptr<juce::dsp::FFT> inverseFFT;
+    // FFT Objects, one for each size (orders 10 to 13), made up front so
+    // that changing size does not allocate
+    std::unique_ptr<juce::dsp::FFT> ffts[4];
+    juce::dsp::FFT* fft = nullptr;
 
     int fftOrder = 11;      // 2^11 = 2048 samples
     int fftSize = 2048;
@@ -82,8 +88,8 @@ private:
 
     //==============================================================================
     // Buffers
-    std::vector<float> fftBuffer;           // Complex FFT data (size = fftSize * 2)
-    std::vector<float> windowBuffer;        // Square-root Hann window (size = fftSize)
+    std::vector<float> fftBuffer;           // Complex FFT data (size = maxFFTSize * 2)
+    std::vector<float> windowBuffer;        // Square-root Hann window (first fftSize used)
 
     // Lock-free double buffering for spectrum data
     // Audio thread writes to buffer[writeIndex], UI reads from buffer[1-writeIndex]
@@ -105,6 +111,7 @@ private:
     int numChannels = 2;
 
     void shiftInput(ChannelData& channel);
+    void fitChannelsToFrame();
 
     //==============================================================================
     // Windowing

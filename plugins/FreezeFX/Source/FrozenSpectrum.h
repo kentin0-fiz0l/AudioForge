@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <vector>
 
 /**
@@ -23,8 +24,9 @@ public:
 
     //==============================================================================
     // Spectrum Capture/Retrieval
-    // Sizes the buffers, so that capturing does not allocate
-    void prepare(size_t numBins);
+    // Sizes the buffers, so that capturing does not allocate. Once sized for
+    // the largest spectrum, sizing again for a smaller one does not either.
+    void prepare(std::size_t numBins);
 
     void captureSpectrum(const std::vector<float>& magnitude);
 

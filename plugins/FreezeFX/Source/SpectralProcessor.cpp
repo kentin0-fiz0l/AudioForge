@@ -1,7 +1,25 @@
 #include "SpectralProcessor.h"
+#include <cstring>
 
 SpectralProcessor::SpectralProcessor()
 {
+    // Everything is sized for the largest frame, so that a smaller one only
+    // uses part of it
+    for (int i = 0; i < 4; ++i)
+        ffts[i] = std::make_unique<juce::dsp::FFT>(10 + i);
+
+    const int maxBins = maxFFTSize / 2 + 1;
+
+    fftBuffer.resize(maxFFTSize * 2, 0.0f);  // Complex data (real + imaginary)
+    windowBuffer.resize(maxFFTSize, 0.0f);
+
+    // Both double buffers for lock-free access
+    for (int i = 0; i < 2; ++i)
+    {
+        magnitudeSpectrum[i].reserve(maxBins);
+        phaseSpectrum[i].reserve(maxBins);
+    }
+
     setFFTSize(2048);  // Default FFT size
 }
 
@@ -15,6 +33,8 @@ void SpectralProcessor::prepare(double newSampleRate, int samplesPerBlock, int n
 
     for (auto& channel : channelData)
     {
+        channel.inputFIFO.reserve(maxFFTSize);
+        channel.outputFIFO.reserve(maxFFTSize);
         channel.inputFIFO.resize(fftSize, 0.0f);
         channel.outputFIFO.resize(fftSize, 0.0f);
     }
@@ -38,41 +58,24 @@ void SpectralProcessor::reset()
 void SpectralProcessor::setFFTSize(int size)
 {
     // Validate and set FFT size (must be power of 2)
-    fftSize = juce::nextPowerOfTwo(size);
-    fftSize = juce::jlimit(1024, 8192, fftSize);
+    fftSize = juce::jlimit(1024, maxFFTSize, juce::nextPowerOfTwo(size));
 
     // Calculate FFT order (2^order = fftSize)
     fftOrder = (int)std::log2(fftSize);
+    fft = ffts[fftOrder - 10].get();
 
     // Update hop size
     hopSize = fftSize / overlapFactor;
 
-    // Create FFT objects
-    forwardFFT = std::make_unique<juce::dsp::FFT>(fftOrder);
-    inverseFFT = std::make_unique<juce::dsp::FFT>(fftOrder);
-
-    // Allocate buffers
-    fftBuffer.resize(fftSize * 2, 0.0f);         // Complex data (real + imaginary)
-    windowBuffer.resize(fftSize, 0.0f);
-
-    // Allocate both double buffers for lock-free access
-    int numBins = fftSize / 2 + 1;
-    magnitudeSpectrum[0].resize(numBins, 0.0f);
-    magnitudeSpectrum[1].resize(numBins, 0.0f);
-    phaseSpectrum[0].resize(numBins, 0.0f);
-    phaseSpectrum[1].resize(numBins, 0.0f);
-
-    // Create window function
-    createWindow();
-
-    // Reallocate channel FIFOs
-    for (auto& channel : channelData)
+    const int numBins = getNumBins();
+    for (int i = 0; i < 2; ++i)
     {
-        channel.inputFIFO.resize(fftSize, 0.0f);
-        channel.outputFIFO.resize(fftSize, 0.0f);
+        magnitudeSpectrum[i].resize(numBins, 0.0f);
+        phaseSpectrum[i].resize(numBins, 0.0f);
     }
 
-    reset();
+    createWindow();
+    fitChannelsToFrame();
 }
 
 void SpectralProcessor::setOverlapFactor(int factor)
@@ -80,7 +83,36 @@ void SpectralProcessor::setOverlapFactor(int factor)
     overlapFactor = juce::jlimit(2, 8, factor);
     hopSize = fftSize / overlapFactor;
 
-    reset();
+    fitChannelsToFrame();
+}
+
+void SpectralProcessor::fitChannelsToFrame()
+{
+    // The next frame is due once a hop of new samples has arrived, so the
+    // input FIFO holds fftSize - hopSize samples of history. Keep the most
+    // recent of what it held, and pad with silence before it if there is
+    // not enough. The FIFOs have room for the largest frame (see prepare),
+    // so none of this allocates.
+    const int history = fftSize - hopSize;
+
+    for (auto& channel : channelData)
+    {
+        auto& input = channel.inputFIFO;
+        const int kept = juce::jmin(channel.inputWritePos, history);
+
+        if (static_cast<int>(input.size()) < fftSize)
+            input.resize(static_cast<size_t>(fftSize), 0.0f);
+
+        std::memmove(input.data() + history - kept, input.data() + channel.inputWritePos - kept,
+                     static_cast<size_t>(kept) * sizeof(float));
+        std::fill(input.begin(), input.begin() + history - kept, 0.0f);
+        input.resize(static_cast<size_t>(fftSize));
+        channel.inputWritePos = history;
+
+        // Frames of the old size do not overlap-add with frames of the new
+        channel.outputFIFO.assign(static_cast<size_t>(fftSize), 0.0f);
+        channel.outputReadPos = 0;
+    }
 }
 
 void SpectralProcessor::createWindow()
@@ -187,7 +219,7 @@ void SpectralProcessor::processFFTFrame(int channel, const float* input, float* 
     }
 
     // 2. Forward FFT (time → frequency), giving interleaved real/imaginary pairs
-    forwardFFT->performRealOnlyForwardTransform(fftBuffer.data());
+    fft->performRealOnlyForwardTransform(fftBuffer.data());
 
     // 3. Compute magnitude and phase
     computeMagnitudePhase(fftBuffer.data(), getNumBins());
@@ -205,7 +237,7 @@ void SpectralProcessor::processFFTFrame(int channel, const float* input, float* 
 
     // 6. Inverse FFT (frequency → time), leaving fftSize real samples at the
     //    start of the buffer
-    inverseFFT->performRealOnlyInverseTransform(fftBuffer.data());
+    fft->performRealOnlyInverseTransform(fftBuffer.data());
 
     // 7. Apply window and overlap-add to output. Overlapped Hann frames sum
     //    to overlapFactor / 2.

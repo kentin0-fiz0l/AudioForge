@@ -100,40 +100,23 @@ FreezeFXProcessor::~FreezeFXProcessor()
 
 void FreezeFXProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
-    // Get FFT size from parameter
-    auto* fftParam = dynamic_cast<juce::AudioParameterChoice*>(apvts.getParameter(PARAM_FFT_SIZE));
-    int fftSizeIndex = fftParam ? fftParam->getIndex() : 1;
-    int fftSize = 1024 << fftSizeIndex;  // 1024, 2048, 4096, 8192
-
-    // Get overlap factor
-    auto* overlapParam = dynamic_cast<juce::AudioParameterChoice*>(apvts.getParameter(PARAM_OVERLAP));
-    int overlapIndex = overlapParam ? overlapParam->getIndex() : 1;
-    int overlap = 2 << overlapIndex;  // 2, 4, 8
-
-    // Prepare spectral processor
-    spectralProcessor.setFFTSize(fftSize);
-    spectralProcessor.setOverlapFactor(overlap);
     spectralProcessor.prepare(sampleRate, samplesPerBlock, getTotalNumOutputChannels());
 
-    // Each channel freezes its own sound
-    int numBins = fftSize / 2 + 1;
+    // Each channel freezes its own sound. Everything is sized for the
+    // largest FFT first, so that FFT Size can change while audio runs
+    // without allocating; updateFrameSettings then sizes it for the setting.
+    const size_t maxBins = static_cast<size_t>(SpectralProcessor::maxFFTSize / 2 + 1);
     frozenChannels = std::vector<FrozenChannel>(static_cast<size_t>(juce::jmax(1, getTotalNumOutputChannels())));
 
     for (auto& frozen : frozenChannels)
     {
         frozen.phaseEvolver.setRandomizationAmount(apvts.getRawParameterValue(PARAM_PHASE_RANDOM)->load());
         frozen.phaseEvolver.setEvolutionSpeed(apvts.getRawParameterValue(PARAM_PHASE_SPEED)->load());
-
         frozen.spectrum.setBlurAmount(apvts.getRawParameterValue(PARAM_SPECTRAL_BLUR)->load());
-        frozen.spectrum.setFrequencyRange(
-            apvts.getRawParameterValue(PARAM_HIGH_PASS)->load(),
-            apvts.getRawParameterValue(PARAM_LOW_PASS)->load(),
-            sampleRate,
-            fftSize);
 
-        frozen.spectrum.prepare(static_cast<size_t>(numBins));
-        frozen.phase.assign(static_cast<size_t>(numBins), 0.0f);
-        frozen.phaseAdvance.assign(static_cast<size_t>(numBins), 0.0f);
+        frozen.spectrum.prepare(maxBins);
+        frozen.phase.assign(maxBins, 0.0f);
+        frozen.phaseAdvance.assign(maxBins, 0.0f);
 
         // The evolver sizes itself to the first spectrum it is given. Give
         // it one now, so that it does not allocate on the first frozen frame.
@@ -144,7 +127,12 @@ void FreezeFXProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
     frozenForUI.store(false);
 
     // Pre-allocate spectral blending buffers (avoid per-frame allocation)
-    tempFrozenMagnitude.resize(numBins);
+    tempFrozenMagnitude.resize(maxBins);
+
+    // Start from the largest size, so that updateFrameSettings sees a change
+    // and sizes everything above for the current setting
+    spectralProcessor.setFFTSize(SpectralProcessor::maxFFTSize);
+    updateFrameSettings();
 
     // Set up spectral processing callback
     spectralProcessor.setSpectralCallback(
@@ -152,6 +140,28 @@ void FreezeFXProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
         {
             this->processSpectrum(channel, magnitude, phase);
         });
+}
+
+void FreezeFXProcessor::updateFrameSettings()
+{
+    const int fftSize = 1024 << static_cast<int>(apvts.getRawParameterValue(PARAM_FFT_SIZE)->load());  // 1024, 2048, 4096, 8192
+    const int overlap = 2 << static_cast<int>(apvts.getRawParameterValue(PARAM_OVERLAP)->load());      // 2, 4, 8
+
+    if (fftSize == spectralProcessor.getFFTSize() && overlap == spectralProcessor.getOverlapFactor())
+        return;
+
+    spectralProcessor.setFFTSize(fftSize);
+    spectralProcessor.setOverlapFactor(overlap);
+
+    // Nothing is held while this runs, so the frozen state can start afresh
+    const size_t numBins = static_cast<size_t>(spectralProcessor.getNumBins());
+
+    for (auto& frozen : frozenChannels)
+    {
+        frozen.spectrum.prepare(numBins);
+        frozen.phase.assign(numBins, 0.0f);
+        frozen.phaseAdvance.assign(numBins, 0.0f);
+    }
 }
 
 void FreezeFXProcessor::releaseResources()
@@ -172,6 +182,12 @@ void FreezeFXProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::Mid
     // Get parameters
     bool freeze = apvts.getRawParameterValue(PARAM_FREEZE)->load() > 0.5f;
 
+    // FFT Size and Overlap decide how a sound is captured, so they apply
+    // whenever nothing is held. A held sound keeps the size it was captured
+    // at until it is released: its spectrum cannot be analysed again.
+    if (!wasFrozen)
+        updateFrameSettings();
+
     // *** PERFORMANCE OPTIMIZATION: Bypass all FFT processing when freeze is off ***
     // This eliminates 100% of spectral processing overhead when the effect is inactive
     if (!freeze && !wasFrozen)
@@ -187,12 +203,15 @@ void FreezeFXProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::Mid
     const float phaseRandom = apvts.getRawParameterValue(PARAM_PHASE_RANDOM)->load();
     const float phaseSpeed = apvts.getRawParameterValue(PARAM_PHASE_SPEED)->load();
     const float spectralBlur = apvts.getRawParameterValue(PARAM_SPECTRAL_BLUR)->load();
+    const float highPass = apvts.getRawParameterValue(PARAM_HIGH_PASS)->load();
+    const float lowPass = apvts.getRawParameterValue(PARAM_LOW_PASS)->load();
 
     for (auto& frozen : frozenChannels)
     {
         frozen.phaseEvolver.setRandomizationAmount(phaseRandom);
         frozen.phaseEvolver.setEvolutionSpeed(phaseSpeed);
         frozen.spectrum.setBlurAmount(spectralBlur);
+        frozen.spectrum.setFrequencyRange(highPass, lowPass, getSampleRate(), spectralProcessor.getFFTSize());
     }
 
     // Check for freeze trigger (edge detection)
