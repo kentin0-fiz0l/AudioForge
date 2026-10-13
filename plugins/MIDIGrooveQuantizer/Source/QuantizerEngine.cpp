@@ -4,122 +4,139 @@ QuantizerEngine::QuantizerEngine()
     : randomGen_(std::random_device{}()),
       randomDist_(-1.0f, 1.0f) {}
 
-void QuantizerEngine::prepareToPlay(double sampleRate) {
+void QuantizerEngine::prepareToPlay(double sampleRate, int samplesPerBlock) {
     sampleRate_ = sampleRate;
+    numPending_ = 0;
+    samplesElapsed_ = 0;
+    noteShift_ = {};
+    output_.ensureSize((size_t) (maxPendingEvents + samplesPerBlock) * 16);
+    updateLatency(120.0, false);  // first guess until the host reports a tempo
 }
 
 void QuantizerEngine::processBlock(juce::MidiBuffer& midiMessages, int numSamples,
-                                    const juce::AudioPlayHead::PositionInfo& posInfo) {
-    juce::MidiBuffer processedMidi;
+                                    const juce::Optional<juce::AudioPlayHead::PositionInfo>& posInfo) {
+    const int64_t blockStart = samplesElapsed_;
+    const int64_t blockEnd = blockStart + numSamples;
+    samplesElapsed_ = blockEnd;
+    output_.clear();
 
-    if (!posInfo.getBpm().hasValue()) {
-        // No tempo info, pass through unmodified
-        return;
-    }
+    const bool hasTempo = posInfo.hasValue() && posInfo->getBpm().hasValue()
+                          && posInfo->getPpqPosition().hasValue();
+    const bool isPlaying = hasTempo && posInfo->getIsPlaying();
 
-    double bpm = *posInfo.getBpm();
-    int64_t totalSamplesProcessed = posInfo.getTimeInSamples().orFallback(0);
+    if (hasTempo)
+        updateLatency(*posInfo->getBpm(), isPlaying);
 
-    // Process incoming MIDI messages
-    for (const auto metadata : midiMessages) {
-        auto msg = metadata.getMessage();
-        int samplePosition = metadata.samplePosition;
+    if (!isPlaying) {
+        // No running beat grid to quantize against: release anything still
+        // delayed, then pass the input straight through.
+        for (int i = 0; i < numPending_; ++i)
+            output_.addEvent(pending_[(size_t) i].data, pending_[(size_t) i].size, 0);
+        numPending_ = 0;
 
-        if (msg.isNoteOn() || msg.isNoteOff()) {
-            // Calculate quantized position
-            int64_t absoluteSample = totalSamplesProcessed + samplePosition;
-            int64_t quantizedSample = calculateQuantizedPosition(absoluteSample, bpm, totalSamplesProcessed);
+        for (const auto metadata : midiMessages)
+            output_.addEvent(metadata.data, metadata.numBytes, metadata.samplePosition);
+    } else {
+        const double samplesPerBeat = sampleRate_ * 60.0 / *posInfo->getBpm();
+        const double blockStartPpq = *posInfo->getPpqPosition();
 
-            // Apply humanization to timing
-            if (humanizeTiming_ > 0.0f && msg.isNoteOn()) {
-                int64_t maxOffset = (int64_t)(getGridSizeInSamples(bpm) * 0.1 * humanizeTiming_);
-                int64_t randomOffset = (int64_t)(getRandomOffset() * maxOffset);
-                quantizedSample += randomOffset;
+        for (const auto metadata : midiMessages) {
+            if (metadata.numBytes > 3) {
+                // SysEx is not delayed: it is rare and can't be queued without allocating
+                output_.addEvent(metadata.data, metadata.numBytes, metadata.samplePosition);
+                continue;
             }
 
-            // Calculate relative position in current block
-            int newPosition = (int)(quantizedSample - totalSamplesProcessed);
+            auto msg = metadata.getMessage();
+            int64_t shift = 0;
 
-            // Create potentially modified message
-            juce::MidiMessage newMsg = msg;
+            if (msg.isNoteOn()) {
+                const double ppq = blockStartPpq + metadata.samplePosition / samplesPerBeat;
+                shift = juce::jmax((int64_t) -latencySamples_,
+                                   (int64_t) std::llround(quantizeOffsetInBeats(ppq) * samplesPerBeat));
+                noteShift_[(size_t) msg.getChannel() - 1][(size_t) msg.getNoteNumber()] = shift;
 
-            if (msg.isNoteOn() && humanizeVelocity_ > 0.0f) {
-                int newVelocity = calculateHumanizedVelocity(msg.getVelocity());
-                newMsg = juce::MidiMessage::noteOn(msg.getChannel(), msg.getNoteNumber(),
-                                                  newVelocity / 127.0f);
+                if (humanizeVelocity_ > 0.0f)
+                    msg = juce::MidiMessage::noteOn(msg.getChannel(), msg.getNoteNumber(),
+                                                    (juce::uint8) calculateHumanizedVelocity(msg.getVelocity()));
+            } else if (msg.isNoteOff()) {
+                // Move the note-off by the same amount as its note-on to keep the note length
+                shift = noteShift_[(size_t) msg.getChannel() - 1][(size_t) msg.getNoteNumber()];
             }
 
-            // Only output if within current block
-            if (newPosition >= 0 && newPosition < numSamples) {
-                processedMidi.addEvent(newMsg, newPosition);
-            } else if (newPosition >= numSamples) {
-                // Note quantized to future block - would need lookahead buffer
-                // For now, output at end of block
-                processedMidi.addEvent(newMsg, numSamples - 1);
-            } else {
-                // Note quantized to past - output immediately
-                processedMidi.addEvent(newMsg, 0);
-            }
-        } else {
-            // Pass through non-note messages (CC, pitch bend, etc.)
-            processedMidi.addEvent(msg, samplePosition);
+            schedule(msg, blockStart + metadata.samplePosition + latencySamples_ + shift);
         }
+
+        // Emit events due in this block; keep the rest, in order
+        int kept = 0;
+        for (int i = 0; i < numPending_; ++i) {
+            const auto& event = pending_[(size_t) i];
+            if (event.dueSample < blockEnd)
+                output_.addEvent(event.data, event.size, (int) juce::jmax((int64_t) 0, event.dueSample - blockStart));
+            else
+                pending_[(size_t) kept++] = event;
+        }
+        numPending_ = kept;
     }
 
-    // Replace input MIDI with quantized MIDI
-    midiMessages.swapWith(processedMidi);
+    midiMessages.clear();
+    midiMessages.addEvents(output_, 0, -1, 0);
 }
 
-int64_t QuantizerEngine::calculateQuantizedPosition(int64_t originalSample, double bpm,
-                                                      int64_t totalSamplesProcessed) {
-    int64_t gridSize = getGridSizeInSamples(bpm);
-
-    // Find nearest grid position
-    int64_t gridIndex = (originalSample + gridSize / 2) / gridSize;
-    int64_t nearestGridSample = gridIndex * gridSize;
-
-    // Apply swing to odd-numbered grid positions (every other beat)
-    if (swing_ > 0.0f && (gridIndex % 2) == 1) {
-        int64_t swingOffset = (int64_t)(gridSize * swing_ * 0.5);  // Max swing is 50% of grid
-        nearestGridSample += swingOffset;
+void QuantizerEngine::schedule(const juce::MidiMessage& msg, int64_t dueSample) {
+    if (numPending_ == maxPendingEvents) {
+        // Queue full: release the oldest event now rather than drop it, so no note-off is lost
+        output_.addEvent(pending_[0].data, pending_[0].size, 0);
+        std::move(pending_.begin() + 1, pending_.end(), pending_.begin());
+        --numPending_;
     }
+
+    auto& event = pending_[(size_t) numPending_++];
+    event.dueSample = dueSample;
+    event.size = msg.getRawDataSize();
+    std::copy_n(msg.getRawData(), event.size, event.data);
+}
+
+void QuantizerEngine::updateLatency(double bpm, bool isPlaying) {
+    // Notes can be pulled earlier by up to half a grid step, plus up to 10% of a step
+    // of timing humanization. Round up to a power of two so tempo changes rarely
+    // change the latency, and only shrink it while stopped, as the host may need
+    // to re-align when the latency changes.
+    const double samplesPerBeat = sampleRate_ * 60.0 / bpm;
+    const int required = juce::nextPowerOfTwo((int) std::ceil(0.6 * getGridSizeInBeats() * samplesPerBeat));
+
+    if (required > latencySamples_ || (!isPlaying && required != latencySamples_))
+        latencySamples_ = required;
+}
+
+double QuantizerEngine::quantizeOffsetInBeats(double ppq) {
+    const double grid = getGridSizeInBeats();
+    const double gridIndex = std::round(ppq / grid);
+    double target = gridIndex * grid;
+
+    // Apply swing to odd-numbered grid positions (the off-beats)
+    if (swing_ > 0.0f && ((int64_t) gridIndex & 1) != 0)
+        target += grid * swing_ * 0.5;  // Max swing is 50% of grid
 
     // Apply quantize strength (partial quantization)
-    if (quantizeStrength_ < 1.0f) {
-        int64_t offset = nearestGridSample - originalSample;
-        nearestGridSample = originalSample + (int64_t)(offset * quantizeStrength_);
-    }
+    double offset = (target - ppq) * quantizeStrength_;
 
-    return nearestGridSample;
+    if (humanizeTiming_ > 0.0f)
+        offset += getRandomOffset() * 0.1 * humanizeTiming_ * grid;
+
+    return offset;
 }
 
-int64_t QuantizerEngine::getGridSizeInSamples(double bpm) {
-    double beatsPerSecond = bpm / 60.0;
-    double secondsPerBeat = 1.0 / beatsPerSecond;
-    double secondsPerGrid = secondsPerBeat;
-
+double QuantizerEngine::getGridSizeInBeats() const {
     switch (gridResolution_) {
-        case GridResolution::Quarter:
-            secondsPerGrid = secondsPerBeat;
-            break;
-        case GridResolution::Eighth:
-            secondsPerGrid = secondsPerBeat / 2.0;
-            break;
-        case GridResolution::Sixteenth:
-            secondsPerGrid = secondsPerBeat / 4.0;
-            break;
-        case GridResolution::ThirtySecond:
-            secondsPerGrid = secondsPerBeat / 8.0;
-            break;
-        case GridResolution::EighthTriplet:
-            secondsPerGrid = secondsPerBeat / 3.0;
-            break;
-        case GridResolution::SixteenthTriplet:
-            secondsPerGrid = secondsPerBeat / 6.0;
-            break;
+        case GridResolution::Quarter:          return 1.0;
+        case GridResolution::Eighth:           return 1.0 / 2.0;
+        case GridResolution::Sixteenth:        return 1.0 / 4.0;
+        case GridResolution::ThirtySecond:     return 1.0 / 8.0;
+        case GridResolution::EighthTriplet:    return 1.0 / 3.0;
+        case GridResolution::SixteenthTriplet: return 1.0 / 6.0;
     }
-
-    return (int64_t)(secondsPerGrid * sampleRate_);
+    return 1.0 / 4.0;
 }
 
 int QuantizerEngine::calculateHumanizedVelocity(int originalVelocity) {
