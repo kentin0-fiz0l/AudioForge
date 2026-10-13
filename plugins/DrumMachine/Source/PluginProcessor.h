@@ -61,16 +61,20 @@ private:
     DrumSynth drumSynth_;
     DrumEngine::DrumPattern currentPattern_;
 
-    double sampleRate_ = 44100.0;
-    bool patternEnabled_ = true;
-    int patternLengthInBeats_ = 4;  // 1 bar at 4/4 = 16 steps
+    static constexpr double beatsPerStep = 0.25;  // 16th notes: 16 steps = 1 bar of 4/4
 
-    int complexity_ = 5;         // 1-10
-    float swing_ = 0.0f;         // 0.0-1.0
+    void resetSequencer();
+
+    double sampleRate_ = 44100.0;
+    std::atomic<bool> patternEnabled_ { true };
+
+    int complexity_ = 5;                // 1-10
+    std::atomic<float> swing_ { 0.0f }; // 0.0-1.0, delays off-beat 16ths at playback
     bool fillsEnabled_ = false;
 
     // Sequencer state
-    int lastProcessedStep_ = -1;
+    juce::int64 lastTriggeredStep_ = -1;   // Counted from the start of the song
+    double expectedBlockStartBeat_ = 0.0;  // Where the next block starts if the transport runs on
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (DrumMachineProcessor)
 };
