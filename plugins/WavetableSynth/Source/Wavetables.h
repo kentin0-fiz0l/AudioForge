@@ -5,6 +5,14 @@
 #include <cstdlib>
 #include <vector>
 
+// MSVC's CL.exe crashed (0xE06D7363) generating code when every table generator was inlined
+// into generateAllWavetables, so keep each one a separate function
+#if defined(_MSC_VER)
+ #define WAVETABLES_NOINLINE __declspec(noinline)
+#else
+ #define WAVETABLES_NOINLINE __attribute__((noinline))
+#endif
+
 namespace Wavetables
 {
 
@@ -22,7 +30,7 @@ class WavetableGenerator
 public:
     using Wavetable = std::array<float, WAVETABLE_SIZE>;
 
-    static std::vector<Wavetable> generateAllWavetables()
+    WAVETABLES_NOINLINE static std::vector<Wavetable> generateAllWavetables()
     {
         std::vector<Wavetable> tables;
         tables.reserve(NUM_WAVETABLES);
@@ -73,7 +81,7 @@ public:
     }
 
 private:
-    static Wavetable generateSine()
+    WAVETABLES_NOINLINE static Wavetable generateSine()
     {
         Wavetable table;
         for (int i = 0; i < WAVETABLE_SIZE; ++i)
@@ -84,7 +92,7 @@ private:
         return table;
     }
 
-    static Wavetable generateSaw()
+    WAVETABLES_NOINLINE static Wavetable generateSaw()
     {
         Wavetable table;
         for (int i = 0; i < WAVETABLE_SIZE; ++i)
@@ -94,7 +102,7 @@ private:
         return table;
     }
 
-    static Wavetable generateSquare()
+    WAVETABLES_NOINLINE static Wavetable generateSquare()
     {
         Wavetable table;
         for (int i = 0; i < WAVETABLE_SIZE; ++i)
@@ -104,7 +112,7 @@ private:
         return table;
     }
 
-    static Wavetable generateTriangle()
+    WAVETABLES_NOINLINE static Wavetable generateTriangle()
     {
         Wavetable table;
         for (int i = 0; i < WAVETABLE_SIZE; ++i)
@@ -117,7 +125,7 @@ private:
         return table;
     }
 
-    static Wavetable generateOddHarmonics()
+    WAVETABLES_NOINLINE static Wavetable generateOddHarmonics()
     {
         Wavetable table;
         table.fill(0.0f);
@@ -134,7 +142,7 @@ private:
         return table;
     }
 
-    static Wavetable generateEvenHarmonics()
+    WAVETABLES_NOINLINE static Wavetable generateEvenHarmonics()
     {
         Wavetable table;
         table.fill(0.0f);
@@ -151,7 +159,7 @@ private:
         return table;
     }
 
-    static Wavetable generateHarmonicSeries(int maxHarmonic)
+    WAVETABLES_NOINLINE static Wavetable generateHarmonicSeries(int maxHarmonic)
     {
         Wavetable table;
         table.fill(0.0f);
@@ -168,7 +176,7 @@ private:
         return table;
     }
 
-    static Wavetable generatePulse(float width)
+    WAVETABLES_NOINLINE static Wavetable generatePulse(float width)
     {
         Wavetable table;
         int threshold = static_cast<int>(WAVETABLE_SIZE * width);
@@ -179,7 +187,7 @@ private:
         return table;
     }
 
-    static Wavetable generateDoubleSquare()
+    WAVETABLES_NOINLINE static Wavetable generateDoubleSquare()
     {
         Wavetable table;
         for (int i = 0; i < WAVETABLE_SIZE; ++i)
@@ -190,7 +198,7 @@ private:
         return table;
     }
 
-    static Wavetable generateAnalogSaw()
+    WAVETABLES_NOINLINE static Wavetable generateAnalogSaw()
     {
         auto table = generateSaw();
         // Add slight harmonics for analog character
@@ -204,7 +212,7 @@ private:
         return table;
     }
 
-    static Wavetable generateAnalogSquare()
+    WAVETABLES_NOINLINE static Wavetable generateAnalogSquare()
     {
         auto table = generateSquare();
         // Smooth transitions for analog character
@@ -218,7 +226,7 @@ private:
         return table;
     }
 
-    static Wavetable generateSuperSaw()
+    WAVETABLES_NOINLINE static Wavetable generateSuperSaw()
     {
         Wavetable table;
         table.fill(0.0f);
@@ -236,7 +244,7 @@ private:
         return table;
     }
 
-    static Wavetable generatePWM()
+    WAVETABLES_NOINLINE static Wavetable generatePWM()
     {
         Wavetable table;
         for (int i = 0; i < WAVETABLE_SIZE; ++i)
@@ -247,7 +255,7 @@ private:
         return table;
     }
 
-    static Wavetable generateRamp()
+    WAVETABLES_NOINLINE static Wavetable generateRamp()
     {
         Wavetable table;
         for (int i = 0; i < WAVETABLE_SIZE; ++i)
@@ -257,7 +265,7 @@ private:
         return table;
     }
 
-    static Wavetable generateTriangleSaw()
+    WAVETABLES_NOINLINE static Wavetable generateTriangleSaw()
     {
         auto triangle = generateTriangle();
         auto saw = generateSaw();
@@ -269,7 +277,7 @@ private:
         return table;
     }
 
-    static Wavetable generateFatSaw()
+    WAVETABLES_NOINLINE static Wavetable generateFatSaw()
     {
         Wavetable table;
         table.fill(0.0f);
@@ -286,7 +294,7 @@ private:
         return table;
     }
 
-    static Wavetable generateDetunedSaw()
+    WAVETABLES_NOINLINE static Wavetable generateDetunedSaw()
     {
         Wavetable table;
         table.fill(0.0f);
@@ -303,7 +311,7 @@ private:
         return table;
     }
 
-    static Wavetable generateDigital1()
+    WAVETABLES_NOINLINE static Wavetable generateDigital1()
     {
         Wavetable table;
         for (int i = 0; i < WAVETABLE_SIZE; ++i)
@@ -315,7 +323,7 @@ private:
         return table;
     }
 
-    static Wavetable generateDigital2()
+    WAVETABLES_NOINLINE static Wavetable generateDigital2()
     {
         Wavetable table;
         for (int i = 0; i < WAVETABLE_SIZE; ++i)
@@ -327,7 +335,7 @@ private:
         return table;
     }
 
-    static Wavetable generateDigital3()
+    WAVETABLES_NOINLINE static Wavetable generateDigital3()
     {
         Wavetable table;
         for (int i = 0; i < WAVETABLE_SIZE; ++i)
@@ -339,7 +347,7 @@ private:
         return table;
     }
 
-    static Wavetable generateFormant()
+    WAVETABLES_NOINLINE static Wavetable generateFormant()
     {
         Wavetable table;
         table.fill(0.0f);
@@ -356,12 +364,12 @@ private:
         return table;
     }
 
-    static Wavetable generateVowel()
+    WAVETABLES_NOINLINE static Wavetable generateVowel()
     {
         return generateFormant(); // Simplified vowel using formant
     }
 
-    static Wavetable generateBell()
+    WAVETABLES_NOINLINE static Wavetable generateBell()
     {
         Wavetable table;
         table.fill(0.0f);
@@ -378,7 +386,7 @@ private:
         return table;
     }
 
-    static Wavetable generateGlass()
+    WAVETABLES_NOINLINE static Wavetable generateGlass()
     {
         Wavetable table;
         table.fill(0.0f);
@@ -395,7 +403,7 @@ private:
         return table;
     }
 
-    static Wavetable generateOrgan()
+    WAVETABLES_NOINLINE static Wavetable generateOrgan()
     {
         Wavetable table;
         table.fill(0.0f);
@@ -412,7 +420,7 @@ private:
         return table;
     }
 
-    static Wavetable generateNoise()
+    WAVETABLES_NOINLINE static Wavetable generateNoise()
     {
         Wavetable table;
         for (int i = 0; i < WAVETABLE_SIZE; ++i)
@@ -422,7 +430,7 @@ private:
         return table;
     }
 
-    static Wavetable generateChip()
+    WAVETABLES_NOINLINE static Wavetable generateChip()
     {
         Wavetable table;
         for (int i = 0; i < WAVETABLE_SIZE; ++i)
@@ -436,7 +444,7 @@ private:
         return table;
     }
 
-    static Wavetable generateMetallic()
+    WAVETABLES_NOINLINE static Wavetable generateMetallic()
     {
         Wavetable table;
         table.fill(0.0f);
@@ -453,7 +461,7 @@ private:
         return table;
     }
 
-    static Wavetable generatePad()
+    WAVETABLES_NOINLINE static Wavetable generatePad()
     {
         Wavetable table;
         table.fill(0.0f);

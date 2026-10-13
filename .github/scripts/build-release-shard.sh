@@ -18,22 +18,24 @@ stage=$1
 shift
 mkdir -p "$stage/VST3" "$stage/AU" "$stage/Standalone" logs
 
-extra=()
+extra=() retry=(--parallel 1)
 case "$(uname -s)" in
   Darwin) extra=(-DCMAKE_OSX_ARCHITECTURES="arm64;x86_64" -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0) ;;
+  # MSBuild still batches several sources into one CL.exe at --parallel 1; compile one file per process
+  MINGW*|MSYS*|CYGWIN*) retry=(--parallel 1 -- -p:CL_MPCount=1 -p:UseMultiToolTask=false) ;;
 esac
 
 # Build one plugin and copy its outputs into the stage; returns non-zero on failure
 build_and_stage() {
   local plugin=$1 start=$SECONDS
-  # A failed build is retried once on one core: on the Windows runners MSVC has run out of
-  # memory compiling JUCE with several jobs at once (CL.exe exited with 0xE06D7363)
+  # A failed build is retried once on one core. On Windows the retry also gives each source
+  # its own CL.exe: MSVC has crashed (0xE06D7363) generating code for a large batch of files
   if ! cmake -S "plugins/$plugin" -B "build/$plugin" -DCMAKE_BUILD_TYPE=Release "${extra[@]}" \
          > "logs/$plugin-configure.log" 2>&1 \
      || ! { cmake --build "build/$plugin" --config Release --parallel 4 > "logs/$plugin-build.log" 2>&1 \
-            || cmake --build "build/$plugin" --config Release --parallel 1 >> "logs/$plugin-build.log" 2>&1; }; then
+            || cmake --build "build/$plugin" --config Release "${retry[@]}" >> "logs/$plugin-build.log" 2>&1; }; then
     echo "::error::$plugin failed to build"
-    tail -40 "logs/$plugin-configure.log" "logs/$plugin-build.log"
+    tail -n 40 "logs/$plugin-configure.log" "logs/$plugin-build.log"
     return 1
   fi
 
