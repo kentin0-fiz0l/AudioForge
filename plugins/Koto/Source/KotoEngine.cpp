@@ -37,12 +37,35 @@ void KotoEngine::reset()
     tremoloPhase_ = 0.0f;
     lastTremoloTrigger_ = 0;
     toneLp_ = 0.0f;
+    releaseGain_ = 1.0f;
+}
+
+int KotoEngine::snapToScale(int midiNote) const
+{
+    // The notes of each scale as bits, C at bit 0 up to B at bit 11, in the
+    // order of the Scale enum. They are the scales the editor names, all on E.
+    static constexpr int scaleNotes[] = {
+        (1 << 4) | (1 << 5) | (1 << 9) | (1 << 11) | (1 << 2),   // In-sen: E F A B D
+        (1 << 4) | (1 << 5) | (1 << 9) | (1 << 10) | (1 << 2),   // Hirajoshi: E F A Bb D
+        (1 << 4) | (1 << 5) | (1 << 8) | (1 << 10) | (1 << 1),   // Iwato: E F Ab Bb Db
+        (1 << 4) | (1 << 5) | (1 << 9) | (1 << 11) | (1 << 0),   // Kumoi: E F A B C
+        0xfff                                                    // Chromatic
+    };
+
+    const int notes = scaleNotes[static_cast<int>(scale_)];
+
+    for (int distance = 0; distance < 12; ++distance)
+        for (int candidate : { midiNote - distance, midiNote + distance })
+            if (candidate >= 0 && candidate <= 127 && (notes & (1 << (candidate % 12))) != 0)
+                return candidate;
+
+    return midiNote;
 }
 
 float KotoEngine::processSample(float baseFrequency, float velocity, bool noteOn, int samplesSinceNoteOn)
 {
-    // Apply pitch bend
-    float frequency = baseFrequency * std::pow(2.0f, pitchBendAmount_ / 12.0f);
+    // Apply the Pitch Bend offset and the MIDI pitch wheel
+    float frequency = baseFrequency * std::pow(2.0f, (pitchBendAmount_ + pitchWheelSemitones_) / 12.0f);
 
     // Update string delay length
     float delayLength = static_cast<float>(sampleRate_) / frequency;
@@ -130,9 +153,10 @@ float KotoEngine::processSample(float baseFrequency, float velocity, bool noteOn
         attackEnv = static_cast<float>(samplesSinceNoteOn) / (attackTime_ * static_cast<float>(sampleRate_));
     }
 
-    float decayEnv = noteOn ? 1.0f : std::pow(0.9995f, static_cast<float>(samplesSinceNoteOn));
+    // Release, counted from note-off
+    releaseGain_ = noteOn ? 1.0f : releaseGain_ * 0.9995f;
 
-    return finalOutput * attackEnv * decayEnv * 0.8f;
+    return finalOutput * attackEnv * releaseGain_ * 0.8f;
 }
 
 void KotoEngine::applyBodyResonance(float& sample)

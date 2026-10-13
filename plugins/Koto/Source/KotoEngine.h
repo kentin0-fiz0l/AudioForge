@@ -14,6 +14,9 @@ public:
     // trip round the string makes the note louder instead of quieter.
     static constexpr float MAX_STRING_FEEDBACK = 0.9995f;
 
+    // How far the MIDI pitch wheel bends, in semitones each way
+    static constexpr float PITCH_WHEEL_RANGE = 2.0f;
+
     enum class Scale
     {
         InSen,        // E F A B D (in-sen scale)
@@ -36,12 +39,19 @@ public:
     void reset();
     float processSample(float baseFrequency, float velocity, bool noteOn, int samplesSinceNoteOn);
 
+    // The MIDI note nearest to midiNote in the current scale (the lower on a tie)
+    int snapToScale(int midiNote) const;
+
+    // True once a released note has faded to silence
+    bool isReleaseFinished() const { return releaseGain_ < 0.0001f; }
+
     void setScale(Scale scale) { scale_ = scale; }
     void setPlayStyle(PlayStyle style) { playStyle_ = style; }
     void setBodyResonance(float amount) { bodyResonance_ = juce::jlimit(0.0f, 1.0f, amount); }
     void setAttack(float attack) { attackTime_ = attack; }
     void setDecay(float decay) { decayTime_ = decay; }
     void setPitchBend(float bend) { pitchBendAmount_ = bend; }
+    void setPitchWheel(int wheelValue) { pitchWheelSemitones_ = (wheelValue - 8192) / 8192.0f * PITCH_WHEEL_RANGE; }
     void setTremoloRate(float rate) { tremoloRate_ = rate; }
     void setTone(float tone) { tone_ = juce::jlimit(0.0f, 1.0f, tone); }
 
@@ -146,11 +156,13 @@ private:
     float attackTime_ = 0.005f;
     float decayTime_ = 0.8f;
     float pitchBendAmount_ = 0.0f;
+    float pitchWheelSemitones_ = 0.0f;
     float tremoloRate_ = 10.0f;
     float tone_ = 0.6f;
 
     // State
     float tremoloPhase_ = 0.0f;
     int lastTremoloTrigger_ = 0;
+    float releaseGain_ = 1.0f;
     juce::Random random_;
 };

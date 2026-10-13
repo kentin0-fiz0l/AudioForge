@@ -154,7 +154,9 @@ void KotoProcessor::setStateInformation(const void* data, int sizeInBytes)
         presetManager_.loadFromXml(*presetXml);
 }
 
+#ifndef AUDIOFORGE_TESTS
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
     return new KotoProcessor();
 }
+#endif
