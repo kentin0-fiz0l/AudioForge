@@ -7,33 +7,65 @@ VocoderEngine::VocoderEngine() {
 
 void VocoderEngine::prepareToPlay(double sr, int sb) {
     sampleRate_ = sr;
-    modulatorBuffer_.setSize(2, sb);
-    carrierBuffer_.setSize(2, sb);
-    initializeBands();
-}
+    dryBuffer_.setSize(2, sb);
+    modulatorBuffer_.setSize(1, sb);
+    carrierBuffer_.setSize(1, sb);
 
-void VocoderEngine::initializeBands() {
-    // Distribute bands logarithmically from 100Hz to 8kHz
-    const float minFreq = 100.0f;
-    const float maxFreq = 8000.0f;
-    const float ratio = std::pow(maxFreq / minFreq, 1.0f / numBands_);
+    // Coefficients first: prepare() sizes each filter's state for its order
+    updateBandFilters();
 
     juce::dsp::ProcessSpec spec;
     spec.sampleRate = sampleRate_;
-    spec.maximumBlockSize = 512;
+    spec.maximumBlockSize = static_cast<juce::uint32>(sb);
     spec.numChannels = 1;
 
-    for (int i = 0; i < numBands_; ++i) {
-        float centerFreq = minFreq * std::pow(ratio, i);
-        bands_[i].centerFreq = centerFreq;
-
-        // Bandpass filter: Q = 5 for narrow bands
-        auto coeffs = juce::dsp::IIR::Coefficients<float>::makeBandPass(sampleRate_, centerFreq, 5.0f);
-        bands_[i].modulatorFilter.prepare(spec);
-        bands_[i].carrierFilter.prepare(spec);
-        *bands_[i].modulatorFilter.coefficients = *coeffs;
-        *bands_[i].carrierFilter.coefficients = *coeffs;
+    for (auto& band : bands_) {
+        band.modulatorFilter.prepare(spec);
+        band.carrierFilter.prepare(spec);
+        band.envelopeLevel = 0.0f;
     }
+}
+
+void VocoderEngine::setNumBands(int bands) {
+    bands = juce::jlimit(8, 32, bands);
+    if (bands != numBands_) {
+        numBands_ = bands;
+        bandsChanged_ = true;
+    }
+}
+
+void VocoderEngine::setFormantShift(float shift) {
+    shift = juce::jlimit(0.5f, 2.0f, shift);
+    if (shift != formantShift_) {
+        formantShift_ = shift;
+        bandsChanged_ = true;
+    }
+}
+
+void VocoderEngine::updateBandFilters() {
+    // Distribute bands logarithmically from 100Hz to 8kHz. Every band gets
+    // band-pass coefficients, including those above the current count, so all
+    // filters stay second order and a later change never resizes their state.
+    const float minFreq = 100.0f;
+    const float maxFreq = 8000.0f;
+    const float ratio = std::pow(maxFreq / minFreq, 1.0f / numBands_);
+    const float maxCenter = 0.45f * static_cast<float>(sampleRate_);
+
+    for (int i = 0; i < MAX_BANDS; ++i) {
+        auto& band = bands_[i];
+        band.centerFreq = juce::jmin(minFreq * std::pow(ratio, static_cast<float>(i)), maxCenter);
+
+        // Formant Shift moves the carrier band relative to the modulator band
+        const float carrierFreq = juce::jmin(band.centerFreq * formantShift_, maxCenter);
+
+        // Bandpass filter: Q = 5 for narrow bands. Assigning ArrayCoefficients
+        // reuses the existing coefficient storage, so this is safe on the audio thread.
+        using Coeffs = juce::dsp::IIR::ArrayCoefficients<float>;
+        *band.modulatorFilter.coefficients = Coeffs::makeBandPass(sampleRate_, band.centerFreq, 5.0f);
+        *band.carrierFilter.coefficients = Coeffs::makeBandPass(sampleRate_, carrierFreq, 5.0f);
+    }
+
+    bandsChanged_ = false;
 }
 
 void VocoderEngine::noteOn(int note, float vel) {
@@ -88,23 +120,28 @@ void VocoderEngine::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuf
             noteOff(message.getNoteNumber());
     }
 
+    if (bandsChanged_)
+        updateBandFilters();
+
     processVocoder(buffer);
 }
 
 void VocoderEngine::processVocoder(juce::AudioBuffer<float>& buffer) {
     const int numSamples = buffer.getNumSamples();
     const int numChannels = buffer.getNumChannels();
+    if (numChannels == 0)
+        return;
 
-    // Copy input as modulator
-    modulatorBuffer_.makeCopyOf(buffer);
+    // Keep the input for the dry mix, and use the mono sum of all its channels as the modulator
+    dryBuffer_.makeCopyOf(buffer, true);
+    modulatorBuffer_.copyFrom(0, 0, buffer, 0, 0, numSamples);
+    for (int ch = 1; ch < numChannels; ++ch)
+        modulatorBuffer_.addFrom(0, 0, buffer, ch, 0, numSamples);
+    modulatorBuffer_.applyGain(0, 0, numSamples, 1.0f / static_cast<float>(numChannels));
 
     // Generate carrier
-    carrierBuffer_.clear();
-    for (int sample = 0; sample < numSamples; ++sample) {
-        float carrier = generateCarrier();
-        for (int ch = 0; ch < numChannels; ++ch)
-            carrierBuffer_.setSample(ch, sample, carrier);
-    }
+    for (int sample = 0; sample < numSamples; ++sample)
+        carrierBuffer_.setSample(0, sample, generateCarrier());
 
     // Clear output
     buffer.clear();
@@ -144,7 +181,7 @@ void VocoderEngine::processVocoder(juce::AudioBuffer<float>& buffer) {
     // Apply mix
     for (int ch = 0; ch < numChannels; ++ch) {
         for (int sample = 0; sample < numSamples; ++sample) {
-            float dry = modulatorBuffer_.getSample(ch, sample);
+            float dry = dryBuffer_.getSample(ch, sample);
             float wet = buffer.getSample(ch, sample);
             buffer.setSample(ch, sample, dry * (1.0f - mix_) + wet * mix_);
         }
