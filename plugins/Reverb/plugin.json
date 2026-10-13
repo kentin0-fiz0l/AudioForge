@@ -1,0 +1,72 @@
+{
+  "tagline": "Freeverb-style reverb with pre-delay, width and freeze",
+  "category": "mixing",
+  "description": "A Schroeder reverb in the Freeverb layout: 8 parallel damped comb filters and 4 series all-pass filters per channel, with the right channel's combs offset by 23 samples. Controls are room size, damping, width, pre-delay up to 100 ms, mix and freeze.",
+  "features": [
+    {
+      "name": "8 parallel comb filters",
+      "description": "Delays of 1116-1617 samples at 44.1 kHz, scaled to the session sample rate"
+    },
+    {
+      "name": "4 series all-pass filters",
+      "description": "Delays of 225-556 samples at 44.1 kHz, for diffusion"
+    },
+    {
+      "name": "Room Size",
+      "description": "0% to 100%, setting comb feedback from 0.28 to 0.84"
+    },
+    {
+      "name": "Damping",
+      "description": "One-pole low-pass in each comb's feedback path, darkening the tail as it decays"
+    },
+    {
+      "name": "Width and Pre-Delay",
+      "description": "Width scales the side signal of the wet output from mono (0%) to full (100%); pre-delay 0 ms to 100 ms"
+    },
+    {
+      "name": "Freeze",
+      "description": "Sets comb feedback to 1 and stops new input reaching the reverb, so the current tail holds (damping still darkens it)"
+    }
+  ],
+  "useCases": [
+    "Small room ambience - room size 20-30%, damping 60-70%, short pre-delay",
+    "Large space - room size 70-90%, damping 30-50%, 20-40 ms pre-delay",
+    "Snare reverb - room size 30-40%, short pre-delay, mix 30-40%",
+    "Held drones - play a chord, switch Freeze on, and play over the held tail",
+    "Subtle room tone - room size 10-20%, high damping, mix 15-25%"
+  ],
+  "learningFocus": [
+    "Schroeder reverberator topology (parallel combs + series all-pass)",
+    "Comb filter tuning to avoid metallic resonances",
+    "Damping with one-pole low-pass filter in feedback path",
+    "All-pass filters for diffusion",
+    "Stereo decorrelation with offset L/R delay lines",
+    "Circular buffer implementation for delays",
+    "Freeze mode implementation (feedback = 1.0)",
+    "Sample rate scaling for delay times"
+  ],
+  "algorithms": [
+    {
+      "name": "Comb Filter with Damping",
+      "description": "Parallel comb filters with low-pass damping in feedback path",
+      "code": "// Comb filter structure\nstruct CombFilter {\n  float buffer[bufferSize];\n  int bufferIndex = 0;\n  float feedback = 0.84f;\n  float damp1 = damping * 0.4f;  // damping coefficient\n  float damp2 = 1.0f - damp1;\n  float filterStore = 0.0f;\n\n  float process(float input) {\n    float output = buffer[bufferIndex];\n\n    // One-pole damping filter\n    filterStore = (output * damp2) + (filterStore * damp1);\n\n    // Write to buffer with damped feedback\n    buffer[bufferIndex] = input + (filterStore * feedback);\n\n    bufferIndex = (bufferIndex + 1) % bufferSize;\n    return output;\n  }\n};"
+    },
+    {
+      "name": "All-Pass Filter",
+      "description": "Series all-pass filters for diffusion",
+      "code": "// All-pass filter structure\nstruct AllPassFilter {\n  float buffer[bufferSize];\n  int bufferIndex = 0;\n  float feedback = 0.5f;\n\n  float process(float input) {\n    float bufOut = buffer[bufferIndex];\n    float output = -input + bufOut;\n\n    buffer[bufferIndex] = input + (bufOut * feedback);\n\n    bufferIndex = (bufferIndex + 1) % bufferSize;\n    return output;\n  }\n};"
+    },
+    {
+      "name": "Stereo Processing",
+      "description": "Mono input into separate L/R comb banks, the right one offset by 23 samples, then mid/side width",
+      "code": "// Process left and right independently\nfloat combOutL = 0.0f, combOutR = 0.0f;\n\n// 8 parallel comb filters (different tunings for L/R)\nfor (int i = 0; i < 8; ++i) {\n  combOutL += combsLeft[i].process(monoInput);\n  combOutR += combsRight[i].process(monoInput);\n}\n\n// 4 series all-pass filters\nfloat wetL = combOutL, wetR = combOutR;\nfor (int i = 0; i < 4; ++i) {\n  wetL = allPassesLeft[i].process(wetL);\n  wetR = allPassesRight[i].process(wetR);\n}\n\n// Apply stereo width (mid/side processing)\nfloat mono = (wetL + wetR) * 0.5f;\nfloat side = (wetL - wetR) * 0.5f * width;\nwetL = mono + side;\nwetR = mono - side;"
+    },
+    {
+      "name": "Freeze Mode",
+      "description": "Holds the tail by muting the reverb input and setting comb feedback to 1",
+      "code": "// Get freeze parameter\nbool freeze = freezeParam->get();\n\n// Update comb filter feedback\nfloat feedback = freeze ? 1.0f : (0.28f + roomSize * 0.56f);\n\nfor (int i = 0; i < numCombs; ++i) {\n  combsLeft[i].feedback = feedback;\n  combsRight[i].feedback = feedback;\n}\n\n// Mute input in freeze mode\nif (freeze) {\n  inputL = 0.0f;\n  inputR = 0.0f;\n}\n\n// Reverb tail sustains indefinitely with feedback = 1.0"
+    }
+  ],
+  "screenshots": [],
+  "graphic": "/plugin-graphics/reverb.svg"
+}

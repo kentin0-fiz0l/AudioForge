@@ -57,6 +57,19 @@ jobs:
           fi
           echo "No M_PI found"
 
+  website-catalog:
+    name: Website Catalog
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: The catalog lists every plugin and is up to date
+        # website/src/lib/catalog.json is generated from the plugins (see website/scripts/build-catalog.mjs);
+        # a plugin without a plugin.json, or a changed parameter, fails here until it is regenerated
+        run: node website/scripts/build-catalog.mjs --check
+
   remote-script-tests:
     name: Remote Script Tests
     runs-on: ubuntu-latest

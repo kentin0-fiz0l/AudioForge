@@ -1,0 +1,28 @@
+{
+  "tagline": "Random in-key melody loop played by a built-in synth",
+  "category": "midi",
+  "description": "MelodyMaker generates a four-bar melody in a chosen key (major or natural minor) by a random walk over the scale, then loops it in time with the host transport through its own 8-voice synth. You'd use it to sketch melodic ideas and export the result as a MIDI file. It loads as an instrument, not a MIDI effect: it plays audio and does not send MIDI to other tracks.",
+  "features": [
+    {
+      "name": "Key and scale",
+      "description": "Twelve root keys and Major or Minor; notes stay within two octaves above the root."
+    },
+    {
+      "name": "Transport-synced loop",
+      "description": "The 16-beat melody follows the host's tempo and song position and repeats while the transport plays."
+    },
+    {
+      "name": "Built-in synth",
+      "description": "Sine, saw, square or triangle oscillator with an ADSR envelope (attack/decay 1 ms to 2 s, release to 3 s)."
+    },
+    {
+      "name": "Effects",
+      "description": "Low-pass filter (200 Hz to 20 kHz), a feedback delay and a reverb, each with its own level."
+    },
+    {
+      "name": "MIDI file export",
+      "description": "Saves the current melody as a .mid file at 120 BPM in 4/4."
+    }
+  ],
+  "experimental": true
+}

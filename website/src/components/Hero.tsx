@@ -48,7 +48,7 @@ export const Hero: React.FC<HeroProps> = ({ className = '' }) => {
 
           {/* Headline */}
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-foreground mb-6 font-display">
-            Professional Audio Plugins,
+            60 Audio Plugins,
             <span className="block mt-2 bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent animate-pulse-slow">
               Free & Open Source
             </span>
@@ -72,7 +72,7 @@ export const Hero: React.FC<HeroProps> = ({ className = '' }) => {
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
             <a
-              href="/docs/#getting-started"
+              href="/#download"
               className="group relative px-8 py-4 bg-gradient-primary text-white font-semibold rounded-lg transition-all shadow-glow-primary hover:shadow-glow-primary hover:scale-105 w-full sm:w-auto text-center overflow-hidden"
             >
               {/* Button glow effect */}
@@ -81,7 +81,7 @@ export const Hero: React.FC<HeroProps> = ({ className = '' }) => {
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                 </svg>
-                Get AudioForge
+                Download
               </span>
             </a>
             <a

@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
+import type { PluginCategory as CatalogCategory } from '@/lib/plugins';
 
-export type PluginCategory = 'all' | 'utility' | 'creative' | 'mixing' | 'synthesis';
+export type PluginCategory = 'all' | CatalogCategory;
 
 interface PluginFilterProps {
   onFilterChange: (category: PluginCategory) => void;
@@ -16,7 +17,8 @@ const categories: { id: PluginCategory; label: string; icon: string }[] = [
   { id: 'utility', label: 'Utility', icon: '🔧' },
   { id: 'creative', label: 'Creative', icon: '🎨' },
   { id: 'mixing', label: 'Mixing', icon: '🎚️' },
-  { id: 'synthesis', label: 'Synthesis', icon: '🎹' },
+  { id: 'synthesis', label: 'Instruments', icon: '🎹' },
+  { id: 'midi', label: 'MIDI', icon: '🎛️' },
 ];
 
 export const PluginFilter: React.FC<PluginFilterProps> = ({

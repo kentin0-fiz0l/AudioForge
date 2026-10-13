@@ -1,0 +1,27 @@
+{
+  "tagline": "Sine kick drum with pitch sweep, noise click and drive",
+  "category": "synthesis",
+  "description": "A kick drum synthesizer: a sine wave whose pitch drops from above the base pitch, a 5 ms noise click, tanh drive and a fixed low-pass. Any MIDI note triggers the same kick, with velocity setting the level. The sound is generated digitally; nothing in the code emulates analog circuitry.",
+  "features": [
+    {
+      "name": "Pitch and Pitch Envelope",
+      "description": "Base pitch 20-200 Hz (default 55 Hz); Pitch Env 0-4 starts the note up to five times higher and Pitch Decay (1-200 ms) sets how fast it falls."
+    },
+    {
+      "name": "Decay",
+      "description": "Exponential amplitude decay from 10 ms to 2 s."
+    },
+    {
+      "name": "Click",
+      "description": "Mixes in a white-noise burst that fades over about 5 ms, for the beater attack."
+    },
+    {
+      "name": "Drive",
+      "description": "Gain of 1-10 into a tanh soft clipper, for a rounder or more distorted kick."
+    },
+    {
+      "name": "Tone",
+      "description": "Lowers the sine body by up to half relative to the click; it is a balance control, not a filter."
+    }
+  ]
+}

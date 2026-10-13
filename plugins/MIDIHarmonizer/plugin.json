@@ -1,0 +1,28 @@
+{
+  "tagline": "Adds 3rds, 5ths and octaves above or below each note",
+  "category": "midi",
+  "description": "Passes each incoming note through and adds harmony notes at a third, fifth or octave above or below it. In Chromatic mode the third is a major third and the fifth a perfect fifth; the in-key scale modes are intended to pick diatonic intervals, but their scale lookup currently gives wrong intervals, so check results by ear. Built as a MIDI effect, so Ableton Live will not load it; use a host that accepts third-party MIDI effects.",
+  "features": [
+    {
+      "name": "Six harmony voices",
+      "description": "Switch on a 3rd, 5th or octave above, and a 3rd, 5th or octave below, in any combination."
+    },
+    {
+      "name": "Key and scale",
+      "description": "Twelve keys and 13 scale choices: Chromatic, Major, Minor, the modes, Harmonic and Melodic Minor, Pentatonic and Blues."
+    },
+    {
+      "name": "Mix",
+      "description": "Scales the velocity of the harmony notes from 0 to 100%; the original note is always played."
+    },
+    {
+      "name": "Velocity",
+      "description": "Harmony notes use the played velocity or a fixed velocity from 1 to 127."
+    },
+    {
+      "name": "MIDI learn",
+      "description": "The Mix and Fixed Velocity sliders can be assigned to a MIDI controller."
+    }
+  ],
+  "experimental": true
+}

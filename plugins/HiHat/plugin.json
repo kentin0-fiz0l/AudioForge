@@ -1,0 +1,23 @@
+{
+  "tagline": "Noise hi-hat synth with band-pass tone and open/closed decay",
+  "category": "synthesis",
+  "description": "A hi-hat voice made from white noise filtered to a high band, shaped by an exponential decay and soft-clipped. Any MIDI note triggers the same hat, with velocity setting the level; there is no open/closed choke between notes.",
+  "features": [
+    {
+      "name": "Band-Pass Noise",
+      "description": "Three high-pass and three low-pass one-pole stages keep the noise between a 4-8 kHz lower edge (set by Tone) and 12 kHz."
+    },
+    {
+      "name": "Decay",
+      "description": "Decay time from 10 to 500 ms."
+    },
+    {
+      "name": "Openness",
+      "description": "Lengthens the decay by up to 2 times, from closed toward open."
+    },
+    {
+      "name": "Metallic",
+      "description": "Raises the level into a tanh saturator by up to 3 times for a harder, more saturated hat; it adds no metallic oscillators."
+    }
+  ]
+}

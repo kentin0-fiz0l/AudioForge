@@ -1,0 +1,27 @@
+{
+  "tagline": "Remaps MIDI CC numbers with range, curve and invert",
+  "category": "midi",
+  "description": "Rewrites incoming MIDI control changes to other CC numbers through eight mapping slots, scaling and shaping the values on the way. Use it to make a controller's knobs drive the CCs a synth expects, or to limit and curve their response. Built as a MIDI effect, so Ableton Live will not load it; use a host that accepts third-party MIDI effects.",
+  "features": [
+    {
+      "name": "Eight mappings",
+      "description": "Each slot has an enable switch, an input CC and an output CC (1 to 127)."
+    },
+    {
+      "name": "Output range",
+      "description": "Min and Max scale each mapping's output into a chosen part of the 0 to 127 range."
+    },
+    {
+      "name": "Response curve",
+      "description": "Curve raises the value to a power from 0.1 to 10, from a fast rise to a slow one; 1 is linear."
+    },
+    {
+      "name": "Invert",
+      "description": "Flips each mapping's value so that a rising control lowers the output."
+    },
+    {
+      "name": "Pass-through",
+      "description": "Unmapped CCs and all other MIDI pass through unchanged; a mapped input CC is replaced by its outputs, and several slots can share one input."
+    }
+  ]
+}

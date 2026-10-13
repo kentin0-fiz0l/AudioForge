@@ -1,0 +1,27 @@
+{
+  "tagline": "A chorus with rate, depth, centre delay, feedback and mix",
+  "category": "creative",
+  "description": "A chorus effect built on JUCE's dsp::Chorus: a delay line whose time is swept by an LFO and blended with the dry signal. Use it to thicken guitars, keys or pads, or push the feedback and centre delay for flanger-like tones. Both channels share the same LFO, so it does not add L/R movement of its own.",
+  "features": [
+    {
+      "name": "LFO rate and depth",
+      "description": "Rate runs from 0.1 to 10 Hz (skewed toward slow settings) and Depth from 0 to 1 sets how far the delay time is swept."
+    },
+    {
+      "name": "Centre delay",
+      "description": "Sets the base delay from 1 to 100 ms (default 7 ms) that the LFO modulates around."
+    },
+    {
+      "name": "Bipolar feedback",
+      "description": "Feedback from -0.95 to +0.95 feeds the delayed signal back with either polarity for a more resonant, comb-filtered sound."
+    },
+    {
+      "name": "Mix",
+      "description": "Blends dry and chorused signal from 0 to 1 (default 0.5)."
+    },
+    {
+      "name": "Presets",
+      "description": "Uses the shared AudioForge preset manager to save and recall settings."
+    }
+  ]
+}

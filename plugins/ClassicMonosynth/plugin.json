@@ -1,0 +1,27 @@
+{
+  "tagline": "Three-oscillator mono synth with ladder-style filter and glide",
+  "category": "synthesis",
+  "description": "A single-voice subtractive synth: saw, pulse and triangle oscillators into a 4-pole ladder-style low-pass filter, with separate filter and amp envelopes, two LFOs and glide. Use it for monophonic bass and lead lines. Note velocity is ignored.",
+  "features": [
+    {
+      "name": "Three Oscillators",
+      "description": "Saw, pulse (width 0.01-0.99) and triangle, each with its own level; oscillators 2 and 3 detune by up to 24 semitones either way, and oscillator 2 can hard-sync to oscillator 1."
+    },
+    {
+      "name": "Ladder-Style Filter",
+      "description": "A four-stage tanh low-pass with cutoff from 20 Hz to 20 kHz, resonance 0-1 and envelope amount of -5000 to +5000 Hz."
+    },
+    {
+      "name": "Two ADSR Envelopes",
+      "description": "Filter and amp envelopes with attack and decay up to 2 s and release up to 5 s."
+    },
+    {
+      "name": "Two LFOs",
+      "description": "LFO 1 adds vibrato of up to 2 semitones and LFO 2 modulates pulse width, each at 0.1-20 Hz."
+    },
+    {
+      "name": "Glide",
+      "description": "Slides between notes over 0-2 s."
+    }
+  ]
+}

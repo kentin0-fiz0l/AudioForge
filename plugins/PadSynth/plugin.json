@@ -1,0 +1,38 @@
+{
+  "tagline": "Unison pad synth with up to 9 detuned oscillators per note",
+  "category": "synthesis",
+  "description": "A 6-voice pad synth in which every note is a stack of 3 to 9 detuned oscillators spread across the stereo field. A multi-mode filter and a slow-by-default ADSR envelope shape the stack.",
+  "features": [
+    {
+      "name": "Unison stack",
+      "description": "3 to 9 oscillators per note (default 7), detuned evenly between minus and plus the Detune amount"
+    },
+    {
+      "name": "Detune",
+      "description": "0 to 50 cents (default 10)"
+    },
+    {
+      "name": "Stereo Width",
+      "description": "Spreads the unison oscillators from centre (0) to fully left and right (1)"
+    },
+    {
+      "name": "Waveform",
+      "description": "Sine, saw, square or triangle, shared by every oscillator in the stack"
+    },
+    {
+      "name": "Multi-mode filter",
+      "description": "Low-pass, high-pass, band-pass or notch; cutoff 20 Hz to 20 kHz, resonance 0.5 to 10"
+    },
+    {
+      "name": "Envelope and polyphony",
+      "description": "ADSR with attack and decay up to 5 s and release up to 10 s (default 0.8 s attack, 1.5 s release); 6-note polyphony; velocity sets the level"
+    }
+  ],
+  "useCases": [
+    "Ambient pads - slow attack, long release, low-pass filter",
+    "Supersaw-style chords - saw wave, 7-9 voices, 15-25 cents of detune",
+    "Thin, wide textures - sine or triangle with full Stereo Width",
+    "Drones - high sustain and long release"
+  ],
+  "screenshots": []
+}

@@ -1,0 +1,23 @@
+{
+  "tagline": "Plucked-string koto synth using a delay-line string model",
+  "category": "synthesis",
+  "description": "An 8-voice plucked-string instrument: a noise burst excites a tuned delay-line (comb filter) string, which then passes through a tone low-pass and three body-resonance peaks. The string loop has no damping filter, so all harmonics decay at the same rate. The Scale parameter (In-sen, Hirajoshi, Iwato, Kumoi, Chromatic) is stored but does not yet change the sound.",
+  "features": [
+    {
+      "name": "Delay-Line String",
+      "description": "A comb filter tuned to the note, with loop feedback from 0.994 to 0.9995 set by Decay (0.1-2)."
+    },
+    {
+      "name": "Play Style",
+      "description": "Pluck excites the string once, Tremolo re-plucks at the Tremolo Rate (2-20 Hz) and Scrape feeds noise in continuously while the key is held."
+    },
+    {
+      "name": "Body Resonance",
+      "description": "Blends in up to 60% of three peaking filters at 250 Hz, 800 Hz and 2 kHz."
+    },
+    {
+      "name": "Tone, Attack and Pitch Bend",
+      "description": "A one-pole low-pass for brightness, a 1-100 ms fade-in, and a fixed pitch offset of up to 2 semitones (a parameter, not the MIDI pitch wheel)."
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "tagline": "One macro knob sending up to eight scaled MIDI CC messages",
+  "category": "midi",
+  "description": "Turning the Macro knob sends a MIDI CC message for each enabled target, each with its own CC number, output range and response curve, so one control can move several synth or effect parameters at once. It is built as an audio effect with MIDI output, and it silences any audio passing through it.",
+  "features": [
+    {
+      "name": "Eight Targets",
+      "description": "Each target has an enable switch and a CC number from 1 to 127; by default targets 1-4 are on, sending CC 1-4."
+    },
+    {
+      "name": "Per-Target Range",
+      "description": "Min and Max (0-1) set the span each CC covers, and setting Max below Min inverts it."
+    },
+    {
+      "name": "Response Curve",
+      "description": "A power curve from 0.1 to 10 per target: below 1 the CC rises quickly at first, above 1 it rises slowly at first."
+    },
+    {
+      "name": "MIDI Channel",
+      "description": "All CCs go out on one selectable channel, 1-16."
+    },
+    {
+      "name": "Send on Change",
+      "description": "CCs are sent only when the Macro value moves; changing a target's settings does not resend."
+    }
+  ]
+}

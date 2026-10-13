@@ -1,0 +1,28 @@
+{
+  "tagline": "Reverb with delayed taps of its own tail",
+  "category": "creative",
+  "description": "A reverb that adds delayed copies of its own tail on top of the main reverb. The code describes these as octave-up and octave-down shimmer, but they are fixed delays of 250 ms and 125 ms with no pitch shift, and the Feedback control only sets how much of them is mixed in. Use it for a longer, echoing reverb tail.",
+  "features": [
+    {
+      "name": "Size and Damping",
+      "description": "Room size and high-frequency damping of the underlying stereo reverb."
+    },
+    {
+      "name": "Shimmer",
+      "description": "Sets the level of the delayed reverb taps."
+    },
+    {
+      "name": "Pitch mode",
+      "description": "Up uses the 250 ms tap, Down the 125 ms tap, Both uses both; the taps are not pitch-shifted."
+    },
+    {
+      "name": "Feedback (0 to 0.85)",
+      "description": "Blends the tapped signal against the plain reverb; nothing is fed back into the reverb."
+    },
+    {
+      "name": "Mix",
+      "description": "Crossfades between the dry input and the processed signal."
+    }
+  ],
+  "experimental": true
+}

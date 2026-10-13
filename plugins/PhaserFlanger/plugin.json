@@ -1,0 +1,27 @@
+{
+  "tagline": "Six-stage phaser and short-delay flanger in one",
+  "category": "creative",
+  "description": "A modulation effect with two modes: a phaser built from six all-pass stages with feedback around them, and a flanger built from a modulated 5 to 15 ms delay with feedback. Use it to add sweeping movement to guitars, synths, drums or pads.",
+  "features": [
+    {
+      "name": "Phaser mode",
+      "description": "Six first-order all-pass stages whose break frequency a sine LFO sweeps up to two octaves either side of Centre Freq (200 Hz to 2 kHz)."
+    },
+    {
+      "name": "Flanger mode",
+      "description": "An interpolated delay swept between 5 and 15 ms, with its output fed back into the delay line."
+    },
+    {
+      "name": "Feedback (-0.9 to 0.9)",
+      "description": "Negative or positive feedback; in phaser mode the wet level is trimmed as feedback rises to hold back the resonant peaks."
+    },
+    {
+      "name": "Rate and Depth",
+      "description": "LFO rate from 0.1 to 10 Hz; Depth sets the sweep width in both modes."
+    },
+    {
+      "name": "Mix",
+      "description": "Crossfades between the dry and processed signal."
+    }
+  ]
+}

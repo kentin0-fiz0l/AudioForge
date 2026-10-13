@@ -1,0 +1,27 @@
+{
+  "tagline": "Wavetable electric piano with Rhodes, Wurlitzer and hybrid tones",
+  "category": "synthesis",
+  "description": "A 16-voice electric piano that plays fixed single-cycle wavetables, with a velocity curve, a tone low-pass and per-voice tremolo. Notes hold at a steady level while the key is down and fade after release at a rate set by Decay. The sound is synthesized from wavetables, not modelled or sampled.",
+  "features": [
+    {
+      "name": "Model",
+      "description": "Rhodes, Wurlitzer, or Hybrid (a 50/50 blend of the two) wavetables."
+    },
+    {
+      "name": "Velocity Curve",
+      "description": "Reshapes velocity with a power curve: squared at 0, square root at 0.5 and linear at 1."
+    },
+    {
+      "name": "Tone and Decay",
+      "description": "Tone blends in a one-pole low-pass for a darker sound; Decay sets how long notes take to fade after key-up."
+    },
+    {
+      "name": "Tremolo",
+      "description": "Amplitude tremolo of up to plus or minus 50% at 0.1-20 Hz."
+    },
+    {
+      "name": "Chorus, Reverb and Output Level",
+      "description": "Chorus and Reverb are a one-sample delay blend and a one-pole blend that mostly soften the tone; Output Level runs from -24 to +12 dB."
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "tagline": "A two-axis pad that sends MIDI CCs as you drag it",
+  "category": "midi",
+  "description": "An on-screen XY pad that sends two MIDI control change messages, one for each axis, on a chosen channel whenever you click or drag in it. Use it to control filter cutoff, expression or any mapped parameter on a downstream instrument with one gesture. It is built as an audio effect with MIDI output (not a MIDI effect), it silences any audio passing through it, and CCs are only sent from mouse movement in the open editor, not from host automation of the X and Y parameters.",
+  "features": [
+    {
+      "name": "XY pad",
+      "description": "Dragging the ball sets X and Y from 0 to 1, shown on a grid with a live coordinate readout."
+    },
+    {
+      "name": "Assignable CC numbers",
+      "description": "X CC and Y CC choose controllers 1 to 127 (defaults CC 1 mod wheel and CC 11 expression)."
+    },
+    {
+      "name": "MIDI channel",
+      "description": "Sends on any channel from 1 to 16."
+    },
+    {
+      "name": "Saved position",
+      "description": "X Position and Y Position are host parameters, so the pad position is saved with the session and restored when the editor opens."
+    }
+  ]
+}

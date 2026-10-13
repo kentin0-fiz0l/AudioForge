@@ -1,0 +1,56 @@
+{
+  "tagline": "Feed-forward compressor with hard or soft knee",
+  "category": "mixing",
+  "description": "A compressor with threshold, ratio, attack, release and a hard or soft knee. Each channel has its own envelope follower, and a fixed makeup gain is added based on threshold and ratio. A meter shows gain reduction.",
+  "features": [
+    {
+      "name": "Threshold and Ratio",
+      "description": "Threshold -60 dB to 0 dB (default -12 dB), ratio 1:1 to 20:1 (default 4:1)"
+    },
+    {
+      "name": "Attack and Release",
+      "description": "Attack 0.1 ms to 100 ms, release 10 ms to 1000 ms, both skewed toward short times"
+    },
+    {
+      "name": "Hard or Soft Knee",
+      "description": "Hard knee, or a 6 dB soft knee with a quadratic transition"
+    },
+    {
+      "name": "Automatic Makeup Gain",
+      "description": "Adds half the gain reduction a -12 dB signal would get at the current threshold and ratio"
+    },
+    {
+      "name": "Gain Reduction Meter",
+      "description": "Shows gain reduction over a 0 to 20 dB range"
+    }
+  ],
+  "useCases": [
+    "Even out a vocal performance",
+    "Control drum transients and peaks",
+    "Add sustain to bass and guitars",
+    "Learn how threshold, ratio, attack and release interact"
+  ],
+  "learningFocus": [
+    "Envelope follower design with attack/release coefficients",
+    "Gain reduction calculation (threshold, ratio, knee)",
+    "Hard vs. soft knee compression curves",
+    "A simple automatic makeup gain",
+    "Thread-safe metering with std::atomic",
+    "Exponential time constants for envelope smoothing",
+    "Per-channel state management for stereo processing"
+  ],
+  "algorithms": [
+    {
+      "name": "Envelope Follower",
+      "description": "Tracks input level with exponential attack/release coefficients calculated from time parameters",
+      "code": "float attackCoeff = std::exp(-1.0f / (attackMs * 0.001f * sampleRate));\nfloat releaseCoeff = std::exp(-1.0f / (releaseMs * 0.001f * sampleRate));\n\nfloat coeff = (inputLevelDB > linearToDb(envelope)) ? attackCoeff : releaseCoeff;\nenvelope = coeff * envelope + (1.0f - coeff) * inputLevel;"
+    },
+    {
+      "name": "Soft Knee Gain Reduction",
+      "description": "Gradual transition using a quadratic curve across a 6 dB knee",
+      "code": "float kneeStart = threshold - knee / 2.0f;\nfloat kneeEnd = threshold + knee / 2.0f;\n\nif (inputLevelDB >= kneeEnd) {\n  // Above knee: full compression\n  float overDB = inputLevelDB - threshold;\n  return overDB - (overDB / ratio);\n} else {\n  // In knee region: quadratic curve\n  float kneeInput = inputLevelDB - kneeStart;\n  float kneeRatio = kneeInput / knee;\n  float overDB = inputLevelDB - threshold;\n  float gainReduction = overDB - (overDB / ratio);\n  return gainReduction * kneeRatio * kneeRatio;\n}"
+    }
+  ],
+  "screenshots": [],
+  "graphic": "/plugin-graphics/simplecomp.svg"
+}

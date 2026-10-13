@@ -1,0 +1,27 @@
+{
+  "tagline": "Synthesized snare from a pitched tone plus noise",
+  "category": "synthesis",
+  "description": "A synthesized snare drum: a triangle-wave body with a downward pitch sweep, a filtered-noise rattle and a short noise click, mixed and soft-clipped. Any MIDI note triggers the same one-shot hit, scaled by velocity, with up to four overlapping hits.",
+  "features": [
+    {
+      "name": "Tone",
+      "description": "Body pitch from 100 to 400 Hz."
+    },
+    {
+      "name": "Pitch Env",
+      "description": "Starts the body up to three times higher and drops it to Tone over about 30 ms."
+    },
+    {
+      "name": "Snappy and Snare Decay",
+      "description": "Level of the noise rattle and its decay time, 10 to 500 ms."
+    },
+    {
+      "name": "Decay",
+      "description": "Decay time of the tonal body, 10 ms to 1 s."
+    },
+    {
+      "name": "Snap",
+      "description": "Level of a 2 ms noise click at the start of the hit."
+    }
+  ]
+}

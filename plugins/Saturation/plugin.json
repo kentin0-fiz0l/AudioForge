@@ -1,0 +1,82 @@
+{
+  "tagline": "Five-mode saturation with tone shelves and oversampling",
+  "category": "creative",
+  "description": "A saturation effect with five curves named after hardware (Tape, Tube, Transistor, Transformer, Diode), drive up to 10x, low and high shelves after the curve, dry/wet mix and optional 2x or 4x oversampling. Each mode is a static waveshaping formula, not a circuit model.",
+  "features": [
+    {
+      "name": "Five modes",
+      "description": "Tape and Transistor are symmetric curves (odd harmonics); Tube, Transformer and Diode treat the two halves of the wave differently, which adds even harmonics"
+    },
+    {
+      "name": "Drive",
+      "description": "0% to 100%, multiplying the input by 1x to 10x before the curve"
+    },
+    {
+      "name": "Oversampling",
+      "description": "Off, 2x or 4x, using JUCE's polyphase IIR half-band filters, to reduce aliasing"
+    },
+    {
+      "name": "Tone shelves",
+      "description": "Low shelf at 200 Hz and high shelf at 5 kHz, ±12 dB each, after the saturation"
+    },
+    {
+      "name": "Mix",
+      "description": "0% (dry) to 100% (saturated) for parallel saturation"
+    },
+    {
+      "name": "Harmonic display and meters",
+      "description": "Bars for H1-H8 that illustrate the typical harmonic pattern of the mode, scaled by drive (not measured from the audio), plus input and output peak readouts"
+    }
+  ],
+  "useCases": [
+    "Gentle saturation - Tape mode with low drive (10-30%)",
+    "Even-harmonic colour - Tube or Transformer mode with medium drive",
+    "Harder clipping - Transistor mode with high drive",
+    "Strongly lopsided distortion - Diode mode",
+    "Parallel saturation - Mix at 30-50%",
+    "Less aliasing at high drive - switch on 2x or 4x oversampling"
+  ],
+  "learningFocus": [
+    "Waveshaping curves named after analog hardware",
+    "Harmonic distortion (even vs odd harmonics)",
+    "Oversampling for aliasing reduction",
+    "Shelf filter design for tone shaping",
+    "DC blocking filters",
+    "Custom UI components (harmonic bar display)",
+    "Per-sample nonlinear processing"
+  ],
+  "algorithms": [
+    {
+      "name": "Tape",
+      "description": "Symmetric soft compression of the level, so it adds odd harmonics",
+      "code": "const float x = input * 0.7f;\nif (abs(x) < 0.1f) return input;\n\nconst float absX = abs(x);\nconst float sign = (x > 0.0f) ? 1.0f : -1.0f;\nconst float compressed = absX / (1.0f + absX * 0.6f);\nreturn sign * compressed * 1.4f;"
+    },
+    {
+      "name": "Tube",
+      "description": "Asymmetric tanh: the positive half saturates harder than the negative",
+      "code": "if (input > 0.0f)\n    return tanh(input * 1.2f) * 0.9f;\nelse\n    return tanh(input * 0.8f) * 1.05f;"
+    },
+    {
+      "name": "Transistor",
+      "description": "Linear up to 0.7, then a tanh knee toward 1.0 on both sides",
+      "code": "const float x = input * 1.5f;\nif (abs(x) < 0.7f)\n    return input;\nif (x > 0.7f)\n    return 0.7f + tanh((x - 0.7f) * 3.0f) * 0.3f;\nreturn -0.7f + tanh((x + 0.7f) * 3.0f) * 0.3f;"
+    },
+    {
+      "name": "Transformer",
+      "description": "A gentle cubic term with slightly different gain on each half, then tanh",
+      "code": "const float x = input * 0.5f;\nfloat output = input - 0.1f * x * x * x;\noutput *= (input > 0.0f) ? 0.98f : 1.02f;\nreturn tanh(output * 1.2f) * 0.9f;"
+    },
+    {
+      "name": "Diode",
+      "description": "Clips the positive half from 0.3 upward; the negative half stays linear down to -2",
+      "code": "if (input > 0.0f)\n    return input < 0.3f ? input : 0.3f + tanh((input - 0.3f) * 4.0f) * 0.4f;\nif (input > -2.0f)\n    return input;\nreturn -2.0f + tanh((input + 2.0f) * 0.5f) * 1.5f;"
+    },
+    {
+      "name": "Oversampling",
+      "description": "Runs the curve and shelves at 2x or 4x the sample rate",
+      "code": "// Upsample by 2x or 4x\nauto oversampledBlock = oversampler->processSamplesUp(block);\n\n// Saturate and filter at the higher rate\nprocessSaturation(oversampledBlock);\n\n// Downsample back to the original rate\noversampler->processSamplesDown(outputBlock);"
+    }
+  ],
+  "screenshots": [],
+  "graphic": "/plugin-graphics/saturation.svg"
+}

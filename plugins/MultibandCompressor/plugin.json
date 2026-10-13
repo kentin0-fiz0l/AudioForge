@@ -1,0 +1,36 @@
+{
+  "tagline": "Four-band compressor with Linkwitz-Riley crossovers",
+  "category": "mixing",
+  "description": "A compressor that splits stereo audio into four bands with 24 dB/octave Linkwitz-Riley crossovers and compresses each band with its own settings before summing them back. Each band can be soloed, bypassed, or switched to process mid and side instead of left and right.",
+  "features": [
+    {
+      "name": "Three crossovers",
+      "description": "20-500 Hz (default 250 Hz), 200 Hz-5 kHz (default 2 kHz) and 2-16 kHz (default 8 kHz), each a 4th-order Linkwitz-Riley split"
+    },
+    {
+      "name": "Per-band compression",
+      "description": "Threshold -60 dB to 0 dB, ratio 1:1 to 20:1, attack 0.1-100 ms, release 10-1000 ms, makeup ±12 dB"
+    },
+    {
+      "name": "Solo and Bypass",
+      "description": "Solo mutes the other bands; Bypass passes a band through uncompressed"
+    },
+    {
+      "name": "Mid/Side per band",
+      "description": "Encodes the band to mid and side, compresses those with the band's settings, then decodes back to left and right"
+    },
+    {
+      "name": "Gain reduction meters",
+      "description": "One gain reduction meter per band"
+    }
+  ],
+  "useCases": [
+    "Control low-end dynamics without touching the mids and highs",
+    "Compress a harsh upper-mid band on its own",
+    "Reduce sibilance by compressing a band set around 4-8 kHz",
+    "Learn how crossover splitting and per-band compression interact, one band at a time with Solo"
+  ],
+  "screenshots": [
+    "/screenshots/plugins/MultibandCompressor/multiband-main.png"
+  ]
+}

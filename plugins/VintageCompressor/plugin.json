@@ -1,0 +1,27 @@
+{
+  "tagline": "A soft-knee compressor with VCA, FET and Opto timing modes",
+  "category": "mixing",
+  "description": "A stereo-linked peak compressor with threshold, ratio, soft knee, attack, release, makeup gain and a dry/wet mix for parallel compression. The VCA, FET and Opto modes only rescale the attack and release times; there is no saturation or other analog-modelling stage. Use it for general bus, drum or instrument compression.",
+  "features": [
+    {
+      "name": "Timing modes",
+      "description": "VCA uses the attack and release as set, FET halves the attack and shortens release to 70%, and Opto doubles the attack and lengthens release to 150%."
+    },
+    {
+      "name": "Core controls",
+      "description": "Threshold -60 to 0 dB, Ratio 1:1 to 20:1, Attack 0.1 to 100 ms and Release 10 to 1000 ms."
+    },
+    {
+      "name": "Soft knee",
+      "description": "Knee from 0 to 12 dB eases the transition into compression around the threshold."
+    },
+    {
+      "name": "Makeup and mix",
+      "description": "Makeup adds 0 to 24 dB after compression, and Mix (0 to 1) blends in the uncompressed signal for parallel compression."
+    },
+    {
+      "name": "Gain reduction meter",
+      "description": "The editor shows the current gain reduction, detected from the louder of the two channels."
+    }
+  ]
+}

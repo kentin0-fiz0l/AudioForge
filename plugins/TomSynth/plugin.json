@@ -1,0 +1,27 @@
+{
+  "tagline": "A synthesized tom drum: pitched sine body with a pitch drop and noise",
+  "category": "synthesis",
+  "description": "A tom drum voice made from a sine oscillator with a decaying amplitude envelope, a fast downward pitch sweep and a short noise burst, followed by fixed low-pass and high-pass filters. Every MIDI note plays the same tom at the Pitch setting, so you tune it with the knob rather than the keyboard; velocity sets the level. Use it for programmed tom fills or as a basis for electronic percussion.",
+  "features": [
+    {
+      "name": "Body pitch",
+      "description": "Pitch sets the sine body frequency from 40 to 300 Hz (default 90 Hz); the note number is ignored."
+    },
+    {
+      "name": "Pitch drop",
+      "description": "Pitch Env (0 to 3) and Bend (0 to 1) together set how far above the base pitch each hit starts before falling back over about 50 ms."
+    },
+    {
+      "name": "Decay",
+      "description": "Sets the body's exponential decay from 0.05 to 2 seconds."
+    },
+    {
+      "name": "Noise attack",
+      "description": "Noise (0 to 1) mixes in a white-noise burst that dies away in about 20 ms, adding stick attack."
+    },
+    {
+      "name": "Four-voice playback",
+      "description": "Up to four overlapping hits ring out at once, each a one-shot that plays to the end of its decay regardless of note-off."
+    }
+  ]
+}

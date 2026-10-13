@@ -1,0 +1,39 @@
+<!doctype html>
+<!-- Source of public/og-image.png (the link-preview image). Render it at 1200x630, e.g. with a
+     headless browser screenshot of this file. -->
+<html><head><meta charset="utf-8"><style>
+  html, body { margin: 0; width: 1200px; height: 630px; background: #0a0e14; overflow: hidden;
+    font-family: -apple-system, "Inter", "Helvetica Neue", Arial, sans-serif; color: #e4e7eb; }
+  .glow { position: absolute; inset: 0;
+    background: radial-gradient(900px 500px at 85% 110%, rgba(6,182,212,.22), transparent 60%),
+                radial-gradient(700px 400px at 0% -10%, rgba(245,158,11,.14), transparent 60%); }
+  .wrap { position: absolute; inset: 0; padding: 72px 80px; display: flex; flex-direction: column; }
+  .brand { display: flex; align-items: center; gap: 22px; font-size: 44px; font-weight: 700; letter-spacing: -0.5px; }
+  .brand b { color: #06b6d4; }
+  h1 { font-size: 76px; line-height: 1.05; margin: 64px 0 0; font-weight: 800; letter-spacing: -1.5px; }
+  h1 span { background: linear-gradient(90deg, #06b6d4, #f59e0b); -webkit-background-clip: text; color: transparent; }
+  p { font-size: 30px; color: #9ca3af; margin: 28px 0 0; }
+  .chips { margin-top: auto; display: flex; gap: 14px; }
+  .chips div { font: 600 22px ui-monospace, Menlo, monospace; color: #9ca3af; padding: 10px 20px;
+    border: 1px solid rgba(6,182,212,.35); border-radius: 999px; }
+  .bars { position: absolute; right: 80px; bottom: 150px; display: flex; gap: 14px; align-items: center; height: 260px; }
+  .bars i { display: block; width: 18px; border-radius: 9px; background: linear-gradient(180deg, #06b6d4, #f59e0b); opacity: .9; }
+</style></head><body>
+  <div class="glow"></div>
+  <div class="bars"><i style="height:30%"></i><i style="height:62%"></i><i style="height:88%"></i><i style="height:52%"></i>
+    <i style="height:76%"></i><i style="height:40%"></i><i style="height:94%"></i><i style="height:58%"></i></div>
+  <div class="wrap">
+    <div class="brand">
+      <svg width="64" height="64" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#151b24"/>
+        <g transform="translate(12 32)" fill="#06b6d4"><rect x="0" y="-6" width="3" height="12" rx="1.5"/>
+        <rect x="5" y="-12" width="3" height="24" rx="1.5"/><rect x="10" y="-16" width="3" height="32" rx="1.5"/>
+        <rect x="15" y="-10" width="3" height="20" rx="1.5"/><rect x="20" y="-14" width="3" height="28" rx="1.5"/>
+        <rect x="25" y="-8" width="3" height="16" rx="1.5"/><rect x="30" y="-15" width="3" height="30" rx="1.5"/>
+        <rect x="35" y="-11" width="3" height="22" rx="1.5"/></g></svg>
+      <div>Audio<b>Forge</b></div>
+    </div>
+    <h1>60 free audio plugins,<br><span>open source</span></h1>
+    <p>Effects, instruments and MIDI tools, built with JUCE</p>
+    <div class="chips"><div>VST3</div><div>AU</div><div>macOS · Windows · Linux</div><div>MIT</div></div>
+  </div>
+</body></html>

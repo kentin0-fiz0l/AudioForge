@@ -1,0 +1,40 @@
+{
+  "tagline": "STFT spectral freeze with blur, shift, stretch, gate and morph",
+  "category": "creative",
+  "description": "SpectralFreeze runs a 2048-point FFT with a Hann window and 75% overlap, and can hold the current spectrum at the level and pitch it had. Blur, stretch, shift, gate, phase randomize, morph and a low/high cut then reshape the spectrum, frozen or live. A scrolling spectrogram shows the result, and six factory presets demonstrate the effects.",
+  "features": [
+    {
+      "name": "Freeze",
+      "description": "Holds each bin's magnitude and keeps advancing its phase at the rate measured just after freezing, so the held sound keeps its pitch and level"
+    },
+    {
+      "name": "Spectral effects",
+      "description": "Blur (Gaussian smoothing over up to 11 bins), Stretch (spreads the spectrum upward by up to 5x), Shift (moves every bin up or down by up to 100 bins), Gate (silences bins below a share of the loudest), Randomize (scrambles phase)"
+    },
+    {
+      "name": "Morph",
+      "description": "While not frozen, crossfades the live spectrum toward the last frozen one"
+    },
+    {
+      "name": "Low Cut, High Cut and Dry/Wet",
+      "description": "Zeroes bins outside 20 Hz to 20 kHz limits you set, and blends the processed signal with the dry input"
+    },
+    {
+      "name": "Spectrogram",
+      "description": "Scrolling display coloured by level from blue to red, with the frozen spectrum overlaid, redrawn 60 times a second"
+    },
+    {
+      "name": "Six factory presets",
+      "description": "Init, Frozen Blur, Spectral Stretch, Frequency Shifter, Spectral Gate and Granular Texture, plus a quick-save slot"
+    }
+  ],
+  "useCases": [
+    "Hold a moment of a sound as a sustained texture",
+    "Keep only the strongest partials with Gate",
+    "Inharmonic, metallic tones with Shift or Stretch",
+    "Band-limited textures with Low Cut and High Cut",
+    "Noisy, smeared versions of a sound with Randomize and Blur"
+  ],
+  "screenshots": [],
+  "graphic": "/plugin-graphics/spectralfreeze.svg"
+}

@@ -1,0 +1,61 @@
+{
+  "tagline": "8-voice subtractive synth with filter, effects and four patches",
+  "category": "synthesis",
+  "description": "An 8-voice subtractive synthesizer: one oscillator (sine, saw or square), an ADSR amp envelope, and a multi-mode filter per voice, followed by saturation, chorus and reverb. It comes with Init, Bass, Pad and Lead patches, offered to the host as programs.",
+  "features": [
+    {
+      "name": "Oscillator",
+      "description": "Sine, sawtooth or square, with note velocity setting the level"
+    },
+    {
+      "name": "ADSR envelope",
+      "description": "Attack and decay 1 ms to 2 s, release 1 ms to 5 s, sustain 0 to 1; linear segments"
+    },
+    {
+      "name": "Multi-mode filter",
+      "description": "Low-pass, high-pass, band-pass or notch state-variable filter; cutoff 20 Hz to 20 kHz, resonance (Q) 0.5 to 10"
+    },
+    {
+      "name": "Effects",
+      "description": "Saturation (soft clip, hard clip or tube) into a stereo chorus into a Schroeder-style reverb, each with its own mix"
+    },
+    {
+      "name": "Factory patches",
+      "description": "Init, Bass, Pad and Lead, chosen from a menu or from the host's program list"
+    },
+    {
+      "name": "8-voice polyphony",
+      "description": "Round-robin voice stealing when a ninth note arrives"
+    }
+  ],
+  "useCases": [
+    "Bass - start from the Bass patch: dark low-pass, short release, a little tube drive",
+    "Pads - start from the Pad patch: slow attack and release, chorus and a large room",
+    "Leads - start from the Lead patch: square wave with chorus and some reverb",
+    "Learning synthesis - change one control at a time and listen"
+  ],
+  "learningFocus": [
+    "MIDI note processing (note on/off messages)",
+    "Polyphonic voice management and voice stealing",
+    "Oscillator waveform generation (sine, saw, square)",
+    "ADSR envelope implementation (linear segments)",
+    "State-variable filter (low-pass, high-pass, band-pass, notch)",
+    "Per-voice state management",
+    "A serial effects chain (saturation, chorus, reverb)",
+    "Factory patches exposed as host programs"
+  ],
+  "algorithms": [
+    {
+      "name": "ADSR Envelope",
+      "description": "Linear attack to 1.0, linear decay to the sustain level, linear release from wherever the note was released",
+      "code": "// Attack phase\nlevel = min(1.0, stageTime / attack);\n\n// Decay phase\ndecayAmount = (1.0 - sustain) * (stageTime / decay);\nlevel = 1.0 - min(decayAmount, 1.0 - sustain);\n\n// Sustain phase\nlevel = sustain;\n\n// Release phase\nlevel = max(0.0, releaseStartLevel * (1.0 - stageTime / release));"
+    },
+    {
+      "name": "Voice Stealing",
+      "description": "Round-robin voice allocation when all 8 voices are active",
+      "code": "// Find a free voice or take the next one in turn\nvoice = findFreeVoice();\nif (voice == null) {\n    voice = voices[nextVoiceIndex];\n    nextVoiceIndex = (nextVoiceIndex + 1) % 8;\n}\nvoice.noteOn(midiNote, velocity, sampleRate);"
+    }
+  ],
+  "screenshots": [],
+  "graphic": "/plugin-graphics/basicsynth.svg"
+}

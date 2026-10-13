@@ -1,0 +1,28 @@
+{
+  "tagline": "Real-time note quantizing with swing and humanize",
+  "category": "midi",
+  "description": "Moves incoming note-ons and note-offs toward a tempo-based grid as they play, with optional swing and random timing and velocity changes. It works without lookahead, so a note can only move within the current audio block, and in practice timing changes are small; velocity humanizing works fully. Built as a MIDI effect, so Ableton Live will not load it; use a host that accepts third-party MIDI effects.",
+  "features": [
+    {
+      "name": "Grid",
+      "description": "1/4, 1/8, 1/16, 1/32, 1/8 triplet or 1/16 triplet, from the host tempo."
+    },
+    {
+      "name": "Strength",
+      "description": "Moves each note from 0 to 100% of the way to the nearest grid line."
+    },
+    {
+      "name": "Swing",
+      "description": "Delays every other grid line by up to half a grid step."
+    },
+    {
+      "name": "Humanize timing",
+      "description": "Adds a random offset to note-ons of up to 10% of a grid step."
+    },
+    {
+      "name": "Humanize velocity",
+      "description": "Adds a random change of up to plus or minus 30 to note-on velocity."
+    }
+  ],
+  "experimental": true
+}

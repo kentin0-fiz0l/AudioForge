@@ -1,0 +1,27 @@
+{
+  "tagline": "Wavetable bass synth with upright and electric tones",
+  "category": "synthesis",
+  "description": "An 8-voice bass instrument built on two fixed additive wavetables, one for upright and one for electric bass. Each note sums a part that holds while the key is down with a brighter part that fades away, plus an optional noise click at the start, through a one-pole low-pass tone control. Nothing is physically modelled or sampled; use it for simple synthesized bass lines.",
+  "features": [
+    {
+      "name": "Bass Type",
+      "description": "Upright uses a five-partial wavetable weighted to the fundamental; Electric uses six partials with stronger upper harmonics."
+    },
+    {
+      "name": "Play Style",
+      "description": "Fingered, Picked and Slapped set how loud the fading attack part starts (0.7, 1.0 or 1.3 times velocity) against the held part."
+    },
+    {
+      "name": "Decay",
+      "description": "Sets how quickly the attack part fades while the note is held; the held part sustains until note-off."
+    },
+    {
+      "name": "Fret Noise",
+      "description": "Adds a white-noise burst about 2 ms long at the start of each note, scaled by the 0-1 Fret Noise amount."
+    },
+    {
+      "name": "Tone",
+      "description": "A one-pole low-pass whose cutoff rises with the 0-1 Tone control, from dark to nearly open."
+    }
+  ]
+}

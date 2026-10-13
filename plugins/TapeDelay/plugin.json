@@ -1,0 +1,27 @@
+{
+  "tagline": "A delay with wow, flutter, a darkening filter and saturated feedback",
+  "category": "mixing",
+  "description": "A stereo delay of 10 ms to 2 s whose delay time is wobbled by two fixed-rate sine LFOs (wow and flutter), with a one-pole low-pass on the repeats and tanh saturation in the feedback path. Use it for echoes that drift in pitch and get darker and softer as they repeat. It does not model a tape transport beyond those stages.",
+  "features": [
+    {
+      "name": "Delay time and feedback",
+      "description": "Time runs from 10 to 2000 ms (default 500 ms) and Feedback from 0 to 0.95."
+    },
+    {
+      "name": "Wow and flutter",
+      "description": "Wow adds up to ±15 ms of delay-time modulation at 0.5 Hz and Flutter up to ±5 ms at 6 Hz, each scaled 0 to 1."
+    },
+    {
+      "name": "Darkening repeats",
+      "description": "A fixed one-pole low-pass filter on the delayed signal rolls off highs, and because it sits inside the loop each repeat gets darker."
+    },
+    {
+      "name": "Feedback saturation",
+      "description": "Saturation (0 to 1) drives a tanh curve on the signal fed back into the delay line, softening and compressing loud repeats."
+    },
+    {
+      "name": "Mix",
+      "description": "Blends dry and delayed signal from 0 to 1 (default 0.5)."
+    }
+  ]
+}

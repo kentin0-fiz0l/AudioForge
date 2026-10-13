@@ -1,0 +1,28 @@
+{
+  "tagline": "Plays a fixed 72-bar house arrangement as MIDI, synced to the host",
+  "category": "midi",
+  "description": "Pressing Generate builds a 72-bar house arrangement in A minor (drums, bass, a two-note chord part and a lead in the drops) and plays it out as MIDI along the host timeline from bar 1. The prompt box is shown but not used: the AI client is a stub, so every prompt produces the same track. This is the plugin in plugins/AIProducer, separate from the AIProducer Ableton Remote Script in ableton/remote-scripts/AIProducer.",
+  "experimental": true,
+  "features": [
+    {
+      "name": "Fixed Arrangement",
+      "description": "Intro 8, build 8, drop 16, breakdown 8, build 8, drop 16 and outro 8 bars; the track is written for 128 BPM but plays at the host tempo."
+    },
+    {
+      "name": "Drums and Bass",
+      "description": "Drums on channel 10 (kick 36 on every beat, snare 38 on 2 and 4, closed hat 42 on eighths) and bass on channel 1 repeating MIDI note 45 (A) on every quarter note."
+    },
+    {
+      "name": "Chords and Lead",
+      "description": "Channel 2 holds A and E (notes 69 and 76) for every bar, and channel 3 plays an ascending eighth-note run on major-pentatonic steps above A in every other bar of the drops."
+    },
+    {
+      "name": "Transport-Following Playback",
+      "description": "Events are placed by host PPQ position, and sounding notes are released when the transport stops, loops or jumps."
+    },
+    {
+      "name": "MIDI-Only Output",
+      "description": "It clears the audio passing through it and drops incoming MIDI, outputting only the notes it generates."
+    }
+  ]
+}

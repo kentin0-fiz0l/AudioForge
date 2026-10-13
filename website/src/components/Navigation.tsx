@@ -11,7 +11,8 @@ interface NavLink {
 
 const navLinks: NavLink[] = [
   { label: 'Plugins', href: '/#plugins' },
-  { label: 'Features', href: '/#features' },
+  { label: 'AI Producer', href: '/#ai-producer' },
+  { label: 'Download', href: '/#download' },
   { label: 'Roadmap', href: '/roadmap/' },
   { label: 'Docs', href: '/docs/' },
   { label: 'GitHub', href: 'https://github.com/kentin0-fiz0l/AudioForge', external: true },

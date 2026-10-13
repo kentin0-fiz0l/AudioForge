@@ -1,0 +1,30 @@
+{
+  "tagline": "Drawbar organ with nine sine drawbars and a rotary-style effect",
+  "category": "synthesis",
+  "description": "An 8-voice drawbar organ that adds nine sine waves at the standard drawbar footages, in the manner of a tonewheel organ. A simple rotary-speaker effect (pitch wobble from a modulated delay plus tremolo, slow or fast) and a percussion click are applied to each voice.",
+  "features": [
+    {
+      "name": "9 drawbars",
+      "description": "16', 5⅓', 8', 4', 2⅔', 2', 1⅗', 1⅓' and 1', each a sine at that harmonic with a level from 0 to 1"
+    },
+    {
+      "name": "Rotary-style effect",
+      "description": "A sine LFO moves a short delay (2 ms, up to 5 ms) for pitch wobble and adds tremolo; Slow is 0.7 Hz, Fast is 6 Hz, with Depth and Mix controls"
+    },
+    {
+      "name": "Percussion click",
+      "description": "A short transient at the start of each note, with level and a decay of 10 ms to 500 ms"
+    },
+    {
+      "name": "8-voice polyphony",
+      "description": "Eight voices; velocity sets the note level"
+    }
+  ],
+  "useCases": [
+    "Full organ - most drawbars out with the fast rotary setting",
+    "Mellow jazz tones - 16', 8' and 4' only, slow rotary",
+    "Bright, thin registrations - upper drawbars with the click up",
+    "Learning additive synthesis - hear each harmonic by pulling one drawbar at a time"
+  ],
+  "screenshots": []
+}

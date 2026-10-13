@@ -1,0 +1,76 @@
+{
+  "tagline": "Chorus and flanger from one LFO-modulated delay line",
+  "category": "creative",
+  "description": "A chorus and flanger built on a modulated delay line per channel, with a sine or triangle LFO. Chorus sweeps around 15 ms and flanger around 3 ms; feedback, mix and an offset between the left and right LFOs shape the result. A display shows the LFO and where each channel is on it.",
+  "features": [
+    {
+      "name": "Two modes",
+      "description": "Chorus (15 ms base delay, up to ±10 ms sweep) and Flanger (3 ms base delay, up to ±2.5 ms sweep)"
+    },
+    {
+      "name": "Rate and LFO shape",
+      "description": "0.1 Hz to 10 Hz, skewed toward slow rates; sine or triangle"
+    },
+    {
+      "name": "Depth",
+      "description": "0% to 100% of the mode's sweep range"
+    },
+    {
+      "name": "Stereo Width",
+      "description": "Offsets the right LFO from the left by 0° to 180°"
+    },
+    {
+      "name": "Feedback and Mix",
+      "description": "Feedback 0% to 95% in both modes; mix 0% to 100% wet"
+    },
+    {
+      "name": "LFO display and meters",
+      "description": "Draws the LFO with left (orange) and right (cyan) phase markers, plus input and output peak readouts"
+    }
+  ],
+  "useCases": [
+    "Vocal thickening - Chorus with slow rate (0.3-0.8 Hz) and medium depth",
+    "Guitar widening - Chorus with Stereo Width at 75-100%",
+    "Sweeping pads - Flanger at 1-3 Hz with high feedback",
+    "Jet flanging - Flanger with fast rate, high feedback and high depth",
+    "Subtle thickness - Chorus with 20-30% depth and 30% mix"
+  ],
+  "learningFocus": [
+    "LFO (Low-Frequency Oscillator) implementation",
+    "Circular delay buffer with write position tracking",
+    "Fractional delay using linear interpolation",
+    "Feedback loops in delay-based effects",
+    "Stereo processing with phase offset",
+    "Time-based modulation effects",
+    "Real-time visualization of LFO state"
+  ],
+  "algorithms": [
+    {
+      "name": "LFO Generation",
+      "description": "Sine and triangle waveforms for smooth and linear modulation",
+      "code": "// Sine LFO\nfloat lfoSine = sin(phase * 2π);\n\n// Triangle LFO\nfloat lfoTriangle = 4.0f * abs(phase - 0.5f) - 1.0f;\n\n// Phase advancement\nphase += (rate / sampleRate);\nif (phase >= 1.0f) phase -= 1.0f;"
+    },
+    {
+      "name": "Fractional Delay Interpolation",
+      "description": "Linear interpolation between samples for smooth pitch changes",
+      "code": "// Calculate read position (fractional)\nfloat readPos = writePos - delayInSamples;\nwhile (readPos < 0.0f) readPos += bufferSize;\n\n// Get integer and fractional parts\nint readPosInt = (int)readPos;\nfloat frac = readPos - readPosInt;\n\n// Linear interpolation\nint nextPos = (readPosInt + 1) % bufferSize;\nfloat sample1 = buffer[readPosInt];\nfloat sample2 = buffer[nextPos];\nreturn sample1 + frac * (sample2 - sample1);"
+    },
+    {
+      "name": "Modulated Delay",
+      "description": "LFO modulates delay time for pitch variation",
+      "code": "// Calculate modulated delay time\nfloat baseDelay = (mode == CHORUS) ? 15ms : 3ms;\nfloat modRange = (mode == CHORUS) ? 10ms : 2.5ms;\n\nfloat lfoValue = getLFO(phase, waveform);  // -1 to +1\nfloat delayTime = baseDelay + lfoValue * modRange * depth;\n\n// Read from delay buffer with interpolation\nfloat delayed = getInterpolatedSample(buffer, delayTime);"
+    },
+    {
+      "name": "Feedback Processing",
+      "description": "Feedback creates comb filtering for flanger resonance",
+      "code": "// Read delayed sample\nfloat delayed = getInterpolatedSample(buffer, delayTime);\n\n// Write to delay buffer (input + feedback)\nbuffer[writePos] = input + delayed * feedback;\n\n// Mix dry/wet\noutput = input * (1.0 - mix) + delayed * mix;"
+    },
+    {
+      "name": "Stereo Phase Offset",
+      "description": "Independent L/R LFO phases create stereo movement",
+      "code": "// Left channel LFO\nlfoPhaseLeft += rateIncrement;\nif (lfoPhaseLeft >= 1.0f) lfoPhaseLeft -= 1.0f;\n\n// Right channel with phase offset\nfloat phaseOffset = stereoWidth * 0.5f;  // 0-0.5 (0-180°)\nlfoPhaseRight = lfoPhaseLeft + phaseOffset;\nif (lfoPhaseRight >= 1.0f) lfoPhaseRight -= 1.0f;"
+    }
+  ],
+  "screenshots": [],
+  "graphic": "/plugin-graphics/chorusflanger.svg"
+}

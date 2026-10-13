@@ -1,0 +1,27 @@
+{
+  "tagline": "A Karplus-Strong plucked-string synth with up to 4 detuned strings",
+  "category": "synthesis",
+  "description": "A 12-voice polyphonic synth that excites a Karplus-Strong delay-line string with a noise burst for each note, so notes behave like plucked strings that decay on their own rather than sustained bowing. Each note can stack up to four detuned strings, and the Violin, Viola, Cello and Bass types differ only in how quickly the string damps. Use it for plucked or pizzicato-style parts and string textures.",
+  "features": [
+    {
+      "name": "String types",
+      "description": "Violin, Viola, Cello and Bass set progressively heavier damping in the string loop, from brighter to darker."
+    },
+    {
+      "name": "Ensemble size",
+      "description": "Ensemble Size stacks one to four strings per note, detuned by 0, -5, +8 and -12 cents and averaged."
+    },
+    {
+      "name": "Brightness and attack",
+      "description": "Brightness (0 to 1) lengthens and brightens the string's ring; Attack (0 to 1) sets the excitation level, the onset speed, and below 0.5 softens the noise burst."
+    },
+    {
+      "name": "Release",
+      "description": "The Decay control (0 to 1) sets how quickly the note fades after note-off, with higher values giving a longer release."
+    },
+    {
+      "name": "Vibrato",
+      "description": "Vibrato Depth adds up to ±2% pitch modulation at a rate of 4 to 7 Hz set by Vibrato Rate."
+    }
+  ]
+}

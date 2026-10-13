@@ -1,0 +1,24 @@
+{
+  "tagline": "Simple stereo reverb with size, damping and width",
+  "category": "mixing",
+  "description": "A stereo reverb built on JUCE's standard reverb (a Freeverb-style comb and all-pass network), not a model of a plate. Use it for general-purpose room and space on a send or insert.",
+  "features": [
+    {
+      "name": "Size",
+      "description": "Sets the room size, and with it the decay length."
+    },
+    {
+      "name": "Damping",
+      "description": "Sets how quickly high frequencies fade in the tail."
+    },
+    {
+      "name": "Width",
+      "description": "Sets the stereo spread of the reverb from mono to full width."
+    },
+    {
+      "name": "Mix",
+      "description": "Crossfades from the dry signal at 0 to the reverb alone at 1, scaled so each end keeps its nominal level."
+    }
+  ],
+  "experimental": true
+}

@@ -1,0 +1,4697 @@
+[
+  {
+    "id": "acousticbass",
+    "folder": "AcousticBass",
+    "name": "AcousticBass",
+    "type": "instrument",
+    "formats": [
+      "VST3",
+      "AU",
+      "Standalone"
+    ],
+    "parameters": [
+      {
+        "name": "Bass Type",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Play Style",
+        "range": "0 to 2"
+      },
+      {
+        "name": "Tone",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Attack",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Decay",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Fret Noise",
+        "range": "0 to 1"
+      }
+    ],
+    "tagline": "Wavetable bass synth with upright and electric tones",
+    "category": "synthesis",
+    "description": "An 8-voice bass instrument built on two fixed additive wavetables, one for upright and one for electric bass. Each note sums a part that holds while the key is down with a brighter part that fades away, plus an optional noise click at the start, through a one-pole low-pass tone control. Nothing is physically modelled or sampled; use it for simple synthesized bass lines.",
+    "features": [
+      {
+        "name": "Bass Type",
+        "description": "Upright uses a five-partial wavetable weighted to the fundamental; Electric uses six partials with stronger upper harmonics."
+      },
+      {
+        "name": "Play Style",
+        "description": "Fingered, Picked and Slapped set how loud the fading attack part starts (0.7, 1.0 or 1.3 times velocity) against the held part."
+      },
+      {
+        "name": "Decay",
+        "description": "Sets how quickly the attack part fades while the note is held; the held part sustains until note-off."
+      },
+      {
+        "name": "Fret Noise",
+        "description": "Adds a white-noise burst about 2 ms long at the start of each note, scaled by the 0-1 Fret Noise amount."
+      },
+      {
+        "name": "Tone",
+        "description": "A one-pole low-pass whose cutoff rises with the 0-1 Tone control, from dark to nearly open."
+      }
+    ]
+  },
+  {
+    "id": "aiproducer",
+    "folder": "AIProducer",
+    "name": "AI Producer",
+    "type": "effect",
+    "formats": [
+      "VST3",
+      "AU",
+      "Standalone"
+    ],
+    "parameters": [],
+    "tagline": "Plays a fixed 72-bar house arrangement as MIDI, synced to the host",
+    "category": "midi",
+    "description": "Pressing Generate builds a 72-bar house arrangement in A minor (drums, bass, a two-note chord part and a lead in the drops) and plays it out as MIDI along the host timeline from bar 1. The prompt box is shown but not used: the AI client is a stub, so every prompt produces the same track. This is the plugin in plugins/AIProducer, separate from the AIProducer Ableton Remote Script in ableton/remote-scripts/AIProducer.",
+    "experimental": true,
+    "features": [
+      {
+        "name": "Fixed Arrangement",
+        "description": "Intro 8, build 8, drop 16, breakdown 8, build 8, drop 16 and outro 8 bars; the track is written for 128 BPM but plays at the host tempo."
+      },
+      {
+        "name": "Drums and Bass",
+        "description": "Drums on channel 10 (kick 36 on every beat, snare 38 on 2 and 4, closed hat 42 on eighths) and bass on channel 1 repeating MIDI note 45 (A) on every quarter note."
+      },
+      {
+        "name": "Chords and Lead",
+        "description": "Channel 2 holds A and E (notes 69 and 76) for every bar, and channel 3 plays an ascending eighth-note run on major-pentatonic steps above A in every other bar of the drops."
+      },
+      {
+        "name": "Transport-Following Playback",
+        "description": "Events are placed by host PPQ position, and sounding notes are released when the transport stops, loops or jumps."
+      },
+      {
+        "name": "MIDI-Only Output",
+        "description": "It clears the audio passing through it and drops incoming MIDI, outputting only the notes it generates."
+      }
+    ]
+  },
+  {
+    "id": "analogkick",
+    "folder": "AnalogKick",
+    "name": "AnalogKick",
+    "type": "instrument",
+    "formats": [
+      "VST3",
+      "AU",
+      "Standalone"
+    ],
+    "parameters": [
+      {
+        "name": "Pitch",
+        "range": "20 to 200"
+      },
+      {
+        "name": "Pitch Env",
+        "range": "0 to 4"
+      },
+      {
+        "name": "Pitch Decay",
+        "range": "0.001 to 0.2"
+      },
+      {
+        "name": "Decay",
+        "range": "0.01 to 2"
+      },
+      {
+        "name": "Click",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Drive",
+        "range": "1 to 10"
+      },
+      {
+        "name": "Tone",
+        "range": "0 to 1"
+      }
+    ],
+    "tagline": "Sine kick drum with pitch sweep, noise click and drive",
+    "category": "synthesis",
+    "description": "A kick drum synthesizer: a sine wave whose pitch drops from above the base pitch, a 5 ms noise click, tanh drive and a fixed low-pass. Any MIDI note triggers the same kick, with velocity setting the level. The sound is generated digitally; nothing in the code emulates analog circuitry.",
+    "features": [
+      {
+        "name": "Pitch and Pitch Envelope",
+        "description": "Base pitch 20-200 Hz (default 55 Hz); Pitch Env 0-4 starts the note up to five times higher and Pitch Decay (1-200 ms) sets how fast it falls."
+      },
+      {
+        "name": "Decay",
+        "description": "Exponential amplitude decay from 10 ms to 2 s."
+      },
+      {
+        "name": "Click",
+        "description": "Mixes in a white-noise burst that fades over about 5 ms, for the beater attack."
+      },
+      {
+        "name": "Drive",
+        "description": "Gain of 1-10 into a tanh soft clipper, for a rounder or more distorted kick."
+      },
+      {
+        "name": "Tone",
+        "description": "Lowers the sine body by up to half relative to the click; it is a balance control, not a filter."
+      }
+    ]
+  },
+  {
+    "id": "autopanner",
+    "folder": "AutoPanner",
+    "name": "AutoPanner",
+    "type": "effect",
+    "formats": [
+      "VST3",
+      "AU",
+      "Standalone"
+    ],
+    "parameters": [
+      {
+        "name": "Waveform",
+        "range": "Sine, Triangle, Square"
+      },
+      {
+        "name": "Rate",
+        "range": "0.01 to 20"
+      },
+      {
+        "name": "Depth",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Phase Offset",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Stereo Width",
+        "range": "0 to 2"
+      }
+    ],
+    "tagline": "LFO auto-panner and tremolo with stereo width control",
+    "category": "creative",
+    "description": "A stereo effect that moves the left and right channel gains with a free-running LFO, using an equal-power gain law. The Phase Offset between the two channels decides the effect: at 0 the channels move in opposition for a left-right pan, and at the default 0.5 they rise and fall together, which sounds as a tremolo. A mid/side width control is applied before the movement.",
+    "features": [
+      {
+        "name": "Waveform",
+        "description": "Sine, Triangle or Square LFO; the square switches hard between positions."
+      },
+      {
+        "name": "Rate and Depth",
+        "description": "Rate from 0.01 to 20 Hz, not synced to tempo; Depth 0-1 sets how far the gains swing."
+      },
+      {
+        "name": "Phase Offset",
+        "description": "Phase between the left and right LFOs from 0 to 1 cycle; 0 gives auto-pan and 0.5 gives tremolo."
+      },
+      {
+        "name": "Stereo Width",
+        "description": "Scales the side signal from 0 (mono) to 2 (twice as wide) before panning."
+      }
+    ]
+  },
+  {
+    "id": "basicsynth",
+    "folder": "BasicSynth",
+    "name": "BasicSynth",
+    "type": "instrument",
+    "formats": [
+      "VST3",
+      "AU",
+      "Standalone"
+    ],
+    "parameters": [
+      {
+        "name": "Waveform",
+        "range": "Sine, Sawtooth, Square"
+      },
+      {
+        "name": "Volume",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Attack",
+        "range": "0.001 to 2"
+      },
+      {
+        "name": "Decay",
+        "range": "0.001 to 2"
+      },
+      {
+        "name": "Sustain",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Release",
+        "range": "0.001 to 5"
+      },
+      {
+        "name": "Filter Cutoff",
+        "range": "20 to 20000"
+      },
+      {
+        "name": "Filter Resonance",
+        "range": "0.5 to 10"
+      },
+      {
+        "name": "Filter Type",
+        "range": "Low-pass, High-pass, Band-pass, Notch"
+      },
+      {
+        "name": "Chorus Rate",
+        "range": "0.1 to 10"
+      },
+      {
+        "name": "Chorus Depth",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Chorus Mix",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Reverb Size",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Reverb Damping",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Reverb Mix",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Saturation Drive",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Saturation Mix",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Saturation Type",
+        "range": "Soft Clip, Hard Clip, Tube"
+      }
+    ],
+    "tagline": "8-voice subtractive synth with filter, effects and four patches",
+    "category": "synthesis",
+    "description": "An 8-voice subtractive synthesizer: one oscillator (sine, saw or square), an ADSR amp envelope, and a multi-mode filter per voice, followed by saturation, chorus and reverb. It comes with Init, Bass, Pad and Lead patches, offered to the host as programs.",
+    "features": [
+      {
+        "name": "Oscillator",
+        "description": "Sine, sawtooth or square, with note velocity setting the level"
+      },
+      {
+        "name": "ADSR envelope",
+        "description": "Attack and decay 1 ms to 2 s, release 1 ms to 5 s, sustain 0 to 1; linear segments"
+      },
+      {
+        "name": "Multi-mode filter",
+        "description": "Low-pass, high-pass, band-pass or notch state-variable filter; cutoff 20 Hz to 20 kHz, resonance (Q) 0.5 to 10"
+      },
+      {
+        "name": "Effects",
+        "description": "Saturation (soft clip, hard clip or tube) into a stereo chorus into a Schroeder-style reverb, each with its own mix"
+      },
+      {
+        "name": "Factory patches",
+        "description": "Init, Bass, Pad and Lead, chosen from a menu or from the host's program list"
+      },
+      {
+        "name": "8-voice polyphony",
+        "description": "Round-robin voice stealing when a ninth note arrives"
+      }
+    ],
+    "useCases": [
+      "Bass - start from the Bass patch: dark low-pass, short release, a little tube drive",
+      "Pads - start from the Pad patch: slow attack and release, chorus and a large room",
+      "Leads - start from the Lead patch: square wave with chorus and some reverb",
+      "Learning synthesis - change one control at a time and listen"
+    ],
+    "learningFocus": [
+      "MIDI note processing (note on/off messages)",
+      "Polyphonic voice management and voice stealing",
+      "Oscillator waveform generation (sine, saw, square)",
+      "ADSR envelope implementation (linear segments)",
+      "State-variable filter (low-pass, high-pass, band-pass, notch)",
+      "Per-voice state management",
+      "A serial effects chain (saturation, chorus, reverb)",
+      "Factory patches exposed as host programs"
+    ],
+    "algorithms": [
+      {
+        "name": "ADSR Envelope",
+        "description": "Linear attack to 1.0, linear decay to the sustain level, linear release from wherever the note was released",
+        "code": "// Attack phase\nlevel = min(1.0, stageTime / attack);\n\n// Decay phase\ndecayAmount = (1.0 - sustain) * (stageTime / decay);\nlevel = 1.0 - min(decayAmount, 1.0 - sustain);\n\n// Sustain phase\nlevel = sustain;\n\n// Release phase\nlevel = max(0.0, releaseStartLevel * (1.0 - stageTime / release));"
+      },
+      {
+        "name": "Voice Stealing",
+        "description": "Round-robin voice allocation when all 8 voices are active",
+        "code": "// Find a free voice or take the next one in turn\nvoice = findFreeVoice();\nif (voice == null) {\n    voice = voices[nextVoiceIndex];\n    nextVoiceIndex = (nextVoiceIndex + 1) % 8;\n}\nvoice.noteOn(midiNote, velocity, sampleRate);"
+      }
+    ],
+    "screenshots": [],
+    "graphic": "/plugin-graphics/basicsynth.svg"
+  },
+  {
+    "id": "bassline",
+    "folder": "BassLine",
+    "name": "BassLine",
+    "type": "instrument",
+    "formats": [
+      "VST3",
+      "AU"
+    ],
+    "parameters": [],
+    "tagline": "Bass-line pattern generator with a built-in bass synth",
+    "category": "synthesis",
+    "description": "Generates a 4-bar bass pattern over a fixed I-IV-V-I progression in one of seven styles and plays it with its own synth, looped in time with the host transport. It ignores incoming MIDI and outputs no MIDI; the Export MIDI button saves the pattern as a .mid file. Settings are not saved with the project.",
+    "experimental": true,
+    "features": [
+      {
+        "name": "Seven Styles",
+        "description": "Rock, Funk, Jazz, EDM, Reggae, Latin and Blues are rule-based patterns of roots, fifths and chord tones, with small random timing and velocity changes on all but EDM."
+      },
+      {
+        "name": "Key, Scale and Octave",
+        "description": "Choose the root key, major or minor (which only changes the Jazz chord tones) and an octave of C1, C2 or C3."
+      },
+      {
+        "name": "Bass Synth",
+        "description": "8-voice Sine, Saw, Square or Triangle oscillator with ADSR and a one-pole low-pass from 100 to 2000 Hz."
+      },
+      {
+        "name": "Delay and Reverb",
+        "description": "A 250 ms delay with fixed 30% feedback and a JUCE reverb, each with a 0-1 mix control."
+      },
+      {
+        "name": "MIDI Export",
+        "description": "Writes the current pattern to a .mid file on channel 1 at 120 BPM."
+      }
+    ]
+  },
+  {
+    "id": "brasssection",
+    "folder": "BrassSection",
+    "name": "BrassSection",
+    "type": "instrument",
+    "formats": [
+      "VST3",
+      "AU",
+      "Standalone"
+    ],
+    "parameters": [
+      {
+        "name": "Instrument",
+        "range": "0 to 2"
+      },
+      {
+        "name": "Articulation",
+        "range": "0 to 3"
+      },
+      {
+        "name": "Brightness",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Breath Noise",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Vibrato Depth",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Vibrato Rate",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Section Size",
+        "range": "1 to 4"
+      }
+    ],
+    "tagline": "Wavetable brass synth: trumpet, trombone and sax with articulations",
+    "category": "synthesis",
+    "description": "A 12-voice brass instrument that plays fixed additive wavetables for trumpet, trombone and saxophone through a low-pass filter that opens as the note gets louder. Articulation modes, breath noise, vibrato and detuned section copies shape each note. The tones are synthesized from harmonic recipes, not modelled or sampled.",
+    "features": [
+      {
+        "name": "Instrument",
+        "description": "Trumpet, Trombone or Saxophone, each a single-cycle wavetable with its own harmonic balance."
+      },
+      {
+        "name": "Articulation",
+        "description": "Sustain; Staccato, which releases after 150 ms; Marcato, a faster attack with a 30% boost over the first 50 ms; and Fall-off, which drops the pitch 5 semitones over 0.35 s as the note releases."
+      },
+      {
+        "name": "Brightness and Expression",
+        "description": "Low-pass cutoff of 500-4500 Hz from Brightness, plus up to 3 kHz more as the level rises; the mod wheel (CC1) sets expression, scaling both level and brightness."
+      },
+      {
+        "name": "Breath Noise and Vibrato",
+        "description": "Low-passed noise that follows the note level, and vibrato of up to 3% pitch at 4-8 Hz."
+      },
+      {
+        "name": "Section Size",
+        "description": "Plays 1-4 slightly detuned copies of each note (up to 0.7% apart) for a section sound."
+      }
+    ]
+  },
+  {
+    "id": "chordgenius",
+    "folder": "ChordGenius",
+    "name": "ChordGenius",
+    "type": "midi",
+    "formats": [
+      "VST3",
+      "AU"
+    ],
+    "parameters": [],
+    "tagline": "Four-chord progression templates with MIDI file export",
+    "category": "midi",
+    "description": "Shows a four-chord progression built from one of eight genre templates in C major and saves it as a .mid file. It does not produce MIDI in real time: the processor passes incoming MIDI through unchanged, and nothing is saved with the project. It is built as a MIDI effect (IS_MIDI_EFFECT TRUE), so Ableton Live will not load it.",
+    "experimental": true,
+    "features": [
+      {
+        "name": "Genre Templates",
+        "description": "Pop, Rock, Jazz, Blues, EDM, Emotional, Happy and Sad map to fixed Roman-numeral progressions; a parsing bug currently turns every IV chord into a V."
+      },
+      {
+        "name": "Triads in C Major",
+        "description": "Each chord is a root-position major or minor triad built on the C major scale; there is no key selector."
+      },
+      {
+        "name": "MIDI File Export",
+        "description": "Writes the four chords one bar each on channel 1 at velocity 100, with a 120 BPM tempo marker."
+      }
+    ]
+  },
+  {
+    "id": "chorusflanger",
+    "folder": "ChorusFlanger",
+    "name": "ChorusFlanger",
+    "type": "effect",
+    "formats": [
+      "VST3",
+      "AU",
+      "Standalone"
+    ],
+    "parameters": [
+      {
+        "name": "Rate",
+        "range": "0.1 to 10"
+      },
+      {
+        "name": "Depth",
+        "range": "0 to 100"
+      },
+      {
+        "name": "Mode",
+        "range": "Chorus, Flanger"
+      },
+      {
+        "name": "Feedback",
+        "range": "0 to 95"
+      },
+      {
+        "name": "Mix",
+        "range": "0 to 100"
+      },
+      {
+        "name": "Waveform",
+        "range": "Sine, Triangle"
+      },
+      {
+        "name": "Stereo Width",
+        "range": "0 to 100"
+      }
+    ],
+    "tagline": "Chorus and flanger from one LFO-modulated delay line",
+    "category": "creative",
+    "description": "A chorus and flanger built on a modulated delay line per channel, with a sine or triangle LFO. Chorus sweeps around 15 ms and flanger around 3 ms; feedback, mix and an offset between the left and right LFOs shape the result. A display shows the LFO and where each channel is on it.",
+    "features": [
+      {
+        "name": "Two modes",
+        "description": "Chorus (15 ms base delay, up to ±10 ms sweep) and Flanger (3 ms base delay, up to ±2.5 ms sweep)"
+      },
+      {
+        "name": "Rate and LFO shape",
+        "description": "0.1 Hz to 10 Hz, skewed toward slow rates; sine or triangle"
+      },
+      {
+        "name": "Depth",
+        "description": "0% to 100% of the mode's sweep range"
+      },
+      {
+        "name": "Stereo Width",
+        "description": "Offsets the right LFO from the left by 0° to 180°"
+      },
+      {
+        "name": "Feedback and Mix",
+        "description": "Feedback 0% to 95% in both modes; mix 0% to 100% wet"
+      },
+      {
+        "name": "LFO display and meters",
+        "description": "Draws the LFO with left (orange) and right (cyan) phase markers, plus input and output peak readouts"
+      }
+    ],
+    "useCases": [
+      "Vocal thickening - Chorus with slow rate (0.3-0.8 Hz) and medium depth",
+      "Guitar widening - Chorus with Stereo Width at 75-100%",
+      "Sweeping pads - Flanger at 1-3 Hz with high feedback",
+      "Jet flanging - Flanger with fast rate, high feedback and high depth",
+      "Subtle thickness - Chorus with 20-30% depth and 30% mix"
+    ],
+    "learningFocus": [
+      "LFO (Low-Frequency Oscillator) implementation",
+      "Circular delay buffer with write position tracking",
+      "Fractional delay using linear interpolation",
+      "Feedback loops in delay-based effects",
+      "Stereo processing with phase offset",
+      "Time-based modulation effects",
+      "Real-time visualization of LFO state"
+    ],
+    "algorithms": [
+      {
+        "name": "LFO Generation",
+        "description": "Sine and triangle waveforms for smooth and linear modulation",
+        "code": "// Sine LFO\nfloat lfoSine = sin(phase * 2π);\n\n// Triangle LFO\nfloat lfoTriangle = 4.0f * abs(phase - 0.5f) - 1.0f;\n\n// Phase advancement\nphase += (rate / sampleRate);\nif (phase >= 1.0f) phase -= 1.0f;"
+      },
+      {
+        "name": "Fractional Delay Interpolation",
+        "description": "Linear interpolation between samples for smooth pitch changes",
+        "code": "// Calculate read position (fractional)\nfloat readPos = writePos - delayInSamples;\nwhile (readPos < 0.0f) readPos += bufferSize;\n\n// Get integer and fractional parts\nint readPosInt = (int)readPos;\nfloat frac = readPos - readPosInt;\n\n// Linear interpolation\nint nextPos = (readPosInt + 1) % bufferSize;\nfloat sample1 = buffer[readPosInt];\nfloat sample2 = buffer[nextPos];\nreturn sample1 + frac * (sample2 - sample1);"
+      },
+      {
+        "name": "Modulated Delay",
+        "description": "LFO modulates delay time for pitch variation",
+        "code": "// Calculate modulated delay time\nfloat baseDelay = (mode == CHORUS) ? 15ms : 3ms;\nfloat modRange = (mode == CHORUS) ? 10ms : 2.5ms;\n\nfloat lfoValue = getLFO(phase, waveform);  // -1 to +1\nfloat delayTime = baseDelay + lfoValue * modRange * depth;\n\n// Read from delay buffer with interpolation\nfloat delayed = getInterpolatedSample(buffer, delayTime);"
+      },
+      {
+        "name": "Feedback Processing",
+        "description": "Feedback creates comb filtering for flanger resonance",
+        "code": "// Read delayed sample\nfloat delayed = getInterpolatedSample(buffer, delayTime);\n\n// Write to delay buffer (input + feedback)\nbuffer[writePos] = input + delayed * feedback;\n\n// Mix dry/wet\noutput = input * (1.0 - mix) + delayed * mix;"
+      },
+      {
+        "name": "Stereo Phase Offset",
+        "description": "Independent L/R LFO phases create stereo movement",
+        "code": "// Left channel LFO\nlfoPhaseLeft += rateIncrement;\nif (lfoPhaseLeft >= 1.0f) lfoPhaseLeft -= 1.0f;\n\n// Right channel with phase offset\nfloat phaseOffset = stereoWidth * 0.5f;  // 0-0.5 (0-180°)\nlfoPhaseRight = lfoPhaseLeft + phaseOffset;\nif (lfoPhaseRight >= 1.0f) lfoPhaseRight -= 1.0f;"
+      }
+    ],
+    "screenshots": [],
+    "graphic": "/plugin-graphics/chorusflanger.svg"
+  },
+  {
+    "id": "classicmonosynth",
+    "folder": "ClassicMonosynth",
+    "name": "Classic Monosynth",
+    "type": "instrument",
+    "formats": [
+      "VST3",
+      "AU",
+      "Standalone"
+    ],
+    "parameters": [
+      {
+        "name": "Osc 1 Level",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Osc 2 Level",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Osc 3 Level",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Osc 2 Detune",
+        "range": "-24 to 24"
+      },
+      {
+        "name": "Osc 3 Detune",
+        "range": "-24 to 24"
+      },
+      {
+        "name": "Pulse Width",
+        "range": "0.01 to 0.99"
+      },
+      {
+        "name": "Osc Sync",
+        "range": "on / off"
+      },
+      {
+        "name": "Filter Cutoff",
+        "range": ""
+      },
+      {
+        "name": "Filter Resonance",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Filter Env Amount",
+        "range": "-5000 to 5000"
+      },
+      {
+        "name": "Filter Attack",
+        "range": "0.001 to 2"
+      },
+      {
+        "name": "Filter Decay",
+        "range": "0.001 to 2"
+      },
+      {
+        "name": "Filter Sustain",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Filter Release",
+        "range": "0.001 to 5"
+      },
+      {
+        "name": "Amp Attack",
+        "range": "0.001 to 2"
+      },
+      {
+        "name": "Amp Decay",
+        "range": "0.001 to 2"
+      },
+      {
+        "name": "Amp Sustain",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Amp Release",
+        "range": "0.001 to 5"
+      },
+      {
+        "name": "LFO 1 Rate",
+        "range": "0.1 to 20"
+      },
+      {
+        "name": "LFO 1 Amount",
+        "range": "0 to 2"
+      },
+      {
+        "name": "LFO 2 Rate",
+        "range": "0.1 to 20"
+      },
+      {
+        "name": "LFO 2 Amount",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Glide Time",
+        "range": "0 to 2"
+      }
+    ],
+    "tagline": "Three-oscillator mono synth with ladder-style filter and glide",
+    "category": "synthesis",
+    "description": "A single-voice subtractive synth: saw, pulse and triangle oscillators into a 4-pole ladder-style low-pass filter, with separate filter and amp envelopes, two LFOs and glide. Use it for monophonic bass and lead lines. Note velocity is ignored.",
+    "features": [
+      {
+        "name": "Three Oscillators",
+        "description": "Saw, pulse (width 0.01-0.99) and triangle, each with its own level; oscillators 2 and 3 detune by up to 24 semitones either way, and oscillator 2 can hard-sync to oscillator 1."
+      },
+      {
+        "name": "Ladder-Style Filter",
+        "description": "A four-stage tanh low-pass with cutoff from 20 Hz to 20 kHz, resonance 0-1 and envelope amount of -5000 to +5000 Hz."
+      },
+      {
+        "name": "Two ADSR Envelopes",
+        "description": "Filter and amp envelopes with attack and decay up to 2 s and release up to 5 s."
+      },
+      {
+        "name": "Two LFOs",
+        "description": "LFO 1 adds vibrato of up to 2 semitones and LFO 2 modulates pulse width, each at 0.1-20 Hz."
+      },
+      {
+        "name": "Glide",
+        "description": "Slides between notes over 0-2 s."
+      }
+    ]
+  },
+  {
+    "id": "cleandelay",
+    "folder": "CleanDelay",
+    "name": "CleanDelay",
+    "type": "effect",
+    "formats": [
+      "VST3",
+      "AU",
+      "Standalone"
+    ],
+    "parameters": [
+      {
+        "name": "Delay Time",
+        "range": "0.001 to 2"
+      },
+      {
+        "name": "Feedback",
+        "range": "0 to 0.99"
+      },
+      {
+        "name": "Mix",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Ping-Pong",
+        "range": "on / off"
+      }
+    ],
+    "tagline": "Stereo delay up to 2 seconds with feedback and ping-pong",
+    "category": "mixing",
+    "description": "A stereo delay built on a circular buffer, with delay time from 1 ms to 2 s, feedback up to 99%, and a wet/dry mix. Ping-pong mode feeds the left delay line into the right channel's feedback. Input and output meters show levels.",
+    "features": [
+      {
+        "name": "Delay Time",
+        "description": "1 ms to 2 s, with the knob skewed toward short times"
+      },
+      {
+        "name": "Feedback",
+        "description": "0% to 99%, shown as a percentage"
+      },
+      {
+        "name": "Mix",
+        "description": "0% (dry) to 100% (wet), shown as a percentage"
+      },
+      {
+        "name": "Ping-Pong",
+        "description": "The right channel's feedback is taken from the left delay line instead of its own"
+      },
+      {
+        "name": "Meters",
+        "description": "Input and output level meters"
+      }
+    ],
+    "useCases": [
+      "Vocal slapback - quick doubling (80-120 ms, low feedback)",
+      "Eighth-note echo - 250 ms at 120 BPM",
+      "Long ambient echoes - 500-800 ms with high feedback",
+      "Haas widening - 10-30 ms, no feedback",
+      "Dub-style throws - 375 ms (dotted eighth at 120 BPM), automate Mix"
+    ],
+    "learningFocus": [
+      "Circular buffer implementation for delay lines",
+      "Cross-channel feedback",
+      "Wet/dry signal mixing",
+      "Buffer index wrapping",
+      "Multi-channel processing with shared write position",
+      "Real-time parameter control (delay time, feedback, mix)",
+      "State persistence (save/restore delay parameters)",
+      "Showing a 0-1 parameter as a percentage"
+    ],
+    "algorithms": [
+      {
+        "name": "Circular Buffer Delay",
+        "description": "Delay line that wraps its read and write positions around a fixed buffer",
+        "code": "// Read the delayed sample\nreadPosition = writePosition - delaySamples;\nif (readPosition < 0) readPosition += MAX_DELAY_SAMPLES;\ndelayed = delayBuffer[readPosition];\n\n// Write input plus feedback\ndelayBuffer[writePosition] = input + feedbackSource * feedback;\n\n// Mix and advance\noutput = input * (1 - mix) + delayed * mix;\nwritePosition = (writePosition + 1) % MAX_DELAY_SAMPLES;"
+      },
+      {
+        "name": "Ping-Pong Feedback",
+        "description": "The right channel takes its feedback from the left delay line",
+        "code": "// Left feeds back into itself\nleftBuffer[writePos] = leftIn + leftBuffer[readPos] * feedback;\n\n// Right feeds back from the left line when ping-pong is on\nsource = pingPong ? leftBuffer[readPos] : rightBuffer[readPos];\nrightBuffer[writePos] = rightIn + source * feedback;"
+      }
+    ],
+    "screenshots": [],
+    "graphic": "/plugin-graphics/cleandelay.svg"
+  },
+  {
+    "id": "drummachine",
+    "folder": "DrumMachine",
+    "name": "DrumMachine",
+    "type": "instrument",
+    "formats": [
+      "VST3",
+      "AU"
+    ],
+    "parameters": [],
+    "tagline": "Self-playing drum pattern generator with five synthesized voices",
+    "category": "synthesis",
+    "description": "Generates a one-bar, 16-step drum pattern in one of seven styles and plays it with built-in synthesized drums, looped in time with the host transport. It ignores incoming MIDI and outputs no MIDI; Export MIDI saves the pattern as a .mid file. Settings are not saved with the project.",
+    "experimental": true,
+    "features": [
+      {
+        "name": "Seven Styles",
+        "description": "Rock, Hip-Hop, Jazz, EDM, Funk, Latin and Blues patterns, with Complexity 1-10 adding ghost notes and extra hits."
+      },
+      {
+        "name": "Five Drum Voices",
+        "description": "Kick (sine sweeping 150 to 50 Hz), snare (200 Hz tone plus noise), tom (120 to 100 Hz), and hi-hat and crash as unfiltered noise bursts with short and long decays."
+      },
+      {
+        "name": "Swing and Fills",
+        "description": "Swing only affects the Jazz style, adding off-beat hats above 0.3 rather than shifting timing; Fills only affect Rock, adding a four-step tom run."
+      },
+      {
+        "name": "Transport Sync",
+        "description": "Steps follow the host's beat position, with each hit starting at the beginning of the host's audio block."
+      },
+      {
+        "name": "MIDI Export",
+        "description": "Writes the pattern on channel 10 with General MIDI notes (36, 38, 42, 47, 49)."
+      }
+    ]
+  },
+  {
+    "id": "drumsynth",
+    "folder": "DrumSynth",
+    "name": "DrumSynth",
+    "type": "instrument",
+    "formats": [
+      "VST3",
+      "AU",
+      "Standalone"
+    ],
+    "parameters": [
+      {
+        "name": "Kick Pitch",
+        "range": "30 to 100"
+      },
+      {
+        "name": "Kick Decay",
+        "range": "0.05 to 2"
+      },
+      {
+        "name": "Kick Click",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Kick Tone",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Kick Drive",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Snare Tune",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Snare Snap",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Snare Tone",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Snare Decay",
+        "range": "0.05 to 1"
+      },
+      {
+        "name": "Snare Mix",
+        "range": "0 to 1"
+      },
+      {
+        "name": "HiHat Tune",
+        "range": "0 to 1"
+      },
+      {
+        "name": "HiHat Decay",
+        "range": "0.01 to 0.5"
+      },
+      {
+        "name": "HiHat Tone",
+        "range": "0 to 1"
+      },
+      {
+        "name": "HiHat Click",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Clap Tone",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Clap Decay",
+        "range": "0.05 to 0.6"
+      }
+    ],
+    "tagline": "Synthesized kick, snare, clap and hi-hats on the GM drum map",
+    "category": "synthesis",
+    "description": "A drum synth with five sounds made from oscillators and filtered noise: kick, snare, clap, closed hi-hat and open hi-hat. Notes follow the General MIDI drum map, each hit plays at its own position in the block and at its velocity, and a closed hat chokes an open one.",
+    "features": [
+      {
+        "name": "Kick",
+        "description": "Sine with a pitch sweep from 3x down to the set pitch (30-100 Hz), plus decay, click, tone and drive"
+      },
+      {
+        "name": "Snare",
+        "description": "A tuned body mixed with band-passed noise (3.5-6.5 kHz), with tune, snap, tone, decay and mix"
+      },
+      {
+        "name": "Clap",
+        "description": "Several short bursts of band-passed noise followed by a tail, with tone and decay"
+      },
+      {
+        "name": "Closed and open hi-hat",
+        "description": "Filtered noise with tune, decay, tone and click; the open hat rings longer, and a closed or pedal hat cuts it off"
+      },
+      {
+        "name": "GM note map",
+        "description": "C1 kick, D1 snare, D#1 clap, F#1 and G#1 closed hat, A#1 open hat"
+      },
+      {
+        "name": "Velocity and timing",
+        "description": "Each hit's level follows its velocity, and hits start on their exact sample within the block"
+      }
+    ],
+    "useCases": [
+      "Electronic drum parts programmed on the GM drum map",
+      "Drum clips written for other GM instruments, played back unchanged",
+      "Layering a synthesized kick or clap under recorded drums",
+      "Learning how kicks, snares and hats are built from oscillators and noise"
+    ],
+    "screenshots": []
+  },
+  {
+    "id": "electricpiano",
+    "folder": "ElectricPiano",
+    "name": "ElectricPiano",
+    "type": "instrument",
+    "formats": [
+      "VST3",
+      "AU",
+      "Standalone"
+    ],
+    "parameters": [
+      {
+        "name": "Model",
+        "range": "0 to 2"
+      },
+      {
+        "name": "Tone",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Decay",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Mechanical Noise",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Velocity Curve",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Tremolo Depth",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Tremolo Rate",
+        "range": "0.1 to 20"
+      },
+      {
+        "name": "Chorus Depth",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Reverb Mix",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Output Level",
+        "range": "-24 to 12"
+      }
+    ],
+    "tagline": "Wavetable electric piano with Rhodes, Wurlitzer and hybrid tones",
+    "category": "synthesis",
+    "description": "A 16-voice electric piano that plays fixed single-cycle wavetables, with a velocity curve, a tone low-pass and per-voice tremolo. Notes hold at a steady level while the key is down and fade after release at a rate set by Decay. The sound is synthesized from wavetables, not modelled or sampled.",
+    "features": [
+      {
+        "name": "Model",
+        "description": "Rhodes, Wurlitzer, or Hybrid (a 50/50 blend of the two) wavetables."
+      },
+      {
+        "name": "Velocity Curve",
+        "description": "Reshapes velocity with a power curve: squared at 0, square root at 0.5 and linear at 1."
+      },
+      {
+        "name": "Tone and Decay",
+        "description": "Tone blends in a one-pole low-pass for a darker sound; Decay sets how long notes take to fade after key-up."
+      },
+      {
+        "name": "Tremolo",
+        "description": "Amplitude tremolo of up to plus or minus 50% at 0.1-20 Hz."
+      },
+      {
+        "name": "Chorus, Reverb and Output Level",
+        "description": "Chorus and Reverb are a one-sample delay blend and a one-pole blend that mostly soften the tone; Output Level runs from -24 to +12 dB."
+      }
+    ]
+  },
+  {
+    "id": "fmsynth",
+    "folder": "FMSynth",
+    "name": "FMSynth",
+    "type": "instrument",
+    "formats": [
+      "VST3",
+      "AU",
+      "Standalone"
+    ],
+    "parameters": [
+      {
+        "name": "Algorithm",
+        "range": "0 to 7"
+      },
+      {
+        "name": "Feedback",
+        "range": "0 to 1"
+      },
+      {
+        "name": "OpNN Level",
+        "range": "0 to 1"
+      },
+      {
+        "name": "OpNN Ratio",
+        "range": "0.25 to 16"
+      },
+      {
+        "name": "OpNN A",
+        "range": "0.001 to 2"
+      },
+      {
+        "name": "OpNN D",
+        "range": "0.001 to 2"
+      },
+      {
+        "name": "OpNN S",
+        "range": "0 to 1"
+      },
+      {
+        "name": "OpNN R",
+        "range": "0.001 to 5"
+      }
+    ],
+    "tagline": "Four-operator FM synth with eight algorithms",
+    "category": "synthesis",
+    "description": "A 6-voice FM synthesizer with four sine operators, each with its own level, frequency ratio and ADSR envelope. Eight algorithms connect the operators in different modulator and carrier layouts, and operator 1 can feed back into itself.",
+    "features": [
+      {
+        "name": "Four sine operators",
+        "description": "Each with level, ratio (0.25 to 16 in steps of 0.25) and its own ADSR envelope"
+      },
+      {
+        "name": "Eight algorithms",
+        "description": "From four parallel carriers, through pairs and stacks, to a four-operator serial chain"
+      },
+      {
+        "name": "Feedback",
+        "description": "Operator 1 modulates its own phase, from 0 to 1"
+      },
+      {
+        "name": "Velocity",
+        "description": "Note velocity scales the voice's output level"
+      },
+      {
+        "name": "6-voice polyphony",
+        "description": "Six voices, managed by JUCE's Synthesiser"
+      }
+    ],
+    "useCases": [
+      "Electric piano tones - a modulator at ratio 1 into a carrier, with a fast-decaying modulator envelope",
+      "Bell tones - non-integer ratios such as 3.5 for inharmonic partials",
+      "FM bass - low ratios and a short modulator envelope",
+      "Bright leads - high modulator levels and some feedback"
+    ],
+    "screenshots": []
+  },
+  {
+    "id": "freezefx",
+    "folder": "FreezeFX",
+    "name": "FreezeFX",
+    "type": "effect",
+    "formats": [
+      "VST3",
+      "AU"
+    ],
+    "parameters": [
+      {
+        "name": "Freeze",
+        "range": "on / off"
+      },
+      {
+        "name": "Freeze Mix",
+        "range": "0 to 1"
+      },
+      {
+        "name": "FFT Size",
+        "range": "1024, 2048, 4096, 8192"
+      },
+      {
+        "name": "Overlap",
+        "range": "2x, 4x, 8x"
+      },
+      {
+        "name": "Phase Random",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Phase Speed",
+        "range": "0.1 to 10"
+      },
+      {
+        "name": "Spectral Blur",
+        "range": "0 to 1"
+      },
+      {
+        "name": "High Pass",
+        "range": "20 to 20000"
+      },
+      {
+        "name": "Low Pass",
+        "range": "20 to 20000"
+      }
+    ],
+    "tagline": "Spectral freeze that holds a sound's level and pitch",
+    "category": "creative",
+    "description": "FreezeFX passes audio through until you press Freeze, then holds the spectrum it captured, using an STFT with FFT sizes from 1024 to 8192 and 2x, 4x or 8x overlap. Each bin keeps the phase advance measured just after freezing, so the held sound keeps its pitch and level; phase randomization and spectral blur can then animate or smear it.",
+    "features": [
+      {
+        "name": "Freeze",
+        "description": "Captures the magnitude of every bin and keeps advancing each bin's phase at the rate it was measured, so the held sound stays at the pitch and level it had"
+      },
+      {
+        "name": "Freeze Mix",
+        "description": "0% to 100% (default 100%), adding the frozen spectrum to the live one bin by bin"
+      },
+      {
+        "name": "Phase Random and Phase Speed",
+        "description": "Below 50% a smooth random walk that pulls neighbouring bins together; from 50% up, per-bin sine modulation for denser movement. Speed 0.1 Hz to 10 Hz"
+      },
+      {
+        "name": "Spectral Blur",
+        "description": "Averages each frozen bin with its neighbours, over 1 to 6 bins"
+      },
+      {
+        "name": "Status display",
+        "description": "Shows FROZEN or PROCESSING"
+      }
+    ],
+    "useCases": [
+      "Hold a chord or vowel as a sustained pad",
+      "Extend the decay of a percussive hit",
+      "Drones built from a short sample",
+      "Slowly shifting textures with Phase Random and Blur"
+    ],
+    "screenshots": [],
+    "graphic": "/plugin-graphics/freezefx.svg",
+    "experimental": true
+  },
+  {
+    "id": "gate",
+    "folder": "Gate",
+    "name": "Gate",
+    "type": "effect",
+    "formats": [
+      "VST3",
+      "AU",
+      "Standalone"
+    ],
+    "parameters": [
+      {
+        "name": "Threshold",
+        "range": "-60 to 0"
+      },
+      {
+        "name": "Ratio",
+        "range": "1 to 20"
+      },
+      {
+        "name": "Range",
+        "range": "-96 to 0"
+      },
+      {
+        "name": "Attack",
+        "range": "0.1 to 100"
+      },
+      {
+        "name": "Hold",
+        "range": "0 to 1000"
+      },
+      {
+        "name": "Release",
+        "range": "10 to 1000"
+      },
+      {
+        "name": "Lookahead",
+        "range": "0 to 10"
+      },
+      {
+        "name": "Mode",
+        "range": "Gate, Expander"
+      },
+      {
+        "name": "Sidechain Enable",
+        "range": "on / off"
+      },
+      {
+        "name": "SC High-Pass",
+        "range": "20 to 2000"
+      },
+      {
+        "name": "SC Low-Pass",
+        "range": "200 to 20000"
+      },
+      {
+        "name": "SC Listen",
+        "range": "on / off"
+      },
+      {
+        "name": "Detection Mode",
+        "range": "RMS, Peak"
+      },
+      {
+        "name": "RMS Window",
+        "range": "1 to 50"
+      }
+    ],
+    "tagline": "Gate and downward expander with hold, range and external key input",
+    "category": "mixing",
+    "description": "A noise gate that can also work as a downward expander. It reads its level from the track or, with Sidechain Enable on, from an external key input, using RMS or peak detection. Attack, hold, release, range and up to 10 ms of lookahead shape how it opens and closes.",
+    "features": [
+      {
+        "name": "Gate and Expander modes",
+        "description": "Gate drops the signal by the full Range below the threshold; Expander turns it down by the Ratio (1:1 to 20:1), never further than Range"
+      },
+      {
+        "name": "Threshold and Range",
+        "description": "Threshold -60 dB to 0 dB; Range -96 dB to 0 dB sets how far the gate closes"
+      },
+      {
+        "name": "Attack, Hold and Release",
+        "description": "Attack 0.1-100 ms, hold 0-1000 ms, release 10-1000 ms"
+      },
+      {
+        "name": "Lookahead",
+        "description": "Delays the audio by 0 ms to 10 ms behind the detector so the gate is open when a transient arrives"
+      },
+      {
+        "name": "Key input and detection",
+        "description": "Optional external sidechain input for detection; RMS (1-50 ms window) or peak detection, linked across both channels"
+      },
+      {
+        "name": "Meters",
+        "description": "Input level and gain reduction meters"
+      }
+    ],
+    "useCases": [
+      "Reduce cymbal bleed on close-miked kick and snare",
+      "Mute amp noise between guitar phrases",
+      "Gentle expansion to lower breaths and room noise between vocal lines",
+      "Key a gate from another track through the sidechain input"
+    ],
+    "screenshots": [
+      "/screenshots/plugins/Gate/gate-main.png"
+    ]
+  },
+  {
+    "id": "granularengine",
+    "folder": "GranularEngine",
+    "name": "GranularEngine",
+    "type": "effect",
+    "formats": [
+      "VST3",
+      "AU"
+    ],
+    "parameters": [
+      {
+        "name": "Grain Size",
+        "range": "10 to 500"
+      },
+      {
+        "name": "Grain Density",
+        "range": "1 to 100"
+      },
+      {
+        "name": "Scan Speed",
+        "range": "0.25 to 4"
+      },
+      {
+        "name": "Position",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Pitch Shift",
+        "range": "-24 to 24"
+      },
+      {
+        "name": "Spray",
+        "range": "0 to 100"
+      },
+      {
+        "name": "Reverse",
+        "range": "0 to 100"
+      },
+      {
+        "name": "Stereo Width",
+        "range": "0 to 200"
+      },
+      {
+        "name": "Dry/Wet",
+        "range": "0 to 100"
+      },
+      {
+        "name": "Window Type",
+        "range": "0 to 5"
+      },
+      {
+        "name": "Window Shape",
+        "range": "0 to 1"
+      }
+    ],
+    "tagline": "Real-time granular effect on the last 10 seconds of input",
+    "category": "creative",
+    "description": "GranularEngine records its input into a 10-second buffer and plays it back as overlapping grains, up to 64 at a time. You set grain size, density, scan speed, read position, pitch, spray, reverse probability and stereo spread, and choose one of six grain windows. MIDI notes, when present, scale grain density by velocity.",
+    "features": [
+      {
+        "name": "Grain controls",
+        "description": "Size 10-500 ms, density 1-100 grains per second, pitch -24 to +24 semitones"
+      },
+      {
+        "name": "Scan Speed and Position",
+        "description": "Scan Speed (0.25x to 4x) sets how fast grains move through the input; Position sets where in the buffer they read from"
+      },
+      {
+        "name": "Spray, Reverse and Stereo Width",
+        "description": "Spray scatters each grain's start point; Reverse is the chance a grain plays backwards; Stereo Width (0-200%) spreads grains at random across the stereo field"
+      },
+      {
+        "name": "Six windows",
+        "description": "Hann, Gaussian, Triangle, Tukey, Blackman and Kaiser, with a Shape control for Gaussian width and Tukey taper"
+      },
+      {
+        "name": "Displays",
+        "description": "Waveform of the 10-second buffer with the read position, a preview of the window, and grain activity, redrawn 60 times a second"
+      },
+      {
+        "name": "Velocity-scaled density",
+        "description": "While a MIDI note is held, grain density is multiplied by its velocity"
+      }
+    ],
+    "useCases": [
+      "Turn a sustained vocal or instrument into a grain cloud",
+      "Stutter and glitch textures with short grains and high spray",
+      "Slow, smeared versions of the input with Scan Speed below 1x",
+      "Octave-shifted textures with Pitch at ±12 semitones",
+      "Backwards-sounding textures with Reverse near 100%"
+    ],
+    "screenshots": [],
+    "graphic": "/plugin-graphics/granularengine.svg"
+  },
+  {
+    "id": "hihat",
+    "folder": "HiHat",
+    "name": "HiHat",
+    "type": "instrument",
+    "formats": [
+      "VST3",
+      "AU",
+      "Standalone"
+    ],
+    "parameters": [
+      {
+        "name": "Tone",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Decay",
+        "range": "0.01 to 0.5"
+      },
+      {
+        "name": "Metallic",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Openness",
+        "range": "0 to 1"
+      }
+    ],
+    "tagline": "Noise hi-hat synth with band-pass tone and open/closed decay",
+    "category": "synthesis",
+    "description": "A hi-hat voice made from white noise filtered to a high band, shaped by an exponential decay and soft-clipped. Any MIDI note triggers the same hat, with velocity setting the level; there is no open/closed choke between notes.",
+    "features": [
+      {
+        "name": "Band-Pass Noise",
+        "description": "Three high-pass and three low-pass one-pole stages keep the noise between a 4-8 kHz lower edge (set by Tone) and 12 kHz."
+      },
+      {
+        "name": "Decay",
+        "description": "Decay time from 10 to 500 ms."
+      },
+      {
+        "name": "Openness",
+        "description": "Lengthens the decay by up to 2 times, from closed toward open."
+      },
+      {
+        "name": "Metallic",
+        "description": "Raises the level into a tanh saturator by up to 3 times for a harder, more saturated hat; it adds no metallic oscillators."
+      }
+    ]
+  },
+  {
+    "id": "koto",
+    "folder": "Koto",
+    "name": "Koto",
+    "type": "instrument",
+    "formats": [
+      "VST3",
+      "AU",
+      "Standalone"
+    ],
+    "parameters": [
+      {
+        "name": "Scale",
+        "range": "0 to 4"
+      },
+      {
+        "name": "Play Style",
+        "range": "0 to 2"
+      },
+      {
+        "name": "Body Resonance",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Attack",
+        "range": "0.001 to 0.1"
+      },
+      {
+        "name": "Decay",
+        "range": "0.1 to 2"
+      },
+      {
+        "name": "Pitch Bend",
+        "range": "-2 to 2"
+      },
+      {
+        "name": "Tremolo Rate",
+        "range": "2 to 20"
+      },
+      {
+        "name": "Tone",
+        "range": "0 to 1"
+      }
+    ],
+    "tagline": "Plucked-string koto synth using a delay-line string model",
+    "category": "synthesis",
+    "description": "An 8-voice plucked-string instrument: a noise burst excites a tuned delay-line (comb filter) string, which then passes through a tone low-pass and three body-resonance peaks. The string loop has no damping filter, so all harmonics decay at the same rate. The Scale parameter (In-sen, Hirajoshi, Iwato, Kumoi, Chromatic) is stored but does not yet change the sound.",
+    "features": [
+      {
+        "name": "Delay-Line String",
+        "description": "A comb filter tuned to the note, with loop feedback from 0.994 to 0.9995 set by Decay (0.1-2)."
+      },
+      {
+        "name": "Play Style",
+        "description": "Pluck excites the string once, Tremolo re-plucks at the Tremolo Rate (2-20 Hz) and Scrape feeds noise in continuously while the key is held."
+      },
+      {
+        "name": "Body Resonance",
+        "description": "Blends in up to 60% of three peaking filters at 250 Hz, 800 Hz and 2 kHz."
+      },
+      {
+        "name": "Tone, Attack and Pitch Bend",
+        "description": "A one-pole low-pass for brightness, a 1-100 ms fade-in, and a fixed pitch offset of up to 2 semitones (a parameter, not the MIDI pitch wheel)."
+      }
+    ]
+  },
+  {
+    "id": "limiter",
+    "folder": "Limiter",
+    "name": "Limiter",
+    "type": "effect",
+    "formats": [
+      "VST3",
+      "AU",
+      "Standalone"
+    ],
+    "parameters": [
+      {
+        "name": "Ceiling",
+        "range": "-12 to 0"
+      },
+      {
+        "name": "Threshold",
+        "range": "-24 to 0"
+      },
+      {
+        "name": "Release",
+        "range": "10 to 1000"
+      },
+      {
+        "name": "Lookahead",
+        "range": "0 to 10"
+      },
+      {
+        "name": "Auto Makeup",
+        "range": "on / off"
+      },
+      {
+        "name": "Output Trim",
+        "range": "-12 to 12"
+      }
+    ],
+    "tagline": "Lookahead peak limiter with a true-peak warning light",
+    "category": "mixing",
+    "description": "A brickwall peak limiter with up to 10 ms of lookahead, so gain comes down before a peak arrives and the output stays under the ceiling. Threshold and auto makeup raise the level into the limiter; release, output trim and meters complete it. A 4x oversampled true-peak check on the output lights a TP indicator when intersample peaks pass 0 dBFS.",
+    "features": [
+      {
+        "name": "Ceiling",
+        "description": "-12 dB to 0 dB (default -0.3 dB); limiting is linked across both channels, with instant attack"
+      },
+      {
+        "name": "Lookahead",
+        "description": "0 ms to 10 ms (default 5 ms), reported to the host as latency; the reduction is held and averaged over the lookahead so it is complete when the peak comes out"
+      },
+      {
+        "name": "Threshold and Auto Makeup",
+        "description": "With Auto Makeup on, the signal is raised so the threshold level (-24 dB to 0 dB) comes out at the ceiling, up to 12 dB of gain"
+      },
+      {
+        "name": "Release and Output Trim",
+        "description": "Exponential release 10 ms to 1000 ms; output trim ±12 dB after the limiter"
+      },
+      {
+        "name": "Meters",
+        "description": "Input, output and gain reduction meters, plus a TP light from a 4x oversampled true-peak check of the output"
+      }
+    ],
+    "useCases": [
+      "Catch peaks on the master bus before export",
+      "Raise the level of a mix with Threshold and Auto Makeup",
+      "Protect a bus from occasional overs",
+      "Check for intersample overs with the TP light"
+    ],
+    "screenshots": [
+      "/screenshots/plugins/Limiter/limiter-main.png"
+    ]
+  },
+  {
+    "id": "macrocontroller",
+    "folder": "MacroController",
+    "name": "Macro Controller",
+    "type": "effect",
+    "formats": [
+      "VST3",
+      "AU",
+      "Standalone"
+    ],
+    "parameters": [
+      {
+        "name": "Macro",
+        "range": "0 to 1"
+      },
+      {
+        "name": "MIDI Channel",
+        "range": "1 to 16"
+      },
+      {
+        "name": "Target N Enable",
+        "range": "on / off"
+      },
+      {
+        "name": "Target N CC",
+        "range": "1 to 127"
+      },
+      {
+        "name": "Target N Min",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Target N Max",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Target N Curve",
+        "range": "0.1 to 10"
+      }
+    ],
+    "tagline": "One macro knob sending up to eight scaled MIDI CC messages",
+    "category": "midi",
+    "description": "Turning the Macro knob sends a MIDI CC message for each enabled target, each with its own CC number, output range and response curve, so one control can move several synth or effect parameters at once. It is built as an audio effect with MIDI output, and it silences any audio passing through it.",
+    "features": [
+      {
+        "name": "Eight Targets",
+        "description": "Each target has an enable switch and a CC number from 1 to 127; by default targets 1-4 are on, sending CC 1-4."
+      },
+      {
+        "name": "Per-Target Range",
+        "description": "Min and Max (0-1) set the span each CC covers, and setting Max below Min inverts it."
+      },
+      {
+        "name": "Response Curve",
+        "description": "A power curve from 0.1 to 10 per target: below 1 the CC rises quickly at first, above 1 it rises slowly at first."
+      },
+      {
+        "name": "MIDI Channel",
+        "description": "All CCs go out on one selectable channel, 1-16."
+      },
+      {
+        "name": "Send on Change",
+        "description": "CCs are sent only when the Macro value moves; changing a target's settings does not resend."
+      }
+    ]
+  },
+  {
+    "id": "melodymaker",
+    "folder": "MelodyMaker",
+    "name": "MelodyMaker",
+    "type": "instrument",
+    "formats": [
+      "VST3",
+      "AU"
+    ],
+    "parameters": [],
+    "tagline": "Random in-key melody loop played by a built-in synth",
+    "category": "midi",
+    "description": "MelodyMaker generates a four-bar melody in a chosen key (major or natural minor) by a random walk over the scale, then loops it in time with the host transport through its own 8-voice synth. You'd use it to sketch melodic ideas and export the result as a MIDI file. It loads as an instrument, not a MIDI effect: it plays audio and does not send MIDI to other tracks.",
+    "features": [
+      {
+        "name": "Key and scale",
+        "description": "Twelve root keys and Major or Minor; notes stay within two octaves above the root."
+      },
+      {
+        "name": "Transport-synced loop",
+        "description": "The 16-beat melody follows the host's tempo and song position and repeats while the transport plays."
+      },
+      {
+        "name": "Built-in synth",
+        "description": "Sine, saw, square or triangle oscillator with an ADSR envelope (attack/decay 1 ms to 2 s, release to 3 s)."
+      },
+      {
+        "name": "Effects",
+        "description": "Low-pass filter (200 Hz to 20 kHz), a feedback delay and a reverb, each with its own level."
+      },
+      {
+        "name": "MIDI file export",
+        "description": "Saves the current melody as a .mid file at 120 BPM in 4/4."
+      }
+    ],
+    "experimental": true
+  },
+  {
+    "id": "midiarpeggiator",
+    "folder": "MIDIArpeggiator",
+    "name": "MIDI Arpeggiator",
+    "type": "midi",
+    "formats": [
+      "VST3",
+      "AU",
+      "Standalone"
+    ],
+    "parameters": [
+      {
+        "name": "Pattern",
+        "range": "Up, Down, Up-Down, Down-Up, Random, Played Order"
+      },
+      {
+        "name": "Rate",
+        "range": "1/1, 1/2, 1/4, 1/8, 1/16, 1/32, 1/4T, 1/8T, 1/16T"
+      },
+      {
+        "name": "Octaves",
+        "range": "1 to 4"
+      },
+      {
+        "name": "Gate",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Swing",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Latch",
+        "range": "on / off"
+      },
+      {
+        "name": "Use Input Velocity",
+        "range": "on / off"
+      },
+      {
+        "name": "Fixed Velocity",
+        "range": "1 to 127"
+      }
+    ],
+    "tagline": "Tempo-synced arpeggiator for held MIDI notes",
+    "category": "midi",
+    "description": "Turns held chords into a stepped sequence of single notes at a tempo-synced rate, replacing the incoming notes with the arpeggio. Use it on a MIDI track ahead of any instrument to turn sustained chords into rhythmic patterns. Built as a MIDI effect, so Ableton Live will not load it; use a host that accepts third-party MIDI effects.",
+    "features": [
+      {
+        "name": "Six patterns",
+        "description": "Up, Down, Up-Down, Down-Up, Random and Played Order."
+      },
+      {
+        "name": "Rate",
+        "description": "Nine step lengths from 1/1 to 1/32, including 1/4, 1/8 and 1/16 triplets, timed from the host tempo."
+      },
+      {
+        "name": "Octave range and gate",
+        "description": "Repeats the pattern over 1 to 4 octaves; Gate sets note length from 0 to 100% of a step."
+      },
+      {
+        "name": "Latch",
+        "description": "Keeps the arpeggio running after the keys are released."
+      },
+      {
+        "name": "Velocity",
+        "description": "Uses the average velocity of the held notes, or a fixed velocity from 1 to 127."
+      }
+    ]
+  },
+  {
+    "id": "midiccmapper",
+    "folder": "MIDICCMapper",
+    "name": "MIDI CC Mapper",
+    "type": "midi",
+    "formats": [
+      "VST3",
+      "AU",
+      "Standalone"
+    ],
+    "parameters": [
+      {
+        "name": "Map N Enable",
+        "range": "on / off"
+      },
+      {
+        "name": "Map N In CC",
+        "range": "1 to 127"
+      },
+      {
+        "name": "Map N Out CC",
+        "range": "1 to 127"
+      },
+      {
+        "name": "Map N Min",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Map N Max",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Map N Curve",
+        "range": "0.1 to 10"
+      },
+      {
+        "name": "Map N Invert",
+        "range": "on / off"
+      }
+    ],
+    "tagline": "Remaps MIDI CC numbers with range, curve and invert",
+    "category": "midi",
+    "description": "Rewrites incoming MIDI control changes to other CC numbers through eight mapping slots, scaling and shaping the values on the way. Use it to make a controller's knobs drive the CCs a synth expects, or to limit and curve their response. Built as a MIDI effect, so Ableton Live will not load it; use a host that accepts third-party MIDI effects.",
+    "features": [
+      {
+        "name": "Eight mappings",
+        "description": "Each slot has an enable switch, an input CC and an output CC (1 to 127)."
+      },
+      {
+        "name": "Output range",
+        "description": "Min and Max scale each mapping's output into a chosen part of the 0 to 127 range."
+      },
+      {
+        "name": "Response curve",
+        "description": "Curve raises the value to a power from 0.1 to 10, from a fast rise to a slow one; 1 is linear."
+      },
+      {
+        "name": "Invert",
+        "description": "Flips each mapping's value so that a rising control lowers the output."
+      },
+      {
+        "name": "Pass-through",
+        "description": "Unmapped CCs and all other MIDI pass through unchanged; a mapped input CC is replaced by its outputs, and several slots can share one input."
+      }
+    ]
+  },
+  {
+    "id": "midichordgenerator",
+    "folder": "MIDIChordGenerator",
+    "name": "MIDI Chord Generator",
+    "type": "midi",
+    "formats": [
+      "VST3",
+      "AU",
+      "Standalone"
+    ],
+    "parameters": [
+      {
+        "name": "Chord Type",
+        "range": "Major, Minor, Dim, Aug, Sus2, Sus4, Maj7, Min7, Dom7, MinMaj7, Dim7, m7b5, Maj6, Min6, Add9, Maj9, Min9, Dom9"
+      },
+      {
+        "name": "Voicing",
+        "range": "Root, 1st Inv, 2nd Inv, 3rd Inv, Spread, Drop2, Drop3"
+      },
+      {
+        "name": "Octave Shift",
+        "range": "-2 to 2"
+      },
+      {
+        "name": "Strum",
+        "range": "0 to 100"
+      },
+      {
+        "name": "Use Input Velocity",
+        "range": "on / off"
+      },
+      {
+        "name": "Fixed Velocity",
+        "range": "1 to 127"
+      }
+    ],
+    "tagline": "Plays a chord of a chosen type from each incoming note",
+    "category": "midi",
+    "description": "Builds a chord on every incoming note using a fixed chord type and voicing, and releases the whole chord when the note is released. Use it to play full chords from single keys or to turn a bass line into a chord part. Built as a MIDI effect, so Ableton Live will not load it; use a host that accepts third-party MIDI effects.",
+    "features": [
+      {
+        "name": "18 chord types",
+        "description": "Triads, sus2/sus4, sixths, sevenths (including dim7 and m7b5) and add9/ninth chords."
+      },
+      {
+        "name": "Voicings",
+        "description": "Root position, 1st to 3rd inversion, Spread, Drop-2 and Drop-3."
+      },
+      {
+        "name": "Octave shift",
+        "description": "Moves the chord from 2 octaves down to 2 octaves up from the played note."
+      },
+      {
+        "name": "Strum",
+        "description": "Offsets each chord note after the first by a set amount; the 0 to 100 value is applied in samples, so the spread is at most a few milliseconds."
+      },
+      {
+        "name": "Velocity",
+        "description": "Uses the played velocity or a fixed velocity from 1 to 127."
+      }
+    ]
+  },
+  {
+    "id": "midigroovequantizer",
+    "folder": "MIDIGrooveQuantizer",
+    "name": "MIDI Groove Quantizer",
+    "type": "midi",
+    "formats": [
+      "VST3",
+      "AU",
+      "Standalone"
+    ],
+    "parameters": [
+      {
+        "name": "Grid",
+        "range": "1/4, 1/8, 1/16, 1/32, 1/8T, 1/16T"
+      },
+      {
+        "name": "Strength",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Swing",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Humanize Time",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Humanize Vel",
+        "range": "0 to 1"
+      }
+    ],
+    "tagline": "Real-time note quantizing with swing and humanize",
+    "category": "midi",
+    "description": "Moves incoming note-ons and note-offs toward a tempo-based grid as they play, with optional swing and random timing and velocity changes. It works without lookahead, so a note can only move within the current audio block, and in practice timing changes are small; velocity humanizing works fully. Built as a MIDI effect, so Ableton Live will not load it; use a host that accepts third-party MIDI effects.",
+    "features": [
+      {
+        "name": "Grid",
+        "description": "1/4, 1/8, 1/16, 1/32, 1/8 triplet or 1/16 triplet, from the host tempo."
+      },
+      {
+        "name": "Strength",
+        "description": "Moves each note from 0 to 100% of the way to the nearest grid line."
+      },
+      {
+        "name": "Swing",
+        "description": "Delays every other grid line by up to half a grid step."
+      },
+      {
+        "name": "Humanize timing",
+        "description": "Adds a random offset to note-ons of up to 10% of a grid step."
+      },
+      {
+        "name": "Humanize velocity",
+        "description": "Adds a random change of up to plus or minus 30 to note-on velocity."
+      }
+    ],
+    "experimental": true
+  },
+  {
+    "id": "midiharmonizer",
+    "folder": "MIDIHarmonizer",
+    "name": "MIDI Harmonizer",
+    "type": "midi",
+    "formats": [
+      "VST3",
+      "AU",
+      "Standalone"
+    ],
+    "parameters": [
+      {
+        "name": "Key",
+        "range": "C, Db, D, Eb, E, F, Gb, G, Ab, A, Bb, B"
+      },
+      {
+        "name": "Scale",
+        "range": "Chromatic, Major, Minor, Dorian, Phrygian, Lydian, Mixolydian, Aeolian, Locrian, Harmonic Minor, Melodic Minor, Pentatonic, Blues"
+      },
+      {
+        "name": "3rd Above",
+        "range": "on / off"
+      },
+      {
+        "name": "5th Above",
+        "range": "on / off"
+      },
+      {
+        "name": "Octave Above",
+        "range": "on / off"
+      },
+      {
+        "name": "3rd Below",
+        "range": "on / off"
+      },
+      {
+        "name": "5th Below",
+        "range": "on / off"
+      },
+      {
+        "name": "Octave Below",
+        "range": "on / off"
+      },
+      {
+        "name": "Mix",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Use Input Velocity",
+        "range": "on / off"
+      },
+      {
+        "name": "Fixed Velocity",
+        "range": "1 to 127"
+      }
+    ],
+    "tagline": "Adds 3rds, 5ths and octaves above or below each note",
+    "category": "midi",
+    "description": "Passes each incoming note through and adds harmony notes at a third, fifth or octave above or below it. In Chromatic mode the third is a major third and the fifth a perfect fifth; the in-key scale modes are intended to pick diatonic intervals, but their scale lookup currently gives wrong intervals, so check results by ear. Built as a MIDI effect, so Ableton Live will not load it; use a host that accepts third-party MIDI effects.",
+    "features": [
+      {
+        "name": "Six harmony voices",
+        "description": "Switch on a 3rd, 5th or octave above, and a 3rd, 5th or octave below, in any combination."
+      },
+      {
+        "name": "Key and scale",
+        "description": "Twelve keys and 13 scale choices: Chromatic, Major, Minor, the modes, Harmonic and Melodic Minor, Pentatonic and Blues."
+      },
+      {
+        "name": "Mix",
+        "description": "Scales the velocity of the harmony notes from 0 to 100%; the original note is always played."
+      },
+      {
+        "name": "Velocity",
+        "description": "Harmony notes use the played velocity or a fixed velocity from 1 to 127."
+      },
+      {
+        "name": "MIDI learn",
+        "description": "The Mix and Fixed Velocity sliders can be assigned to a MIDI controller."
+      }
+    ],
+    "experimental": true
+  },
+  {
+    "id": "multibandcompressor",
+    "folder": "MultibandCompressor",
+    "name": "Multiband Compressor",
+    "type": "effect",
+    "formats": [
+      "VST3",
+      "AU",
+      "Standalone"
+    ],
+    "parameters": [
+      {
+        "name": "Crossover 1",
+        "range": "20 to 500"
+      },
+      {
+        "name": "Crossover 2",
+        "range": "200 to 5000"
+      },
+      {
+        "name": "Crossover 3",
+        "range": "2000 to 16000"
+      },
+      {
+        "name": "Band 1 Threshold",
+        "range": "-60 to 0"
+      },
+      {
+        "name": "Band 1 Ratio",
+        "range": "1 to 20"
+      },
+      {
+        "name": "Band 1 Attack",
+        "range": "0.1 to 100"
+      },
+      {
+        "name": "Band 1 Release",
+        "range": "10 to 1000"
+      },
+      {
+        "name": "Band 1 Makeup",
+        "range": "-12 to 12"
+      },
+      {
+        "name": "Band 1 Solo",
+        "range": "on / off"
+      },
+      {
+        "name": "Band 1 Bypass",
+        "range": "on / off"
+      },
+      {
+        "name": "Band 1 Mid/Side",
+        "range": "on / off"
+      },
+      {
+        "name": "Band 2 Threshold",
+        "range": "-60 to 0"
+      },
+      {
+        "name": "Band 2 Ratio",
+        "range": "1 to 20"
+      },
+      {
+        "name": "Band 2 Attack",
+        "range": "0.1 to 100"
+      },
+      {
+        "name": "Band 2 Release",
+        "range": "10 to 1000"
+      },
+      {
+        "name": "Band 2 Makeup",
+        "range": "-12 to 12"
+      },
+      {
+        "name": "Band 2 Solo",
+        "range": "on / off"
+      },
+      {
+        "name": "Band 2 Bypass",
+        "range": "on / off"
+      },
+      {
+        "name": "Band 2 Mid/Side",
+        "range": "on / off"
+      },
+      {
+        "name": "Band 3 Threshold",
+        "range": "-60 to 0"
+      },
+      {
+        "name": "Band 3 Ratio",
+        "range": "1 to 20"
+      },
+      {
+        "name": "Band 3 Attack",
+        "range": "0.1 to 100"
+      },
+      {
+        "name": "Band 3 Release",
+        "range": "10 to 1000"
+      },
+      {
+        "name": "Band 3 Makeup",
+        "range": "-12 to 12"
+      },
+      {
+        "name": "Band 3 Solo",
+        "range": "on / off"
+      },
+      {
+        "name": "Band 3 Bypass",
+        "range": "on / off"
+      },
+      {
+        "name": "Band 3 Mid/Side",
+        "range": "on / off"
+      },
+      {
+        "name": "Band 4 Threshold",
+        "range": "-60 to 0"
+      },
+      {
+        "name": "Band 4 Ratio",
+        "range": "1 to 20"
+      },
+      {
+        "name": "Band 4 Attack",
+        "range": "0.1 to 100"
+      },
+      {
+        "name": "Band 4 Release",
+        "range": "10 to 1000"
+      },
+      {
+        "name": "Band 4 Makeup",
+        "range": "-12 to 12"
+      },
+      {
+        "name": "Band 4 Solo",
+        "range": "on / off"
+      },
+      {
+        "name": "Band 4 Bypass",
+        "range": "on / off"
+      },
+      {
+        "name": "Band 4 Mid/Side",
+        "range": "on / off"
+      }
+    ],
+    "tagline": "Four-band compressor with Linkwitz-Riley crossovers",
+    "category": "mixing",
+    "description": "A compressor that splits stereo audio into four bands with 24 dB/octave Linkwitz-Riley crossovers and compresses each band with its own settings before summing them back. Each band can be soloed, bypassed, or switched to process mid and side instead of left and right.",
+    "features": [
+      {
+        "name": "Three crossovers",
+        "description": "20-500 Hz (default 250 Hz), 200 Hz-5 kHz (default 2 kHz) and 2-16 kHz (default 8 kHz), each a 4th-order Linkwitz-Riley split"
+      },
+      {
+        "name": "Per-band compression",
+        "description": "Threshold -60 dB to 0 dB, ratio 1:1 to 20:1, attack 0.1-100 ms, release 10-1000 ms, makeup ±12 dB"
+      },
+      {
+        "name": "Solo and Bypass",
+        "description": "Solo mutes the other bands; Bypass passes a band through uncompressed"
+      },
+      {
+        "name": "Mid/Side per band",
+        "description": "Encodes the band to mid and side, compresses those with the band's settings, then decodes back to left and right"
+      },
+      {
+        "name": "Gain reduction meters",
+        "description": "One gain reduction meter per band"
+      }
+    ],
+    "useCases": [
+      "Control low-end dynamics without touching the mids and highs",
+      "Compress a harsh upper-mid band on its own",
+      "Reduce sibilance by compressing a band set around 4-8 kHz",
+      "Learn how crossover splitting and per-band compression interact, one band at a time with Solo"
+    ],
+    "screenshots": [
+      "/screenshots/plugins/MultibandCompressor/multiband-main.png"
+    ]
+  },
+  {
+    "id": "organemulator",
+    "folder": "OrganEmulator",
+    "name": "OrganEmulator",
+    "type": "instrument",
+    "formats": [
+      "VST3",
+      "AU",
+      "Standalone"
+    ],
+    "parameters": [
+      {
+        "name": "16' Drawbar",
+        "range": "0 to 1"
+      },
+      {
+        "name": "5⅓' Drawbar",
+        "range": "0 to 1"
+      },
+      {
+        "name": "8' Drawbar",
+        "range": "0 to 1"
+      },
+      {
+        "name": "4' Drawbar",
+        "range": "0 to 1"
+      },
+      {
+        "name": "2⅔' Drawbar",
+        "range": "0 to 1"
+      },
+      {
+        "name": "2' Drawbar",
+        "range": "0 to 1"
+      },
+      {
+        "name": "1⅗' Drawbar",
+        "range": "0 to 1"
+      },
+      {
+        "name": "1⅓' Drawbar",
+        "range": "0 to 1"
+      },
+      {
+        "name": "1' Drawbar",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Leslie Speed",
+        "range": "on / off"
+      },
+      {
+        "name": "Leslie Depth",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Leslie Mix",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Percussion Click",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Percussion Decay",
+        "range": "0.01 to 0.5"
+      }
+    ],
+    "tagline": "Drawbar organ with nine sine drawbars and a rotary-style effect",
+    "category": "synthesis",
+    "description": "An 8-voice drawbar organ that adds nine sine waves at the standard drawbar footages, in the manner of a tonewheel organ. A simple rotary-speaker effect (pitch wobble from a modulated delay plus tremolo, slow or fast) and a percussion click are applied to each voice.",
+    "features": [
+      {
+        "name": "9 drawbars",
+        "description": "16', 5⅓', 8', 4', 2⅔', 2', 1⅗', 1⅓' and 1', each a sine at that harmonic with a level from 0 to 1"
+      },
+      {
+        "name": "Rotary-style effect",
+        "description": "A sine LFO moves a short delay (2 ms, up to 5 ms) for pitch wobble and adds tremolo; Slow is 0.7 Hz, Fast is 6 Hz, with Depth and Mix controls"
+      },
+      {
+        "name": "Percussion click",
+        "description": "A short transient at the start of each note, with level and a decay of 10 ms to 500 ms"
+      },
+      {
+        "name": "8-voice polyphony",
+        "description": "Eight voices; velocity sets the note level"
+      }
+    ],
+    "useCases": [
+      "Full organ - most drawbars out with the fast rotary setting",
+      "Mellow jazz tones - 16', 8' and 4' only, slow rotary",
+      "Bright, thin registrations - upper drawbars with the click up",
+      "Learning additive synthesis - hear each harmonic by pulling one drawbar at a time"
+    ],
+    "screenshots": []
+  },
+  {
+    "id": "padsynth",
+    "folder": "PadSynth",
+    "name": "PadSynth",
+    "type": "instrument",
+    "formats": [
+      "VST3",
+      "AU",
+      "Standalone"
+    ],
+    "parameters": [
+      {
+        "name": "Waveform",
+        "range": "0 to 3"
+      },
+      {
+        "name": "Unison Voices",
+        "range": "3 to 9"
+      },
+      {
+        "name": "Detune",
+        "range": "0 to 50"
+      },
+      {
+        "name": "Stereo Width",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Filter Cutoff",
+        "range": "20 to 20000"
+      },
+      {
+        "name": "Filter Resonance",
+        "range": "0.5 to 10"
+      },
+      {
+        "name": "Filter Type",
+        "range": "0 to 3"
+      },
+      {
+        "name": "Attack",
+        "range": "0.001 to 5"
+      },
+      {
+        "name": "Decay",
+        "range": "0.001 to 5"
+      },
+      {
+        "name": "Sustain",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Release",
+        "range": "0.001 to 10"
+      }
+    ],
+    "tagline": "Unison pad synth with up to 9 detuned oscillators per note",
+    "category": "synthesis",
+    "description": "A 6-voice pad synth in which every note is a stack of 3 to 9 detuned oscillators spread across the stereo field. A multi-mode filter and a slow-by-default ADSR envelope shape the stack.",
+    "features": [
+      {
+        "name": "Unison stack",
+        "description": "3 to 9 oscillators per note (default 7), detuned evenly between minus and plus the Detune amount"
+      },
+      {
+        "name": "Detune",
+        "description": "0 to 50 cents (default 10)"
+      },
+      {
+        "name": "Stereo Width",
+        "description": "Spreads the unison oscillators from centre (0) to fully left and right (1)"
+      },
+      {
+        "name": "Waveform",
+        "description": "Sine, saw, square or triangle, shared by every oscillator in the stack"
+      },
+      {
+        "name": "Multi-mode filter",
+        "description": "Low-pass, high-pass, band-pass or notch; cutoff 20 Hz to 20 kHz, resonance 0.5 to 10"
+      },
+      {
+        "name": "Envelope and polyphony",
+        "description": "ADSR with attack and decay up to 5 s and release up to 10 s (default 0.8 s attack, 1.5 s release); 6-note polyphony; velocity sets the level"
+      }
+    ],
+    "useCases": [
+      "Ambient pads - slow attack, long release, low-pass filter",
+      "Supersaw-style chords - saw wave, 7-9 voices, 15-25 cents of detune",
+      "Thin, wide textures - sine or triangle with full Stereo Width",
+      "Drones - high sustain and long release"
+    ],
+    "screenshots": []
+  },
+  {
+    "id": "panutil",
+    "folder": "PanUtil",
+    "name": "PanUtil",
+    "type": "effect",
+    "formats": [
+      "VST3",
+      "AU",
+      "Standalone"
+    ],
+    "parameters": [
+      {
+        "name": "Pan",
+        "range": "-1 to 1"
+      },
+      {
+        "name": "Width",
+        "range": "0 to 2"
+      },
+      {
+        "name": "Mode",
+        "range": "Pan, Balance"
+      },
+      {
+        "name": "Gain",
+        "range": "-36 to 24"
+      },
+      {
+        "name": "Mono",
+        "range": "on / off"
+      }
+    ],
+    "tagline": "Pan, width, gain and mono for one stereo track",
+    "category": "utility",
+    "description": "A track utility for stereo signals: pan or balance, stereo width from mono to 200%, output gain from -36 dB to +24 dB, and a mono switch. All four controls are smoothed, and L/R meters and a pan indicator show the result.",
+    "features": [
+      {
+        "name": "Pan or Balance",
+        "description": "Pan mode uses a constant-power pan law; Balance mode (the default) only turns the opposite side down, so a centred signal keeps its level"
+      },
+      {
+        "name": "Width",
+        "description": "Mid/side width from 0% (mono) through 100% (unchanged) to 200%"
+      },
+      {
+        "name": "Gain",
+        "description": "Output gain from -36 dB to +24 dB; double-click returns it to 0 dB"
+      },
+      {
+        "name": "Mono",
+        "description": "Sums to mono whatever Width is set to, smoothed so switching does not click"
+      },
+      {
+        "name": "Meters",
+        "description": "Left and right peak meters and a pan position indicator"
+      }
+    ],
+    "useCases": [
+      "Re-centre a source recorded slightly to one side",
+      "Place instruments across the stereo field",
+      "Widen a synth or pad with width above 100%",
+      "Check mono compatibility with the Mono switch",
+      "Trim a track's level without touching the fader"
+    ],
+    "learningFocus": [
+      "Stereo processing (L/R channels)",
+      "Constant-power panning algorithm",
+      "M/S (Mid/Side) processing for width control",
+      "Dual-channel metering",
+      "Pan vs Balance behavior",
+      "Choice and bool parameters",
+      "Keeping saved state compatible when parameters are added",
+      "Custom drawing in the editor"
+    ],
+    "algorithms": [
+      {
+        "name": "Constant-Power Panning",
+        "description": "Keeps perceived loudness about constant as you pan across the stereo field",
+        "code": "// Convert pan (-1 to +1) to angle (0 to π/2)\nfloat angle = (pan + 1.0) * 0.25 * π;\nleftGain = cos(angle);\nrightGain = sin(angle);"
+      },
+      {
+        "name": "Width Control (M/S Processing)",
+        "description": "Mid/Side processing for stereo width adjustment",
+        "code": "// Convert L/R to M/S\nmid = (L + R) * 0.5;    // Mono sum\nside = (L - R) * 0.5;   // Stereo difference\n\n// Scale side by width\nside *= width;  // 0.0 = mono, 1.0 = normal, 2.0 = wide\n\n// Convert back to L/R\nL = mid + side;\nR = mid - side;"
+      }
+    ],
+    "screenshots": [],
+    "graphic": "/plugin-graphics/panutil.svg"
+  },
+  {
+    "id": "phaserflanger",
+    "folder": "PhaserFlanger",
+    "name": "PhaserFlanger",
+    "type": "effect",
+    "formats": [
+      "VST3",
+      "AU",
+      "Standalone"
+    ],
+    "parameters": [
+      {
+        "name": "Mode",
+        "range": "Phaser, Flanger"
+      },
+      {
+        "name": "Rate",
+        "range": "0.1 to 10"
+      },
+      {
+        "name": "Depth",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Feedback",
+        "range": "-0.9 to 0.9"
+      },
+      {
+        "name": "Centre Freq",
+        "range": "200 to 2000"
+      },
+      {
+        "name": "Mix",
+        "range": "0 to 1"
+      }
+    ],
+    "tagline": "Six-stage phaser and short-delay flanger in one",
+    "category": "creative",
+    "description": "A modulation effect with two modes: a phaser built from six all-pass stages with feedback around them, and a flanger built from a modulated 5 to 15 ms delay with feedback. Use it to add sweeping movement to guitars, synths, drums or pads.",
+    "features": [
+      {
+        "name": "Phaser mode",
+        "description": "Six first-order all-pass stages whose break frequency a sine LFO sweeps up to two octaves either side of Centre Freq (200 Hz to 2 kHz)."
+      },
+      {
+        "name": "Flanger mode",
+        "description": "An interpolated delay swept between 5 and 15 ms, with its output fed back into the delay line."
+      },
+      {
+        "name": "Feedback (-0.9 to 0.9)",
+        "description": "Negative or positive feedback; in phaser mode the wet level is trimmed as feedback rises to hold back the resonant peaks."
+      },
+      {
+        "name": "Rate and Depth",
+        "description": "LFO rate from 0.1 to 10 Hz; Depth sets the sweep width in both modes."
+      },
+      {
+        "name": "Mix",
+        "description": "Crossfades between the dry and processed signal."
+      }
+    ]
+  },
+  {
+    "id": "platereverb",
+    "folder": "PlateReverb",
+    "name": "PlateReverb",
+    "type": "effect",
+    "formats": [
+      "VST3",
+      "AU",
+      "Standalone"
+    ],
+    "parameters": [
+      {
+        "name": "Size",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Damping",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Width",
+        "range": "0 to 1"
+      },
+      {
+        "name": "PreDelay",
+        "range": "0 to 100"
+      },
+      {
+        "name": "Mix",
+        "range": "0 to 1"
+      }
+    ],
+    "tagline": "Simple stereo reverb with size, damping and width",
+    "category": "mixing",
+    "description": "A stereo reverb built on JUCE's standard reverb (a Freeverb-style comb and all-pass network), not a model of a plate. Use it for general-purpose room and space on a send or insert.",
+    "features": [
+      {
+        "name": "Size",
+        "description": "Sets the room size, and with it the decay length."
+      },
+      {
+        "name": "Damping",
+        "description": "Sets how quickly high frequencies fade in the tail."
+      },
+      {
+        "name": "Width",
+        "description": "Sets the stereo spread of the reverb from mono to full width."
+      },
+      {
+        "name": "Mix",
+        "description": "Crossfades from the dry signal at 0 to the reverb alone at 1, scaled so each end keeps its nominal level."
+      }
+    ],
+    "experimental": true
+  },
+  {
+    "id": "polysynth",
+    "folder": "Polysynth",
+    "name": "Polysynth",
+    "type": "instrument",
+    "formats": [
+      "VST3",
+      "AU",
+      "Standalone"
+    ],
+    "parameters": [
+      {
+        "name": "Osc Mix",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Detune",
+        "range": "-24 to 24"
+      },
+      {
+        "name": "Unison Voices",
+        "range": "1 to 6"
+      },
+      {
+        "name": "Unison Detune",
+        "range": "0 to 50"
+      },
+      {
+        "name": "Filter Cutoff",
+        "range": ""
+      },
+      {
+        "name": "Filter Resonance",
+        "range": "0 to 1"
+      },
+      {
+        "name": "LP/HP Mix",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Attack",
+        "range": "0.001 to 2"
+      },
+      {
+        "name": "Decay",
+        "range": "0.001 to 2"
+      },
+      {
+        "name": "Sustain",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Release",
+        "range": "0.001 to 5"
+      },
+      {
+        "name": "Chorus Depth",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Chorus Rate",
+        "range": "0.1 to 10"
+      },
+      {
+        "name": "Output Level",
+        "range": "-24 to 12"
+      }
+    ],
+    "tagline": "Six-voice saw and square synth with unison",
+    "category": "synthesis",
+    "description": "A six-voice subtractive synth with a sawtooth and a square oscillator per voice, up to six detuned unison copies, a simple low-pass/high-pass filter and an ADSR envelope. Use it for basic leads, basses and pads.",
+    "features": [
+      {
+        "name": "Two oscillators",
+        "description": "Saw and square, crossfaded by Osc Mix; the square can be detuned from -24 to +24 semitones."
+      },
+      {
+        "name": "Unison",
+        "description": "1 to 6 stacked copies per voice, spread across up to 50 cents."
+      },
+      {
+        "name": "Filter",
+        "description": "One-pole (6 dB/octave) low-pass and high-pass, blended by LP/HP Mix, with cutoff from 20 Hz to 20 kHz."
+      },
+      {
+        "name": "ADSR envelope",
+        "description": "Attack and decay up to 2 s, sustain level, release up to 5 s."
+      },
+      {
+        "name": "Output Level",
+        "description": "-24 to +12 dB, ramped across each block to avoid clicks."
+      }
+    ]
+  },
+  {
+    "id": "reverb",
+    "folder": "Reverb",
+    "name": "Reverb",
+    "type": "effect",
+    "formats": [
+      "VST3",
+      "AU",
+      "Standalone"
+    ],
+    "parameters": [
+      {
+        "name": "Room Size",
+        "range": "0 to 100"
+      },
+      {
+        "name": "Damping",
+        "range": "0 to 100"
+      },
+      {
+        "name": "Width",
+        "range": "0 to 100"
+      },
+      {
+        "name": "Pre-Delay",
+        "range": "0 to 100"
+      },
+      {
+        "name": "Mix",
+        "range": "0 to 100"
+      },
+      {
+        "name": "Freeze",
+        "range": "on / off"
+      }
+    ],
+    "tagline": "Freeverb-style reverb with pre-delay, width and freeze",
+    "category": "mixing",
+    "description": "A Schroeder reverb in the Freeverb layout: 8 parallel damped comb filters and 4 series all-pass filters per channel, with the right channel's combs offset by 23 samples. Controls are room size, damping, width, pre-delay up to 100 ms, mix and freeze.",
+    "features": [
+      {
+        "name": "8 parallel comb filters",
+        "description": "Delays of 1116-1617 samples at 44.1 kHz, scaled to the session sample rate"
+      },
+      {
+        "name": "4 series all-pass filters",
+        "description": "Delays of 225-556 samples at 44.1 kHz, for diffusion"
+      },
+      {
+        "name": "Room Size",
+        "description": "0% to 100%, setting comb feedback from 0.28 to 0.84"
+      },
+      {
+        "name": "Damping",
+        "description": "One-pole low-pass in each comb's feedback path, darkening the tail as it decays"
+      },
+      {
+        "name": "Width and Pre-Delay",
+        "description": "Width scales the side signal of the wet output from mono (0%) to full (100%); pre-delay 0 ms to 100 ms"
+      },
+      {
+        "name": "Freeze",
+        "description": "Sets comb feedback to 1 and stops new input reaching the reverb, so the current tail holds (damping still darkens it)"
+      }
+    ],
+    "useCases": [
+      "Small room ambience - room size 20-30%, damping 60-70%, short pre-delay",
+      "Large space - room size 70-90%, damping 30-50%, 20-40 ms pre-delay",
+      "Snare reverb - room size 30-40%, short pre-delay, mix 30-40%",
+      "Held drones - play a chord, switch Freeze on, and play over the held tail",
+      "Subtle room tone - room size 10-20%, high damping, mix 15-25%"
+    ],
+    "learningFocus": [
+      "Schroeder reverberator topology (parallel combs + series all-pass)",
+      "Comb filter tuning to avoid metallic resonances",
+      "Damping with one-pole low-pass filter in feedback path",
+      "All-pass filters for diffusion",
+      "Stereo decorrelation with offset L/R delay lines",
+      "Circular buffer implementation for delays",
+      "Freeze mode implementation (feedback = 1.0)",
+      "Sample rate scaling for delay times"
+    ],
+    "algorithms": [
+      {
+        "name": "Comb Filter with Damping",
+        "description": "Parallel comb filters with low-pass damping in feedback path",
+        "code": "// Comb filter structure\nstruct CombFilter {\n  float buffer[bufferSize];\n  int bufferIndex = 0;\n  float feedback = 0.84f;\n  float damp1 = damping * 0.4f;  // damping coefficient\n  float damp2 = 1.0f - damp1;\n  float filterStore = 0.0f;\n\n  float process(float input) {\n    float output = buffer[bufferIndex];\n\n    // One-pole damping filter\n    filterStore = (output * damp2) + (filterStore * damp1);\n\n    // Write to buffer with damped feedback\n    buffer[bufferIndex] = input + (filterStore * feedback);\n\n    bufferIndex = (bufferIndex + 1) % bufferSize;\n    return output;\n  }\n};"
+      },
+      {
+        "name": "All-Pass Filter",
+        "description": "Series all-pass filters for diffusion",
+        "code": "// All-pass filter structure\nstruct AllPassFilter {\n  float buffer[bufferSize];\n  int bufferIndex = 0;\n  float feedback = 0.5f;\n\n  float process(float input) {\n    float bufOut = buffer[bufferIndex];\n    float output = -input + bufOut;\n\n    buffer[bufferIndex] = input + (bufOut * feedback);\n\n    bufferIndex = (bufferIndex + 1) % bufferSize;\n    return output;\n  }\n};"
+      },
+      {
+        "name": "Stereo Processing",
+        "description": "Mono input into separate L/R comb banks, the right one offset by 23 samples, then mid/side width",
+        "code": "// Process left and right independently\nfloat combOutL = 0.0f, combOutR = 0.0f;\n\n// 8 parallel comb filters (different tunings for L/R)\nfor (int i = 0; i < 8; ++i) {\n  combOutL += combsLeft[i].process(monoInput);\n  combOutR += combsRight[i].process(monoInput);\n}\n\n// 4 series all-pass filters\nfloat wetL = combOutL, wetR = combOutR;\nfor (int i = 0; i < 4; ++i) {\n  wetL = allPassesLeft[i].process(wetL);\n  wetR = allPassesRight[i].process(wetR);\n}\n\n// Apply stereo width (mid/side processing)\nfloat mono = (wetL + wetR) * 0.5f;\nfloat side = (wetL - wetR) * 0.5f * width;\nwetL = mono + side;\nwetR = mono - side;"
+      },
+      {
+        "name": "Freeze Mode",
+        "description": "Holds the tail by muting the reverb input and setting comb feedback to 1",
+        "code": "// Get freeze parameter\nbool freeze = freezeParam->get();\n\n// Update comb filter feedback\nfloat feedback = freeze ? 1.0f : (0.28f + roomSize * 0.56f);\n\nfor (int i = 0; i < numCombs; ++i) {\n  combsLeft[i].feedback = feedback;\n  combsRight[i].feedback = feedback;\n}\n\n// Mute input in freeze mode\nif (freeze) {\n  inputL = 0.0f;\n  inputR = 0.0f;\n}\n\n// Reverb tail sustains indefinitely with feedback = 1.0"
+      }
+    ],
+    "screenshots": [],
+    "graphic": "/plugin-graphics/reverb.svg"
+  },
+  {
+    "id": "samplerplugin",
+    "folder": "SamplerPlugin",
+    "name": "Sampler",
+    "type": "instrument",
+    "formats": [
+      "VST3",
+      "AU",
+      "Standalone"
+    ],
+    "parameters": [
+      {
+        "name": "Amp Attack",
+        "range": "0.001 to 5"
+      },
+      {
+        "name": "Amp Decay",
+        "range": "0.001 to 5"
+      },
+      {
+        "name": "Amp Sustain",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Amp Release",
+        "range": "0.001 to 10"
+      },
+      {
+        "name": "Filter Cutoff",
+        "range": "20 to 20000"
+      },
+      {
+        "name": "Filter Resonance",
+        "range": "0.5 to 10"
+      },
+      {
+        "name": "Filter Type",
+        "range": "Low-pass, High-pass, Band-pass, Notch"
+      },
+      {
+        "name": "Filter Env Amount",
+        "range": "-1 to 1"
+      },
+      {
+        "name": "Filt Attack",
+        "range": "0.001 to 5"
+      },
+      {
+        "name": "Filt Decay",
+        "range": "0.001 to 5"
+      },
+      {
+        "name": "Filt Sustain",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Filt Release",
+        "range": "0.001 to 10"
+      },
+      {
+        "name": "Sample Start",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Sample End",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Loop Mode",
+        "range": "None, Forward, Ping-Pong"
+      },
+      {
+        "name": "Loop Start",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Loop End",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Master Volume",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Master Tune",
+        "range": "-24 to 24"
+      },
+      {
+        "name": "Voice Count",
+        "range": "1 to 16"
+      }
+    ],
+    "tagline": "16-voice sampler with key zones, velocity layers and looping",
+    "category": "synthesis",
+    "description": "A sampler that loads WAV, AIFF and FLAC files, by file dialog or by dragging them onto the window, and plays them back repitched from each zone's root note. Key zones and velocity layers, with round-robin between samples on the same layer, map samples across the keyboard; amp and filter envelopes and a multi-mode filter shape the sound.",
+    "features": [
+      {
+        "name": "Sample loading",
+        "description": "WAV, AIFF or FLAC, from a Load Sample dialog or dropped onto the window, listed in a sample browser with memory use"
+      },
+      {
+        "name": "Key zones and velocity layers",
+        "description": "Zones cover a range of notes with a root note; each zone holds velocity layers, cycling round-robin when several samples match"
+      },
+      {
+        "name": "Looping",
+        "description": "None, Forward or Ping-Pong per sample, with loop start and end dragged on the waveform display"
+      },
+      {
+        "name": "Amp and filter envelopes",
+        "description": "Two ADSRs (attack and decay up to 5 s, release up to 10 s); the filter envelope amount runs from -1 to +1"
+      },
+      {
+        "name": "Multi-mode filter",
+        "description": "Low-pass, high-pass, band-pass or notch; cutoff 20 Hz to 20 kHz, resonance 0.5 to 10"
+      },
+      {
+        "name": "16-voice polyphony",
+        "description": "Sixteen voices with master volume; velocity sets the level"
+      }
+    ],
+    "useCases": [
+      "Play a single recorded note across the keyboard",
+      "Build a drum kit with one zone per note",
+      "Multi-sampled instruments with velocity layers and round-robin",
+      "Sustained sounds from short samples with forward or ping-pong loops"
+    ],
+    "screenshots": []
+  },
+  {
+    "id": "saturation",
+    "folder": "Saturation",
+    "name": "Saturation",
+    "type": "effect",
+    "formats": [
+      "VST3",
+      "AU",
+      "Standalone"
+    ],
+    "parameters": [
+      {
+        "name": "Drive",
+        "range": "0 to 100"
+      },
+      {
+        "name": "Mode",
+        "range": "Tape, Tube, Transistor, Transformer, Diode"
+      },
+      {
+        "name": "Tone Low",
+        "range": "-12 to 12"
+      },
+      {
+        "name": "Tone High",
+        "range": "-12 to 12"
+      },
+      {
+        "name": "Mix",
+        "range": "0 to 100"
+      },
+      {
+        "name": "Oversampling",
+        "range": "Off, 2x, 4x"
+      }
+    ],
+    "tagline": "Five-mode saturation with tone shelves and oversampling",
+    "category": "creative",
+    "description": "A saturation effect with five curves named after hardware (Tape, Tube, Transistor, Transformer, Diode), drive up to 10x, low and high shelves after the curve, dry/wet mix and optional 2x or 4x oversampling. Each mode is a static waveshaping formula, not a circuit model.",
+    "features": [
+      {
+        "name": "Five modes",
+        "description": "Tape and Transistor are symmetric curves (odd harmonics); Tube, Transformer and Diode treat the two halves of the wave differently, which adds even harmonics"
+      },
+      {
+        "name": "Drive",
+        "description": "0% to 100%, multiplying the input by 1x to 10x before the curve"
+      },
+      {
+        "name": "Oversampling",
+        "description": "Off, 2x or 4x, using JUCE's polyphase IIR half-band filters, to reduce aliasing"
+      },
+      {
+        "name": "Tone shelves",
+        "description": "Low shelf at 200 Hz and high shelf at 5 kHz, ±12 dB each, after the saturation"
+      },
+      {
+        "name": "Mix",
+        "description": "0% (dry) to 100% (saturated) for parallel saturation"
+      },
+      {
+        "name": "Harmonic display and meters",
+        "description": "Bars for H1-H8 that illustrate the typical harmonic pattern of the mode, scaled by drive (not measured from the audio), plus input and output peak readouts"
+      }
+    ],
+    "useCases": [
+      "Gentle saturation - Tape mode with low drive (10-30%)",
+      "Even-harmonic colour - Tube or Transformer mode with medium drive",
+      "Harder clipping - Transistor mode with high drive",
+      "Strongly lopsided distortion - Diode mode",
+      "Parallel saturation - Mix at 30-50%",
+      "Less aliasing at high drive - switch on 2x or 4x oversampling"
+    ],
+    "learningFocus": [
+      "Waveshaping curves named after analog hardware",
+      "Harmonic distortion (even vs odd harmonics)",
+      "Oversampling for aliasing reduction",
+      "Shelf filter design for tone shaping",
+      "DC blocking filters",
+      "Custom UI components (harmonic bar display)",
+      "Per-sample nonlinear processing"
+    ],
+    "algorithms": [
+      {
+        "name": "Tape",
+        "description": "Symmetric soft compression of the level, so it adds odd harmonics",
+        "code": "const float x = input * 0.7f;\nif (abs(x) < 0.1f) return input;\n\nconst float absX = abs(x);\nconst float sign = (x > 0.0f) ? 1.0f : -1.0f;\nconst float compressed = absX / (1.0f + absX * 0.6f);\nreturn sign * compressed * 1.4f;"
+      },
+      {
+        "name": "Tube",
+        "description": "Asymmetric tanh: the positive half saturates harder than the negative",
+        "code": "if (input > 0.0f)\n    return tanh(input * 1.2f) * 0.9f;\nelse\n    return tanh(input * 0.8f) * 1.05f;"
+      },
+      {
+        "name": "Transistor",
+        "description": "Linear up to 0.7, then a tanh knee toward 1.0 on both sides",
+        "code": "const float x = input * 1.5f;\nif (abs(x) < 0.7f)\n    return input;\nif (x > 0.7f)\n    return 0.7f + tanh((x - 0.7f) * 3.0f) * 0.3f;\nreturn -0.7f + tanh((x + 0.7f) * 3.0f) * 0.3f;"
+      },
+      {
+        "name": "Transformer",
+        "description": "A gentle cubic term with slightly different gain on each half, then tanh",
+        "code": "const float x = input * 0.5f;\nfloat output = input - 0.1f * x * x * x;\noutput *= (input > 0.0f) ? 0.98f : 1.02f;\nreturn tanh(output * 1.2f) * 0.9f;"
+      },
+      {
+        "name": "Diode",
+        "description": "Clips the positive half from 0.3 upward; the negative half stays linear down to -2",
+        "code": "if (input > 0.0f)\n    return input < 0.3f ? input : 0.3f + tanh((input - 0.3f) * 4.0f) * 0.4f;\nif (input > -2.0f)\n    return input;\nreturn -2.0f + tanh((input + 2.0f) * 0.5f) * 1.5f;"
+      },
+      {
+        "name": "Oversampling",
+        "description": "Runs the curve and shelves at 2x or 4x the sample rate",
+        "code": "// Upsample by 2x or 4x\nauto oversampledBlock = oversampler->processSamplesUp(block);\n\n// Saturate and filter at the higher rate\nprocessSaturation(oversampledBlock);\n\n// Downsample back to the original rate\noversampler->processSamplesDown(outputBlock);"
+      }
+    ],
+    "screenshots": [],
+    "graphic": "/plugin-graphics/saturation.svg"
+  },
+  {
+    "id": "shakuhachi",
+    "folder": "Shakuhachi",
+    "name": "Shakuhachi",
+    "type": "instrument",
+    "formats": [
+      "VST3",
+      "AU",
+      "Standalone"
+    ],
+    "parameters": [
+      {
+        "name": "Breath Pressure",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Embouchure (Meri/Kari)",
+        "range": "-1 to 1"
+      },
+      {
+        "name": "Air Noise",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Attack",
+        "range": "0.01 to 0.5"
+      },
+      {
+        "name": "Release",
+        "range": "0.1 to 2"
+      },
+      {
+        "name": "Vibrato Rate",
+        "range": "0 to 10"
+      },
+      {
+        "name": "Vibrato Depth",
+        "range": "0 to 0.05"
+      },
+      {
+        "name": "Brightness",
+        "range": "0 to 1"
+      }
+    ],
+    "tagline": "Breathy flute voice from noise and a tuned delay",
+    "category": "synthesis",
+    "description": "A four-voice instrument that sends filtered pink noise through a feedback delay line tuned to the note, giving a breathy, flute-like tone. It is a simple delay-line resonator rather than a full physical model of the bamboo tube. Use it for airy lead lines and textures.",
+    "features": [
+      {
+        "name": "Breath Pressure",
+        "description": "Sets how much noise drives the resonator and how bright that noise is."
+      },
+      {
+        "name": "Embouchure (Meri/Kari)",
+        "description": "Shifts the pitch by up to 2 semitones down (meri) or up (kari)."
+      },
+      {
+        "name": "Air Noise and Brightness",
+        "description": "Air Noise blends unpitched breath noise against the tone; Brightness opens a low-pass filter on the tone."
+      },
+      {
+        "name": "Breath attack",
+        "description": "During the attack (10 to 500 ms) the sound fades from breath noise into the tone; release runs from 0.1 to 2 s."
+      },
+      {
+        "name": "Vibrato",
+        "description": "Sine vibrato with rate up to 10 Hz and depth up to 5% of the pitch."
+      }
+    ]
+  },
+  {
+    "id": "shimmerreverb",
+    "folder": "ShimmerReverb",
+    "name": "ShimmerReverb",
+    "type": "effect",
+    "formats": [
+      "VST3",
+      "AU",
+      "Standalone"
+    ],
+    "parameters": [
+      {
+        "name": "Size",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Damping",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Shimmer",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Pitch",
+        "range": "Up, Down, Both"
+      },
+      {
+        "name": "Feedback",
+        "range": "0 to 0.85"
+      },
+      {
+        "name": "Mix",
+        "range": "0 to 1"
+      }
+    ],
+    "tagline": "Reverb with delayed taps of its own tail",
+    "category": "creative",
+    "description": "A reverb that adds delayed copies of its own tail on top of the main reverb. The code describes these as octave-up and octave-down shimmer, but they are fixed delays of 250 ms and 125 ms with no pitch shift, and the Feedback control only sets how much of them is mixed in. Use it for a longer, echoing reverb tail.",
+    "features": [
+      {
+        "name": "Size and Damping",
+        "description": "Room size and high-frequency damping of the underlying stereo reverb."
+      },
+      {
+        "name": "Shimmer",
+        "description": "Sets the level of the delayed reverb taps."
+      },
+      {
+        "name": "Pitch mode",
+        "description": "Up uses the 250 ms tap, Down the 125 ms tap, Both uses both; the taps are not pitch-shifted."
+      },
+      {
+        "name": "Feedback (0 to 0.85)",
+        "description": "Blends the tapped signal against the plain reverb; nothing is fed back into the reverb."
+      },
+      {
+        "name": "Mix",
+        "description": "Crossfades between the dry input and the processed signal."
+      }
+    ],
+    "experimental": true
+  },
+  {
+    "id": "simplecomp",
+    "folder": "SimpleComp",
+    "name": "SimpleComp",
+    "type": "effect",
+    "formats": [
+      "VST3",
+      "AU",
+      "Standalone"
+    ],
+    "parameters": [
+      {
+        "name": "Threshold",
+        "range": "-60 to 0"
+      },
+      {
+        "name": "Ratio",
+        "range": "1 to 20"
+      },
+      {
+        "name": "Attack",
+        "range": "0.1 to 100"
+      },
+      {
+        "name": "Release",
+        "range": "10 to 1000"
+      },
+      {
+        "name": "Knee",
+        "range": ""
+      }
+    ],
+    "tagline": "Feed-forward compressor with hard or soft knee",
+    "category": "mixing",
+    "description": "A compressor with threshold, ratio, attack, release and a hard or soft knee. Each channel has its own envelope follower, and a fixed makeup gain is added based on threshold and ratio. A meter shows gain reduction.",
+    "features": [
+      {
+        "name": "Threshold and Ratio",
+        "description": "Threshold -60 dB to 0 dB (default -12 dB), ratio 1:1 to 20:1 (default 4:1)"
+      },
+      {
+        "name": "Attack and Release",
+        "description": "Attack 0.1 ms to 100 ms, release 10 ms to 1000 ms, both skewed toward short times"
+      },
+      {
+        "name": "Hard or Soft Knee",
+        "description": "Hard knee, or a 6 dB soft knee with a quadratic transition"
+      },
+      {
+        "name": "Automatic Makeup Gain",
+        "description": "Adds half the gain reduction a -12 dB signal would get at the current threshold and ratio"
+      },
+      {
+        "name": "Gain Reduction Meter",
+        "description": "Shows gain reduction over a 0 to 20 dB range"
+      }
+    ],
+    "useCases": [
+      "Even out a vocal performance",
+      "Control drum transients and peaks",
+      "Add sustain to bass and guitars",
+      "Learn how threshold, ratio, attack and release interact"
+    ],
+    "learningFocus": [
+      "Envelope follower design with attack/release coefficients",
+      "Gain reduction calculation (threshold, ratio, knee)",
+      "Hard vs. soft knee compression curves",
+      "A simple automatic makeup gain",
+      "Thread-safe metering with std::atomic",
+      "Exponential time constants for envelope smoothing",
+      "Per-channel state management for stereo processing"
+    ],
+    "algorithms": [
+      {
+        "name": "Envelope Follower",
+        "description": "Tracks input level with exponential attack/release coefficients calculated from time parameters",
+        "code": "float attackCoeff = std::exp(-1.0f / (attackMs * 0.001f * sampleRate));\nfloat releaseCoeff = std::exp(-1.0f / (releaseMs * 0.001f * sampleRate));\n\nfloat coeff = (inputLevelDB > linearToDb(envelope)) ? attackCoeff : releaseCoeff;\nenvelope = coeff * envelope + (1.0f - coeff) * inputLevel;"
+      },
+      {
+        "name": "Soft Knee Gain Reduction",
+        "description": "Gradual transition using a quadratic curve across a 6 dB knee",
+        "code": "float kneeStart = threshold - knee / 2.0f;\nfloat kneeEnd = threshold + knee / 2.0f;\n\nif (inputLevelDB >= kneeEnd) {\n  // Above knee: full compression\n  float overDB = inputLevelDB - threshold;\n  return overDB - (overDB / ratio);\n} else {\n  // In knee region: quadratic curve\n  float kneeInput = inputLevelDB - kneeStart;\n  float kneeRatio = kneeInput / knee;\n  float overDB = inputLevelDB - threshold;\n  float gainReduction = overDB - (overDB / ratio);\n  return gainReduction * kneeRatio * kneeRatio;\n}"
+      }
+    ],
+    "screenshots": [],
+    "graphic": "/plugin-graphics/simplecomp.svg"
+  },
+  {
+    "id": "simpleeq",
+    "folder": "SimpleEQ",
+    "name": "SimpleEQ",
+    "type": "effect",
+    "formats": [
+      "VST3",
+      "AU",
+      "Standalone"
+    ],
+    "parameters": [
+      {
+        "name": "Low Frequency",
+        "range": "20 to 500"
+      },
+      {
+        "name": "Low Gain",
+        "range": "-12 to 12"
+      },
+      {
+        "name": "Mid Frequency",
+        "range": "200 to 5000"
+      },
+      {
+        "name": "Mid Gain",
+        "range": "-12 to 12"
+      },
+      {
+        "name": "High Frequency",
+        "range": "2000 to 20000"
+      },
+      {
+        "name": "High Gain",
+        "range": "-12 to 12"
+      },
+      {
+        "name": "HPF Enabled",
+        "range": "on / off"
+      },
+      {
+        "name": "HPF Frequency",
+        "range": "20 to 500"
+      },
+      {
+        "name": "LPF Enabled",
+        "range": "on / off"
+      },
+      {
+        "name": "LPF Frequency",
+        "range": "2000 to 20000"
+      }
+    ],
+    "tagline": "Three-band EQ with switchable high-pass and low-pass filters",
+    "category": "mixing",
+    "description": "A three-band EQ: low shelf, mid peak and high shelf, each with frequency and ±12 dB gain, plus a high-pass and a low-pass filter that can be switched in. All five are biquad filters in series; input and output meters show the levels.",
+    "features": [
+      {
+        "name": "Low Shelf",
+        "description": "20 Hz to 500 Hz (default 80 Hz), ±12 dB, Q 0.707"
+      },
+      {
+        "name": "Mid Peak",
+        "description": "200 Hz to 5 kHz (default 1 kHz), ±12 dB, fixed Q of 1.0"
+      },
+      {
+        "name": "High Shelf",
+        "description": "2 kHz to 20 kHz (default 8 kHz), ±12 dB, Q 0.707"
+      },
+      {
+        "name": "High-Pass Filter",
+        "description": "Off by default; 20 Hz to 500 Hz, 12 dB/octave"
+      },
+      {
+        "name": "Low-Pass Filter",
+        "description": "Off by default; 2 kHz to 20 kHz, 12 dB/octave"
+      },
+      {
+        "name": "Meters",
+        "description": "Input and output level meters"
+      }
+    ],
+    "useCases": [
+      "Remove rumble - switch on the HPF at 40-80 Hz",
+      "Reduce harshness - cut the mid band at 2-4 kHz by 3-6 dB",
+      "Add air - boost the high shelf at 8-12 kHz by 2-4 dB",
+      "Telephone effect - HPF at 300 Hz and LPF at 3 kHz",
+      "Add weight - boost the low shelf at 80-120 Hz by 3-6 dB"
+    ],
+    "learningFocus": [
+      "Biquad filter design (shelf, peaking, HPF, LPF)",
+      "Recomputing coefficients only when a parameter changes",
+      "Cascaded filter processing (5 filters in series)",
+      "Shelf vs peaking filter behavior",
+      "Per-channel filter state management",
+      "State persistence across sessions"
+    ],
+    "algorithms": [
+      {
+        "name": "Low Shelf Filter",
+        "description": "Bass boost or cut, using the shelf formulas from the RBJ Audio EQ Cookbook (Q=0.707)",
+        "code": "// Calculate shelf coefficients\nA = pow(10.0, gainDb / 40.0);  // Convert dB to linear\nw0 = 2π * frequency / sampleRate;\nalpha = sin(w0) / (2.0 * Q);\nbeta = sqrt(A) / Q;\n\n// Biquad coefficients\na0 = (A+1) + (A-1)*cos(w0) + beta*sin(w0);\nb0 = A*((A+1) - (A-1)*cos(w0) + beta*sin(w0)) / a0;\nb1 = 2*A*((A-1) - (A+1)*cos(w0)) / a0;\nb2 = A*((A+1) - (A-1)*cos(w0) - beta*sin(w0)) / a0;"
+      },
+      {
+        "name": "Peaking EQ",
+        "description": "Bell curve for the mid band (Q=1.0)",
+        "code": "// Peaking filter for mid band\nA = pow(10.0, gainDb / 40.0);\nw0 = 2π * frequency / sampleRate;\nalpha = sin(w0) / (2.0 * Q);\n\na0 = 1.0 + alpha/A;\nb0 = (1.0 + alpha*A) / a0;\nb1 = (-2.0 * cos(w0)) / a0;\nb2 = (1.0 - alpha*A) / a0;"
+      }
+    ],
+    "screenshots": [],
+    "graphic": "/plugin-graphics/simpleeq.svg"
+  },
+  {
+    "id": "simplegain",
+    "folder": "SimpleGain",
+    "name": "SimpleGain",
+    "type": "effect",
+    "formats": [
+      "VST3",
+      "AU",
+      "Standalone"
+    ],
+    "parameters": [
+      {
+        "name": "Gain",
+        "range": "-60 to 12"
+      }
+    ],
+    "tagline": "Gain control from -60 dB to +12 dB with a peak meter",
+    "category": "utility",
+    "description": "A single gain knob from -60 dB to +12 dB, smoothed so changes do not click, with a peak level meter. It is the smallest plugin in the set and a starting point for learning buffer processing in JUCE.",
+    "features": [
+      {
+        "name": "Gain",
+        "description": "-60 dB to +12 dB in 0.1 dB steps, default 0 dB (unity)"
+      },
+      {
+        "name": "Peak meter",
+        "description": "Shows the output peak level, redrawn 30 times a second"
+      },
+      {
+        "name": "Parameter smoothing",
+        "description": "Gain changes ramp over 50 ms, so moving the knob does not click"
+      },
+      {
+        "name": "Rotary knob",
+        "description": "One knob with a dB readout below it"
+      }
+    ],
+    "learningFocus": [
+      "Audio buffer processing",
+      "Decibel to linear conversion",
+      "Parameter smoothing",
+      "Level metering",
+      "Sample-by-sample processing",
+      "AudioProcessor basics",
+      "AudioParameterFloat usage",
+      "GUI with AudioProcessorEditor",
+      "Timer-based UI updates",
+      "Thread-safe communication (atomics)"
+    ],
+    "screenshots": [
+      "/screenshots/plugins/SimpleGain/simplegain-main.png"
+    ],
+    "graphic": "/plugin-graphics/simplegain.svg"
+  },
+  {
+    "id": "sitar",
+    "folder": "Sitar",
+    "name": "Sitar",
+    "type": "instrument",
+    "formats": [
+      "VST3",
+      "AU",
+      "Standalone"
+    ],
+    "parameters": [
+      {
+        "name": "Raga Scale",
+        "range": "0 to 3"
+      },
+      {
+        "name": "Jawari",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Sympathetic",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Attack",
+        "range": "0.001 to 0.1"
+      },
+      {
+        "name": "Decay",
+        "range": "0.1 to 2"
+      },
+      {
+        "name": "Pitch Bend",
+        "range": "-2 to 2"
+      },
+      {
+        "name": "Vibrato Rate",
+        "range": "0 to 10"
+      },
+      {
+        "name": "Vibrato Depth",
+        "range": "0 to 0.05"
+      },
+      {
+        "name": "Drone Level",
+        "range": "0 to 1"
+      }
+    ],
+    "tagline": "Plucked-string sitar voice with sympathetic strings",
+    "category": "synthesis",
+    "description": "A six-voice plucked-string instrument: a noise burst excites a tuned feedback delay (Karplus-Strong), a soft clipper adds bridge buzz, and 13 further tuned delays ring along as sympathetic strings. Use it for sitar-like melodic lines and drones.",
+    "features": [
+      {
+        "name": "Jawari",
+        "description": "Blends in tanh soft clipping of the string output for a buzzing, brighter tone."
+      },
+      {
+        "name": "Sympathetic strings",
+        "description": "13 resonators fed by the main string, tuned to the played note in a Chromatic, Bhairavi, Yaman or Kafi scale."
+      },
+      {
+        "name": "Drone",
+        "description": "Two resonators at C3 and G3, plucked every 4 and 5 seconds, so they are heard only on notes held that long."
+      },
+      {
+        "name": "Pitch and vibrato",
+        "description": "Pitch Bend from -2 to +2 semitones and sine vibrato up to 10 Hz and 5% depth."
+      },
+      {
+        "name": "Attack",
+        "description": "Fade-in from 1 to 100 ms; the Decay control is read but not used by the engine."
+      }
+    ],
+    "experimental": true
+  },
+  {
+    "id": "snaresynth",
+    "folder": "SnareSynth",
+    "name": "SnareSynth",
+    "type": "instrument",
+    "formats": [
+      "VST3",
+      "AU",
+      "Standalone"
+    ],
+    "parameters": [
+      {
+        "name": "Tone",
+        "range": "100 to 400"
+      },
+      {
+        "name": "Snappy",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Decay",
+        "range": "0.01 to 1"
+      },
+      {
+        "name": "Snare Decay",
+        "range": "0.01 to 0.5"
+      },
+      {
+        "name": "Pitch Env",
+        "range": "0 to 2"
+      },
+      {
+        "name": "Snap",
+        "range": "0 to 1"
+      }
+    ],
+    "tagline": "Synthesized snare from a pitched tone plus noise",
+    "category": "synthesis",
+    "description": "A synthesized snare drum: a triangle-wave body with a downward pitch sweep, a filtered-noise rattle and a short noise click, mixed and soft-clipped. Any MIDI note triggers the same one-shot hit, scaled by velocity, with up to four overlapping hits.",
+    "features": [
+      {
+        "name": "Tone",
+        "description": "Body pitch from 100 to 400 Hz."
+      },
+      {
+        "name": "Pitch Env",
+        "description": "Starts the body up to three times higher and drops it to Tone over about 30 ms."
+      },
+      {
+        "name": "Snappy and Snare Decay",
+        "description": "Level of the noise rattle and its decay time, 10 to 500 ms."
+      },
+      {
+        "name": "Decay",
+        "description": "Decay time of the tonal body, 10 ms to 1 s."
+      },
+      {
+        "name": "Snap",
+        "description": "Level of a 2 ms noise click at the start of the hit."
+      }
+    ]
+  },
+  {
+    "id": "spectralfreeze",
+    "folder": "SpectralFreeze",
+    "name": "SpectralFreeze",
+    "type": "effect",
+    "formats": [
+      "VST3",
+      "AU"
+    ],
+    "parameters": [
+      {
+        "name": "Freeze",
+        "range": "on / off"
+      },
+      {
+        "name": "Blur",
+        "range": "0 to 100"
+      },
+      {
+        "name": "Low Cut",
+        "range": "20 to 20000"
+      },
+      {
+        "name": "High Cut",
+        "range": "20 to 20000"
+      },
+      {
+        "name": "Dry/Wet",
+        "range": "0 to 100"
+      },
+      {
+        "name": "Stretch",
+        "range": "0 to 100"
+      },
+      {
+        "name": "Shift",
+        "range": "-100 to 100"
+      },
+      {
+        "name": "Morph",
+        "range": "0 to 100"
+      },
+      {
+        "name": "Gate",
+        "range": "0 to 100"
+      },
+      {
+        "name": "Randomize",
+        "range": "0 to 100"
+      }
+    ],
+    "tagline": "STFT spectral freeze with blur, shift, stretch, gate and morph",
+    "category": "creative",
+    "description": "SpectralFreeze runs a 2048-point FFT with a Hann window and 75% overlap, and can hold the current spectrum at the level and pitch it had. Blur, stretch, shift, gate, phase randomize, morph and a low/high cut then reshape the spectrum, frozen or live. A scrolling spectrogram shows the result, and six factory presets demonstrate the effects.",
+    "features": [
+      {
+        "name": "Freeze",
+        "description": "Holds each bin's magnitude and keeps advancing its phase at the rate measured just after freezing, so the held sound keeps its pitch and level"
+      },
+      {
+        "name": "Spectral effects",
+        "description": "Blur (Gaussian smoothing over up to 11 bins), Stretch (spreads the spectrum upward by up to 5x), Shift (moves every bin up or down by up to 100 bins), Gate (silences bins below a share of the loudest), Randomize (scrambles phase)"
+      },
+      {
+        "name": "Morph",
+        "description": "While not frozen, crossfades the live spectrum toward the last frozen one"
+      },
+      {
+        "name": "Low Cut, High Cut and Dry/Wet",
+        "description": "Zeroes bins outside 20 Hz to 20 kHz limits you set, and blends the processed signal with the dry input"
+      },
+      {
+        "name": "Spectrogram",
+        "description": "Scrolling display coloured by level from blue to red, with the frozen spectrum overlaid, redrawn 60 times a second"
+      },
+      {
+        "name": "Six factory presets",
+        "description": "Init, Frozen Blur, Spectral Stretch, Frequency Shifter, Spectral Gate and Granular Texture, plus a quick-save slot"
+      }
+    ],
+    "useCases": [
+      "Hold a moment of a sound as a sustained texture",
+      "Keep only the strongest partials with Gate",
+      "Inharmonic, metallic tones with Shift or Stretch",
+      "Band-limited textures with Low Cut and High Cut",
+      "Noisy, smeared versions of a sound with Randomize and Blur"
+    ],
+    "screenshots": [],
+    "graphic": "/plugin-graphics/spectralfreeze.svg"
+  },
+  {
+    "id": "stereochorus",
+    "folder": "StereoChorus",
+    "name": "StereoChorus",
+    "type": "effect",
+    "formats": [
+      "VST3",
+      "AU",
+      "Standalone"
+    ],
+    "parameters": [
+      {
+        "name": "Rate",
+        "range": "0.1 to 10"
+      },
+      {
+        "name": "Depth",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Center Delay",
+        "range": "1 to 100"
+      },
+      {
+        "name": "Feedback",
+        "range": "-0.95 to 0.95"
+      },
+      {
+        "name": "Mix",
+        "range": "0 to 1"
+      }
+    ],
+    "tagline": "A chorus with rate, depth, centre delay, feedback and mix",
+    "category": "creative",
+    "description": "A chorus effect built on JUCE's dsp::Chorus: a delay line whose time is swept by an LFO and blended with the dry signal. Use it to thicken guitars, keys or pads, or push the feedback and centre delay for flanger-like tones. Both channels share the same LFO, so it does not add L/R movement of its own.",
+    "features": [
+      {
+        "name": "LFO rate and depth",
+        "description": "Rate runs from 0.1 to 10 Hz (skewed toward slow settings) and Depth from 0 to 1 sets how far the delay time is swept."
+      },
+      {
+        "name": "Centre delay",
+        "description": "Sets the base delay from 1 to 100 ms (default 7 ms) that the LFO modulates around."
+      },
+      {
+        "name": "Bipolar feedback",
+        "description": "Feedback from -0.95 to +0.95 feeds the delayed signal back with either polarity for a more resonant, comb-filtered sound."
+      },
+      {
+        "name": "Mix",
+        "description": "Blends dry and chorused signal from 0 to 1 (default 0.5)."
+      },
+      {
+        "name": "Presets",
+        "description": "Uses the shared AudioForge preset manager to save and recall settings."
+      }
+    ]
+  },
+  {
+    "id": "stringensemble",
+    "folder": "StringEnsemble",
+    "name": "StringEnsemble",
+    "type": "instrument",
+    "formats": [
+      "VST3",
+      "AU",
+      "Standalone"
+    ],
+    "parameters": [
+      {
+        "name": "String Type",
+        "range": "0 to 3"
+      },
+      {
+        "name": "Brightness",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Attack",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Decay",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Vibrato Depth",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Vibrato Rate",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Ensemble Size",
+        "range": "1 to 4"
+      }
+    ],
+    "tagline": "A Karplus-Strong plucked-string synth with up to 4 detuned strings",
+    "category": "synthesis",
+    "description": "A 12-voice polyphonic synth that excites a Karplus-Strong delay-line string with a noise burst for each note, so notes behave like plucked strings that decay on their own rather than sustained bowing. Each note can stack up to four detuned strings, and the Violin, Viola, Cello and Bass types differ only in how quickly the string damps. Use it for plucked or pizzicato-style parts and string textures.",
+    "features": [
+      {
+        "name": "String types",
+        "description": "Violin, Viola, Cello and Bass set progressively heavier damping in the string loop, from brighter to darker."
+      },
+      {
+        "name": "Ensemble size",
+        "description": "Ensemble Size stacks one to four strings per note, detuned by 0, -5, +8 and -12 cents and averaged."
+      },
+      {
+        "name": "Brightness and attack",
+        "description": "Brightness (0 to 1) lengthens and brightens the string's ring; Attack (0 to 1) sets the excitation level, the onset speed, and below 0.5 softens the noise burst."
+      },
+      {
+        "name": "Release",
+        "description": "The Decay control (0 to 1) sets how quickly the note fades after note-off, with higher values giving a longer release."
+      },
+      {
+        "name": "Vibrato",
+        "description": "Vibrato Depth adds up to ±2% pitch modulation at a rate of 4 to 7 Hz set by Vibrato Rate."
+      }
+    ]
+  },
+  {
+    "id": "tapedelay",
+    "folder": "TapeDelay",
+    "name": "TapeDelay",
+    "type": "effect",
+    "formats": [
+      "VST3",
+      "AU",
+      "Standalone"
+    ],
+    "parameters": [
+      {
+        "name": "Time",
+        "range": "10 to 2000"
+      },
+      {
+        "name": "Feedback",
+        "range": "0 to 0.95"
+      },
+      {
+        "name": "Wow",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Flutter",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Saturation",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Mix",
+        "range": "0 to 1"
+      }
+    ],
+    "tagline": "A delay with wow, flutter, a darkening filter and saturated feedback",
+    "category": "mixing",
+    "description": "A stereo delay of 10 ms to 2 s whose delay time is wobbled by two fixed-rate sine LFOs (wow and flutter), with a one-pole low-pass on the repeats and tanh saturation in the feedback path. Use it for echoes that drift in pitch and get darker and softer as they repeat. It does not model a tape transport beyond those stages.",
+    "features": [
+      {
+        "name": "Delay time and feedback",
+        "description": "Time runs from 10 to 2000 ms (default 500 ms) and Feedback from 0 to 0.95."
+      },
+      {
+        "name": "Wow and flutter",
+        "description": "Wow adds up to ±15 ms of delay-time modulation at 0.5 Hz and Flutter up to ±5 ms at 6 Hz, each scaled 0 to 1."
+      },
+      {
+        "name": "Darkening repeats",
+        "description": "A fixed one-pole low-pass filter on the delayed signal rolls off highs, and because it sits inside the loop each repeat gets darker."
+      },
+      {
+        "name": "Feedback saturation",
+        "description": "Saturation (0 to 1) drives a tanh curve on the signal fed back into the delay line, softening and compressing loud repeats."
+      },
+      {
+        "name": "Mix",
+        "description": "Blends dry and delayed signal from 0 to 1 (default 0.5)."
+      }
+    ]
+  },
+  {
+    "id": "tomsynth",
+    "folder": "TomSynth",
+    "name": "TomSynth",
+    "type": "instrument",
+    "formats": [
+      "VST3",
+      "AU",
+      "Standalone"
+    ],
+    "parameters": [
+      {
+        "name": "Pitch",
+        "range": "40 to 300"
+      },
+      {
+        "name": "Pitch Env",
+        "range": "0 to 3"
+      },
+      {
+        "name": "Decay",
+        "range": "0.05 to 2"
+      },
+      {
+        "name": "Bend",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Noise",
+        "range": "0 to 1"
+      }
+    ],
+    "tagline": "A synthesized tom drum: pitched sine body with a pitch drop and noise",
+    "category": "synthesis",
+    "description": "A tom drum voice made from a sine oscillator with a decaying amplitude envelope, a fast downward pitch sweep and a short noise burst, followed by fixed low-pass and high-pass filters. Every MIDI note plays the same tom at the Pitch setting, so you tune it with the knob rather than the keyboard; velocity sets the level. Use it for programmed tom fills or as a basis for electronic percussion.",
+    "features": [
+      {
+        "name": "Body pitch",
+        "description": "Pitch sets the sine body frequency from 40 to 300 Hz (default 90 Hz); the note number is ignored."
+      },
+      {
+        "name": "Pitch drop",
+        "description": "Pitch Env (0 to 3) and Bend (0 to 1) together set how far above the base pitch each hit starts before falling back over about 50 ms."
+      },
+      {
+        "name": "Decay",
+        "description": "Sets the body's exponential decay from 0.05 to 2 seconds."
+      },
+      {
+        "name": "Noise attack",
+        "description": "Noise (0 to 1) mixes in a white-noise burst that dies away in about 20 ms, adding stick attack."
+      },
+      {
+        "name": "Four-voice playback",
+        "description": "Up to four overlapping hits ring out at once, each a one-shot that plays to the end of its decay regardless of note-off."
+      }
+    ]
+  },
+  {
+    "id": "tremolovibrato",
+    "folder": "TremoloVibrato",
+    "name": "TremoloVibrato",
+    "type": "effect",
+    "formats": [
+      "VST3",
+      "AU",
+      "Standalone"
+    ],
+    "parameters": [
+      {
+        "name": "Mode",
+        "range": "Tremolo, Vibrato"
+      },
+      {
+        "name": "Waveform",
+        "range": "Sine, Triangle, Square"
+      },
+      {
+        "name": "Rate",
+        "range": "0.1 to 20"
+      },
+      {
+        "name": "Depth",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Mix",
+        "range": "0 to 1"
+      }
+    ],
+    "tagline": "Tremolo or vibrato from one LFO with sine, triangle or square shapes",
+    "category": "creative",
+    "description": "A modulation effect with two modes: Tremolo varies the volume and Vibrato varies the pitch by sweeping a short delay line. Both use the same LFO, waveform and depth controls. Use it for amp-style pulsing, choppy square-wave gating, or wavering pitch on guitars, keys and synths.",
+    "features": [
+      {
+        "name": "Two modes",
+        "description": "Tremolo scales the level between full and (1 - Depth); Vibrato reads a delay line swept between about 7 and 13 ms with linear interpolation."
+      },
+      {
+        "name": "Three LFO waveforms",
+        "description": "Sine, Triangle and Square shapes, with the square giving hard on/off gating in Tremolo mode."
+      },
+      {
+        "name": "Rate and depth",
+        "description": "Rate runs from 0.1 to 20 Hz (default 5 Hz) and Depth from 0 to 1."
+      },
+      {
+        "name": "Mix",
+        "description": "Blends the dry and modulated signal from 0 to 1 (default fully wet)."
+      }
+    ]
+  },
+  {
+    "id": "vintagecompressor",
+    "folder": "VintageCompressor",
+    "name": "VintageCompressor",
+    "type": "effect",
+    "formats": [
+      "VST3",
+      "AU",
+      "Standalone"
+    ],
+    "parameters": [
+      {
+        "name": "Mode",
+        "range": "VCA, FET, Opto"
+      },
+      {
+        "name": "Threshold",
+        "range": "-60 to 0"
+      },
+      {
+        "name": "Ratio",
+        "range": "1 to 20"
+      },
+      {
+        "name": "Attack",
+        "range": "0.1 to 100"
+      },
+      {
+        "name": "Release",
+        "range": "10 to 1000"
+      },
+      {
+        "name": "Knee",
+        "range": "0 to 12"
+      },
+      {
+        "name": "Makeup",
+        "range": "0 to 24"
+      },
+      {
+        "name": "Mix",
+        "range": "0 to 1"
+      }
+    ],
+    "tagline": "A soft-knee compressor with VCA, FET and Opto timing modes",
+    "category": "mixing",
+    "description": "A stereo-linked peak compressor with threshold, ratio, soft knee, attack, release, makeup gain and a dry/wet mix for parallel compression. The VCA, FET and Opto modes only rescale the attack and release times; there is no saturation or other analog-modelling stage. Use it for general bus, drum or instrument compression.",
+    "features": [
+      {
+        "name": "Timing modes",
+        "description": "VCA uses the attack and release as set, FET halves the attack and shortens release to 70%, and Opto doubles the attack and lengthens release to 150%."
+      },
+      {
+        "name": "Core controls",
+        "description": "Threshold -60 to 0 dB, Ratio 1:1 to 20:1, Attack 0.1 to 100 ms and Release 10 to 1000 ms."
+      },
+      {
+        "name": "Soft knee",
+        "description": "Knee from 0 to 12 dB eases the transition into compression around the threshold."
+      },
+      {
+        "name": "Makeup and mix",
+        "description": "Makeup adds 0 to 24 dB after compression, and Mix (0 to 1) blends in the uncompressed signal for parallel compression."
+      },
+      {
+        "name": "Gain reduction meter",
+        "description": "The editor shows the current gain reduction, detected from the louder of the two channels."
+      }
+    ]
+  },
+  {
+    "id": "vocalcompressor",
+    "folder": "VocalCompressor",
+    "name": "Vocal Compressor",
+    "type": "effect",
+    "formats": [
+      "VST3",
+      "AU",
+      "Standalone"
+    ],
+    "parameters": [
+      {
+        "name": "Threshold",
+        "range": "-60 to 0"
+      },
+      {
+        "name": "Ratio",
+        "range": "1 to 20"
+      },
+      {
+        "name": "Attack",
+        "range": "0.1 to 100"
+      },
+      {
+        "name": "Release",
+        "range": "10 to 1000"
+      },
+      {
+        "name": "Knee",
+        "range": "0 to 12"
+      },
+      {
+        "name": "Makeup Gain",
+        "range": "-12 to 24"
+      },
+      {
+        "name": "Parallel Mix",
+        "range": "0 to 100"
+      },
+      {
+        "name": "Detection",
+        "range": "RMS, Peak"
+      }
+    ],
+    "tagline": "A vocal compressor with RMS or peak detection and a parallel blend",
+    "category": "mixing",
+    "description": "A stereo-linked compressor aimed at vocals, with a choice of RMS (512-sample window) or peak level detection, manual makeup gain and a parallel mix control. Use it to even out a vocal's level, or blend in the dry signal for parallel compression that keeps the transients.",
+    "features": [
+      {
+        "name": "RMS or peak detection",
+        "description": "RMS mode averages the level over a 512-sample window for smoother gain changes; Peak mode follows the instantaneous level."
+      },
+      {
+        "name": "Core controls",
+        "description": "Threshold -60 to 0 dB (default -18), Ratio 1:1 to 20:1, Attack 0.1 to 100 ms and Release 10 to 1000 ms."
+      },
+      {
+        "name": "Makeup gain",
+        "description": "Manual makeup from -12 to +24 dB applied to the compressed signal."
+      },
+      {
+        "name": "Parallel mix",
+        "description": "Parallel Mix from 0 to 100% blends the uncompressed input back in; 0% is fully compressed."
+      },
+      {
+        "name": "Level readouts",
+        "description": "The editor shows gain reduction and output level for each block."
+      }
+    ]
+  },
+  {
+    "id": "vocaldeesser",
+    "folder": "VocalDeEsser",
+    "name": "Vocal DeEsser",
+    "type": "effect",
+    "formats": [
+      "VST3",
+      "AU",
+      "Standalone"
+    ],
+    "parameters": [
+      {
+        "name": "Frequency",
+        "range": "4000 to 10000"
+      },
+      {
+        "name": "Bandwidth",
+        "range": "0.5 to 4"
+      },
+      {
+        "name": "Threshold",
+        "range": "-60 to 0"
+      },
+      {
+        "name": "Ratio",
+        "range": "1 to 10"
+      },
+      {
+        "name": "Attack",
+        "range": "0.1 to 10"
+      },
+      {
+        "name": "Release",
+        "range": "10 to 500"
+      },
+      {
+        "name": "Mix",
+        "range": "0 to 100"
+      }
+    ],
+    "tagline": "A broadband de-esser keyed from a tunable 4-10 kHz sidechain",
+    "category": "mixing",
+    "description": "A de-esser that listens to a band-passed copy of the signal and turns the whole signal down when that band crosses the threshold. Because the gain reduction is applied to the full signal rather than only the high frequencies, it ducks the entire vocal briefly on each 's' or 'sh'. Use it to tame harsh sibilance on vocals or spoken word.",
+    "features": [
+      {
+        "name": "Tunable detection band",
+        "description": "Frequency sets the sidechain band-pass centre from 4 to 10 kHz (default 7 kHz), and Bandwidth (0.5 to 4) widens it."
+      },
+      {
+        "name": "Threshold and ratio",
+        "description": "Threshold -60 to 0 dB and Ratio 1:1 to 10:1 set when and how hard sibilant peaks are reduced."
+      },
+      {
+        "name": "Fast timing",
+        "description": "Attack 0.1 to 10 ms and Release 10 to 500 ms control how quickly reduction starts and recovers."
+      },
+      {
+        "name": "Mix",
+        "description": "Blends the processed and dry signal from 0 to 100%."
+      },
+      {
+        "name": "Gain reduction readout",
+        "description": "The editor shows the largest gain reduction in each block."
+      }
+    ]
+  },
+  {
+    "id": "vocaldoubler",
+    "folder": "VocalDoubler",
+    "name": "Vocal Doubler",
+    "type": "effect",
+    "formats": [
+      "VST3",
+      "AU",
+      "Standalone"
+    ],
+    "parameters": [
+      {
+        "name": "Voices",
+        "range": "1 to 4"
+      },
+      {
+        "name": "Stereo Width",
+        "range": "0 to 100"
+      },
+      {
+        "name": "Pitch Variation",
+        "range": "0 to 20"
+      },
+      {
+        "name": "Timing Shift",
+        "range": "0 to 30"
+      },
+      {
+        "name": "Humanize",
+        "range": "0 to 100"
+      },
+      {
+        "name": "High Pass",
+        "range": "20 to 500"
+      },
+      {
+        "name": "Low Pass",
+        "range": "2000 to 20000"
+      },
+      {
+        "name": "Mix",
+        "range": "0 to 100"
+      },
+      {
+        "name": "Output Gain",
+        "range": "-12 to 12"
+      }
+    ],
+    "tagline": "Up to four delayed, detuned, panned copies of a vocal",
+    "category": "mixing",
+    "description": "A doubler that builds one to four extra voices from the input, each with its own timing offset, small pitch offset and pan position, filtered and mixed back with the dry signal. It is meant for widening a lead vocal or faking a double-tracked part. The per-voice delay read position does not yet track the input correctly, so the voices currently come out as a stepped, held version of the input rather than a clean double.",
+    "experimental": true,
+    "features": [
+      {
+        "name": "Voices and width",
+        "description": "Voices sets one to four copies, spread evenly across the stereo field by Stereo Width (0 to 100%) with constant-power panning."
+      },
+      {
+        "name": "Timing and pitch offsets",
+        "description": "Timing Shift (0 to 30 ms) and Pitch Variation (0 to 20 cents) are scaled up per voice, with pitch offsets alternating sharp and flat."
+      },
+      {
+        "name": "Humanize",
+        "description": "Humanize (0 to 100%) adds a slow LFO wobble to each voice's delay and a small random pitch jitter."
+      },
+      {
+        "name": "Voice filtering",
+        "description": "A high-pass (20 to 500 Hz) and low-pass (2 to 20 kHz) filter shape the doubled voices only."
+      },
+      {
+        "name": "Mix and output gain",
+        "description": "Mix blends dry and doubled signal (0 to 100%), and Output Gain trims the doubles by -12 to +12 dB."
+      }
+    ]
+  },
+  {
+    "id": "vocalharmonizer",
+    "folder": "VocalHarmonizer",
+    "name": "Vocal Harmonizer",
+    "type": "effect",
+    "formats": [
+      "VST3",
+      "AU",
+      "Standalone"
+    ],
+    "parameters": [
+      {
+        "name": "Voices",
+        "range": "1 to 4"
+      },
+      {
+        "name": "Voice 1 Pitch",
+        "range": "-24 to 24"
+      },
+      {
+        "name": "Voice 2 Pitch",
+        "range": "-24 to 24"
+      },
+      {
+        "name": "Voice 3 Pitch",
+        "range": "-24 to 24"
+      },
+      {
+        "name": "Voice 4 Pitch",
+        "range": "-24 to 24"
+      },
+      {
+        "name": "Voice 1 Pan",
+        "range": "-100 to 100"
+      },
+      {
+        "name": "Voice 2 Pan",
+        "range": "-100 to 100"
+      },
+      {
+        "name": "Voice 3 Pan",
+        "range": "-100 to 100"
+      },
+      {
+        "name": "Voice 4 Pan",
+        "range": "-100 to 100"
+      },
+      {
+        "name": "Scale",
+        "range": ""
+      },
+      {
+        "name": "Formant Shift",
+        "range": "-12 to 12"
+      },
+      {
+        "name": "High Pass",
+        "range": "20 to 500"
+      },
+      {
+        "name": "Low Pass",
+        "range": "2000 to 20000"
+      },
+      {
+        "name": "Mix",
+        "range": "0 to 100"
+      },
+      {
+        "name": "Output Gain",
+        "range": "-12 to 12"
+      }
+    ],
+    "tagline": "Up to four pitch-shifted voices at fixed intervals, each panned",
+    "category": "creative",
+    "description": "A harmonizer that adds one to four voices, each set to a fixed interval of -24 to +24 semitones and its own pan position, then filtered and mixed with the dry signal. The Scale setting snaps each interval to the nearest step of the chosen scale; it does not detect the sung note. The pitch shifter is a single delay-line read without crossfading and does not yet produce the set intervals correctly, and the Formant Shift control is a placeholder that does nothing.",
+    "experimental": true,
+    "features": [
+      {
+        "name": "Four interval voices",
+        "description": "Voices sets how many of the four voices play; each has a Pitch control from -24 to +24 semitones (defaults +3, +7, +12, -12)."
+      },
+      {
+        "name": "Per-voice panning",
+        "description": "Each voice has a Pan control from -100 to +100 with constant-power panning."
+      },
+      {
+        "name": "Scale snapping",
+        "description": "Twelve scale choices (Chromatic, Major, Minor, the modes, Harmonic Minor, Melodic Minor, Pentatonic) round each voice's interval to a scale step."
+      },
+      {
+        "name": "Voice filtering",
+        "description": "A high-pass (20 to 500 Hz) and low-pass (2 to 20 kHz) filter shape the harmony voices only."
+      },
+      {
+        "name": "Mix and output gain",
+        "description": "Mix blends dry and harmony signal (0 to 100%), and Output Gain trims the harmonies by -12 to +12 dB."
+      }
+    ]
+  },
+  {
+    "id": "vocoder",
+    "folder": "Vocoder",
+    "name": "Vocoder",
+    "type": "instrument",
+    "formats": [
+      "VST3",
+      "AU",
+      "Standalone"
+    ],
+    "parameters": [
+      {
+        "name": "Bands",
+        "range": "8 to 32"
+      },
+      {
+        "name": "Formant Shift",
+        "range": "0.5 to 2"
+      },
+      {
+        "name": "Carrier Level",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Modulator Level",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Attack",
+        "range": "0.001 to 0.1"
+      },
+      {
+        "name": "Release",
+        "range": "0.01 to 0.5"
+      },
+      {
+        "name": "Mix",
+        "range": "0 to 1"
+      }
+    ],
+    "tagline": "A channel vocoder: audio input shapes a MIDI-played sawtooth carrier",
+    "category": "creative",
+    "description": "A filter-bank vocoder that splits the audio input (the modulator) into 8 to 32 band-pass bands spaced from 100 Hz to 8 kHz, follows each band's level, and applies those levels to the same bands of an internal sawtooth carrier played from MIDI notes. It is built as an instrument that also takes audio input, so the host has to route a voice or other signal into it while you play notes. The Formant Shift control is stored but not used by the DSP.",
+    "experimental": true,
+    "features": [
+      {
+        "name": "MIDI-played carrier",
+        "description": "Up to eight simultaneous MIDI notes each play a sawtooth, scaled by velocity and by Carrier Level (0 to 1)."
+      },
+      {
+        "name": "Band count",
+        "description": "Bands sets 8 to 32 log-spaced band-pass filters (Q 5); filter frequencies are only recalculated when playback is prepared."
+      },
+      {
+        "name": "Envelope timing",
+        "description": "Attack (1 to 100 ms) and Release (10 to 500 ms) set how quickly each band follows the modulator."
+      },
+      {
+        "name": "Modulator level and mix",
+        "description": "Modulator Level scales the vocoded output, and Mix blends it with the dry input (default fully wet)."
+      },
+      {
+        "name": "Band level display",
+        "description": "The editor draws a bar for each band's envelope level, updated 30 times a second."
+      }
+    ]
+  },
+  {
+    "id": "waveshaper",
+    "folder": "WaveShaper",
+    "name": "WaveShaper",
+    "type": "effect",
+    "formats": [
+      "VST3",
+      "AU",
+      "Standalone"
+    ],
+    "parameters": [
+      {
+        "name": "Drive",
+        "range": "0 to 100"
+      },
+      {
+        "name": "Mix",
+        "range": "0 to 100"
+      },
+      {
+        "name": "Tone",
+        "range": "0 to 100"
+      },
+      {
+        "name": "Shape",
+        "range": "Soft Clip, Hard Clip, Tanh, Cubic, Asymmetric"
+      },
+      {
+        "name": "Output",
+        "range": "-12 to 12"
+      }
+    ],
+    "tagline": "Waveshaping distortion with five curves and a tone filter",
+    "category": "creative",
+    "description": "A waveshaper with five transfer curves, drive up to 11x, dry/wet mix, a low-pass tone filter and output gain. A display draws the selected curve, and a 20 Hz high-pass removes DC from the output.",
+    "features": [
+      {
+        "name": "Five shapes",
+        "description": "Soft Clip, Hard Clip, Tanh, Cubic and Asymmetric"
+      },
+      {
+        "name": "Drive",
+        "description": "0% to 100%, multiplying the input by 1x to 11x before shaping"
+      },
+      {
+        "name": "Curve display",
+        "description": "Draws the selected transfer curve and redraws when you change the shape"
+      },
+      {
+        "name": "Mix",
+        "description": "0% (dry) to 100% (shaped) for parallel distortion"
+      },
+      {
+        "name": "Tone",
+        "description": "12 dB/octave low-pass from 500 Hz to 20 kHz after the shaper; off at 100%"
+      },
+      {
+        "name": "Output and meters",
+        "description": "Output gain -12 dB to +12 dB, with input and output peak readouts updated 30 times a second"
+      }
+    ],
+    "useCases": [
+      "Gentle saturation - Soft Clip with low drive (10-30%)",
+      "Hard digital clipping - Hard Clip with high drive",
+      "Smooth saturation - Tanh with medium drive (40-60%)",
+      "Even-harmonic colour - Asymmetric mode, where the two halves of the wave clip differently",
+      "Parallel distortion - Mix around 50%",
+      "Darker distortion - lower Tone to roll off the highs the shaper adds"
+    ],
+    "learningFocus": [
+      "Waveshaping algorithms (polynomial, tanh, clipping)",
+      "Transfer function visualization",
+      "Per-sample nonlinear processing",
+      "Harmonic distortion (odd vs even harmonics)",
+      "Soft vs hard clipping behavior",
+      "DC offset and blocking filters",
+      "Parallel processing",
+      "Post-distortion tone shaping"
+    ],
+    "algorithms": [
+      {
+        "name": "Soft Clip",
+        "description": "Straight below 1.0, then bends over smoothly toward ±1.5, meeting the straight part with the same slope",
+        "code": "// Soft clipping (input limited to ±3)\nif (|input| < 1.0)\n    return input;\nsign = input > 0 ? 1.0 : -1.0;\nreturn sign * (1.5 - 0.5 / (2.0 * |input| - 1.0));"
+      },
+      {
+        "name": "Hard Clip",
+        "description": "Clamps the signal at ±1",
+        "code": "return clamp(input, -1.0, 1.0);"
+      },
+      {
+        "name": "Tanh Saturation",
+        "description": "Hyperbolic tangent curve",
+        "code": "return tanh(input);  // Approaches ±1 asymptotically"
+      },
+      {
+        "name": "Cubic Waveshaping",
+        "description": "x - x³/3, which adds odd harmonics; past |x| = 1 the curve turns back down, so high drive folds the wave",
+        "code": "input = clamp(input, -2.0, 2.0);\noutput = input - (input³ / 3.0);\nreturn clamp(output, -1.0, 1.0);"
+      },
+      {
+        "name": "Asymmetric Waveshaping",
+        "description": "Different curves for positive and negative halves, which adds even harmonics",
+        "code": "if (input > 0.0)\n    return tanh(input * 1.5) * 0.85;  // Harder positive\nelse\n    return tanh(input * 0.8) * 0.95;  // Softer negative"
+      }
+    ],
+    "screenshots": [],
+    "graphic": "/plugin-graphics/waveshaper.svg"
+  },
+  {
+    "id": "wavetablesynth",
+    "folder": "WavetableSynth",
+    "name": "WavetableSynth",
+    "type": "instrument",
+    "formats": [
+      "VST3",
+      "AU",
+      "Standalone"
+    ],
+    "parameters": [
+      {
+        "name": "Wavetable Position",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Filter Cutoff",
+        "range": "20 to 20000"
+      },
+      {
+        "name": "Filter Resonance",
+        "range": "0.5 to 10"
+      },
+      {
+        "name": "Filter Type",
+        "range": "0 to 3"
+      },
+      {
+        "name": "Filter Envelope Amount",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Amp Attack",
+        "range": "0.001 to 2"
+      },
+      {
+        "name": "Amp Decay",
+        "range": "0.001 to 2"
+      },
+      {
+        "name": "Amp Sustain",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Amp Release",
+        "range": "0.001 to 5"
+      },
+      {
+        "name": "Filter Attack",
+        "range": "0.001 to 2"
+      },
+      {
+        "name": "Filter Decay",
+        "range": "0.001 to 2"
+      },
+      {
+        "name": "Filter Sustain",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Filter Release",
+        "range": "0.001 to 5"
+      }
+    ],
+    "tagline": "8-voice wavetable synth with 32 tables and an enveloped filter",
+    "category": "synthesis",
+    "description": "An 8-voice synth that reads from 32 built-in single-cycle wavetables, from sine and saw to formant, bell and noise. One Position control moves through the tables, crossfading between neighbours, into a multi-mode filter with its own envelope and an amp envelope.",
+    "features": [
+      {
+        "name": "32 wavetables",
+        "description": "Basic waves, harmonic series, pulses, saw variants, digital, formant, vowel, bell, glass, organ, noise, chip and pad tables, generated in code"
+      },
+      {
+        "name": "Wavetable Position",
+        "description": "0 to 1 across all 32 tables, interpolating between the two nearest"
+      },
+      {
+        "name": "Multi-mode filter",
+        "description": "Low-pass, high-pass, band-pass or notch; cutoff 20 Hz to 20 kHz, resonance 0.5 to 10"
+      },
+      {
+        "name": "Filter envelope",
+        "description": "Its own ADSR, adding up to 10 kHz to the cutoff, scaled by Env Amount"
+      },
+      {
+        "name": "Amp envelope and velocity",
+        "description": "ADSR with attack and decay up to 2 s and release up to 5 s; velocity sets the note level"
+      },
+      {
+        "name": "8-voice polyphony",
+        "description": "Eight voices through the shared AudioForge voice manager"
+      }
+    ],
+    "useCases": [
+      "Pads - a soft table with slow attack and release",
+      "Leads - a bright table with a resonant low-pass and a short filter envelope",
+      "Bass - a saw or pulse table with the cutoff low and a snappy filter envelope",
+      "Exploring timbre - sweep Position while holding a note"
+    ],
+    "screenshots": []
+  },
+  {
+    "id": "xypadcontroller",
+    "folder": "XYPadController",
+    "name": "XY Pad Controller",
+    "type": "effect",
+    "formats": [
+      "VST3",
+      "AU",
+      "Standalone"
+    ],
+    "parameters": [
+      {
+        "name": "X Position",
+        "range": "0 to 1"
+      },
+      {
+        "name": "Y Position",
+        "range": "0 to 1"
+      },
+      {
+        "name": "X CC",
+        "range": "1 to 127"
+      },
+      {
+        "name": "Y CC",
+        "range": "1 to 127"
+      },
+      {
+        "name": "MIDI Channel",
+        "range": "1 to 16"
+      }
+    ],
+    "tagline": "A two-axis pad that sends MIDI CCs as you drag it",
+    "category": "midi",
+    "description": "An on-screen XY pad that sends two MIDI control change messages, one for each axis, on a chosen channel whenever you click or drag in it. Use it to control filter cutoff, expression or any mapped parameter on a downstream instrument with one gesture. It is built as an audio effect with MIDI output (not a MIDI effect), it silences any audio passing through it, and CCs are only sent from mouse movement in the open editor, not from host automation of the X and Y parameters.",
+    "features": [
+      {
+        "name": "XY pad",
+        "description": "Dragging the ball sets X and Y from 0 to 1, shown on a grid with a live coordinate readout."
+      },
+      {
+        "name": "Assignable CC numbers",
+        "description": "X CC and Y CC choose controllers 1 to 127 (defaults CC 1 mod wheel and CC 11 expression)."
+      },
+      {
+        "name": "MIDI channel",
+        "description": "Sends on any channel from 1 to 16."
+      },
+      {
+        "name": "Saved position",
+        "description": "X Position and Y Position are host parameters, so the pad position is saved with the session and restored when the editor opens."
+      }
+    ]
+  }
+]

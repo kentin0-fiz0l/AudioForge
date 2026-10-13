@@ -1,0 +1,27 @@
+{
+  "tagline": "Wavetable brass synth: trumpet, trombone and sax with articulations",
+  "category": "synthesis",
+  "description": "A 12-voice brass instrument that plays fixed additive wavetables for trumpet, trombone and saxophone through a low-pass filter that opens as the note gets louder. Articulation modes, breath noise, vibrato and detuned section copies shape each note. The tones are synthesized from harmonic recipes, not modelled or sampled.",
+  "features": [
+    {
+      "name": "Instrument",
+      "description": "Trumpet, Trombone or Saxophone, each a single-cycle wavetable with its own harmonic balance."
+    },
+    {
+      "name": "Articulation",
+      "description": "Sustain; Staccato, which releases after 150 ms; Marcato, a faster attack with a 30% boost over the first 50 ms; and Fall-off, which drops the pitch 5 semitones over 0.35 s as the note releases."
+    },
+    {
+      "name": "Brightness and Expression",
+      "description": "Low-pass cutoff of 500-4500 Hz from Brightness, plus up to 3 kHz more as the level rises; the mod wheel (CC1) sets expression, scaling both level and brightness."
+    },
+    {
+      "name": "Breath Noise and Vibrato",
+      "description": "Low-passed noise that follows the note level, and vibrato of up to 3% pitch at 4-8 Hz."
+    },
+    {
+      "name": "Section Size",
+      "description": "Plays 1-4 slightly detuned copies of each note (up to 0.7% apart) for a section sound."
+    }
+  ]
+}

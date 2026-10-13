@@ -1,0 +1,60 @@
+{
+  "tagline": "Three-band EQ with switchable high-pass and low-pass filters",
+  "category": "mixing",
+  "description": "A three-band EQ: low shelf, mid peak and high shelf, each with frequency and ±12 dB gain, plus a high-pass and a low-pass filter that can be switched in. All five are biquad filters in series; input and output meters show the levels.",
+  "features": [
+    {
+      "name": "Low Shelf",
+      "description": "20 Hz to 500 Hz (default 80 Hz), ±12 dB, Q 0.707"
+    },
+    {
+      "name": "Mid Peak",
+      "description": "200 Hz to 5 kHz (default 1 kHz), ±12 dB, fixed Q of 1.0"
+    },
+    {
+      "name": "High Shelf",
+      "description": "2 kHz to 20 kHz (default 8 kHz), ±12 dB, Q 0.707"
+    },
+    {
+      "name": "High-Pass Filter",
+      "description": "Off by default; 20 Hz to 500 Hz, 12 dB/octave"
+    },
+    {
+      "name": "Low-Pass Filter",
+      "description": "Off by default; 2 kHz to 20 kHz, 12 dB/octave"
+    },
+    {
+      "name": "Meters",
+      "description": "Input and output level meters"
+    }
+  ],
+  "useCases": [
+    "Remove rumble - switch on the HPF at 40-80 Hz",
+    "Reduce harshness - cut the mid band at 2-4 kHz by 3-6 dB",
+    "Add air - boost the high shelf at 8-12 kHz by 2-4 dB",
+    "Telephone effect - HPF at 300 Hz and LPF at 3 kHz",
+    "Add weight - boost the low shelf at 80-120 Hz by 3-6 dB"
+  ],
+  "learningFocus": [
+    "Biquad filter design (shelf, peaking, HPF, LPF)",
+    "Recomputing coefficients only when a parameter changes",
+    "Cascaded filter processing (5 filters in series)",
+    "Shelf vs peaking filter behavior",
+    "Per-channel filter state management",
+    "State persistence across sessions"
+  ],
+  "algorithms": [
+    {
+      "name": "Low Shelf Filter",
+      "description": "Bass boost or cut, using the shelf formulas from the RBJ Audio EQ Cookbook (Q=0.707)",
+      "code": "// Calculate shelf coefficients\nA = pow(10.0, gainDb / 40.0);  // Convert dB to linear\nw0 = 2π * frequency / sampleRate;\nalpha = sin(w0) / (2.0 * Q);\nbeta = sqrt(A) / Q;\n\n// Biquad coefficients\na0 = (A+1) + (A-1)*cos(w0) + beta*sin(w0);\nb0 = A*((A+1) - (A-1)*cos(w0) + beta*sin(w0)) / a0;\nb1 = 2*A*((A-1) - (A+1)*cos(w0)) / a0;\nb2 = A*((A+1) - (A-1)*cos(w0) - beta*sin(w0)) / a0;"
+    },
+    {
+      "name": "Peaking EQ",
+      "description": "Bell curve for the mid band (Q=1.0)",
+      "code": "// Peaking filter for mid band\nA = pow(10.0, gainDb / 40.0);\nw0 = 2π * frequency / sampleRate;\nalpha = sin(w0) / (2.0 * Q);\n\na0 = 1.0 + alpha/A;\nb0 = (1.0 + alpha*A) / a0;\nb1 = (-2.0 * cos(w0)) / a0;\nb2 = (1.0 - alpha*A) / a0;"
+    }
+  ],
+  "screenshots": [],
+  "graphic": "/plugin-graphics/simpleeq.svg"
+}

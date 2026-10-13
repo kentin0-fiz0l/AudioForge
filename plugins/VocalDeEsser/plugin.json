@@ -1,0 +1,27 @@
+{
+  "tagline": "A broadband de-esser keyed from a tunable 4-10 kHz sidechain",
+  "category": "mixing",
+  "description": "A de-esser that listens to a band-passed copy of the signal and turns the whole signal down when that band crosses the threshold. Because the gain reduction is applied to the full signal rather than only the high frequencies, it ducks the entire vocal briefly on each 's' or 'sh'. Use it to tame harsh sibilance on vocals or spoken word.",
+  "features": [
+    {
+      "name": "Tunable detection band",
+      "description": "Frequency sets the sidechain band-pass centre from 4 to 10 kHz (default 7 kHz), and Bandwidth (0.5 to 4) widens it."
+    },
+    {
+      "name": "Threshold and ratio",
+      "description": "Threshold -60 to 0 dB and Ratio 1:1 to 10:1 set when and how hard sibilant peaks are reduced."
+    },
+    {
+      "name": "Fast timing",
+      "description": "Attack 0.1 to 10 ms and Release 10 to 500 ms control how quickly reduction starts and recovers."
+    },
+    {
+      "name": "Mix",
+      "description": "Blends the processed and dry signal from 0 to 100%."
+    },
+    {
+      "name": "Gain reduction readout",
+      "description": "The editor shows the largest gain reduction in each block."
+    }
+  ]
+}
