@@ -35,8 +35,8 @@ private:
         float lfoPhase = 0.0f;          // For humanization
         float lfoSpeed = 0.0f;
 
-        // Simple pitch shifting using variable delay
-        float pitchReadPos = 0.0f;
+        // Pitch shifting by sweeping the delay across a crossfaded window
+        float pitchPhase = 0.5f;        // 0-1 position in the pitch window
         float pitchReadSpeed = 1.0f;
     };
 
@@ -53,8 +53,10 @@ private:
     float outputGain_ = 1.0f;
 
     std::vector<Voice> voices_;
-    static constexpr int kMaxDelayMs = 50;
-    int maxDelaySamples_ = 2205; // 50ms at 44.1kHz
+    static constexpr int kPitchWindowMs = 20;
+    static constexpr int kMaxDelayMs = 64; // 30ms timing + 20ms pitch window + humanize, with headroom
+    int maxDelaySamples_ = 2822; // 64ms at 44.1kHz
+    float pitchWindowSamples_ = 882.0f; // 20ms at 44.1kHz
 
     // Filters for each voice
     std::vector<juce::dsp::ProcessorDuplicator<juce::dsp::IIR::Filter<float>,

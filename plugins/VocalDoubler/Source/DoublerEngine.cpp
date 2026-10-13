@@ -9,12 +9,14 @@ DoublerEngine::DoublerEngine()
 void DoublerEngine::prepare(double sampleRate, int samplesPerBlock) {
     sampleRate_ = sampleRate;
     maxDelaySamples_ = static_cast<int>(sampleRate * kMaxDelayMs / 1000.0);
+    pitchWindowSamples_ = static_cast<float>(sampleRate * kPitchWindowMs / 1000.0);
 
     // Initialize delay buffers for each voice
     for (auto& voice : voices_) {
         voice.delayBuffer.setSize(2, maxDelaySamples_ + samplesPerBlock);
         voice.delayBuffer.clear();
         voice.delayWritePos = 0;
+        voice.pitchPhase = 0.5f;
         voice.lfoPhase = randomDist_(randomGen_) * juce::MathConstants<float>::pi;
         voice.lfoSpeed = 0.1f + randomDist_(randomGen_) * 0.05f;
     }
@@ -42,7 +44,7 @@ void DoublerEngine::reset() {
     for (auto& voice : voices_) {
         voice.delayBuffer.clear();
         voice.delayWritePos = 0;
-        voice.pitchReadPos = 0.0f;
+        voice.pitchPhase = 0.5f;
     }
 
     for (auto& filter : highPassFilters_) {
@@ -98,8 +100,8 @@ float DoublerEngine::readDelayedSample(Voice& voice, int channel, float delaySam
     const int bufferSize = voice.delayBuffer.getNumSamples();
     const float* bufferData = voice.delayBuffer.getReadPointer(channel);
 
-    // Calculate read position with fractional delay
-    float readPos = voice.delayWritePos - delaySamples;
+    // Calculate read position with fractional delay (never ahead of the write head)
+    float readPos = voice.delayWritePos - juce::jmax(0.0f, delaySamples);
     while (readPos < 0.0f) readPos += bufferSize;
     while (readPos >= bufferSize) readPos -= bufferSize;
 
@@ -150,12 +152,21 @@ void DoublerEngine::process(juce::AudioBuffer<float>& buffer) {
             // Calculate delay with humanization
             float totalDelay = voice.timingOffset + lfoValue;
 
-            // Read delayed samples with pitch shifting (variable speed)
-            voice.pitchReadPos += voice.pitchReadSpeed;
-            float pitchDelay = totalDelay + voice.pitchReadPos;
+            // Pitch shift: sweep the delay by (1 - speed) samples per sample so
+            // the read head moves at `speed`. Two taps half a window apart, each
+            // faded by a Hann window, hide the jump when a tap's delay wraps.
+            voice.pitchPhase += (1.0f - voice.pitchReadSpeed) / pitchWindowSamples_;
+            voice.pitchPhase -= std::floor(voice.pitchPhase);
+            const float phaseA = voice.pitchPhase;
+            const float phaseB = phaseA < 0.5f ? phaseA + 0.5f : phaseA - 0.5f;
+            const float sinA = std::sin(juce::MathConstants<float>::pi * phaseA);
+            const float gainA = sinA * sinA; // tap B gets cos^2 = 1 - gainA
+            const float delayA = totalDelay + phaseA * pitchWindowSamples_;
+            const float delayB = totalDelay + phaseB * pitchWindowSamples_;
 
             for (int ch = 0; ch < numChannels; ++ch) {
-                float delayedSample = readDelayedSample(voice, ch, pitchDelay);
+                float delayedSample = gainA * readDelayedSample(voice, ch, delayA)
+                                    + (1.0f - gainA) * readDelayedSample(voice, ch, delayB);
                 voiceBuffer.setSample(ch, sample, delayedSample);
             }
 
