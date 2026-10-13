@@ -3,6 +3,7 @@
  *
  * Plays the Koto processor through its public API, MIDI in and audio out:
  * - The Scale control moves notes onto the chosen scale
+ * - New instances start on Chromatic; saved sessions keep their scale
  * - Releasing a long-held note fades it out instead of cutting it off
  * - The MIDI pitch wheel bends the note
  * - High notes are in tune and bend by fine steps, not whole samples
@@ -27,6 +28,7 @@ public:
     void runTest() override
     {
         testScaleSnapsNotes();
+        testNewInstancesPlayNotesAsWritten();
         testReleaseCountsFromNoteOff();
         testPitchWheelBendsNote();
         testHighNotesAreInTune();
@@ -172,6 +174,28 @@ private:
                                                  + juce::String(cSharp) + " vs " + juce::String(d));
         expectWithinAbsoluteError(cSharpInSen, d, 2.0f, "In-sen should play C# as D");
         expectWithinAbsoluteError(aInSen, a, 2.0f, "In-sen should leave A, which is in the scale, alone");
+    }
+
+    void testNewInstancesPlayNotesAsWritten()
+    {
+        beginTest("New instances start on Chromatic; a saved In-sen session stays In-sen");
+
+        // A fresh Koto plays C#4 as C#4, not moved to D4
+        Player fresh;
+        fresh.render(0.3, Player::message(juce::MidiMessage::noteOn(1, 61, 1.0f)));
+        expectWithinAbsoluteError(fresh.pitchFrom(0.1), pitchOfNote(61, chromatic), 2.0f,
+                                  "A new instance should play notes as written");
+
+        // A session saved with In-sen loads back as In-sen
+        Player saved;
+        saved.setParameter("scale", static_cast<float>(inSen));
+        juce::MemoryBlock state;
+        saved.processor.getStateInformation(state);
+
+        Player loaded;
+        loaded.processor.setStateInformation(state.getData(), static_cast<int>(state.getSize()));
+        expectEquals(juce::roundToInt(loaded.processor.getValueTreeState().getRawParameterValue("scale")->load()), inSen,
+                     "A saved In-sen session should keep In-sen");
     }
 
     void testReleaseCountsFromNoteOff()

@@ -21,7 +21,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout KotoProcessor::createParamet
 {
     std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
 
-    params.push_back(std::make_unique<juce::AudioParameterInt>(PARAM_SCALE, "Scale", 0, 4, 0));
+    params.push_back(std::make_unique<juce::AudioParameterInt>(PARAM_SCALE, "Scale", 0, 4, 4)); // Chromatic: notes as written
     params.push_back(std::make_unique<juce::AudioParameterInt>(PARAM_PLAY_STYLE, "Play Style", 0, 2, 0));
     params.push_back(std::make_unique<juce::AudioParameterFloat>(PARAM_BODY_RESONANCE, "Body Resonance", 0.0f, 1.0f, 0.5f));
     params.push_back(std::make_unique<juce::AudioParameterFloat>(PARAM_ATTACK, "Attack", 0.001f, 0.1f, 0.005f));
@@ -88,7 +88,7 @@ void KotoProcessor::updateVoiceParameters()
         case 2: scale = KotoEngine::Scale::Iwato; break;
         case 3: scale = KotoEngine::Scale::Kumoi; break;
         case 4: scale = KotoEngine::Scale::Chromatic; break;
-        default: scale = KotoEngine::Scale::InSen; break;
+        default: scale = KotoEngine::Scale::Chromatic; break;
     }
 
     KotoEngine::PlayStyle playStyle;
