@@ -12,7 +12,7 @@ AudioForge is a collection of professional-quality audio plugins built with mode
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS
 - **Deployment**: Static site export to DigitalOcean Spaces
-- **URL**: https://audioforge-site.sfo3.cdn.digitaloceanspaces.com/index.html
+- **URL**: https://fluxstudio-audioforge-y59di.ondigitalocean.app/
 
 ## Features
 
@@ -108,138 +108,11 @@ npm install -g serve
 serve out
 ```
 
-## Deployment to DigitalOcean
+## Deployment
 
-### Option 1: DigitalOcean App Platform (Recommended)
-
-Easiest deployment method with automatic builds and HTTPS:
-
-1. **Create a new App on DigitalOcean:**
-   - Go to DigitalOcean Dashboard → Apps → Create App
-   - Connect your GitHub repository
-   - Select the `AudioForge` repository
-   - Set source directory to `/website`
-
-2. **Configure the App:**
-   - **Build Command**: `npm run build`
-   - **Output Directory**: `out`
-   - **Environment Variables**: None needed
-   - **Plan**: Static Site (cheapest option, $3/mo)
-
-3. **Set up custom domain:**
-   - In App settings, add domain: `audioforge.fluxstudio.art`
-   - Copy the CNAME record provided by DigitalOcean
-   - Add CNAME record to FluxStudio.art DNS:
-     ```
-     Type: CNAME
-     Name: audioforge
-     Value: [your-app-name].ondigitalocean.app
-     TTL: 3600
-     ```
-
-4. **Deploy:**
-   - DigitalOcean will auto-deploy on every push to main
-   - HTTPS certificate is automatically provisioned
-   - Site will be live at `audioforge.fluxstudio.art`
-
-### Option 2: DigitalOcean Spaces + CDN
-
-Cheapest option for pure static hosting ($5/mo for 250GB storage + bandwidth):
-
-1. **Create a Space:**
-   - Go to DigitalOcean Dashboard → Spaces → Create Space
-   - Name: `audioforge-site`
-   - Region: Choose closest to your users (e.g., SFO3)
-   - Enable CDN
-   - Set Files Listing to "Public"
-
-2. **Upload the static site:**
-   ```bash
-   # Install s3cmd or use doctl
-   npm install -g @digitalocean/doctl
-
-   # Authenticate
-   doctl auth init
-
-   # Build the site
-   npm run build
-
-   # Upload to Spaces (replace YOUR-SPACE-NAME and REGION)
-   doctl spaces upload out/* \
-     --space audioforge-site \
-     --region sfo3 \
-     --recursive
-   ```
-
-3. **Configure Space as website:**
-   - In Space settings → Enable "Static Website Hosting"
-   - Set index document: `index.html`
-   - Set error document: `404.html`
-
-4. **Set up custom domain:**
-   - In Space settings → Add custom domain: `audioforge.fluxstudio.art`
-   - Add CNAME record to FluxStudio.art DNS:
-     ```
-     Type: CNAME
-     Name: audioforge
-     Value: audioforge-site.sfo3.cdn.digitaloceanspaces.com
-     TTL: 3600
-     ```
-
-5. **Enable SSL:**
-   - DigitalOcean will provision a Let's Encrypt certificate automatically
-
-### Option 3: Manual Deployment Script
-
-Create a deployment script for easy updates:
-
-```bash
-#!/bin/bash
-# deploy.sh
-
-echo "Building site..."
-npm run build
-
-echo "Uploading to DigitalOcean Spaces..."
-doctl spaces upload out/* \
-  --space audioforge-site \
-  --region sfo3 \
-  --recursive \
-  --force
-
-echo "Deployment complete!"
-echo "Site live at: https://audioforge.fluxstudio.art"
-```
-
-Make it executable:
-```bash
-chmod +x deploy.sh
-./deploy.sh
-```
-
-## DNS Configuration
-
-Add this CNAME record to FluxStudio.art DNS (e.g., in DigitalOcean Networking or your DNS provider):
-
-```
-Type: CNAME
-Name: audioforge
-Value: [depends on deployment option]
-TTL: 3600
-```
-
-**Values by deployment option:**
-- **App Platform**: `your-app-name.ondigitalocean.app`
-- **Spaces CDN**: `audioforge-site.sfo3.cdn.digitaloceanspaces.com`
-
-## Cost Comparison
-
-- **App Platform**: $3/month (static site plan)
-- **Spaces + CDN**: $5/month (250GB storage + bandwidth)
-- **Both options include**:
-  - Automatic HTTPS
-  - CDN distribution
-  - 99.99% uptime SLA
+The site is served by DigitalOcean App Platform (app `audioforge`, free static-site tier) at
+https://fluxstudio-audioforge-y59di.ondigitalocean.app/ and redeploys on every push to `main`. The spec is `.do/app.yaml` at the repo root;
+see `DEPLOYMENT.md`. Nothing is deployed by hand.
 
 ## SEO Optimization
 

@@ -67,7 +67,7 @@ const badgeStyles: Record<BadgeType, {
 };
 
 const defaultText: Record<BadgeType, string> = {
-  fixed: 'Fixed in v1.9.0',
+  fixed: 'Fixed',
   experimental: 'Experimental',
   new: 'New',
   validated: 'Validated',

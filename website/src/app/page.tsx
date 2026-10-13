@@ -10,10 +10,7 @@ import { StickyDownload } from '@/components/StickyDownload';
 import { ScrollToTop } from '@/components/ScrollToTop';
 import { AnimatedSection } from '@/components/AnimatedSection';
 import { FAQ } from '@/components/FAQ';
-import { Newsletter } from '@/components/Newsletter';
 import { DocsPreview } from '@/components/DocsPreview';
-import { Testimonials } from '@/components/Testimonials';
-import { ReleaseAnnouncement } from '@/components/ReleaseAnnouncement';
 import { PluginFilter, type PluginCategory } from '@/components/PluginFilter';
 import { plugins, getCurrentPhase, roadmap } from '@/lib/plugins';
 
@@ -47,9 +44,6 @@ export default function Home() {
 
   return (
     <main className="min-h-screen">
-      {/* Release Announcement Banner */}
-      <ReleaseAnnouncement />
-
       {/* Sticky Download Button */}
       <StickyDownload />
 
@@ -146,7 +140,7 @@ export default function Home() {
       <DocsPreview />
 
       {/* Roadmap Teaser */}
-      <section className="py-16 md:py-24 bg-background-light">
+      <section id="roadmap" className="py-16 md:py-24 bg-background-light">
         <div className="container mx-auto px-4">
           {/* Section Header */}
           <div className="text-center mb-12 md:mb-16">
@@ -171,9 +165,6 @@ export default function Home() {
                   </h3>
                 </div>
                 <p className="text-foreground-muted text-lg mb-6">{currentPhase.goal}</p>
-                {currentPhase.timeline && (
-                  <p className="text-foreground/60 mb-6">Timeline: {currentPhase.timeline}</p>
-                )}
 
                 {/* Current Phase Items */}
                 <div className="space-y-4">
@@ -263,7 +254,7 @@ export default function Home() {
                 Community & Support
               </h2>
               <p className="text-foreground-muted text-lg">
-                Join our growing community of producers and developers.
+                Questions, bugs and ideas are welcome on GitHub.
               </p>
             </div>
 
@@ -326,10 +317,10 @@ export default function Home() {
                 <div className="text-4xl mb-4">🎓</div>
                 <h3 className="text-2xl font-bold text-foreground mb-3">Learn Audio DSP</h3>
                 <p className="text-foreground/70 mb-6">
-                  Clean, well-documented code with 100% test coverage (136 passing tests). Study real-world implementations of audio algorithms.
+                  Readable C++ with 290+ automated tests. Study real implementations of audio algorithms.
                 </p>
                 <a
-                  href="/docs/learning"
+                  href="/docs/#dsp-basics"
                   className="inline-flex items-center text-primary hover:text-primary-light font-semibold transition-colors"
                 >
                   Start Learning
@@ -344,29 +335,21 @@ export default function Home() {
                 Ready to Try AudioForge?
               </h3>
               <p className="text-foreground-muted text-lg mb-8 max-w-2xl mx-auto">
-                Get AudioForge: 60 plugins (VST3 & AU), universal preset management, and full MIDI Learn support. Free forever, no strings attached.
+                60 plugins (VST3 & AU), free and open source under the MIT License. Installers are on the way; for now, build from source in a few commands.
               </p>
               <a
-                href="https://github.com/kentin0-fiz0l/AudioForge/releases/latest"
-                target="_blank"
-                rel="noopener noreferrer"
+                href="/docs/#getting-started"
                 className="inline-block px-10 py-4 bg-gradient-primary text-white font-semibold text-lg rounded-lg hover:shadow-glow-primary transition-all"
               >
-                Download
+                Get Started
               </a>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Testimonials Section */}
-      <Testimonials />
-
       {/* FAQ Section */}
       <FAQ />
-
-      {/* Newsletter Signup */}
-      <Newsletter />
 
       <Footer />
     </main>

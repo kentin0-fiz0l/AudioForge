@@ -2,22 +2,15 @@ import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
-import { getPluginById } from '@/lib/plugins';
+import { getPluginById, plugins } from '@/lib/plugins';
 
 interface PluginPageProps {
   params: Promise<{ slug: string }>;
 }
 
-// Generate static params for all released plugins
+// A page for every plugin in the catalog
 export async function generateStaticParams() {
-  return [
-    { slug: 'simplegain' },
-    { slug: 'panutil' },
-    { slug: 'basicsynth' },
-    { slug: 'cleandelay' },
-    { slug: 'simpleeq' },
-    { slug: 'simplecomp' },
-  ];
+  return plugins.map((plugin) => ({ slug: plugin.id }));
 }
 
 // Generate metadata for SEO
@@ -101,19 +94,12 @@ export default async function PluginPage({ params }: PluginPageProps) {
                     Download for Free
                   </a>
                 ) : (
-                  <button
-                    disabled
-                    className="px-8 py-4 bg-foreground/5 text-foreground/40 text-lg font-semibold rounded-lg cursor-not-allowed border border-foreground/10"
-                  >
-                    Coming Soon
-                  </button>
-                )}
-                {plugin.docsUrl && (
+                  // No installers yet: building from source is how to get it today
                   <Link
-                    href={plugin.docsUrl}
-                    className="px-8 py-4 bg-foreground/10 text-foreground text-lg font-semibold rounded-lg hover:bg-foreground/20 transition-colors border border-foreground/20"
+                    href="/docs/#getting-started"
+                    className="px-8 py-4 bg-gradient-primary text-white text-lg font-semibold rounded-lg hover:opacity-90 transition-opacity shadow-lg shadow-primary/20"
                   >
-                    View Documentation
+                    Build from Source
                   </Link>
                 )}
               </div>

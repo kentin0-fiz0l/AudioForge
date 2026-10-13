@@ -1,16 +1,18 @@
+# AudioForge website on DigitalOcean App Platform (free static-site tier).
+# Built from /website on main and redeployed on every push to main.
 name: audioforge
 region: sfo
 static_sites:
   - name: audioforge-website
     github:
-      repo: kentino/AudioForge
+      repo: kentin0-fiz0l/AudioForge
       branch: main
       deploy_on_push: true
     source_dir: /website
-    output_dir: /website/out
+    output_dir: out
     build_command: npm run build
-    routes:
-      - path: /
+    error_document: 404.html
     envs:
       - key: NODE_VERSION
+        scope: BUILD_TIME
         value: "18"

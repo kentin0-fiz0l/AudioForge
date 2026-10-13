@@ -87,7 +87,7 @@ export default function DocsPage() {
               <h3 className="text-2xl font-semibold mb-4 text-orange-500">Build Your First Plugin</h3>
               <pre className="bg-zinc-900 p-4 rounded-lg overflow-x-auto text-sm">
                 <code className="text-orange-400">{`# Clone the repository
-git clone --recursive https://github.com/yourusername/AudioForge.git
+git clone --recursive https://github.com/kentin0-fiz0l/AudioForge.git
 cd AudioForge
 
 # Build SimpleGain

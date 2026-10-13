@@ -66,15 +66,13 @@ export const Hero: React.FC<HeroProps> = ({ className = '' }) => {
 
           {/* Subheadline */}
           <p className="text-lg md:text-xl text-foreground-muted mb-8 max-w-2xl mx-auto leading-relaxed">
-            39 professional VST3 and AU plugins with universal preset management and MIDI Learn. From essential utilities to advanced synthesis, built with JUCE and modern C++.
+            60 VST3 and AU plugins: effects, synths, instruments and MIDI tools. From essential utilities to advanced synthesis, built with JUCE and modern C++.
           </p>
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
             <a
-              href="https://github.com/kentin0-fiz0l/AudioForge/releases/latest"
-              target="_blank"
-              rel="noopener noreferrer"
+              href="/docs/#getting-started"
               className="group relative px-8 py-4 bg-gradient-primary text-white font-semibold rounded-lg transition-all shadow-glow-primary hover:shadow-glow-primary hover:scale-105 w-full sm:w-auto text-center overflow-hidden"
             >
               {/* Button glow effect */}
@@ -83,7 +81,7 @@ export const Hero: React.FC<HeroProps> = ({ className = '' }) => {
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                 </svg>
-                Download
+                Get AudioForge
               </span>
             </a>
             <a
@@ -110,8 +108,8 @@ export const Hero: React.FC<HeroProps> = ({ className = '' }) => {
             <span className="px-4 py-2 bg-background-light text-foreground-muted rounded-full text-sm font-medium border border-primary/20 hover:border-primary/40 transition-colors font-mono">
               MIT License
             </span>
-            <span className="px-4 py-2 bg-gradient-primary text-white rounded-full text-sm font-medium border border-primary shadow-glow-primary font-mono">
-              100% Test Coverage
+            <span className="px-4 py-2 bg-background-light text-foreground-muted rounded-full text-sm font-medium border border-primary/20 hover:border-primary/40 transition-colors font-mono">
+              Tested on every change
             </span>
           </div>
 
