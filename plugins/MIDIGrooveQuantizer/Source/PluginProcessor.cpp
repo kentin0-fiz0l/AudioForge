@@ -67,6 +67,15 @@ void MIDIGrooveQuantizerProcessor::processBlock(juce::AudioBuffer<float>& buffer
     buffer.clear();
 }
 
+void MIDIGrooveQuantizerProcessor::processBlockBypassed(juce::AudioBuffer<float>& buffer,
+                                                          juce::MidiBuffer& midiMessages) {
+    // Run the engine with no beat grid: it releases whatever it is still
+    // delaying (so a note bypassed mid-way is not left sounding) and passes the
+    // input straight through
+    engine_.processBlock(midiMessages, buffer.getNumSamples(), {});
+    buffer.clear();
+}
+
 void MIDIGrooveQuantizerProcessor::updateEngineParameters() {
     int gridIdx = apvts_.getRawParameterValue("gridResolution")->load();
     engine_.setGridResolution(static_cast<QuantizerEngine::GridResolution>(gridIdx));

@@ -80,7 +80,10 @@ namespace
                     if (e.time >= blockStart && e.time < blockStart + blockSize)
                         midi.addEvent(e.message, (int) (e.time - blockStart));
 
-                processor.processBlock(audio, midi);
+                if (bypassed)
+                    processor.processBlockBypassed(audio, midi);
+                else
+                    processor.processBlock(audio, midi);
 
                 for (const auto m : midi)
                     out.push_back({ blockStart + m.samplePosition, m.getMessage() });
@@ -96,6 +99,7 @@ namespace
         FakePlayHead playHead;
         juce::AudioBuffer<float> audio { 2, blockSize };
         int64_t blocksDone = 0;
+        bool bypassed = false;
     };
 
     juce::MidiMessage on(int note) { return juce::MidiMessage::noteOn(1, note, (juce::uint8) 100); }
@@ -133,6 +137,7 @@ public:
         testZeroTempoPassesThrough();
         testPassThroughNoteOnClearsShift();
         testStopDropsNotesNotYetStarted();
+        testBypassReleasesQueuedNotes();
     }
 
 private:
@@ -361,6 +366,34 @@ private:
 
         expect(timeOf(out, 62, true) >= 0, "held note is still played");
         expect(timeOf(out, 62, false) > timeOf(out, 62, true), "held note is released after it starts");
+    }
+
+    void testBypassReleasesQueuedNotes()
+    {
+        beginTest("Bypassing mid-note releases the note and passes MIDI through");
+
+        Harness h;
+        // Both events enter the lookahead queue (the note-off at block 3); play
+        // until the note-on is out
+        std::vector<OutEvent> out = h.run({ { 100, on(60) }, { 2000, off(60) } }, 4);
+        while (timeOf(out, 60, true) < 0 && h.blocksDone < 100)
+        {
+            const auto more = h.run({}, 1);
+            out.insert(out.end(), more.begin(), more.end());
+        }
+        expect(timeOf(out, 60, true) >= 0, "the note-on is played before bypassing");
+        expect(timeOf(out, 60, false) < 0, "its note-off is still queued");
+
+        h.bypassed = true;
+        const int64_t bypassStart = h.blocksDone * blockSize;
+        const auto bypassed = h.run({ { bypassStart + 10, on(64) } }, 2);
+        expect(timeOf(bypassed, 60, false) >= 0, "the queued note-off is released on bypass");
+        expectEquals(timeOf(bypassed, 64, true), bypassStart + 10,
+                     "MIDI passes straight through while bypassed");
+
+        h.bypassed = false;
+        const auto resumed = h.run({}, 40);
+        expectEquals(timeOf(resumed, 60, false), (int64_t) -1, "the note-off is not sent again after bypass");
     }
 };
 

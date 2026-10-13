@@ -14,7 +14,9 @@ namespace {
 
 QuantizerEngine::QuantizerEngine()
     : randomGen_(std::random_device{}()),
-      randomDist_(-1.0f, 1.0f) {}
+      randomDist_(-1.0f, 1.0f) {
+    lastNoteOnDue_.fill(noNoteOn);
+}
 
 void QuantizerEngine::prepareToPlay(double sampleRate, int samplesPerBlock) {
     sampleRate_ = sampleRate;
