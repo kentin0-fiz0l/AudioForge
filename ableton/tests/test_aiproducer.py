@@ -171,6 +171,11 @@ class FakeDevice:
             self.parameters.append(FakeParameter("Program", 0.0))
 
 
+class FakeRouting:
+    def __init__(self, display_name):
+        self.display_name = display_name
+
+
 class FakeTrack:
     def __init__(self, name="MIDI"):
         self.name = name
@@ -184,6 +189,29 @@ class FakeTrack:
         self.has_audio_output = True
         self.output_meter_left = 0.0
         self.output_meter_right = 0.0
+        self.song = None
+        self.input_routing_type = FakeRouting("All Ins")
+        self.input_routing_channel = FakeRouting("All Channels")
+        self.current_monitoring_state = 1  # Auto
+
+    # Live offers the other tracks as inputs. Taking one offers its tap
+    # points: before and after its devices, and each device that sends MIDI.
+    @property
+    def _song_tracks(self):
+        return self.song.tracks if self.song else []
+
+    @property
+    def available_input_routing_types(self):
+        others = [t for t in self._song_tracks if t is not self]
+        return [FakeRouting("All Ins"), FakeRouting("Computer Keyboard")] + [FakeRouting(t.name) for t in others]
+
+    @property
+    def available_input_routing_channels(self):
+        source = next((t for t in self._song_tracks
+                       if t.name == self.input_routing_type.display_name), None)
+        if source is None:
+            return [FakeRouting("All Channels"), FakeRouting("Ch. 1")]
+        return [FakeRouting("Pre FX"), FakeRouting("Post FX")] + [FakeRouting(d.name) for d in source.devices]
 
     def delete_device(self, index):
         del self.devices[index]
@@ -728,6 +756,8 @@ class LiveControlTestCase(AIProducerTestCase):
         osc_module = importlib.import_module("AIProducer.OSCServer")
 
         self.song.tracks = [FakeTrack(name) for name in TRACK_NAMES]
+        for track in self.song.tracks:
+            track.song = self.song
 
         # Listen on a port the system picks, so the test cannot collide with Live
         self.script.osc_server.close()
@@ -761,6 +791,28 @@ class LiveControlTestCase(AIProducerTestCase):
 
 
 class MixerTests(LiveControlTestCase):
+    def test_a_track_takes_midi_from_a_device_on_another_track_and_monitors_it(self):
+        # Ableton cannot split one track's MIDI by channel, so a plugin that
+        # writes MIDI (Track Sketch) feeds each instrument track on its own
+        self.song.tracks[0].devices.append(FakeDevice("Track Sketch"))
+
+        reply = self.ask("/live/track/set/input", "AI Bass", self.song.tracks[0].name, "track sketch")
+
+        self.assertTrue(reply["ok"], reply)
+        bass = self.song.tracks[1]
+        self.assertEqual(bass.input_routing_type.display_name, self.song.tracks[0].name)
+        self.assertEqual(bass.input_routing_channel.display_name, "Track Sketch")
+        self.assertEqual(bass.current_monitoring_state, 0, "monitored, so it plays without arming")
+        self.assertEqual(reply["tap"], "Track Sketch")
+
+    def test_an_unknown_input_says_what_the_choices_are(self):
+        reply = self.ask("/live/track/set/input", "AI Bass", "No Such Track")
+
+        self.assertFalse(reply["ok"])
+        self.assertIn("No input called 'No Such Track'", reply["error"])
+        self.assertIn("AI Lead", reply["error"])
+        self.assertEqual(self.song.tracks[1].current_monitoring_state, 1, "nothing changed")
+
     def test_mixer_lists_every_track_with_its_level(self):
         self.song.tracks[1].devices.append(FakeDevice("BasicSynth"))
 
