@@ -3,6 +3,7 @@
 */
 
 #include "PluginProcessor.h"
+#include <cmath>
 #include "PluginEditor.h"
 #include "../../../shared/dsp/ReverbLevels.h"
 
@@ -352,6 +353,7 @@ void MelodyMakerProcessor::getStateInformation (juce::MemoryBlock& destData)
 
     auto melody = state.getOrCreateChildWithName ("Melody", nullptr);
     melody.removeAllChildren (nullptr);
+    const juce::ScopedLock edit (melodyEditLock_);
     for (const auto& note : currentMelody_)
     {
         juce::ValueTree noteTree ("Note");
@@ -377,20 +379,40 @@ void MelodyMakerProcessor::setStateInformation (const void* data, int sizeInByte
     const auto state = juce::ValueTree::fromXml (*xml);
     apvts_.replaceState (state);
 
-    style_ = state.getProperty ("style", juce::String (style_)).toString().toStdString();
-    keyRoot_ = state.getProperty ("keyRoot", keyRoot_);
-    keyIsMajor_ = state.getProperty ("keyIsMajor", keyIsMajor_);
+    // A project file can be damaged or hand-edited, so nothing from it reaches the audio thread
+    // unchecked: the key keeps a two-octave melody inside MIDI, only known styles are taken,
+    // notes with impossible timings are dropped and the rest clamped, and the melody is capped.
+    static const juce::StringArray styles { "Pop", "Rock", "Jazz", "Blues", "EDM", "Ballad", "Funk", "Classical" };
+    constexpr std::size_t maxNotes = 4096;
+    constexpr double maxStartBeats = 1024.0, maxDurationBeats = 64.0;
+
+    if (const auto style = state.getProperty ("style").toString(); styles.contains (style))
+        style_ = style.toStdString();
+    keyRoot_ = juce::jlimit (0, 127 - 24, static_cast<int> (state.getProperty ("keyRoot", keyRoot_)));
+    keyIsMajor_ = static_cast<bool> (state.getProperty ("keyIsMajor", keyIsMajor_));
 
     std::vector<MelodyEngine::Note> melody;
     for (const auto& noteTree : state.getChildWithName ("Melody"))
-        melody.push_back ({ noteTree["pitch"], noteTree["start"], noteTree["duration"],
-                            noteTree["velocity"], noteTree["chordTone"] });
+    {
+        if (melody.size() >= maxNotes)
+            break;
+        const double start = noteTree["start"], duration = noteTree["duration"];
+        if (! std::isfinite (start) || start < 0.0 || start > maxStartBeats
+            || ! std::isfinite (duration) || duration <= 0.0)
+            continue;
+        melody.push_back ({ juce::jlimit (0, 127, static_cast<int> (noteTree["pitch"])),
+                            static_cast<float> (start),
+                            static_cast<float> (juce::jmin (duration, maxDurationBeats)),
+                            juce::jlimit (1, 127, static_cast<int> (noteTree["velocity"])),
+                            static_cast<bool> (noteTree["chordTone"]) });
+    }
     if (! melody.empty())
         setMelody (std::move (melody));
 }
 
 void MelodyMakerProcessor::setMelody (std::vector<MelodyEngine::Note> melody)
 {
+    const juce::ScopedLock edit (melodyEditLock_);
     const juce::SpinLock::ScopedLockType lock (melodyLock_);
     currentMelody_.swap (melody);
 }
@@ -429,6 +451,7 @@ void MelodyMakerProcessor::exportToMidiFile(const juce::File& file)
     // Convert melody to MIDI
     int ticksPerBeat = 480;
 
+    const juce::ScopedLock edit (melodyEditLock_);
     for (const auto& note : currentMelody_) {
         int velocity = note.velocity;
 

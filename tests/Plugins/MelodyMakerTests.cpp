@@ -12,6 +12,9 @@
 
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <cmath>
+#include <thread>
+#include <atomic>
+#include <limits>
 
 #include "../../plugins/MelodyMaker/Source/PluginProcessor.h"
 
@@ -97,6 +100,8 @@ public:
     {
         testStyleChangesMelody();
         testSettingsAndMelodyAreRestored();
+        testDamagedSessionIsMadeSafe();
+        testSavingWhileTheMelodyChanges();
         testOpeningEditorKeepsMelody();
         testFilterCutoffFollowsParameter();
         testExportReplacesExistingFile();
@@ -123,6 +128,99 @@ private:
 
         processor.generateNewMelody("Jazz");
         expectEquals((int) processor.getCurrentMelody().size(), 24, "Jazz plays in triplets");
+    }
+
+    // A project file is outside the plugin's control: a damaged or hand-edited one must not
+    // put out-of-range notes or timings into the audio thread, or make it allocate without bound
+    void testDamagedSessionIsMadeSafe()
+    {
+        beginTest("A damaged session is clamped to safe values");
+
+        MelodyMakerProcessor original;
+        original.prepareToPlay(sampleRate, blockSize);
+        original.generateNewMelody("Pop");
+        juce::MemoryBlock good;
+        original.getStateInformation(good);
+
+        auto xml = juce::AudioProcessor::getXmlFromBinary(good.getData(), static_cast<int>(good.getSize()));
+        expect(xml != nullptr);
+        auto state = juce::ValueTree::fromXml(*xml);
+        state.setProperty("keyRoot", 5000, nullptr);
+        state.setProperty("style", "<not a style>", nullptr);
+
+        auto melody = state.getChildWithName("Melody");
+        melody.removeAllChildren(nullptr);
+        // pitch, start (beats), duration (beats), velocity: the first two have usable timings
+        // but out-of-range values, the last two have timings no note can have
+        const juce::var bad[][4] = { { -40, 1.0, 0.5, 999 },
+                                     { 300, 2.0, 1.0e30, -7 },
+                                     { 64, std::numeric_limits<double>::quiet_NaN(), 1.0, 64 },
+                                     { 64, -3.0, -1.0, 64 } };
+        for (int i = 0; i < 100000; ++i)
+        {
+            const auto& v = bad[i % 4];
+            juce::ValueTree note("Note");
+            note.setProperty("pitch", v[0], nullptr);
+            note.setProperty("start", v[1], nullptr);
+            note.setProperty("duration", v[2], nullptr);
+            note.setProperty("velocity", v[3], nullptr);
+            melody.appendChild(note, nullptr);
+        }
+        juce::MemoryBlock damaged;
+        juce::AudioProcessor::copyXmlToBinary(*state.createXml(), damaged);
+
+        MelodyMakerProcessor restored;
+        restored.prepareToPlay(sampleRate, blockSize);
+        restored.setStateInformation(damaged.getData(), static_cast<int>(damaged.getSize()));
+
+        expect(restored.getKeyRoot() >= 0 && restored.getKeyRoot() + 24 <= 127,
+               "The key root should be kept to a playable range, not " + juce::String(restored.getKeyRoot()));
+        expectEquals(juce::String(restored.getStyle()), juce::String("Pop"), "An unknown style should be ignored");
+        expect(! restored.getCurrentMelody().empty(), "Notes with usable timings should be kept, clamped");
+        expect(restored.getCurrentMelody().size() <= 4096, "The melody should be capped, not "
+               + juce::String((int) restored.getCurrentMelody().size()) + " notes");
+        for (const auto& note : restored.getCurrentMelody())
+        {
+            expect(note.pitch >= 0 && note.pitch <= 127, "Pitch out of range: " + juce::String(note.pitch));
+            expect(note.velocity >= 1 && note.velocity <= 127, "Velocity out of range: " + juce::String(note.velocity));
+            expect(std::isfinite(note.startTime) && note.startTime >= 0.0f, "Bad start time");
+            expect(std::isfinite(note.duration) && note.duration > 0.0f && note.duration <= 64.0f, "Bad duration");
+        }
+
+        for (auto s : play(restored, 8.0))
+            if (! std::isfinite(s))
+            {
+                expect(false, "The output should stay finite");
+                break;
+            }
+    }
+
+    // Hosts may save from a background thread while the melody is being replaced
+    void testSavingWhileTheMelodyChanges()
+    {
+        beginTest("Saving on another thread while the melody is replaced is safe");
+
+        MelodyMakerProcessor processor;
+        processor.prepareToPlay(sampleRate, blockSize);
+        std::atomic<bool> done { false };
+        std::atomic<int> saves { 0 };
+
+        std::thread saver([&] {
+            while (! done.load())
+            {
+                juce::MemoryBlock state;
+                processor.getStateInformation(state);
+                saves.fetch_add(1);
+            }
+        });
+
+        const char* styles[] = { "Pop", "EDM", "Jazz", "Ballad" };
+        for (int i = 0; i < 2000; ++i)
+            processor.generateNewMelody(styles[i % 4]);
+
+        done.store(true);
+        saver.join();
+        expect(saves.load() > 0, "The saving thread should have run");
     }
 
     void testSettingsAndMelodyAreRestored()

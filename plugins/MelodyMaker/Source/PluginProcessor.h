@@ -71,6 +71,9 @@ private:
     MelodyEngine melodyEngine_;
     std::vector<MelodyEngine::Note> currentMelody_;
     juce::SpinLock melodyLock_;
+    // Held by everything outside the audio thread that replaces the melody or reads it (saving,
+    // export): a host can save from a background thread while the melody is being replaced
+    juce::CriticalSection melodyEditLock_;
 
     double sampleRate_ = 44100.0;
     bool melodyEnabled_ = true;
