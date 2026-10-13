@@ -2,9 +2,10 @@
 
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "MIDIGenerator.h"
-#include "AIClient.h"
+#include "Styles.h"
 
-class AIProducerProcessor : public juce::AudioProcessor {
+class AIProducerProcessor : public juce::AudioProcessor,
+                            private juce::Timer {
 public:
     AIProducerProcessor();
     ~AIProducerProcessor() override;
@@ -16,7 +17,7 @@ public:
     juce::AudioProcessorEditor* createEditor() override;
     bool hasEditor() const override { return true; }
 
-    const juce::String getName() const override { return "AI Producer"; }
+    const juce::String getName() const override { return "Track Sketch"; }
     bool acceptsMidi() const override { return false; }
     bool producesMidi() const override { return true; }  // This plugin generates MIDI!
     bool isMidiEffect() const override { return false; }
@@ -31,24 +32,33 @@ public:
     void getStateInformation(juce::MemoryBlock& destData) override;
     void setStateInformation(const void* data, int sizeInBytes) override;
 
-    // Public API for UI
-    void generateTrack(const juce::String& prompt);
-    bool isGenerating() const { return isGenerating_; }
-    juce::String getStatus() const { return statusMessage_; }
-    float getProgress() const { return progress_; }
+    juce::AudioProcessorValueTreeState& getValueTreeState() { return apvts_; }
+
+    // Rebuilds the track if the controls have changed since it was last
+    // built. Called from a timer on the message thread, and after loading.
+    void regenerateIfChanged();
+
+    // Moves the Variation control on, so the same settings give a new track
+    void nextVariation();
+
+    // What is playing, e.g. "House in A minor, 72 bars at 124 BPM"
+    juce::String getDescription() const;
 
 private:
-    void onTrackGenerated(TrackStructure structure);
-    void onGenerationError(std::string error);
+    void timerCallback() override { regenerateIfChanged(); }
+    Styles::Settings currentSettings() const;
 
     // Hands a newly generated sequence to the audio thread (message thread only)
     void publishSequence(std::unique_ptr<const MIDIGenerator::Sequence> next);
 
-    std::unique_ptr<AIClient> aiClient_;
+    juce::AudioProcessorValueTreeState apvts_;
 
-    bool isGenerating_ = false;
-    juce::String statusMessage_ = "Ready";
-    float progress_ = 0.0f;
+    // Guards building a track, which the timer and setStateInformation() can
+    // both start; never taken on the audio thread
+    mutable juce::CriticalSection buildLock_;
+    Styles::Settings builtSettings_;
+    bool hasBuilt_ = false;
+    juce::String description_;
 
     double lastSampleRate_ = 44100.0;
 

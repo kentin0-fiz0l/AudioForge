@@ -14,14 +14,12 @@ juce_add_plugin(AIProducer
     PLUGIN_MANUFACTURER_CODE AFrg
     PLUGIN_CODE AIPr
     FORMATS VST3 AU Standalone
-    PRODUCT_NAME "AI Producer"
-    PLUGIN_NAME "AIProducer"
+    PRODUCT_NAME "Track Sketch"
+    PLUGIN_NAME "Track Sketch"
     IS_SYNTH FALSE
     NEEDS_MIDI_INPUT FALSE
-    NEEDS_MIDI_OUTPUT TRUE    # This plugin generates MIDI!
+    NEEDS_MIDI_OUTPUT TRUE    # This plugin generates MIDI
     IS_MIDI_EFFECT FALSE
-    EDITOR_WANTS_KEYBOARD_FOCUS TRUE  # For text input
-    NEEDS_CURL TRUE                   # Link libcurl on Linux (JUCE_USE_CURL=1 below)
     COPY_PLUGIN_AFTER_BUILD TRUE)
 
 # Add source files
@@ -30,13 +28,13 @@ target_sources(AIProducer PRIVATE
     Source/PluginEditor.cpp
     Source/MIDIGenerator.cpp
     Source/MusicTheory.cpp
-    Source/AIClient.cpp)
+    Source/Styles.cpp)
 
 # Compiler definitions
 target_compile_definitions(AIProducer PUBLIC
     JUCE_VST3_CAN_REPLACE_VST2=0
     JUCE_WEB_BROWSER=0
-    JUCE_USE_CURL=1           # Enable CURL for HTTP requests
+    JUCE_USE_CURL=0
     JUCE_DISPLAY_SPLASH_SCREEN=0)
 
 # Link JUCE libraries

@@ -109,7 +109,7 @@ target_sources(TestRunner PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/AIProducer/Source/PluginEditor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/AIProducer/Source/MIDIGenerator.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/AIProducer/Source/MusicTheory.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/AIProducer/Source/AIClient.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/AIProducer/Source/Styles.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/BrassSection/Source/BrassEngine.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/Gate/Source/GateEngine.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../shared/dsp/EnvelopeFollower.cpp
