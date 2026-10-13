@@ -25,6 +25,7 @@ void GateEngine::prepare(double sampleRate, int maxBlockSize)
     // Prepare sub-components
     envelopeFollower.prepare(sampleRate, maxBlockSize);
     sidechain.prepare(sampleRate, maxBlockSize);
+    detectorBuffer.setSize(2, maxBlockSize, false, true, false);
 
     // Allocate lookahead buffer (stereo, max 10ms)
     int maxLookaheadSamples = static_cast<int>(0.010 * sampleRate);  // 10ms
@@ -115,102 +116,103 @@ void GateEngine::process(juce::AudioBuffer<float>& buffer,
     float* leftChannel = buffer.getWritePointer(0);
     float* rightChannel = numChannels > 1 ? buffer.getWritePointer(1) : nullptr;
 
-    // Determine detection source (sidechain or main input)
-    const float* detectionLeft = leftChannel;
-    const float* detectionRight = rightChannel;
+    // Determine detection source (external key or main input)
+    const bool useKey = sidechainBuffer != nullptr
+                        && sidechainBuffer->getNumChannels() > 0
+                        && sidechain.isEnabled();
+    const float* sourceLeft = useKey ? sidechainBuffer->getReadPointer(0) : leftChannel;
+    const float* sourceRight = useKey
+        ? (sidechainBuffer->getNumChannels() > 1 ? sidechainBuffer->getReadPointer(1) : sourceLeft)
+        : (rightChannel != nullptr ? rightChannel : sourceLeft);
 
-    if (sidechainBuffer != nullptr && sidechain.isEnabled())
+    const bool listen = sidechain.isListenModeEnabled();
+    const int bufferSize = lookaheadBuffer.getNumSamples();
+    float* lookaheadLeft = lookaheadBuffer.getWritePointer(0);
+    float* lookaheadRight = lookaheadBuffer.getWritePointer(1);
+
+    // The detector buffer holds at most one prepared block, so work in chunks
+    for (int start = 0; start < numSamples; start += maxSamplesPerBlock)
     {
-        // Use sidechain input for detection
-        detectionLeft = sidechainBuffer->getReadPointer(0);
-        detectionRight = sidechainBuffer->getNumChannels() > 1
-            ? sidechainBuffer->getReadPointer(1)
-            : detectionLeft;
+        const int chunkSize = juce::jmin(maxSamplesPerBlock, numSamples - start);
 
-        // Apply sidechain filtering (modifies sidechain buffer in-place)
-        // Note: We'll need a temporary buffer for this in real implementation
-        // For now, we'll process the main input's sidechain directly
-    }
+        // Copy the detection source and run it through the sidechain filters
+        detectorBuffer.copyFrom(0, 0, sourceLeft + start, chunkSize);
+        detectorBuffer.copyFrom(1, 0, sourceRight + start, chunkSize);
+        sidechain.process(juce::dsp::AudioBlock<float>(detectorBuffer)
+                              .getSubBlock(0, static_cast<size_t>(chunkSize)));
 
-    // Process each sample
-    for (int i = 0; i < numSamples; ++i)
-    {
-        //==============================================================================
-        // 1. Detect input level from sidechain or main input
+        const float* detectorLeft = detectorBuffer.getReadPointer(0);
+        const float* detectorRight = detectorBuffer.getReadPointer(1);
 
-        float detectionSample = detectionLeft[i];
-        if (detectionRight != nullptr)
+        for (int j = 0; j < chunkSize; ++j)
         {
-            // Stereo: use max of both channels
-            detectionSample = juce::jmax(std::abs(detectionLeft[i]),
-                                         std::abs(detectionRight[i]));
+            const int i = start + j;
+
+            //==============================================================================
+            // 1. Detect input level from the filtered detector signal (max of both channels)
+
+            float detectionSample = juce::jmax(std::abs(detectorLeft[j]),
+                                               std::abs(detectorRight[j]));
+
+            // Run through envelope follower
+            float inputLevel = envelopeFollower.process(&detectionSample, 1);
+
+            // Update input metering
+            if (inputLevel > inputPeak)
+                inputPeak = inputLevel;
+
+            //==============================================================================
+            // 2. Calculate target gain reduction
+
+            targetGainReduction = calculateGainReduction(inputLevel);
+
+            //==============================================================================
+            // 3. Smooth gain reduction with envelope shaping
+
+            float smoothedGain = updateEnvelope(targetGainReduction);
+
+            //==============================================================================
+            // 4. Write input to lookahead buffer
+
+            lookaheadLeft[lookaheadWritePosition] = leftChannel[i];
+            if (rightChannel != nullptr)
+                lookaheadRight[lookaheadWritePosition] = rightChannel[i];
+
+            //==============================================================================
+            // 5. Read delayed audio from lookahead buffer
+
+            int readPos = (lookaheadWritePosition - lookaheadSamples + bufferSize) % bufferSize;
+
+            float delayedLeft = lookaheadLeft[readPos];
+            float delayedRight = rightChannel != nullptr ? lookaheadRight[readPos] : 0.0f;
+
+            //==============================================================================
+            // 6. Apply gain reduction to delayed audio, or in listen mode play
+            //    the filtered detector signal instead
+
+            leftChannel[i] = listen ? detectorLeft[j] : delayedLeft * smoothedGain;
+            if (rightChannel != nullptr)
+                rightChannel[i] = listen ? detectorRight[j] : delayedRight * smoothedGain;
+
+            // Sanitize output to prevent NaN/Inf propagation
+            if (!std::isfinite(leftChannel[i]))
+                leftChannel[i] = 0.0f;
+            if (rightChannel != nullptr && !std::isfinite(rightChannel[i]))
+                rightChannel[i] = 0.0f;
+
+            // Update output metering
+            float outputSample = std::abs(leftChannel[i]);
+            if (rightChannel != nullptr)
+                outputSample = juce::jmax(outputSample, std::abs(rightChannel[i]));
+
+            if (outputSample > outputPeak)
+                outputPeak = outputSample;
+
+            //==============================================================================
+            // 7. Advance lookahead buffer position
+
+            lookaheadWritePosition = (lookaheadWritePosition + 1) % bufferSize;
         }
-        else
-        {
-            detectionSample = std::abs(detectionSample);
-        }
-
-        // Run through envelope follower
-        float inputLevel = envelopeFollower.process(&detectionSample, 1);
-
-        // Update input metering
-        if (inputLevel > inputPeak)
-            inputPeak = inputLevel;
-
-        //==============================================================================
-        // 2. Calculate target gain reduction
-
-        targetGainReduction = calculateGainReduction(inputLevel);
-
-        //==============================================================================
-        // 3. Smooth gain reduction with envelope shaping
-
-        float smoothedGain = updateEnvelope(targetGainReduction);
-
-        //==============================================================================
-        // 4. Write input to lookahead buffer
-
-        float* lookaheadLeft = lookaheadBuffer.getWritePointer(0);
-        float* lookaheadRight = lookaheadBuffer.getWritePointer(1);
-
-        lookaheadLeft[lookaheadWritePosition] = leftChannel[i];
-        if (rightChannel != nullptr)
-            lookaheadRight[lookaheadWritePosition] = rightChannel[i];
-
-        //==============================================================================
-        // 5. Read delayed audio from lookahead buffer
-
-        int bufferSize = lookaheadBuffer.getNumSamples();
-        int readPos = (lookaheadWritePosition - lookaheadSamples + bufferSize) % bufferSize;
-
-        float delayedLeft = lookaheadLeft[readPos];
-        float delayedRight = rightChannel != nullptr ? lookaheadRight[readPos] : 0.0f;
-
-        //==============================================================================
-        // 6. Apply gain reduction to delayed audio
-
-        leftChannel[i] = delayedLeft * smoothedGain;
-        if (rightChannel != nullptr)
-            rightChannel[i] = delayedRight * smoothedGain;
-
-        // Sanitize output to prevent NaN/Inf propagation
-        if (!std::isfinite(leftChannel[i]))
-            leftChannel[i] = 0.0f;
-        if (rightChannel != nullptr && !std::isfinite(rightChannel[i]))
-            rightChannel[i] = 0.0f;
-
-        // Update output metering
-        float outputSample = std::abs(leftChannel[i]);
-        if (rightChannel != nullptr)
-            outputSample = juce::jmax(outputSample, std::abs(rightChannel[i]));
-
-        if (outputSample > outputPeak)
-            outputPeak = outputSample;
-
-        //==============================================================================
-        // 7. Advance lookahead buffer position
-
-        lookaheadWritePosition = (lookaheadWritePosition + 1) % bufferSize;
     }
 
     // currentGainReduction is the envelope's running state and carries over
