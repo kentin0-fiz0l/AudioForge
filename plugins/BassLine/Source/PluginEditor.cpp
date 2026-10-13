@@ -24,7 +24,9 @@ BassLineEditor::BassLineEditor (BassLineProcessor& p)
     styleSelector_.addItem ("Reggae", 5);
     styleSelector_.addItem ("Latin", 6);
     styleSelector_.addItem ("Blues", 7);
-    styleSelector_.setSelectedId (1);
+    for (int i = 0; i < styleSelector_.getNumItems(); ++i)
+        if (styleSelector_.getItemText (i) == juce::String (processor_.getStyle()))
+            styleSelector_.setSelectedItemIndex (i, juce::dontSendNotification);
     styleSelector_.addListener (this);
     addAndMakeVisible (styleSelector_);
 
@@ -41,14 +43,14 @@ BassLineEditor::BassLineEditor (BassLineProcessor& p)
     keySelector_.addItem ("A", 10);
     keySelector_.addItem ("A#", 11);
     keySelector_.addItem ("B", 12);
-    keySelector_.setSelectedId (1);
+    keySelector_.setSelectedId (processor_.getKeyRoot() % 12 + 1, juce::dontSendNotification);
     keySelector_.addListener (this);
     addAndMakeVisible (keySelector_);
 
     // Scale selector
     scaleSelector_.addItem ("Major", 1);
     scaleSelector_.addItem ("Minor", 2);
-    scaleSelector_.setSelectedId (1);
+    scaleSelector_.setSelectedId (processor_.getKeyIsMajor() ? 1 : 2, juce::dontSendNotification);
     scaleSelector_.addListener (this);
     addAndMakeVisible (scaleSelector_);
 
@@ -60,7 +62,7 @@ BassLineEditor::BassLineEditor (BassLineProcessor& p)
     octaveSelector_.addItem ("C1 (Low)", 1);
     octaveSelector_.addItem ("C2 (Mid)", 2);
     octaveSelector_.addItem ("C3 (High)", 3);
-    octaveSelector_.setSelectedId (2);  // Default C2
+    octaveSelector_.setSelectedId (processor_.getOctave(), juce::dontSendNotification);
     octaveSelector_.addListener (this);
     addAndMakeVisible (octaveSelector_);
 
@@ -73,7 +75,7 @@ BassLineEditor::BassLineEditor (BassLineProcessor& p)
     waveformSelector_.addItem ("Saw (Bright)", 2);
     waveformSelector_.addItem ("Square (Hollow)", 3);
     waveformSelector_.addItem ("Triangle (Warm)", 4);
-    waveformSelector_.setSelectedId (1);
+    waveformSelector_.setSelectedId (processor_.getWaveform() + 1, juce::dontSendNotification);
     waveformSelector_.addListener (this);
     addAndMakeVisible (waveformSelector_);
 
@@ -84,28 +86,28 @@ BassLineEditor::BassLineEditor (BassLineProcessor& p)
 
     // ADSR sliders
     attackSlider_.setRange (0.001, 0.5, 0.001);
-    attackSlider_.setValue (0.005);
+    attackSlider_.setValue (processor_.getAttack(), juce::dontSendNotification);
     attackSlider_.setSliderStyle (juce::Slider::Rotary);
     attackSlider_.setTextBoxStyle (juce::Slider::TextBoxBelow, false, 50, 20);
     attackSlider_.addListener (this);
     addAndMakeVisible (attackSlider_);
 
     decaySlider_.setRange (0.001, 1.0, 0.001);
-    decaySlider_.setValue (0.1);
+    decaySlider_.setValue (processor_.getDecay(), juce::dontSendNotification);
     decaySlider_.setSliderStyle (juce::Slider::Rotary);
     decaySlider_.setTextBoxStyle (juce::Slider::TextBoxBelow, false, 50, 20);
     decaySlider_.addListener (this);
     addAndMakeVisible (decaySlider_);
 
     sustainSlider_.setRange (0.0, 1.0, 0.01);
-    sustainSlider_.setValue (0.8);
+    sustainSlider_.setValue (processor_.getSustain(), juce::dontSendNotification);
     sustainSlider_.setSliderStyle (juce::Slider::Rotary);
     sustainSlider_.setTextBoxStyle (juce::Slider::TextBoxBelow, false, 50, 20);
     sustainSlider_.addListener (this);
     addAndMakeVisible (sustainSlider_);
 
     releaseSlider_.setRange (0.001, 1.0, 0.001);
-    releaseSlider_.setValue (0.2);
+    releaseSlider_.setValue (processor_.getRelease(), juce::dontSendNotification);
     releaseSlider_.setSliderStyle (juce::Slider::Rotary);
     releaseSlider_.setTextBoxStyle (juce::Slider::TextBoxBelow, false, 50, 20);
     releaseSlider_.addListener (this);
@@ -117,7 +119,7 @@ BassLineEditor::BassLineEditor (BassLineProcessor& p)
     addAndMakeVisible (filterLabel_);
 
     filterSlider_.setRange (100.0, 2000.0, 1.0);
-    filterSlider_.setValue (800.0);
+    filterSlider_.setValue (processor_.getFilterCutoff(), juce::dontSendNotification);
     filterSlider_.setSliderStyle (juce::Slider::Rotary);
     filterSlider_.setTextBoxStyle (juce::Slider::TextBoxBelow, false, 60, 20);
     filterSlider_.addListener (this);
@@ -155,7 +157,10 @@ BassLineEditor::BassLineEditor (BassLineProcessor& p)
     addAndMakeVisible (exportButton_);
 
     // Stats label
-    statsLabel_.setText ("12 notes | C Major | Rock", juce::dontSendNotification);
+    statsLabel_.setText (juce::String (static_cast<int> (processor_.getCurrentBassLine().size())) + " notes | "
+                             + keySelector_.getText() + " " + scaleSelector_.getText() + " | "
+                             + juce::String (processor_.getStyle()),
+                         juce::dontSendNotification);
     statsLabel_.setFont (juce::Font (14.0f));
     addAndMakeVisible (statsLabel_);
 
@@ -166,7 +171,7 @@ BassLineEditor::BassLineEditor (BassLineProcessor& p)
 
     // Reverb slider
     reverbSlider_.setRange (0.0, 1.0, 0.01);
-    reverbSlider_.setValue (0.0);
+    reverbSlider_.setValue (processor_.getReverbMix(), juce::dontSendNotification);
     reverbSlider_.setSliderStyle (juce::Slider::Rotary);
     reverbSlider_.setTextBoxStyle (juce::Slider::TextBoxBelow, false, 50, 20);
     reverbSlider_.addListener (this);
@@ -179,7 +184,7 @@ BassLineEditor::BassLineEditor (BassLineProcessor& p)
 
     // Delay Mix slider
     delayMixSlider_.setRange (0.0, 1.0, 0.01);
-    delayMixSlider_.setValue (0.0);
+    delayMixSlider_.setValue (processor_.getDelayMix(), juce::dontSendNotification);
     delayMixSlider_.setSliderStyle (juce::Slider::Rotary);
     delayMixSlider_.setTextBoxStyle (juce::Slider::TextBoxBelow, false, 50, 20);
     delayMixSlider_.addListener (this);

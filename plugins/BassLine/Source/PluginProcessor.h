@@ -41,6 +41,7 @@ public:
     std::vector<BassEngine::Note>& getCurrentBassLine() { return currentBassLine_; }
 
     void generateNewBassLine(const std::string& style, int numBars = 4);
+    const std::string& getStyle() const { return style_; }
     void setBassEnabled(bool enabled) { bassEnabled_ = enabled; }
     bool isBassEnabled() const { return bassEnabled_; }
 
@@ -78,12 +79,16 @@ public:
     float getDelayMix() const { return delayMix_; }
 
 private:
+    void setBassLine(std::vector<BassEngine::Note>&& line);
+
     BassEngine bassEngine_;
     std::vector<BassEngine::Note> currentBassLine_;
+    juce::SpinLock bassLineLock_;  // processBlock reads the line; the message thread replaces it
 
     double sampleRate_ = 44100.0;
     bool bassEnabled_ = true;
     int bassLengthInBeats_ = 16; // 4 bars at 4/4
+    std::string style_ = "Rock";
 
     int keyRoot_ = 60;       // C4
     bool keyIsMajor_ = true; // Major scale
