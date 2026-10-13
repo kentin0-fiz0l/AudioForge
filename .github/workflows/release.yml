@@ -235,7 +235,7 @@ jobs:
         run: |
           (cd dist && sha256sum * > SHA256SUMS.txt)
           # This version's CHANGELOG section, if it has one
-          awk -v v="$VERSION" '$0 ~ "^## \\[" v "\\]" {on=1; next} /^## \[/ {on=0} on' CHANGELOG.md > changes.md
+          awk -v v="$VERSION" '$0 ~ "^## \\[" v "\\]" {on=1; next} /^## \[/ {on=0} on && $0 != "---"' CHANGELOG.md > changes.md
           # The fixed part of the notes, with this version filled in
           cat > template.md <<'EOF'
           ## Download
