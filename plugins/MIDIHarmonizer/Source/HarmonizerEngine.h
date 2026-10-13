@@ -72,8 +72,11 @@ private:
 
     // Scale generation
     std::vector<int> generateHarmonyNotes(int rootNote);
-    int getScaleDegree(int noteNumber);
-    int transposeInScale(int noteNumber, int degrees);
-    std::array<int, 12> getScalePattern(Scale scale);
+    struct ScaleTones {
+        std::array<int, 7> tones;  // semitones above the key, ascending
+        int size;
+    };
+    static ScaleTones getScaleTones(Scale scale);
+    int transposeInScale(int noteNumber, int degrees, int semitones) const;
     int getVelocityForNote(int inputVelocity) const;
 };
