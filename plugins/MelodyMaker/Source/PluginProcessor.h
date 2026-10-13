@@ -48,7 +48,8 @@ public:
     void setMelodyEnabled(bool enabled) { melodyEnabled_ = enabled; }
     bool isMelodyEnabled() const { return melodyEnabled_; }
 
-    void setKey(int rootNote, bool isMajor) { keyRoot_ = rootNote; keyIsMajor_ = isMajor; }
+    // The root is kept where a two-octave melody above it stays inside MIDI
+    void setKey(int rootNote, bool isMajor) { keyRoot_ = juce::jlimit(0, 127 - 24, rootNote); keyIsMajor_ = isMajor; }
     int getKeyRoot() const { return keyRoot_; }
     bool getKeyIsMajor() const { return keyIsMajor_; }
 
@@ -65,15 +66,21 @@ public:
 private:
     juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
     void setMelody(std::vector<MelodyEngine::Note> melody);
+    float cutoffForKnob() const;
+    float delaySamplesForKnob() const;
 
     juce::AudioProcessorValueTreeState apvts_;
 
     MelodyEngine melodyEngine_;
     std::vector<MelodyEngine::Note> currentMelody_;
     juce::SpinLock melodyLock_;
-    // Held by everything outside the audio thread that replaces the melody or reads it (saving,
+    // Held by everything outside the audio thread that replaces the style and melody or reads them (saving,
     // export): a host can save from a background thread while the melody is being replaced
     juce::CriticalSection melodyEditLock_;
+    // Set when the melody is replaced: notes the old melody started get no note-off from the
+    // new one (nor from a block skipped while the melody was being swapped), so the audio
+    // thread releases them
+    std::atomic<bool> melodyReplaced_ { false };
 
     double sampleRate_ = 44100.0;
     bool melodyEnabled_ = true;
@@ -105,6 +112,9 @@ private:
     juce::dsp::Reverb reverb_;
     juce::dsp::DelayLine<float> delayLine_{48000};
     juce::dsp::StateVariableTPTFilter<float> filter_;
+    // The cutoff and delay time glide to a new knob setting rather than stepping once a block
+    juce::SmoothedValue<float, juce::ValueSmoothingTypes::Multiplicative> smoothedCutoff_;
+    juce::SmoothedValue<float> smoothedDelaySamples_;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MelodyMakerProcessor)
 };

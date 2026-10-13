@@ -52,7 +52,7 @@ MelodyMakerEditor::MelodyMakerEditor (MelodyMakerProcessor& p)
     // Show the melody's style and key without generating a new one, which
     // would replace the melody of a session that was just reopened
     styleSelector_.setText (processor_.getStyle(), juce::dontSendNotification);
-    keySelector_.setSelectedId ((processor_.getKeyRoot() - 60) % 12 + 1, juce::dontSendNotification);
+    keySelector_.setSelectedId (processor_.getKeyRoot() % 12 + 1, juce::dontSendNotification);
     scaleSelector_.setSelectedId (processor_.getKeyIsMajor() ? 1 : 2, juce::dontSendNotification);
     styleSelector_.setComponentID ("style");
     keySelector_.setComponentID ("key");

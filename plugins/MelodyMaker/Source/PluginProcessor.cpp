@@ -192,9 +192,15 @@ void MelodyMakerProcessor::prepareToPlay (double sampleRate, int samplesPerBlock
     delayLine_.setMaximumDelayInSamples(static_cast<int>(std::ceil(sampleRate * maxDelaySeconds)));
     delayLine_.prepare(spec);
 
-    // Cutoff, resonance, and delay time are set at the start of each block
     filter_.prepare(spec);
     filter_.setType(juce::dsp::StateVariableTPTFilterType::lowpass);
+
+    // Start at the knobs' settings; a later move glides over 50 ms
+    smoothedCutoff_.reset(sampleRate, 0.05);
+    smoothedCutoff_.setCurrentAndTargetValue(cutoffForKnob());
+    filter_.setCutoffFrequency(smoothedCutoff_.getCurrentValue());
+    smoothedDelaySamples_.reset(sampleRate, 0.05);
+    smoothedDelaySamples_.setCurrentAndTargetValue(delaySamplesForKnob());
 
     juce::dsp::Reverb::Parameters reverbParams;
     reverbParams.roomSize = 0.5f;
@@ -212,6 +218,8 @@ void MelodyMakerProcessor::releaseResources()
 void MelodyMakerProcessor::processBlock (juce::AudioBuffer<float>& buffer,
                                          juce::MidiBuffer& midiMessages)
 {
+    // The delay feedback, the filter, and the reverb tails all decay into denormals
+    juce::ScopedNoDenormals noDenormals;
     buffer.clear();
     internalMidiBuffer_.clear();
 
@@ -225,6 +233,10 @@ void MelodyMakerProcessor::processBlock (juce::AudioBuffer<float>& buffer,
             // The message thread can replace the melody (Generate, or a session
             // being loaded); rather than wait for it, skip scheduling this block
             const juce::SpinLock::ScopedTryLockType melodyLock (melodyLock_);
+
+            // Release what the old melody started (and any note-off a skipped block lost)
+            if (melodyLock.isLocked() && melodyReplaced_.exchange (false))
+                synth_.allNotesOff (0, true);
 
             auto isPlaying = position->getIsPlaying();
             if (isPlaying && melodyEnabled_ && melodyLock.isLocked())
@@ -294,29 +306,27 @@ void MelodyMakerProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     const float reverbMix = reverbMix_->load();
 
     // Follow the knobs, which can move at any time
-    filter_.setCutoffFrequency(juce::jmin(filterCutoff_->load(), static_cast<float>(sampleRate_ * 0.45)));
     filter_.setResonance(filterResonance_->load());
-    delayLine_.setDelay(static_cast<float>(sampleRate_ * delayTime_->load()));
+    smoothedCutoff_.setTargetValue(cutoffForKnob());
+    smoothedDelaySamples_.setTargetValue(delaySamplesForKnob());
 
-    // 1. Filter
-    for (int channel = 0; channel < numChannels; ++channel) {
-        auto* channelData = buffer.getWritePointer(channel);
-        for (int sample = 0; sample < numSamples; ++sample) {
-            channelData[sample] = filter_.processSample(channel, channelData[sample]);
-        }
-    }
+    // 1. Filter, then 2. Delay, a sample at a time so the cutoff and delay time can glide
+    auto* const* channelData = buffer.getArrayOfWritePointers();
+    for (int sample = 0; sample < numSamples; ++sample) {
+        if (smoothedCutoff_.isSmoothing())
+            filter_.setCutoffFrequency(smoothedCutoff_.getNextValue());
+        const float delaySamples = smoothedDelaySamples_.getNextValue();
 
-    // 2. Delay
-    if (delayMix > 0.0f) {
         for (int channel = 0; channel < numChannels; ++channel) {
-            auto* channelData = buffer.getWritePointer(channel);
+            float x = filter_.processSample(channel, channelData[channel][sample]);
 
-            for (int sample = 0; sample < numSamples; ++sample) {
-                float delaySample = delayLine_.popSample(channel);
-                float input = channelData[sample] + delaySample * delayFeedback;
-                delayLine_.pushSample(channel, input);
-                channelData[sample] += delaySample * delayMix;
+            if (delayMix > 0.0f) {
+                const float delaySample = delayLine_.popSample(channel, delaySamples);
+                delayLine_.pushSample(channel, x + delaySample * delayFeedback);
+                x += delaySample * delayMix;
             }
+
+            channelData[channel][sample] = x;
         }
     }
 
@@ -346,6 +356,8 @@ juce::AudioProcessorEditor* MelodyMakerProcessor::createEditor()
 // in, and the melody itself, so a reopened session plays the same notes
 void MelodyMakerProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
+    // A host can save from a background thread while Generate replaces the style and melody
+    const juce::ScopedLock edit (melodyEditLock_);
     auto state = apvts_.copyState();
     state.setProperty ("style", juce::String (style_), nullptr);
     state.setProperty ("keyRoot", keyRoot_, nullptr);
@@ -353,7 +365,6 @@ void MelodyMakerProcessor::getStateInformation (juce::MemoryBlock& destData)
 
     auto melody = state.getOrCreateChildWithName ("Melody", nullptr);
     melody.removeAllChildren (nullptr);
-    const juce::ScopedLock edit (melodyEditLock_);
     for (const auto& note : currentMelody_)
     {
         juce::ValueTree noteTree ("Note");
@@ -386,6 +397,7 @@ void MelodyMakerProcessor::setStateInformation (const void* data, int sizeInByte
     constexpr std::size_t maxNotes = 4096;
     constexpr double maxStartBeats = 1024.0, maxDurationBeats = 64.0;
 
+    const juce::ScopedLock edit (melodyEditLock_);
     if (const auto style = state.getProperty ("style").toString(); styles.contains (style))
         style_ = style.toStdString();
     keyRoot_ = juce::jlimit (0, 127 - 24, static_cast<int> (state.getProperty ("keyRoot", keyRoot_)));
@@ -415,6 +427,17 @@ void MelodyMakerProcessor::setMelody (std::vector<MelodyEngine::Note> melody)
     const juce::ScopedLock edit (melodyEditLock_);
     const juce::SpinLock::ScopedLockType lock (melodyLock_);
     currentMelody_.swap (melody);
+    melodyReplaced_ = true;
+}
+
+float MelodyMakerProcessor::cutoffForKnob() const
+{
+    return juce::jmin (filterCutoff_->load(), static_cast<float> (sampleRate_ * 0.45));
+}
+
+float MelodyMakerProcessor::delaySamplesForKnob() const
+{
+    return static_cast<float> (sampleRate_ * delayTime_->load());
 }
 
 void MelodyMakerProcessor::generateNewMelody(const std::string& style, int numBars)
@@ -428,6 +451,7 @@ void MelodyMakerProcessor::generateNewMelody(const std::string& style, int numBa
     params.useChordTones = true;
     params.useSyncopation = (style == "Jazz" || style == "Funk");
 
+    const juce::ScopedLock edit (melodyEditLock_);
     style_ = style;
     setMelody(melodyEngine_.generateMelodyInScale(keyRoot_, keyIsMajor_, params, numBars));
 }

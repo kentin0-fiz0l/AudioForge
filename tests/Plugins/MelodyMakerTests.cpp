@@ -6,7 +6,9 @@
  * - Picking a style changes the kind of melody it generates
  * - Its settings and its melody come back when a session is reopened, and
  *   opening the window does not replace the melody with a new one
- * - Turning the filter cutoff while it plays changes the sound
+ * - Turning the filter cutoff while it plays changes the sound, and moving
+ *   the delay time glides rather than clicking
+ * - Replacing the melody while a note sounds releases that note
  * - Exporting a melody over an existing MIDI file replaces that file
  */
 
@@ -39,10 +41,10 @@ namespace
         double bpm = 120.0;
     };
 
-    // Plays the processor from the top of the melody for the given number of
-    // beats, as a host would with its transport running, and returns the left
-    // channel of what it played
-    std::vector<float> play(MelodyMakerProcessor& processor, double beats)
+    // Plays the processor from beat up to endBeat, as a host would with its transport
+    // running, appends the left channel of what it played to output, and leaves beat
+    // where it stopped so a later call carries on from there
+    void playRange(MelodyMakerProcessor& processor, double& beat, double endBeat, std::vector<float>& output)
     {
         FakePlayHead playHead;
         processor.setPlayHead(&playHead);
@@ -50,17 +52,27 @@ namespace
         const double beatsPerBlock = blockSize * playHead.bpm / (60.0 * sampleRate);
         juce::AudioBuffer<float> audio(2, blockSize);
         juce::MidiBuffer midi;
-        std::vector<float> output;
 
-        for (; playHead.ppq < beats; playHead.ppq += beatsPerBlock)
+        for (; beat < endBeat; beat += beatsPerBlock)
         {
+            playHead.ppq = beat;
             processor.processBlock(audio, midi);
             output.insert(output.end(), audio.getReadPointer(0), audio.getReadPointer(0) + blockSize);
         }
 
         processor.setPlayHead(nullptr);
+    }
+
+    // Plays the processor from the top of the melody for the given number of beats
+    std::vector<float> play(MelodyMakerProcessor& processor, double beats)
+    {
+        std::vector<float> output;
+        double beat = 0.0;
+        playRange(processor, beat, beats, output);
         return output;
     }
+
+    int sampleAtBeat(double beat) { return static_cast<int>(beat * 60.0 / 120.0 * sampleRate); }
 
     float rms(const std::vector<float>& samples)
     {
@@ -86,6 +98,34 @@ namespace
                 && x.duration == y.duration && x.velocity == y.velocity;
         });
     }
+
+    void setParameter(juce::AudioProcessor& processor, const juce::String& id, float value)
+    {
+        if (auto* param = findParameter(processor, id))
+            param->setValueNotifyingHost(param->convertTo0to1(value));
+    }
+
+    // Replaces the processor's melody with the given notes, the way reopening a session does
+    void loadMelody(MelodyMakerProcessor& processor, const std::vector<MelodyEngine::Note>& notes)
+    {
+        juce::MemoryBlock saved;
+        processor.getStateInformation(saved);
+        auto state = juce::ValueTree::fromXml(*juce::AudioProcessor::getXmlFromBinary(saved.getData(), static_cast<int>(saved.getSize())));
+        auto melody = state.getChildWithName("Melody");
+        melody.removeAllChildren(nullptr);
+        for (const auto& n : notes)
+        {
+            juce::ValueTree note("Note");
+            note.setProperty("pitch", n.pitch, nullptr);
+            note.setProperty("start", n.startTime, nullptr);
+            note.setProperty("duration", n.duration, nullptr);
+            note.setProperty("velocity", n.velocity, nullptr);
+            melody.appendChild(note, nullptr);
+        }
+        juce::MemoryBlock replaced;
+        juce::AudioProcessor::copyXmlToBinary(*state.createXml(), replaced);
+        processor.setStateInformation(replaced.getData(), static_cast<int>(replaced.getSize()));
+    }
 }
 
 class MelodyMakerPluginTests : public juce::UnitTest
@@ -103,6 +143,9 @@ public:
         testDamagedSessionIsMadeSafe();
         testSavingWhileTheMelodyChanges();
         testOpeningEditorKeepsMelody();
+        testEditorShowsKeyBelowMiddleC();
+        testReplacingMelodyReleasesSoundingNotes();
+        testDelayTimeChangeDoesNotClick();
         testFilterCutoffFollowsParameter();
         testExportReplacesExistingFile();
     }
@@ -283,6 +326,87 @@ private:
         expectEquals(shown("key"), juce::String("F"));
         expectEquals(shown("scale"), juce::String("Minor"));
         expect(sameMelody(restored.getCurrentMelody(), original.getCurrentMelody()), "The melody should be the one that was saved");
+    }
+
+    void testEditorShowsKeyBelowMiddleC()
+    {
+        beginTest("The window shows a key whose root is below middle C");
+
+        MelodyMakerProcessor processor;
+        processor.setKey(59, true); // B3
+        processor.generateNewMelody("Pop");
+        std::unique_ptr<juce::AudioProcessorEditor> editor(processor.createEditor());
+
+        auto* key = dynamic_cast<juce::ComboBox*>(editor->findChildWithID("key"));
+        expect(key != nullptr, "No key control");
+        if (key != nullptr)
+            expectEquals(key->getText(), juce::String("B"));
+    }
+
+    // A note that is sounding when the melody is replaced (Generate, or a session being
+    // loaded) gets no note-off from the new melody, so it must not be left to ring forever
+    void testReplacingMelodyReleasesSoundingNotes()
+    {
+        beginTest("Replacing the melody while a note sounds releases that note");
+
+        MelodyMakerProcessor processor;
+        processor.prepareToPlay(sampleRate, blockSize);
+        setParameter(processor, "sustain", 1.0f);
+        setParameter(processor, "release", 0.01f);
+        loadMelody(processor, { { 60, 0.0f, 2.0f, 100, true } });
+
+        std::vector<float> output;
+        double beat = 0.0;
+        playRange(processor, beat, 1.0, output);
+        expect(rms(output) > 0.01f, "The first note should be audible");
+
+        loadMelody(processor, { { 72, 12.0f, 0.5f, 100, true } });
+        output.clear();
+        playRange(processor, beat, 8.0, output);
+
+        const std::vector<float> tail(output.begin() + sampleAtBeat(2.0), output.end());
+        expect(rms(tail) < 0.0001f, "The old note should have been released, but it still plays at "
+               + juce::String(rms(tail)));
+    }
+
+    // Moving the Delay Time knob while echoes play should glide, not jump the read head
+    void testDelayTimeChangeDoesNotClick()
+    {
+        beginTest("Changing the delay time while echoes play does not click");
+
+        float worstJump = 0.0f, worstSlope = 0.0f;
+        // Several change points, so the result does not hang on where in its cycle the echo is
+        for (int trial = 0; trial < 8; ++trial)
+        {
+            MelodyMakerProcessor processor;
+            processor.prepareToPlay(sampleRate, blockSize);
+            setParameter(processor, "attack", 0.005f);
+            setParameter(processor, "sustain", 1.0f);
+            setParameter(processor, "release", 0.005f);
+            setParameter(processor, "delayTime", 0.25f);
+            setParameter(processor, "delayFeedback", 0.0f);
+            setParameter(processor, "delayMix", 1.0f);
+            // One note for the first beat, so after it only its echo plays
+            loadMelody(processor, { { 60, 0.0f, 1.0f, 100, true } });
+
+            std::vector<float> output;
+            double beat = 0.0;
+            playRange(processor, beat, 1.1 + 0.02 * trial, output);
+            const auto changeAt = output.size();
+
+            // From here a 10 ms delay reads only silence
+            setParameter(processor, "delayTime", 0.01f);
+            playRange(processor, beat, beat + 0.5, output);
+
+            for (size_t i = 1; i < changeAt; ++i)
+                worstSlope = juce::jmax(worstSlope, std::abs(output[i] - output[i - 1]));
+            for (size_t i = changeAt; i < output.size(); ++i)
+                worstJump = juce::jmax(worstJump, std::abs(output[i] - output[i - 1]));
+        }
+
+        expect(worstSlope > 0.0f, "The melody and its echo should be audible");
+        expect(worstJump < 8.0f * worstSlope, "The delay time change jumped by " + juce::String(worstJump)
+               + " in one sample; the steepest step while playing normally was " + juce::String(worstSlope));
     }
 
     void testFilterCutoffFollowsParameter()
