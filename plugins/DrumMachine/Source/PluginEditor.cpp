@@ -221,11 +221,7 @@ void DrumMachineEditor::buttonClicked (juce::Button* button)
         repaint();
     }
     else if (button == &clearButton_) {
-        // Clear all hits from the pattern
-        auto& pattern = processor_.getCurrentPattern();
-        for (auto& voiceHits : pattern.voices) {
-            voiceHits.clear();
-        }
+        processor_.clearPattern();
         repaint();
     }
     else if (button == &exportButton_) {
@@ -371,29 +367,7 @@ void DrumMachineEditor::toggleHitAtPosition (int x, int y)
     if (voice == -1 || step == -1)
         return;
 
-    auto& pattern = processor_.getCurrentPattern();
-    auto& voiceHits = pattern.voices[voice];
-
-    // Check if hit already exists at this position
-    bool hitExists = false;
-    for (auto it = voiceHits.begin(); it != voiceHits.end(); ++it) {
-        if (it->step == step) {
-            // Remove existing hit
-            voiceHits.erase(it);
-            hitExists = true;
-            break;
-        }
-    }
-
-    // If no hit existed, add one
-    if (!hitExists) {
-        DrumEngine::DrumHit newHit;
-        newHit.voice = static_cast<DrumEngine::DrumVoice>(voice);
-        newHit.step = step;
-        newHit.velocity = 0.8f;  // Default velocity
-        voiceHits.push_back(newHit);
-    }
-
+    processor_.toggleHit(voice, step);
     repaint();
 }
 
@@ -411,25 +385,6 @@ void DrumMachineEditor::mouseDrag (const juce::MouseEvent& event)
     if (voice == -1 || step == -1)
         return;
 
-    auto& pattern = processor_.getCurrentPattern();
-    auto& voiceHits = pattern.voices[voice];
-
-    // Check if hit already exists
-    bool hitExists = false;
-    for (const auto& hit : voiceHits) {
-        if (hit.step == step) {
-            hitExists = true;
-            break;
-        }
-    }
-
-    // Add hit if it doesn't exist
-    if (!hitExists) {
-        DrumEngine::DrumHit newHit;
-        newHit.voice = static_cast<DrumEngine::DrumVoice>(voice);
-        newHit.step = step;
-        newHit.velocity = 0.8f;
-        voiceHits.push_back(newHit);
+    if (processor_.setHit(voice, step, true))
         repaint();
-    }
 }

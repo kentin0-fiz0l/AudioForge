@@ -38,13 +38,20 @@ public:
 
     // DrumMachine specific
     DrumEngine& getDrumEngine() { return drumEngine_; }
-    DrumEngine::DrumPattern& getCurrentPattern() { return currentPattern_; }
+    // A copy, taken under the edit lock: the pattern may be replaced from another thread
+    DrumEngine::DrumPattern getCurrentPattern() const;
+    void setPattern (DrumEngine::DrumPattern pattern);
+
+    // Grid edits. setHit returns whether anything changed.
+    bool setHit (int voice, int step, bool on);
+    void toggleHit (int voice, int step);
+    void clearPattern();
 
     void generateNewPattern(const std::string& style);
     void setPatternEnabled(bool enabled) { patternEnabled_ = enabled; }
     bool isPatternEnabled() const { return patternEnabled_; }
 
-    void setComplexity(int complexity) { complexity_ = complexity; }
+    void setComplexity(int complexity) { complexity_ = juce::jlimit (1, 10, complexity); }
     int getComplexity() const { return complexity_; }
 
     void setSwing(float swing) { swing_ = swing; }
@@ -60,6 +67,10 @@ private:
     DrumEngine drumEngine_;
     DrumSynth drumSynth_;
     DrumEngine::DrumPattern currentPattern_;
+    juce::SpinLock patternLock_;  // processBlock only try-locks it; held while the pattern is swapped
+    // Held by everything outside the audio thread that replaces or reads the pattern (saving,
+    // export, the window): a host can save or load from a background thread
+    juce::CriticalSection patternEditLock_;
 
     static constexpr double beatsPerStep = 0.25;  // 16th notes: 16 steps = 1 bar of 4/4
 
@@ -68,13 +79,14 @@ private:
     double sampleRate_ = 44100.0;
     std::atomic<bool> patternEnabled_ { true };
 
-    int complexity_ = 5;                // 1-10
+    std::atomic<int> complexity_ { 5 }; // 1-10
     std::atomic<float> swing_ { 0.0f }; // 0.0-1.0, delays off-beat 16ths at playback
-    bool fillsEnabled_ = false;
+    std::atomic<bool> fillsEnabled_ { false };
 
     // Sequencer state
     juce::int64 lastTriggeredStep_ = -1;   // Counted from the start of the song
     double expectedBlockStartBeat_ = 0.0;  // Where the next block starts if the transport runs on
+    bool resync_ = true;                   // After a start or a jump: steps already passed do not fire
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (DrumMachineProcessor)
 };
