@@ -43,6 +43,7 @@ private:
     void updateVoiceParameters();
 
     juce::Synthesiser synth_;
+    SitarDrone drone_;
     juce::AudioProcessorValueTreeState apvts_;
 
     static constexpr const char* PARAM_RAGA_SCALE = "ragaScale";

@@ -47,6 +47,7 @@ add_executable(TestRunner
     Plugins/EditorParameterTests.cpp
     Plugins/GranularEngineTests.cpp
     Plugins/PhaserEngineTests.cpp
+    Plugins/SitarTests.cpp
     Integration/PluginIntegrationTests.cpp)
 
 # Link JUCE libraries
@@ -156,7 +157,11 @@ target_sources(TestRunner PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/SpectralFreeze/Source/SpectralProcessor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/VintageCompressor/Source/PluginProcessor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/VintageCompressor/Source/PluginEditor.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/VintageCompressor/Source/CompressorEngine.cpp)
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/VintageCompressor/Source/CompressorEngine.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/Sitar/Source/PluginProcessor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/Sitar/Source/PluginEditor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/Sitar/Source/SitarEngine.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/Sitar/Source/SitarVoice.cpp)
 
 # Compiler definitions
 target_compile_definitions(TestRunner PUBLIC
