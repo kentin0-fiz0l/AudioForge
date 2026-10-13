@@ -7,6 +7,8 @@
 # "@<beat>" for the Arrangement clip that is playing at that beat
 
 import math
+import os
+import time
 
 
 class ClipControl:
@@ -16,15 +18,29 @@ class ClipControl:
     # or a copy's start comes back a fraction of a unit from what was asked for
     MARKER_TOLERANCE = 0.001
 
-    def __init__(self, find_track, log_function):
+    # Feedback #39: Live warps a long file's clips again once it has finished
+    # analysing the file (when it writes the .asd next to it), minutes after
+    # warping was switched off. After warping is switched off, every clip of
+    # that file, in the Session and on the Arrangement, is watched and
+    # unwarped again if that happens, until the analysis has been done for
+    # this long. Live also moves a re-warped clip's bounds to where its beat
+    # guess put them (a 15-minute file's copy came back playing 3.2 s to
+    # 714 s), so the watch keeps each clip's bounds and puts them back too.
+    WARP_GRACE = 20.0
+    BOUNDS = (('loop_start', 'loop_end'), ('start_marker', 'end_marker'))
+
+    def __init__(self, find_track, log_function, tracks=lambda: []):
         self.find_track = find_track  # Target (index or name) -> track
         self.log = log_function
+        self.tracks = tracks          # () -> every track, for the watch
+        self._warp_watch = {}         # file -> {'analysed_at': seconds or None, 'rewarped': count, 'bounds': {}}
 
         self.commands = {
             '/live/clip/info': self.get_info,
             '/live/clip/arrangement': self.list_arrangement,
             '/live/clip/duplicate': self.duplicate_to_arrangement,
             '/live/clip/set/warping': self.set_warping,
+            '/live/clip/warp_watch': self.get_warp_watch,
             '/live/clip/set/markers': self.set_markers,
             '/live/clip/clear_arrangement': self.clear_arrangement,
         }
@@ -128,7 +144,11 @@ class ClipControl:
 
         track.duplicate_clip_to_arrangement(clip, beat)
         self.log(f"Copied '{clip.name}' to beat {beat:g} of '{track.name}'")
-        return self._describe(self._arrangement_clip(track, beat))
+        copy = self._arrangement_clip(track, beat)
+        watch = self._warp_watch.get(getattr(copy, 'file_path', None))
+        if watch is not None and not copy.warping:
+            self._remember_bounds(watch, copy)      # before Live has a chance to warp it again
+        return self._describe(copy)
 
     def _audio_clip(self, target, slot):
         clip = self._clip(target, slot)
@@ -206,4 +226,82 @@ class ClipControl:
         clip = self._audio_clip(target, slot)
         clip.warping = bool(int(on))
         self.log(f"Warping {'on' if clip.warping else 'off'} for '{clip.name}'")
-        return self._describe(clip)
+
+        reply = self._describe(clip)
+        path = getattr(clip, 'file_path', None)
+        if path:
+            if clip.warping:
+                self._warp_watch.pop(path, None)
+            else:
+                self._warp_watch.setdefault(path, {'analysed_at': None, 'rewarped': 0, 'bounds': {}})
+            # Until Live has analysed the file it may warp the clip again; the watch covers that
+            reply['analysis_pending'] = not self._analysed(path)
+        return reply
+
+    @staticmethod
+    def _analysed(path):
+        return os.path.exists(path + '.asd')
+
+    def _clips_of(self, path):
+        """Every audio clip that plays a file, in the Session and on the Arrangement"""
+        for track in self.tracks():
+            for slot in getattr(track, 'clip_slots', []):
+                clip = getattr(slot, 'clip', None) if getattr(slot, 'has_clip', True) else None
+                if clip is not None and getattr(clip, 'file_path', None) == path:
+                    yield clip
+            for clip in getattr(track, 'arrangement_clips', []):
+                if getattr(clip, 'file_path', None) == path:
+                    yield clip
+
+    def update_warp_watch(self, now=None):
+        """Called on Live's tick: unwarp what Live has warped again, and end watches that are done"""
+        now = time.monotonic() if now is None else now
+        for path, watch in list(self._warp_watch.items()):
+            for clip in self._clips_of(path):
+                if not getattr(clip, 'is_audio_clip', False):
+                    continue
+                if clip.warping:
+                    self._unwarp_again(watch, clip)
+                else:
+                    self._remember_bounds(watch, clip)
+            if self._analysed(path):
+                if watch['analysed_at'] is None:
+                    watch['analysed_at'] = now
+                elif now - watch['analysed_at'] > self.WARP_GRACE:
+                    del self._warp_watch[path]
+
+    def _unwarp_again(self, watch, clip):
+        """Switch warping off a clip Live warped again, and put back the bounds it had unwarped"""
+        clip.warping = False
+        watch['rewarped'] += 1
+        bounds = watch['bounds'].get(self._key(clip)) or self._whole_file(clip)
+        if bounds:
+            try:
+                for start_name, end_name in self.BOUNDS:
+                    self._set_pair(clip, start_name, end_name, bounds[start_name], bounds[end_name])
+            except Exception as e:
+                self.log(f"Could not put back the bounds of '{clip.name}': {e}")
+        self.log(f"Live warped '{clip.name}' again after analysing it; warping is off again"
+                 + (" and its bounds are back" if bounds else ""))
+
+    @staticmethod
+    def _key(clip):
+        return getattr(clip, '_live_ptr', id(clip))
+
+    def _remember_bounds(self, watch, clip):
+        watch['bounds'][self._key(clip)] = {name: getattr(clip, name) for pair in self.BOUNDS for name in pair}
+
+    @staticmethod
+    def _whole_file(clip):
+        """Bounds that play the whole file, as Live gives a fresh copy of an unwarped clip"""
+        samples, rate = getattr(clip, 'sample_length', None), getattr(clip, 'sample_rate', None)
+        if not (samples and rate):
+            return None
+        end = samples / float(rate)
+        return {'loop_start': 0.0, 'loop_end': end, 'start_marker': 0.0, 'end_marker': end}
+
+    def get_warp_watch(self):
+        """The files being kept unwarped, whether Live has analysed each, and how often it warped them again"""
+        return {'watching': [{'file': path, 'analysis_pending': not self._analysed(path),
+                              'rewarped': watch['rewarped']}
+                             for path, watch in self._warp_watch.items()]}
