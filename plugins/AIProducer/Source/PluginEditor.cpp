@@ -2,8 +2,8 @@
 
 namespace {
 
-const char* const kChoiceIds[] = {"genre", "key", "scale", "length"};
-const char* const kChoiceNames[] = {"Genre", "Key", "Scale", "Length"};
+const char* const kChoiceIds[] = {"genre", "key", "scale", "length", "part"};
+const char* const kChoiceNames[] = {"Genre", "Key", "Scale", "Length", "Part"};
 const char* const kPartIds[] = {"drums", "bass", "chords", "lead"};
 const char* const kPartNames[] = {"Drums (ch 10)", "Bass (ch 1)", "Chords (ch 2)", "Lead (ch 3)"};
 
@@ -40,8 +40,8 @@ AIProducerEditor::AIProducerEditor(AIProducerProcessor& p)
     descriptionLabel_.setFont(juce::Font(15.0f, juce::Font::bold));
     addAndMakeVisible(descriptionLabel_);
 
-    routingLabel_.setText("Plays along the song from bar 1. Set your DAW's tempo to the one shown, and route "
-                          "each MIDI channel to its own instrument.",
+    routingLabel_.setText("Plays along the song from bar 1 at the tempo shown. Route each MIDI channel to its own "
+                          "instrument, or (in Live) use one copy per Part with the same settings.",
                           juce::dontSendNotification);
     routingLabel_.setJustificationType(juce::Justification::centred);
     routingLabel_.setFont(juce::Font(12.0f));
@@ -49,7 +49,7 @@ AIProducerEditor::AIProducerEditor(AIProducerProcessor& p)
 
     timerCallback();
     startTimerHz(5);
-    setSize(600, 380);
+    setSize(600, 420);
 }
 
 AIProducerEditor::~AIProducerEditor() {
@@ -71,12 +71,13 @@ void AIProducerEditor::resized() {
     auto bounds = getLocalBounds().reduced(20);
     bounds.removeFromTop(50); // Title
 
-    // Two rows of two drop-downs
-    for (size_t row = 0; row < 2; ++row) {
+    // Drop-downs, two to a row
+    for (size_t first = 0; first < choices_.size(); first += 2) {
         auto line = bounds.removeFromTop(32);
-        for (size_t column = 0; column < 2; ++column) {
-            auto& choice = choices_[row * 2 + column];
-            auto cell = line.removeFromLeft(line.getWidth() / (column == 0 ? 2 : 1)).reduced(6, 2);
+        const int cellWidth = line.getWidth() / 2;
+        for (size_t i = first; i < std::min(first + 2, choices_.size()); ++i) {
+            auto& choice = choices_[i];
+            auto cell = line.removeFromLeft(cellWidth).reduced(6, 2);
             choice.label.setBounds(cell.removeFromLeft(60));
             choice.box.setBounds(cell);
         }

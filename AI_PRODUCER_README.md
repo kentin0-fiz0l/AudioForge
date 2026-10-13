@@ -23,6 +23,16 @@ Track Sketch has no AI in it: it writes from musical rules, so the same settings
 
 The track is laid out along the song timeline from bar 1, so stopping, looping and moving the playhead all behave as you would expect; sounding notes are released when the transport stops or jumps. Nothing plays while the transport is stopped. Any control change rebuilds the track within a fifth of a second, including host automation, and the controls are saved with the session.
 
+### In Ableton Live
+
+Live can take MIDI from another track but cannot pick out one channel of it, so use one copy of Track Sketch per part:
+
+1. Make four MIDI tracks (Sketch Drums, Sketch Bass, Sketch Chords, Sketch Lead), put Track Sketch on each, and set each one's **Part** to its part.
+2. Make four instrument tracks. On each, set **MIDI From** to its Sketch track, the box below to **Track Sketch**, and **Monitor** to **In**.
+3. Give all four copies the same Genre, Key, Scale, Length and Variation. The same settings always write the same notes, so the copies play together.
+
+The AI Producer Remote Script can do step 2 for you: `python3 live_control.py /live/track/set/input Bass "Sketch Bass" "Track Sketch"`.
+
 ## Controls
 
 | Control | Values |
@@ -33,6 +43,7 @@ The track is laid out along the song timeline from bar 1, so stopping, looping a
 | Length | 8-bar loop, 32 bars (intro, build, drop), Full song (72 bars: intro, build, drop, breakdown, build, drop, outro) |
 | Drums, Bass, Chords, Lead | On or off |
 | Variation | 1 to 100: picks the chord progression (four per scale) and writes the lead phrases |
+| Part | All, or just Drums, Bass, Chords or Lead (for hosts such as Live that cannot split MIDI by channel) |
 
 Each genre has its own drum pattern, bass rhythm and lead rhythm. Chords are triads built from the scale, one per bar, following the progression; the bass plays each chord's root; the lead is a phrase in scale steps above the chord, with an answering phrase every fourth bar.
 

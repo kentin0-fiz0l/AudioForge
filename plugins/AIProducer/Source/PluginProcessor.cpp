@@ -28,6 +28,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout() {
     params.push_back(std::make_unique<juce::AudioParameterBool>("chords", "Chords", true));
     params.push_back(std::make_unique<juce::AudioParameterBool>("lead", "Lead", true));
     params.push_back(std::make_unique<juce::AudioParameterInt>("variation", "Variation", 1, kMaxVariation, defaults.variation));
+    params.push_back(std::make_unique<juce::AudioParameterChoice>("part", "Part", toStringArray(Styles::partNames()), defaults.part));
     return {params.begin(), params.end()};
 }
 
@@ -139,6 +140,7 @@ Styles::Settings AIProducerProcessor::currentSettings() const {
     settings.chords = value("chords") != 0;
     settings.lead = value("lead") != 0;
     settings.variation = value("variation");
+    settings.part = value("part");
     return settings;
 }
 

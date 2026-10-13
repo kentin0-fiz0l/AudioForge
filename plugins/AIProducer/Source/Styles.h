@@ -29,6 +29,7 @@ struct Settings {
     bool minor = true;
     int length = 2;                // Index into lengthNames()
     bool drums = true, bass = true, chords = true, lead = true;
+    int part = 0;                  // Index into partNames(): 0 plays every part
     int variation = 1;
 
     bool operator==(const Settings& other) const;
@@ -36,6 +37,11 @@ struct Settings {
 };
 
 std::vector<std::string> lengthNames();
+
+// "All", then one name per part. A host that cannot split MIDI by channel
+// (Ableton Live) runs one copy per part with the same settings: the same
+// settings always write the same notes, so the copies play together.
+std::vector<std::string> partNames();
 std::vector<std::string> keyNames();
 
 // Builds the plan for a set of controls: the genre's tempo, a chord

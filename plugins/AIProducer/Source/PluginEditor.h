@@ -32,7 +32,7 @@ private:
 
     AIProducerProcessor& processor_;
 
-    std::array<Choice, 4> choices_;   // Genre, key, scale, length
+    std::array<Choice, 5> choices_;   // Genre, key, scale, length, part
     std::array<Part, 4> parts_;       // Drums, bass, chords, lead
     juce::TextButton variationButton_;
     juce::Label variationLabel_;

@@ -12,6 +12,7 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <map>
 #include <set>
+#include <tuple>
 
 // Include AI Producer plugin headers
 #include "../../plugins/AIProducer/Source/MIDIGenerator.h"
@@ -193,6 +194,7 @@ public:
         testSameSettingsGiveTheSameTrack();
         testVariationChangesTheTrack();
         testTheArrangementBuilds();
+        testEachPartPlaysOnlyItsOwnNotes();
     }
 
 private:
@@ -330,6 +332,32 @@ private:
         expectEquals(count(32, 40, drumChannel, kickNote), 0, "Breakdown: no kick, so the next drop hits");
         expect(count(32, 40, lead) > 0, "Breakdown: the lead over the chords");
         expectEquals(count(64, 72, drumChannel, kickNote) + count(64, 72, bass), 0, "Outro: kick and bass gone");
+    }
+
+    void testEachPartPlaysOnlyItsOwnNotes()
+    {
+        beginTest("Part plays just one part, note for note what All plays on its channel");
+
+        auto notes = [](int part, int channel) {
+            Styles::Settings settings;
+            settings.variation = 5;
+            settings.part = part;
+            const auto sequence = MIDIGenerator::generateFromStructure(Styles::build(settings));
+            std::vector<std::tuple<double, int, int, bool>> result;
+            for (const auto& event : sequence->events)
+                if (channel < 0 || event.channel == channel)
+                    result.emplace_back(event.time, event.channel, event.noteNumber, event.isNoteOn);
+            return result;
+        };
+
+        const int channels[] = {10, 1, 2, 3}; // Drums, bass, chords, lead
+        for (int part = 1; part <= 4; ++part)
+        {
+            const auto name = Styles::partNames()[static_cast<size_t>(part)];
+            const auto alone = notes(part, -1);
+            expect(! alone.empty(), name + " plays");
+            expect(alone == notes(0, channels[part - 1]), name + " matches its channel in All");
+        }
     }
 };
 

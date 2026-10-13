@@ -55,6 +55,10 @@ std::vector<std::string> lengthNames() {
     return {"8-bar loop", "32 bars", "Full song (72 bars)"};
 }
 
+std::vector<std::string> partNames() {
+    return {"All", "Drums", "Bass", "Chords", "Lead"};
+}
+
 std::vector<std::string> keyNames() {
     return {"C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"};
 }
@@ -62,7 +66,7 @@ std::vector<std::string> keyNames() {
 bool Settings::operator==(const Settings& o) const {
     return genre == o.genre && keyRoot == o.keyRoot && minor == o.minor && length == o.length
            && drums == o.drums && bass == o.bass && chords == o.chords && lead == o.lead
-           && variation == o.variation;
+           && variation == o.variation && part == o.part;
 }
 
 TrackStructure build(const Settings& settings) {
@@ -93,10 +97,11 @@ TrackStructure build(const Settings& settings) {
             break;
     }
 
-    structure.hasDrums = settings.drums;
-    structure.hasBass = settings.bass;
-    structure.hasChords = settings.chords;
-    structure.hasLead = settings.lead;
+    auto plays = [&](bool on, int part) { return on && (settings.part == 0 || settings.part == part); };
+    structure.hasDrums = plays(settings.drums, 1);
+    structure.hasBass = plays(settings.bass, 2);
+    structure.hasChords = plays(settings.chords, 3);
+    structure.hasLead = plays(settings.lead, 4);
     return structure;
 }
 
