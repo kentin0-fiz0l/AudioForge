@@ -47,6 +47,7 @@ add_executable(TestRunner
     Plugins/EditorParameterTests.cpp
     Plugins/GranularEngineTests.cpp
     Plugins/PhaserEngineTests.cpp
+    Plugins/ShimmerReverbTests.cpp
     Integration/PluginIntegrationTests.cpp)
 
 # Link JUCE libraries
@@ -151,6 +152,8 @@ target_sources(TestRunner PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/Polysynth/Source/PolysynthEngine.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/Polysynth/Source/PolysynthVoice.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/ShimmerReverb/Source/ShimmerEngine.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/ShimmerReverb/Source/PluginProcessor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/ShimmerReverb/Source/PluginEditor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/SpectralFreeze/Source/PluginProcessor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/SpectralFreeze/Source/PluginEditor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/SpectralFreeze/Source/SpectralProcessor.cpp
