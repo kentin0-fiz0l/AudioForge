@@ -8,7 +8,15 @@
 class KotoEngine
 {
 public:
-    static constexpr int DELAY_BUFFER_SIZE = 8192;
+    // A power of two, so indices wrap with a mask. Big enough for the lowest
+    // MIDI note bent down 4 semitones (6.5 Hz) at 192 kHz, about 29600 samples.
+    static constexpr int DELAY_BUFFER_SIZE = 32768;
+    static_assert((DELAY_BUFFER_SIZE & (DELAY_BUFFER_SIZE - 1)) == 0, "must be a power of two");
+
+    // The string's delay is held within these, in samples, whatever the note,
+    // bend and sample rate, so every read stays inside the buffer
+    static constexpr float MIN_DELAY = 2.0f;
+    static constexpr float MAX_DELAY = static_cast<float>(DELAY_BUFFER_SIZE - 2);
 
     // Highest loop gain allowed for the string. It must stay below 1, or each
     // trip round the string makes the note louder instead of quieter.
@@ -69,14 +77,35 @@ private:
             writePos = 0;
         }
 
+        // Reads delayLength samples back, between samples by linear
+        // interpolation, so the pitch is exact and bends move smoothly.
+        // (An allpass would keep the top harmonics, but it delays them less
+        // than the fundamental, which puts the noise-burst pluck out of tune.)
         float process(float input)
         {
-            int readPos = static_cast<int>(writePos - delayLength);
-            if (readPos < 0) readPos += DELAY_BUFFER_SIZE;
+            constexpr int mask = DELAY_BUFFER_SIZE - 1;
 
-            float output = buffer[readPos % DELAY_BUFFER_SIZE];
-            buffer[writePos] = input + output * feedback;
-            writePos = (writePos + 1) % DELAY_BUFFER_SIZE;
+            // The negated test also catches NaN
+            const float delay = ! (delayLength >= MIN_DELAY) ? MIN_DELAY : juce::jmin(delayLength, MAX_DELAY);
+            const int whole = static_cast<int>(delay);
+            const float fraction = delay - static_cast<float>(whole);
+
+            // Both indices are masked into the buffer
+            const float newer = buffer[static_cast<size_t>((writePos - whole) & mask)];
+            const float older = buffer[static_cast<size_t>((writePos - whole - 1) & mask)];
+
+            // The interpolation loses a little level at the fundamental, more
+            // the nearer the fraction is to a half. Make that up, so the note
+            // rings as long as Decay says whatever its pitch. The loop gain
+            // stays below 1 at every frequency: the interpolation never gains,
+            // and DC, which it passes whole, gets at most MAX_STRING_FEEDBACK.
+            const float spread = 2.0f * fraction * (1.0f - fraction)
+                                 * (1.0f - std::cos(juce::MathConstants<float>::twoPi / delay));
+            const float loopGain = juce::jmin(MAX_STRING_FEEDBACK, feedback / std::sqrt(juce::jmax(0.01f, 1.0f - spread)));
+
+            const float output = newer + fraction * (older - newer);
+            buffer[static_cast<size_t>(writePos)] = input + output * loopGain;
+            writePos = (writePos + 1) & mask;
 
             return output;
         }
@@ -147,6 +176,12 @@ private:
     ResonantFilter bodyFilter2_;  // ~800Hz
     ResonantFilter bodyFilter3_;  // ~2000Hz
 
+    // DC blocker on the string's output. The pluck's noise leaves some DC in
+    // the string, and the interpolated delay keeps DC longer than the note.
+    // It sits outside the loop so it does not detune low notes.
+    float dcIn_ = 0.0f, dcOut_ = 0.0f;
+    float dcCoeff_ = 0.999f;
+
     // One-pole tone filter
     float toneLp_ = 0.0f;
     float toneCoeff_ = 0.5f;
@@ -157,6 +192,9 @@ private:
     float decayTime_ = 0.8f;
     float pitchBendAmount_ = 0.0f;
     float pitchWheelSemitones_ = 0.0f;
+    float smoothedBend_ = 0.0f;   // Pitch Bend plus wheel, in semitones, glided over a few ms
+    float bendSmoothing_ = 1.0f;  // Per-sample step of that glide, set from the sample rate
+    float releaseCoeff_ = 0.9995f;  // Per-sample release factor, set from the sample rate
     float tremoloRate_ = 10.0f;
     float tone_ = 0.6f;
 

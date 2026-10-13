@@ -20,6 +20,17 @@ void KotoEngine::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
     sampleRate_ = sampleRate;
 
+    // The release keeps the length it had at 44.1 kHz (0.9995 per sample
+    // there, about 0.4 s to silence) at every sample rate
+    releaseCoeff_ = static_cast<float>(std::pow(0.9995, 44100.0 / sampleRate));
+
+    // Bends glide with a 5 ms time constant, so a wheel jump does not jump
+    // the string's read point
+    bendSmoothing_ = static_cast<float>(1.0 - std::exp(-1.0 / (0.005 * sampleRate)));
+
+    // 5 Hz high-pass, below the lowest note's fundamental
+    dcCoeff_ = static_cast<float>(std::exp(-juce::MathConstants<double>::twoPi * 5.0 / sampleRate));
+
     bodyFilter1_.updateCoefficients(sampleRate);
     bodyFilter2_.updateCoefficients(sampleRate);
     bodyFilter3_.updateCoefficients(sampleRate);
@@ -37,7 +48,9 @@ void KotoEngine::reset()
     tremoloPhase_ = 0.0f;
     lastTremoloTrigger_ = 0;
     toneLp_ = 0.0f;
+    dcIn_ = dcOut_ = 0.0f;
     releaseGain_ = 1.0f;
+    smoothedBend_ = pitchBendAmount_ + pitchWheelSemitones_;
 }
 
 int KotoEngine::snapToScale(int midiNote) const
@@ -65,11 +78,11 @@ int KotoEngine::snapToScale(int midiNote) const
 float KotoEngine::processSample(float baseFrequency, float velocity, bool noteOn, int samplesSinceNoteOn)
 {
     // Apply the Pitch Bend offset and the MIDI pitch wheel
-    float frequency = baseFrequency * std::pow(2.0f, (pitchBendAmount_ + pitchWheelSemitones_) / 12.0f);
+    smoothedBend_ += bendSmoothing_ * (pitchBendAmount_ + pitchWheelSemitones_ - smoothedBend_);
+    float frequency = baseFrequency * std::pow(2.0f, smoothedBend_ / 12.0f);
 
-    // Update string delay length
-    float delayLength = static_cast<float>(sampleRate_) / frequency;
-    string_.delayLength = delayLength;
+    // Update string delay length (CombFilter keeps it inside the buffer)
+    string_.delayLength = static_cast<float>(sampleRate_) / frequency;
     // Longer decay = higher feedback. The Decay control runs up to 2.0, and
     // without the limit this mapping passes 1.0 at a decay of 1.5.
     string_.feedback = juce::jmin(MAX_STRING_FEEDBACK, 0.994f + decayTime_ * 0.004f);
@@ -137,6 +150,9 @@ float KotoEngine::processSample(float baseFrequency, float velocity, bool noteOn
 
     // Process string
     float stringOutput = string_.process(excitation);
+    dcOut_ = stringOutput - dcIn_ + dcCoeff_ * dcOut_;
+    dcIn_ = stringOutput;
+    stringOutput = dcOut_;
 
     // Apply tone filtering (simulate pick position)
     toneLp_ += toneCoeff_ * (stringOutput - toneLp_);
@@ -154,7 +170,7 @@ float KotoEngine::processSample(float baseFrequency, float velocity, bool noteOn
     }
 
     // Release, counted from note-off
-    releaseGain_ = noteOn ? 1.0f : releaseGain_ * 0.9995f;
+    releaseGain_ = noteOn ? 1.0f : releaseGain_ * releaseCoeff_;
 
     return finalOutput * attackEnv * releaseGain_ * 0.8f;
 }

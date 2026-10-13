@@ -14,8 +14,10 @@ void KotoVoice::startNote(int midiNoteNumber, float velocity, juce::SynthesiserS
     isNoteOn_ = true;
     samplesSinceNoteOn_ = 0;
 
-    engine_.reset();
+    // Wheel first: reset() starts the bend glide at the wheel's position, so
+    // a new note does not slide in from the last one's bend
     engine_.setPitchWheel(currentPitchWheelPosition);
+    engine_.reset();
 }
 
 void KotoVoice::stopNote(float, bool allowTailOff)
