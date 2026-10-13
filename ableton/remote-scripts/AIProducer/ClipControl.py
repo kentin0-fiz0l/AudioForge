@@ -7,6 +7,8 @@
 # "@<beat>" for the Arrangement clip that is playing at that beat
 
 import math
+import os
+import time
 
 
 class ClipControl:
@@ -16,15 +18,26 @@ class ClipControl:
     # or a copy's start comes back a fraction of a unit from what was asked for
     MARKER_TOLERANCE = 0.001
 
-    def __init__(self, find_track, log_function):
+    # Feedback #39: Live warps a long file's clips again once it has finished
+    # analysing the file (when it writes the .asd next to it), minutes after
+    # warping was switched off. After warping is switched off, every clip of
+    # that file, in the Session and on the Arrangement, is watched and
+    # unwarped again if that happens, until the analysis has been done for
+    # this long.
+    WARP_GRACE = 20.0
+
+    def __init__(self, find_track, log_function, tracks=lambda: []):
         self.find_track = find_track  # Target (index or name) -> track
         self.log = log_function
+        self.tracks = tracks          # () -> every track, for the watch
+        self._warp_watch = {}         # file -> {'analysed_at': seconds or None, 'rewarped': count}
 
         self.commands = {
             '/live/clip/info': self.get_info,
             '/live/clip/arrangement': self.list_arrangement,
             '/live/clip/duplicate': self.duplicate_to_arrangement,
             '/live/clip/set/warping': self.set_warping,
+            '/live/clip/warp_watch': self.get_warp_watch,
             '/live/clip/set/markers': self.set_markers,
             '/live/clip/clear_arrangement': self.clear_arrangement,
         }
@@ -206,4 +219,50 @@ class ClipControl:
         clip = self._audio_clip(target, slot)
         clip.warping = bool(int(on))
         self.log(f"Warping {'on' if clip.warping else 'off'} for '{clip.name}'")
-        return self._describe(clip)
+
+        reply = self._describe(clip)
+        path = getattr(clip, 'file_path', None)
+        if path:
+            if clip.warping:
+                self._warp_watch.pop(path, None)
+            else:
+                self._warp_watch.setdefault(path, {'analysed_at': None, 'rewarped': 0})
+            # Until Live has analysed the file it may warp the clip again; the watch covers that
+            reply['analysis_pending'] = not self._analysed(path)
+        return reply
+
+    @staticmethod
+    def _analysed(path):
+        return os.path.exists(path + '.asd')
+
+    def _clips_of(self, path):
+        """Every audio clip that plays a file, in the Session and on the Arrangement"""
+        for track in self.tracks():
+            for slot in getattr(track, 'clip_slots', []):
+                clip = getattr(slot, 'clip', None) if getattr(slot, 'has_clip', True) else None
+                if clip is not None and getattr(clip, 'file_path', None) == path:
+                    yield clip
+            for clip in getattr(track, 'arrangement_clips', []):
+                if getattr(clip, 'file_path', None) == path:
+                    yield clip
+
+    def update_warp_watch(self, now=None):
+        """Called on Live's tick: unwarp what Live has warped again, and end watches that are done"""
+        now = time.monotonic() if now is None else now
+        for path, watch in list(self._warp_watch.items()):
+            for clip in self._clips_of(path):
+                if getattr(clip, 'is_audio_clip', False) and clip.warping:
+                    clip.warping = False
+                    watch['rewarped'] += 1
+                    self.log(f"Live warped '{clip.name}' again after analysing it; warping is off again")
+            if self._analysed(path):
+                if watch['analysed_at'] is None:
+                    watch['analysed_at'] = now
+                elif now - watch['analysed_at'] > self.WARP_GRACE:
+                    del self._warp_watch[path]
+
+    def get_warp_watch(self):
+        """The files being kept unwarped, whether Live has analysed each, and how often it warped them again"""
+        return {'watching': [{'file': path, 'analysis_pending': not self._analysed(path),
+                              'rewarped': watch['rewarped']}
+                             for path, watch in self._warp_watch.items()]}

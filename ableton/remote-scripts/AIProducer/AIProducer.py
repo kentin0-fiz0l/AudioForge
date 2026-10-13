@@ -29,7 +29,8 @@ class AIProducer:
 
         # Mixer, device and meter access for the chat interface
         self.mixer_control = MixerControl(self.song, self.app, self.log)
-        self.clip_control = ClipControl(self.mixer_control.find_track, self.log)
+        self.clip_control = ClipControl(self.mixer_control.find_track, self.log,
+                                        tracks=lambda: list(self.song.tracks))
 
         self.log("AI Producer initialized!")
         self.log("=" * 50)
@@ -74,6 +75,7 @@ class AIProducer:
                 self._handle_osc_message(message)
 
         self.mixer_control.update_meters()
+        self.clip_control.update_warp_watch()
 
     def refresh_state(self):
         """Called when Live refreshes - required method"""

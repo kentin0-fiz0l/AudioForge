@@ -20,6 +20,8 @@ class MixerControl:
 
         self._clear_started_at = None
         self._cleared = 0
+        self._saved_quantization = None   # Global Quantization while a locator command moves the playhead
+        self._moves = {}                  # beat -> times the playhead has been sent there
 
         self.commands = {
             '/live/mixer': self.get_mixer,
@@ -34,6 +36,8 @@ class MixerControl:
             '/live/device/delete': self.delete_device,
             '/live/song/clear_locators': self.clear_locators,
             '/live/song/set_locator': self.set_locator,
+            '/live/song/locators': self.get_locators,
+            '/live/song/set_time': self.set_time,
             '/live/song/jump_to_locator': self.jump_to_locator,
         }
 
@@ -212,7 +216,47 @@ class MixerControl:
     # cannot be toggled in the same call that moves the playhead there: the
     # toggle would land where the playhead was. These commands take one step
     # per call, and the caller calls again until the reply says done.
+    #
+    # Feedback #40: while Live was stopped, a playhead sent to beat 57 or
+    # 30.13 never got there (30 and 56 did), so set_locator never finished.
+    # A playhead moved from a script lands on the Global Quantization grid
+    # (1/2 note in that set), so these commands switch quantization off while
+    # they move the playhead and put it back when they finish. If the
+    # playhead still does not arrive, they give up with an error instead of
+    # asking to be called forever.
     CUE_TOLERANCE = 1e-3
+    MAX_MOVES = 5
+
+    def _free_playhead(self):
+        song = self.song
+        if self._saved_quantization is None and not song.is_playing:
+            self._saved_quantization = song.clip_trigger_quantization
+            song.clip_trigger_quantization = 0
+
+    def _restore_quantization(self):
+        if self._saved_quantization is not None:
+            self.song.clip_trigger_quantization = self._saved_quantization
+            self._saved_quantization = None
+
+    def _move_playhead(self, beat):
+        """Send the playhead to a beat; an error once it has been sent too often without arriving"""
+        song = self.song
+        self._free_playhead()
+        tries = self._moves.get(beat, 0)
+        if tries >= self.MAX_MOVES:
+            self._finished(beat)
+            raise ValueError(f"Live keeps the playhead at beat {song.current_song_time:g}, not {beat:g}; "
+                             "it may be snapping to a grid")
+        self._moves[beat] = tries + 1
+        song.current_song_time = beat
+
+    def _finished(self, beat=None):
+        """A locator command is done with a beat (or with every beat): forget its moves, put quantization back"""
+        if beat is None:
+            self._moves.clear()
+        else:
+            self._moves.pop(beat, None)
+        self._restore_quantization()
 
     def _cue_at(self, beat):
         for cue in self.song.cue_points:
@@ -232,6 +276,7 @@ class MixerControl:
         if not cues:
             # Finished: put the playhead back where it was
             song.current_song_time = self._clear_started_at
+            self._finished()
             deleted, self._cleared, self._clear_started_at = self._cleared, 0, None
             self.log(f"Deleted {deleted} locator(s)")
             return {'done': True, 'deleted': deleted, 'remaining': 0}
@@ -241,7 +286,11 @@ class MixerControl:
             self._cleared += 1
             return {'done': False, 'deleted': self._cleared, 'remaining': len(cues) - 1}
 
-        song.current_song_time = cues[0].time   # send the playhead to the next one
+        try:
+            self._move_playhead(cues[0].time)   # send the playhead to the next one
+        except ValueError:
+            self._clear_started_at = None
+            raise
         return {'done': False, 'deleted': self._cleared, 'remaining': len(cues)}
 
     def set_locator(self, beat, name=''):
@@ -254,12 +303,29 @@ class MixerControl:
         if cue is not None:
             if name:
                 cue.name = str(name)
+            self._finished(beat)
             return {'done': True, 'time': cue.time, 'name': cue.name}
 
         if abs(song.current_song_time - beat) < self.CUE_TOLERANCE:
             song.set_or_delete_cue()        # the playhead is there: make it
         else:
-            song.current_song_time = beat   # send the playhead there first
+            self._move_playhead(beat)       # send the playhead there first
+        return {'done': False, 'time': beat}
+
+    def get_locators(self):
+        """Every locator, in order: its beat and name"""
+        cues = sorted(self.song.cue_points, key=lambda cue: cue.time)
+        return {'locators': [{'time': cue.time, 'name': cue.name} for cue in cues]}
+
+    def set_time(self, beat):
+        """Move the playhead to a beat without touching the locators, one step per call"""
+        beat = float(beat)
+        if not (math.isfinite(beat) and beat >= 0.0):
+            raise ValueError("The beat has to be a number, at or after the start")
+        if abs(self.song.current_song_time - beat) < self.CUE_TOLERANCE:
+            self._finished(beat)
+            return {'done': True, 'time': self.song.current_song_time}
+        self._move_playhead(beat)
         return {'done': False, 'time': beat}
 
     def jump_to_locator(self, name):
