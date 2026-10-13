@@ -20,8 +20,11 @@ class MixerControl:
 
         self._clear_started_at = None
         self._cleared = 0
-        self._saved_quantization = None   # Global Quantization while a locator command moves the playhead
         self._moves = {}                  # beat -> times the playhead has been sent there
+        self._landed = {}                 # beat asked for -> grid beat Live put its locator on
+        self._toggled = None              # (beat, {time: name} before) after a toggle, until it is checked
+        self._restoring = None            # (beat, time, name) of a locator a toggle deleted, being put back
+        self._blocked = {}                # beat asked for -> grid beat already taken by another locator
 
         self.commands = {
             '/live/mixer': self.get_mixer,
@@ -217,52 +220,47 @@ class MixerControl:
     # toggle would land where the playhead was. These commands take one step
     # per call, and the caller calls again until the reply says done.
     #
-    # Feedback #40: while Live was stopped, a playhead sent to beat 57 or
-    # 30.13 never got there (30 and 56 did), so set_locator never finished.
-    # A playhead moved from a script lands on the Global Quantization grid
-    # (1/2 note in that set), so these commands switch quantization off while
-    # they move the playhead and put it back when they finish. If the
-    # playhead still does not arrive, they give up with an error instead of
-    # asking to be called forever.
+    # Feedback #40, measured in Live 12.4.6: the playhead goes to any beat,
+    # but set_or_delete_cue toggles a locator on the Arrangement grid nearest
+    # the playhead (sixteenths at the default zoom, coarser zoomed out) and
+    # moves the playhead there. A locator's time cannot be set afterwards.
+    # So asked for 30.13, Live made one at 30.25; the old loop then went back
+    # to 30.13 and the next toggle deleted it, for ever. Now a locator off the
+    # grid is kept where Live put it and the reply says so, and a locator
+    # that a toggle deletes is put back with its name.
     CUE_TOLERANCE = 1e-3
     MAX_MOVES = 5
-
-    def _free_playhead(self):
-        song = self.song
-        if self._saved_quantization is None and not song.is_playing:
-            self._saved_quantization = song.clip_trigger_quantization
-            song.clip_trigger_quantization = 0
-
-    def _restore_quantization(self):
-        if self._saved_quantization is not None:
-            self.song.clip_trigger_quantization = self._saved_quantization
-            self._saved_quantization = None
 
     def _move_playhead(self, beat):
         """Send the playhead to a beat; an error once it has been sent too often without arriving"""
         song = self.song
-        self._free_playhead()
         tries = self._moves.get(beat, 0)
         if tries >= self.MAX_MOVES:
             self._finished(beat)
-            raise ValueError(f"Live keeps the playhead at beat {song.current_song_time:g}, not {beat:g}; "
-                             "it may be snapping to a grid")
+            raise ValueError(f"Live keeps the playhead at beat {song.current_song_time:g}, not {beat:g}")
         self._moves[beat] = tries + 1
         song.current_song_time = beat
 
     def _finished(self, beat=None):
-        """A locator command is done with a beat (or with every beat): forget its moves, put quantization back"""
+        """A locator command is done with a beat (or with every beat): forget its moves"""
         if beat is None:
             self._moves.clear()
         else:
             self._moves.pop(beat, None)
-        self._restore_quantization()
 
     def _cue_at(self, beat):
+        if beat is None:
+            return None
         for cue in self.song.cue_points:
             if abs(cue.time - beat) < self.CUE_TOLERANCE:
                 return cue
         return None
+
+    def _cue_times(self):
+        return {cue.time: cue.name for cue in self.song.cue_points}
+
+    def _missing(self, times, among):
+        return [t for t in times if all(abs(t - other) >= self.CUE_TOLERANCE for other in among)]
 
     def clear_locators(self):
         """Delete the locators, one step per call; done when none are left"""
@@ -293,24 +291,83 @@ class MixerControl:
             raise
         return {'done': False, 'deleted': self._cleared, 'remaining': len(cues)}
 
+    def _done(self, beat, cue, name):
+        if name:
+            cue.name = str(name)
+        self._finished(beat)
+        reply = {'done': True, 'time': cue.time, 'name': cue.name}
+        if abs(cue.time - beat) >= self.CUE_TOLERANCE:
+            reply['snapped_to'] = cue.time      # Live's grid would not take the beat asked for
+        return reply
+
     def set_locator(self, beat, name=''):
-        """Put a named locator at a beat, one step per call; done when it is there"""
+        """Put a named locator at a beat, one step per call; done when it is there.
+
+        Live only places locators on its Arrangement grid: a beat off the grid
+        gets its locator on the nearest grid beat, and the reply's snapped_to
+        says which.
+        """
         beat = float(beat)
         if not (math.isfinite(beat) and beat >= 0.0):
             raise ValueError("The beat has to be a number, at or after the start")
         song = self.song
-        cue = self._cue_at(beat)
+
+        if self._restoring and self._restoring[0] == beat:
+            return self._finish_restoring(beat)
+        taken = self._cue_at(self._blocked.get(beat))
+        if taken is not None:
+            raise self._taken_error(beat, taken.time, taken.name)    # asking again must not toggle it away
+
+        cue = self._cue_at(beat) or self._cue_at(self._landed.get(beat))
         if cue is not None:
-            if name:
-                cue.name = str(name)
-            self._finished(beat)
-            return {'done': True, 'time': cue.time, 'name': cue.name}
+            return self._done(beat, cue, name)
+
+        if self._toggled and self._toggled[0] == beat:
+            reply = self._check_toggle(beat, name)
+            if reply is not None:
+                return reply
 
         if abs(song.current_song_time - beat) < self.CUE_TOLERANCE:
+            self._toggled = (beat, self._cue_times())
             song.set_or_delete_cue()        # the playhead is there: make it
         else:
             self._move_playhead(beat)       # send the playhead there first
         return {'done': False, 'time': beat}
+
+    def _check_toggle(self, beat, name):
+        """See what the last toggle did: the reply if it made or deleted a locator, None if neither"""
+        before, self._toggled = self._toggled[1], None
+        now = self._cue_times()
+        added = self._missing(now, before)
+        if added:
+            self._landed[beat] = added[0]
+            return self._done(beat, self._cue_at(added[0]), name)
+        removed = self._missing(before, now)
+        if removed:
+            # The grid spot already had a locator, and the toggle deleted it. The
+            # playhead is on it now: toggle again to put it back.
+            self._restoring = (beat, removed[0], before[removed[0]])
+            self.song.set_or_delete_cue()
+            return {'done': False, 'time': beat}
+        return None
+
+    def _finish_restoring(self, beat):
+        """Name the locator put back, then say why no new one could be made"""
+        _, time, name = self._restoring
+        cue = self._cue_at(time)
+        if cue is None:
+            self._move_playhead(time)       # not back yet: wait, within the usual limit
+            return {'done': False, 'time': beat}
+        cue.name = name
+        self._restoring = None
+        self._blocked[beat] = time
+        self._finished(beat)
+        raise self._taken_error(beat, time, name)
+
+    @staticmethod
+    def _taken_error(beat, time, name):
+        return ValueError(f"Live puts locators on its grid, and the grid beat nearest {beat:g} is "
+                          f"{time:g}, where the locator '{name}' already is")
 
     def get_locators(self):
         """Every locator, in order: its beat and name"""

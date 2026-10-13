@@ -256,8 +256,9 @@ class FakeSong:
         self._cue_points = []
         self._time = 0.0
         self._pending_time = None
-        self.clip_trigger_quantization = 4   # Live's default Global Quantization: 1 bar
-        self.snap_anyway = None              # a grid Live snaps to whatever the quantization (a test can set it)
+        self.song_length = 1000.0
+        self.locator_grid = 0.25   # the Arrangement grid at Live's default zoom: sixteenths
+        self.stuck = False         # a playhead that will not move (a test can set it)
 
     # Seen in Live 12.4.6: a new song time is applied a moment after it is
     # set, so a toggle in the same breath lands at the old position. Here
@@ -268,23 +269,16 @@ class FakeSong:
 
     @current_song_time.setter
     def current_song_time(self, value):
+        # As in Live 12.4.6
+        if value > self.song_length:
+            raise RuntimeError("Cannot set the Songtime behind the Songlength")
         self._pending_time = value
-
-    # Grid, in beats, for each Global Quantization value (0 is None)
-    QUANTIZATION_BEATS = {0: 0, 1: 32, 2: 16, 3: 8, 4: 4, 5: 2, 6: 4 / 3, 7: 1, 8: 2 / 3,
-                          9: 0.5, 10: 1 / 3, 11: 0.25, 12: 1 / 6, 13: 0.125}
 
     def _settle(self):
         if self._pending_time is not None:
             time_, self._pending_time = self._pending_time, None
-            # Seen with the Optics set (feedback #40): while stopped, a playhead moved from a
-            # script lands on a 2-beat grid (30 and 56 reached, 57 and 30.13 never). Modelled
-            # as Live's Global Quantization (1/2 note there).
-            grid = self.snap_anyway or (0 if self.is_playing else
-                                        self.QUANTIZATION_BEATS[self.clip_trigger_quantization])
-            if grid:
-                time_ = round(time_ / grid) * grid
-            self._time = time_
+            if not self.stuck:
+                self._time = time_
 
     @property
     def cue_points(self):
@@ -296,14 +290,18 @@ class FakeSong:
         self._cue_points = value
 
     def set_or_delete_cue(self):
-        # As in Live: toggles a locator at the current song time
-        for cue in self._cue_points:
-            if abs(cue.time - self._time) < 1e-3:
-                self._cue_points.remove(cue)
-                self._settle()
-                return
-        self._cue_points.append(types.SimpleNamespace(time=self._time, name=""))
+        # Seen in Live 12.4.6 (feedback #40): the locator is toggled on the Arrangement grid
+        # nearest the playhead, not at the playhead, and the playhead moves there. With the
+        # playhead at 30.13 a locator is made at 30.25; at 30.13 again, that one is deleted.
+        # A locator's time cannot be set afterwards.
         self._settle()
+        at = round(self._time / self.locator_grid) * self.locator_grid
+        self._time = at
+        for cue in self._cue_points:
+            if abs(cue.time - at) < 1e-3:
+                self._cue_points.remove(cue)
+                return
+        self._cue_points.append(types.SimpleNamespace(time=at, name=str(len(self._cue_points) + 1)))
 
     def create_midi_track(self, index):
         self.tracks.insert(index, FakeTrack())
@@ -736,7 +734,10 @@ class LiveControlTestCase(AIProducerTestCase):
         self.script.osc_server = osc_module.OSCServer(port=0)
         self.port = self.script.osc_server.sock.getsockname()[1]
 
-        # Live calls update_display about ten times a second; stand in for that
+        # Live calls update_display about ten times a second; stand in for that.
+        # What Live itself does between ticks is done under live_lock, as Live
+        # does it on its own thread, never in the middle of a tick.
+        self.live_lock = threading.Lock()
         self.pumping = True
         self.pump = threading.Thread(target=self._pump, daemon=True)
         self.pump.start()
@@ -744,7 +745,8 @@ class LiveControlTestCase(AIProducerTestCase):
 
     def _pump(self):
         while self.pumping:
-            self.script.update_display()
+            with self.live_lock:
+                self.script.update_display()
             time.sleep(0.002)
             self.song._settle()     # time passes between Live's ticks: a moved playhead lands
 
@@ -900,9 +902,18 @@ class ClipTests(LiveControlTestCase):
         self.vocals.file_path = str(pathlib.Path(folder.name) / "vocals.wav")
 
     def analyse(self, clip):
-        """Do what Live does when it finishes analysing a file: write the .asd and warp its clips"""
-        pathlib.Path(clip.file_path + ".asd").write_bytes(b"asd")
-        clip.warping = True
+        """Do what Live does when it finishes analysing a file: write the .asd and warp its clips.
+
+        Seen in Live 12.4.6 (feedback #39) on a 15-minute file: the Arrangement copy came back
+        warped, and once unwarped it played from 3.2 s to 714 s of the 879 s file (1421.5 beats
+        instead of 1757.7), its bounds moved to where Live's beat guess had put them.
+        """
+        with self.live_lock:
+            pathlib.Path(clip.file_path + ".asd").write_bytes(b"asd")
+            clip.warping = True
+            clip.loop_end = 713.966
+            clip.loop_start = clip.start_marker = 3.2
+            clip.end_marker = 713.966
 
     def wait_for(self, condition, seconds=2.0):
         deadline = time.monotonic() + seconds
@@ -918,18 +929,34 @@ class ClipTests(LiveControlTestCase):
 
         reply = self.ask("/live/clip/set/warping", "AI Bass", 0, 0)
         self.assertTrue(reply["analysis_pending"], "Live has not analysed the file yet")
-        copy = self.song.tracks[1].duplicate_clip_to_arrangement(self.vocals, 16.0)
+        self.ask("/live/clip/duplicate", "AI Bass", 0, 16.0)
+        copy = self.song.tracks[1].arrangement_clips[0]
         self.assertFalse(copy.warping)
 
         self.analyse(copy)
 
         self.assertTrue(self.wait_for(lambda: not copy.warping), "the copy should be unwarped again")
+        self.assertTrue(self.wait_for(lambda: copy.loop_start == 1.15), "its bounds should be put back")
+        self.assertEqual((copy.loop_start, copy.loop_end, copy.start_marker, copy.end_marker),
+                         (1.15, 145.38, 1.15, 145.38))
         watch = self.ask("/live/clip/warp_watch")["watching"]
         self.assertEqual(len(watch), 1)
         self.assertEqual(watch[0]["file"], self.vocals.file_path)
         self.assertFalse(watch[0]["analysis_pending"])
         self.assertEqual(watch[0]["rewarped"], 1)
         self.assertIn("again after analysing it", self.log_text())
+
+    def test_a_copy_the_watch_never_saw_gets_the_whole_file_back(self):
+        self.give_vocals_a_file()
+        self.ask("/live/clip/set/warping", "AI Bass", 0, 0)
+        with self.live_lock:            # made and analysed between two ticks
+            copy = self.song.tracks[1].duplicate_clip_to_arrangement(self.vocals, 16.0)
+        self.analyse(copy)
+
+        whole = 6411200 / 44100.0
+        self.assertTrue(self.wait_for(lambda: not copy.warping and copy.loop_start == 0.0))
+        self.assertAlmostEqual(copy.loop_end, whole)
+        self.assertEqual(copy.start_marker, 0.0)
 
     def test_the_watch_ends_a_while_after_the_analysis(self):
         self.give_vocals_a_file()
@@ -1127,6 +1154,8 @@ class LocatorTests(LiveControlTestCase):
             self.song.current_song_time = time
             self.song.cue_points        # time passes
             self.song.set_or_delete_cue()
+        for cue in self.song.cue_points:
+            cue.name = ""
 
     def run_until_done(self, address, *args, limit=40):
         for _ in range(limit):
@@ -1166,38 +1195,63 @@ class LocatorTests(LiveControlTestCase):
         self.run_until_done("/live/song/set_locator", 312.0, "Breakdown A")
         self.assertEqual([(c.time, c.name) for c in self.song.cue_points], [(312.0, "Breakdown A")])
 
-    def test_a_locator_can_go_on_an_odd_or_fractional_beat_while_stopped(self):
-        # Feedback #40: with Global Quantization at 1/2 note, beats 57 and 30.13 never finished
-        self.song.clip_trigger_quantization = 5
-        for beat in (57.0, 30.13):
-            self.run_until_done("/live/song/set_locator", beat, f"at {beat:g}")
+    def test_a_locator_can_go_on_an_odd_beat(self):
+        reply = self.run_until_done("/live/song/set_locator", 57.0, "Odd")
 
-        self.assertEqual(sorted((round(c.time, 3), c.name) for c in self.song.cue_points),
-                         [(30.13, "at 30.13"), (57.0, "at 57")])
-        self.assertEqual(self.song.clip_trigger_quantization, 5, "Global Quantization is put back")
+        self.assertEqual([(c.time, c.name) for c in self.song.cue_points], [(57.0, "Odd")])
+        self.assertNotIn("snapped_to", reply)
 
-    def test_a_locator_that_cannot_be_reached_fails_instead_of_running_forever(self):
-        self.song.snap_anyway = 2.0      # snapping that switching quantization off does not stop
-        self.song.clip_trigger_quantization = 5
+    def test_a_locator_off_the_grid_lands_on_it_and_finishes(self):
+        # Feedback #40: asked for 30.13, Live made 30.25, deleted it and made it again, forever
+        reply = self.run_until_done("/live/song/set_locator", 30.13, "Hit")
+
+        self.assertEqual([(c.time, c.name) for c in self.song.cue_points], [(30.25, "Hit")])
+        self.assertEqual(reply["time"], 30.25)
+        self.assertEqual(reply["snapped_to"], 30.25)
+
+        # Asking again finds it, rather than toggling it away
+        again = self.run_until_done("/live/song/set_locator", 30.13, "Hit 2")
+        self.assertEqual([(c.time, c.name) for c in self.song.cue_points], [(30.25, "Hit 2")])
+        self.assertEqual(again["time"], 30.25)
+
+    def test_a_locator_already_on_that_grid_spot_is_kept(self):
+        self.place_cues(30.25)
+        self.song.cue_points[0].name = "Verse"
+
+        replies = [self.ask("/live/song/set_locator", 30.13, "Hit") for _ in range(10)]
+
+        failed = [r for r in replies if not r["ok"]]
+        self.assertTrue(failed, "it should say it cannot put a second locator there")
+        self.assertIn("30.25", failed[0]["error"])
+        self.song.cue_points
+        self.assertEqual([(c.time, c.name) for c in self.song.cue_points], [(30.25, "Verse")],
+                         "the locator that was there is still there, with its name")
+
+    def test_a_playhead_that_will_not_move_fails_instead_of_running_forever(self):
+        self.song.stuck = True
 
         replies = [self.ask("/live/song/set_locator", 57.0, "Odd") for _ in range(12)]
 
         failed = [r for r in replies if not r["ok"]]
         self.assertTrue(failed, "it should give up with an error")
         self.assertIn("playhead", failed[0]["error"])
-        self.assertEqual(self.song.cue_points, [], "no locator is left anywhere else")
-        self.assertEqual(self.song.clip_trigger_quantization, 5)
+        self.assertEqual(self.song.cue_points, [])
 
-    def test_clearing_reaches_a_locator_on_an_odd_beat(self):
-        self.song.clip_trigger_quantization = 0
-        self.place_cues(57.0, 30.13)
-        self.song.clip_trigger_quantization = 5
+    def test_a_locator_past_the_end_of_the_song_says_why(self):
+        self.song.song_length = 232.0
+
+        reply = self.ask("/live/song/set_locator", 267.0, "Late")
+
+        self.assertFalse(reply["ok"])
+        self.assertIn("Songlength", reply["error"])
+
+    def test_clearing_reaches_locators_on_odd_beats(self):
+        self.place_cues(57.0, 30.25)
 
         reply = self.run_until_done("/live/song/clear_locators")
 
         self.assertEqual(reply["deleted"], 2)
         self.assertEqual(self.song.cue_points, [])
-        self.assertEqual(self.song.clip_trigger_quantization, 5)
 
     def test_locators_can_be_listed_in_order(self):
         self.place_cues(24.0, 8.0)
@@ -1209,13 +1263,12 @@ class LocatorTests(LiveControlTestCase):
 
     def test_the_playhead_can_be_moved_without_making_a_locator(self):
         # Feedback #40: set_locator 0 was used to send the playhead home and left a locator there
-        self.song.clip_trigger_quantization = 5
-        reply = self.run_until_done("/live/song/set_time", 57.0)
+        reply = self.run_until_done("/live/song/set_time", 30.13)
 
-        self.assertEqual(self.song.current_song_time, 57.0)
+        # OSC carries 30.13 as a 32-bit float
+        self.assertAlmostEqual(self.song.current_song_time, 30.13, places=5)
         self.assertEqual(self.song.cue_points, [])
-        self.assertEqual(reply["time"], 57.0)
-        self.assertEqual(self.song.clip_trigger_quantization, 5)
+        self.assertAlmostEqual(reply["time"], 30.13, places=5)
 
 
 class MeterTests(LiveControlTestCase):
