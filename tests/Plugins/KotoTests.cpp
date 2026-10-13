@@ -147,6 +147,7 @@ private:
 
     static constexpr int chromatic = 4;
     static constexpr int inSen = 0;
+    static constexpr int iwato = 2;
 
     static float cents(float ratio) { return 1200.0f * std::log2(ratio); }
     static float noteHz(int note) { return static_cast<float>(juce::MidiMessage::getMidiNoteInHertz(note)); }
@@ -196,6 +197,20 @@ private:
         loaded.processor.setStateInformation(state.getData(), static_cast<int>(state.getSize()));
         expectEquals(juce::roundToInt(loaded.processor.getValueTreeState().getRawParameterValue("scale")->load()), inSen,
                      "A saved In-sen session should keep In-sen");
+
+        // Before 2.1.1 Scale was never applied, so every session played
+        // chromatically whatever it stored. Such a session must still do so.
+        Player old;
+        old.setParameter("scale", static_cast<float>(iwato)); // never took effect
+        auto oldXml = old.processor.getValueTreeState().copyState().createXml();
+        oldXml->removeAttribute("stateVersion");
+        juce::MemoryBlock oldState;
+        juce::AudioProcessor::copyXmlToBinary(*oldXml, oldState);
+
+        Player reloaded;
+        reloaded.processor.setStateInformation(oldState.getData(), static_cast<int>(oldState.getSize()));
+        expectEquals(juce::roundToInt(reloaded.processor.getValueTreeState().getRawParameterValue("scale")->load()), chromatic,
+                     "A session saved before Scale worked should keep playing chromatically");
     }
 
     void testReleaseCountsFromNoteOff()

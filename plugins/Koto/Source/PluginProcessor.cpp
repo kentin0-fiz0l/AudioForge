@@ -133,6 +133,7 @@ void KotoProcessor::getStateInformation(juce::MemoryBlock& destData)
 {
     auto state = apvts_.copyState();
     std::unique_ptr<juce::XmlElement> xml(state.createXml());
+    xml->setAttribute("stateVersion", currentStateVersion);
     xml->addChildElement(midiLearnManager_.saveToXml().release());
     xml->addChildElement(presetManager_.saveToXml().release());
     copyXmlToBinary(*xml, destData);
@@ -145,6 +146,13 @@ void KotoProcessor::setStateInformation(const void* data, int sizeInBytes)
     // A state that did not parse, or that belongs to something else, is ignored
     if (xmlState == nullptr || ! xmlState->hasTagName(apvts_.state.getType()))
         return;
+
+    // Before version 2 (AudioForge 2.1.1) Scale was stored but never applied,
+    // so every session played chromatically. Keep them sounding that way.
+    if (xmlState->getIntAttribute("stateVersion", 1) < 2)
+        for (auto* param : xmlState->getChildWithTagNameIterator("PARAM"))
+            if (param->getStringAttribute("id") == PARAM_SCALE)
+                param->setAttribute("value", 4); // Chromatic
 
     apvts_.replaceState(juce::ValueTree::fromXml(*xmlState));
 
