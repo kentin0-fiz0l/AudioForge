@@ -31,6 +31,13 @@ public:
 private:
     juce::AudioProcessorValueTreeState apvts_;
     juce::dsp::Reverb reverb_;
+    // PreDelay delays only the signal going into the reverb, so the reverb
+    // runs wet-only on a copy and the dry signal is mixed back in here
+    juce::dsp::DelayLine<float, juce::dsp::DelayLineInterpolationTypes::Linear> preDelay_;
+    juce::AudioBuffer<float> wetBuffer_;
+    juce::SmoothedValue<float> preDelaySamples_, dryGain_;
+    double sampleRate_ = 44100.0;
+    float preDelayInSamples() const;
     void updateReverbParameters();
     AudioForge::MIDILearnManager midiLearnManager_;
     AudioForge::PresetManager presetManager_;

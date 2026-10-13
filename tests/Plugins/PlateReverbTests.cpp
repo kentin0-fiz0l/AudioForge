@@ -3,7 +3,8 @@
  *
  * Mix runs from the dry signal alone to the reverb alone. With Mix at zero
  * the signal should come through exactly as it went in, and at the default
- * settings the plugin should not add several dB of level.
+ * settings the plugin should not add several dB of level. PreDelay holds
+ * the reverb back by its time, and leaves the dry signal where it is.
  */
 
 #include <juce_audio_processors/juce_audio_processors.h>
@@ -24,6 +25,8 @@ public:
         testMixAtZeroIsTheDrySignal();
         testDefaultSettingsKeepTheLevel();
         testFullyWetIsNearTheInputLevel();
+        testPreDelayHoldsBackTheReverb();
+        testPreDelayLeavesTheDrySignalAlone();
     }
 
 private:
@@ -72,6 +75,80 @@ private:
         }
 
         return result;
+    }
+
+    static void setParameter(ReverbProcessor& processor, const juce::String& id, float value)
+    {
+        auto* parameter = processor.getValueTreeState().getParameter(id);
+        parameter->setValueNotifyingHost(parameter->convertTo0to1(value));
+    }
+
+    // Sends a single impulse through the plugin, after half a second of
+    // silence for its smoothing to settle, and returns the sample at which
+    // the output first goes above a small threshold
+    int firstSoundAfterImpulse(ReverbProcessor& processor)
+    {
+        processor.setRateAndBufferSizeDetails(sampleRate, blockSize);
+        processor.prepareToPlay(sampleRate, blockSize);
+
+        juce::AudioBuffer<float> buffer(2, blockSize);
+        juce::MidiBuffer midi;
+
+        const int silentBlocks = static_cast<int>(sampleRate / blockSize / 2);
+        for (int block = 0; block < silentBlocks; ++block)
+        {
+            buffer.clear();
+            processor.processBlock(buffer, midi);
+        }
+
+        const int numBlocks = static_cast<int>(sampleRate / blockSize / 4);
+        for (int block = 0; block < numBlocks; ++block)
+        {
+            buffer.clear();
+            if (block == 0)
+                for (int channel = 0; channel < 2; ++channel)
+                    buffer.setSample(channel, 0, 1.0f);
+
+            processor.processBlock(buffer, midi);
+
+            for (int i = 0; i < blockSize; ++i)
+                for (int channel = 0; channel < 2; ++channel)
+                    if (std::abs(buffer.getSample(channel, i)) > 1.0e-3f)
+                        return block * blockSize + i;
+        }
+
+        return -1;
+    }
+
+    void testPreDelayHoldsBackTheReverb()
+    {
+        beginTest("PreDelay holds the reverb back by its time");
+
+        ReverbProcessor withoutPreDelay, withPreDelay;
+        for (auto* processor : { &withoutPreDelay, &withPreDelay })
+            setParameter(*processor, "mix", 1.0f);
+        setParameter(withPreDelay, "predelay", 50.0f);
+
+        const int onsetWithout = firstSoundAfterImpulse(withoutPreDelay);
+        const int onsetWith = firstSoundAfterImpulse(withPreDelay);
+        const int expectedShift = static_cast<int>(sampleRate * 0.05);
+
+        expect(onsetWithout >= 0 && onsetWith >= 0, "No reverb came out of the impulse");
+        expectWithinAbsoluteError(onsetWith - onsetWithout, expectedShift, 2);
+    }
+
+    void testPreDelayLeavesTheDrySignalAlone()
+    {
+        beginTest("PreDelay does not delay the dry signal");
+
+        ReverbProcessor processor;
+        setParameter(processor, "mix", 0.0f);
+        setParameter(processor, "predelay", 100.0f);
+
+        const auto result = run(processor);
+
+        expect(result.worstDifference < 0.001f,
+               "Output differs from the input by up to " + juce::String(result.worstDifference, 4));
     }
 
     void testMixAtZeroIsTheDrySignal()
