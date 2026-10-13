@@ -26,10 +26,12 @@ esac
 # Build one plugin and copy its outputs into the stage; returns non-zero on failure
 build_and_stage() {
   local plugin=$1 start=$SECONDS
+  # A failed build is retried once on one core: on the Windows runners MSVC has run out of
+  # memory compiling JUCE with several jobs at once (CL.exe exited with 0xE06D7363)
   if ! cmake -S "plugins/$plugin" -B "build/$plugin" -DCMAKE_BUILD_TYPE=Release "${extra[@]}" \
          > "logs/$plugin-configure.log" 2>&1 \
-     || ! cmake --build "build/$plugin" --config Release --parallel 4 \
-         > "logs/$plugin-build.log" 2>&1; then
+     || ! { cmake --build "build/$plugin" --config Release --parallel 4 > "logs/$plugin-build.log" 2>&1 \
+            || cmake --build "build/$plugin" --config Release --parallel 1 >> "logs/$plugin-build.log" 2>&1; }; then
     echo "::error::$plugin failed to build"
     tail -40 "logs/$plugin-configure.log" "logs/$plugin-build.log"
     return 1

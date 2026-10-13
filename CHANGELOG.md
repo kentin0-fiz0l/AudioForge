@@ -74,6 +74,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   warps again after analysing them are kept unwarped; locators off Live's grid no longer
   loop forever.
 
+### Known issues
+These plugins are marked **Experimental**: parts of them don't work as their controls say yet. They
+install with the rest; fixes are planned for 2.1.1.
+- **ShimmerReverb:** no pitch shifting; the "octave" taps are plain delays of the tail.
+- **VocalDoubler, VocalHarmonizer:** the pitch shifting is broken (wrong read speed), so voices are
+  garbled or reversed.
+- **MIDIHarmonizer:** only Chromatic mode gives the right intervals; scale modes are off.
+- **MIDIGrooveQuantizer:** notes can only move within one audio block, so the effect is small.
+- **PlateReverb:** a general stereo reverb, not a plate; Pre-Delay does nothing.
+- **Sitar:** Decay does nothing, and the drone strings start seconds into a note.
+- **Vocoder:** changing Bands while playing doesn't take effect; only the left input is used.
+- **FreezeFX:** its High-pass, Low-pass, FFT Size and Overlap controls take effect only when the
+  plugin is reloaded.
+- **ChordGenius:** doesn't output MIDI yet (export only), and IV chords come out as V.
+- **AIProducer (the plugin):** plays the same 72-bar house arrangement whatever you ask. The AI
+  Producer *Remote Script* for Ableton Live is separate and works.
+- **MelodyMaker, BassLine, DrumMachine:** self-playing generators with built-in sounds; styles and
+  settings are partly ignored and nothing is saved with your project.
+
 ### Technical Details
 - CI builds every plugin on macOS, Windows and Linux, and runs each through a stress host at
   extreme settings and a level check; pull requests build only what they change.

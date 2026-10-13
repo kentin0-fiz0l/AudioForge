@@ -13,7 +13,7 @@ void FrozenSpectrum::unfreeze()
     frozen = false;
 }
 
-void FrozenSpectrum::prepare(size_t numBins)
+void FrozenSpectrum::prepare(std::size_t numBins)
 {
     frozenMagnitude.assign(numBins, 0.0f);
     blurScratch.assign(numBins, 0.0f);
@@ -38,9 +38,9 @@ void FrozenSpectrum::getSpectrum(std::vector<float>& magnitude)
         }
 
         // Apply frequency range filtering (zero out bins outside range)
-        for (size_t i = 0; i < magnitude.size(); ++i)
+        for (std::size_t i = 0; i < magnitude.size(); ++i)
         {
-            if (i < static_cast<size_t>(lowBin) || i > static_cast<size_t>(highBin))
+            if (i < static_cast<std::size_t>(lowBin) || i > static_cast<std::size_t>(highBin))
                 magnitude[i] = 0.0f;
         }
     }
@@ -75,7 +75,7 @@ void FrozenSpectrum::applyBlur(std::vector<float>& magnitude)
 
     int blurRadius = static_cast<int>(blurAmount * 5.0f) + 1;  // 1-6 bins
 
-    for (size_t i = 1; i < magnitude.size() - 1; ++i)
+    for (std::size_t i = 1; i < magnitude.size() - 1; ++i)
     {
         float sum = 0.0f;
         int count = 0;
