@@ -1,6 +1,6 @@
 # Render host
 
-A small command-line host that renders audio offline through one VST3: a MIDI file through an instrument, or a WAV file through an effect, into a 24-bit WAV. It's for making music with AudioForge's own plugins without a DAW in the loop (the [Vowbound](../../../Vowbound/arena/assets/audio/score/make_score.py) arena's score is written as notes in Python and played this way), and for hearing what a plugin does to a part.
+A small command-line host that renders audio offline through one VST3: a MIDI file through an instrument, or a WAV file through an effect, into a 32-bit float WAV (so a hot part never clips before it's mixed). It's for making music with AudioForge's own plugins without a DAW in the loop (the [Vowbound](../../../Vowbound/arena/assets/audio/score/make_score.py) arena's score is written as notes in Python and played this way), and for hearing what a plugin does to a part.
 
 ## Build
 

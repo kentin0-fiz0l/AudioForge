@@ -196,7 +196,7 @@ int main(int argc, char* argv[])
     outFile.getParentDirectory().createDirectory();
     juce::WavAudioFormat wav;
     std::unique_ptr<juce::AudioFormatWriter> writer(wav.createWriterFor(
-        new juce::FileOutputStream(outFile), sampleRate, (unsigned int) outChannels, 24, {}, 0));
+        new juce::FileOutputStream(outFile), sampleRate, (unsigned int) outChannels, 32, {}, 0));  // 32-bit float: a hot part doesn't clip before it's mixed
     if (writer == nullptr)
         fail("can't write " + outFile.getFullPathName());
 
