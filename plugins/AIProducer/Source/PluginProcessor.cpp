@@ -1,14 +1,51 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
+namespace {
+
+juce::StringArray toStringArray(const std::vector<std::string>& names) {
+    juce::StringArray array;
+    for (const auto& name : names) array.add(name);
+    return array;
+}
+
+constexpr int kMaxVariation = 100;
+
+// A host's reported position can differ from where the last block ended by
+// rounding or tempo automation; anything beyond this is a loop or a seek.
+constexpr double kJumpToleranceInQuarterNotes = 1.0e-3;
+
+
+juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout() {
+    std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
+    const Styles::Settings defaults;
+    params.push_back(std::make_unique<juce::AudioParameterChoice>("genre", "Genre", toStringArray(Styles::genreNames()), defaults.genre));
+    params.push_back(std::make_unique<juce::AudioParameterChoice>("key", "Key", toStringArray(Styles::keyNames()), defaults.keyRoot));
+    params.push_back(std::make_unique<juce::AudioParameterChoice>("scale", "Scale", juce::StringArray{"Minor", "Major"}, 0));
+    params.push_back(std::make_unique<juce::AudioParameterChoice>("length", "Length", toStringArray(Styles::lengthNames()), defaults.length));
+    params.push_back(std::make_unique<juce::AudioParameterBool>("drums", "Drums", true));
+    params.push_back(std::make_unique<juce::AudioParameterBool>("bass", "Bass", true));
+    params.push_back(std::make_unique<juce::AudioParameterBool>("chords", "Chords", true));
+    params.push_back(std::make_unique<juce::AudioParameterBool>("lead", "Lead", true));
+    params.push_back(std::make_unique<juce::AudioParameterInt>("variation", "Variation", 1, kMaxVariation, defaults.variation));
+    params.push_back(std::make_unique<juce::AudioParameterChoice>("part", "Part", toStringArray(Styles::partNames()), defaults.part));
+    return {params.begin(), params.end()};
+}
+
+} // namespace
+
 AIProducerProcessor::AIProducerProcessor()
     : AudioProcessor(BusesProperties()
                         .withInput("Input", juce::AudioChannelSet::stereo(), true)
                         .withOutput("Output", juce::AudioChannelSet::stereo(), true)),
-      aiClient_(std::make_unique<AIClient>(AIClient::Provider::OllamaLocal)) {
+      apvts_(*this, nullptr, "PARAMETERS", createParameterLayout()) {
+    regenerateIfChanged(); // A track is ready as soon as the plugin loads
+    startTimerHz(5);       // Then follow the controls, including host automation
 }
 
-AIProducerProcessor::~AIProducerProcessor() {}
+AIProducerProcessor::~AIProducerProcessor() {
+    stopTimer();
+}
 
 void AIProducerProcessor::prepareToPlay(double sampleRate, int /*samplesPerBlock*/) {
     lastSampleRate_ = sampleRate;
@@ -16,14 +53,6 @@ void AIProducerProcessor::prepareToPlay(double sampleRate, int /*samplesPerBlock
 }
 
 void AIProducerProcessor::releaseResources() {}
-
-namespace {
-
-// A host's reported position can differ from where the last block ended by
-// rounding or tempo automation; anything beyond this is a loop or a seek.
-constexpr double kJumpToleranceInQuarterNotes = 1.0e-3;
-
-} // namespace
 
 void AIProducerProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages) {
     buffer.clear();
@@ -46,9 +75,8 @@ void AIProducerProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::M
     }
 
     if (!isPlaying) {
-        if (wasPlaying_) {
+        if (wasPlaying_)
             heldNotes_.releaseAll(midiMessages, 0); // Transport stopped: silence what is sounding
-        }
         wasPlaying_ = false;
         return;
     }
@@ -99,63 +127,49 @@ void AIProducerProcessor::publishSequence(std::unique_ptr<const MIDIGenerator::S
     }
 }
 
-void AIProducerProcessor::generateTrack(const juce::String& prompt) {
-    if (isGenerating_) return;
+Styles::Settings AIProducerProcessor::currentSettings() const {
+    auto value = [this](const char* id) { return juce::roundToInt(apvts_.getRawParameterValue(id)->load()); };
 
-    isGenerating_ = true;
-    statusMessage_ = "Generating track...";
-    progress_ = 0.0f;
-
-    // For MVP: Generate a hardcoded house track structure
-    // Later: Use AI to generate based on prompt
-    TrackStructure structure;
-    structure.genre = "House";
-    structure.bpm = 128;
-    structure.key = "Am";
-    structure.scale = "Minor";
-    structure.progression = "i-VI-III-VII";  // Minor house progression
-
-    // Create arrangement: Intro -> Build -> Drop -> Break -> Build -> Drop -> Outro
-    structure.sections.push_back({"intro", 0, 8, 3});      // 8 bars, low energy
-    structure.sections.push_back({"build", 8, 8, 6});      // 8 bars, building
-    structure.sections.push_back({"drop", 16, 16, 10});    // 16 bars, peak energy
-    structure.sections.push_back({"breakdown", 32, 8, 4}); // 8 bars, calm
-    structure.sections.push_back({"build", 40, 8, 7});     // 8 bars, building again
-    structure.sections.push_back({"drop", 48, 16, 10});    // 16 bars, peak
-    structure.sections.push_back({"outro", 64, 8, 2});     // 8 bars, fade out
-
-    structure.hasDrums = true;
-    structure.hasBass = true;
-    structure.hasChords = true;
-    structure.hasLead = true;
-    structure.hasPads = false;
-
-    structure.styleNotes = "Classic progressive house with energetic drops";
-
-    // Generate MIDI
-    onTrackGenerated(structure);
+    Styles::Settings settings;
+    settings.genre = value("genre");
+    settings.keyRoot = value("key");
+    settings.minor = value("scale") == 0;
+    settings.length = value("length");
+    settings.drums = value("drums") != 0;
+    settings.bass = value("bass") != 0;
+    settings.chords = value("chords") != 0;
+    settings.lead = value("lead") != 0;
+    settings.variation = value("variation");
+    settings.part = value("part");
+    return settings;
 }
 
-void AIProducerProcessor::onTrackGenerated(TrackStructure structure) {
-    statusMessage_ = "Generating MIDI...";
-    progress_ = 0.5f;
+void AIProducerProcessor::regenerateIfChanged() {
+    const juce::ScopedLock lock(buildLock_);
 
+    const auto settings = currentSettings();
+    if (hasBuilt_ && settings == builtSettings_) return;
+
+    const auto structure = Styles::build(settings);
     auto sequence = MIDIGenerator::generateFromStructure(structure);
-    const int totalBars = sequence->totalBars;
+    description_ = Styles::describe(structure, sequence->totalBars);
     publishSequence(std::move(sequence));
 
-    // Playback follows the host's tempo, so the track only sounds as intended
-    // when the DAW is set to the tempo it was written for
-    isGenerating_ = false;
-    statusMessage_ = "Track ready: " + juce::String(totalBars) + " bars at "
-                     + juce::String(structure.bpm) + " BPM. Set your DAW's tempo to match, then press play from bar 1.";
-    progress_ = 1.0f;
+    builtSettings_ = settings;
+    hasBuilt_ = true;
 }
 
-void AIProducerProcessor::onGenerationError(std::string error) {
-    isGenerating_ = false;
-    statusMessage_ = "Error: " + juce::String(error);
-    progress_ = 0.0f;
+void AIProducerProcessor::nextVariation() {
+    if (auto* variation = apvts_.getParameter("variation")) {
+        const int next = currentSettings().variation % kMaxVariation + 1;
+        variation->setValueNotifyingHost(variation->convertTo0to1(static_cast<float>(next)));
+    }
+    regenerateIfChanged();
+}
+
+juce::String AIProducerProcessor::getDescription() const {
+    const juce::ScopedLock lock(buildLock_);
+    return description_;
 }
 
 juce::AudioProcessorEditor* AIProducerProcessor::createEditor() {
@@ -163,11 +177,18 @@ juce::AudioProcessorEditor* AIProducerProcessor::createEditor() {
 }
 
 void AIProducerProcessor::getStateInformation(juce::MemoryBlock& destData) {
-    // Save state (for now, nothing to save)
+    if (auto xml = apvts_.copyState().createXml())
+        copyXmlToBinary(*xml, destData);
 }
 
 void AIProducerProcessor::setStateInformation(const void* data, int sizeInBytes) {
-    // Load state
+    // Anything that is not our own saved state is ignored. Parameter values
+    // are clamped to their ranges as they are read in.
+    auto xml = getXmlFromBinary(data, sizeInBytes);
+    if (xml == nullptr || !xml->hasTagName(apvts_.state.getType())) return;
+
+    apvts_.replaceState(juce::ValueTree::fromXml(*xml));
+    regenerateIfChanged();
 }
 
 // Create plugin instance

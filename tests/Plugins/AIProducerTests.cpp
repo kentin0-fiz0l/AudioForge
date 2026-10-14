@@ -1,16 +1,23 @@
 /**
  * AI Producer Tests
  *
- * Tests for the AI Producer MIDI generator plugin:
+ * Tests for the Track Sketch MIDI generator (plugins/AIProducer):
+ * - Writing: every genre and length gives a well-formed track in key
  * - Sequencing: the generated track is time-ordered, and block-by-block
  *   playback emits every event exactly once
  * - Playback: the processor follows the host transport (start, stop, seek)
+ * - Controls: changing them rebuilds the track, and they are saved and loaded
  */
 
 #include <juce_audio_processors/juce_audio_processors.h>
+#include <map>
+#include <set>
+#include <tuple>
 
 // Include AI Producer plugin headers
 #include "../../plugins/AIProducer/Source/MIDIGenerator.h"
+#include "../../plugins/AIProducer/Source/MusicTheory.h"
+#include "../../plugins/AIProducer/Source/Styles.h"
 #include "../../plugins/AIProducer/Source/PluginProcessor.h"
 
 namespace
@@ -21,23 +28,55 @@ namespace
     constexpr int drumChannel = 10;
     constexpr int kickNote = 36;
 
-    // Two bars of intro, then two bars of drop (the only section with a lead)
-    TrackStructure makeTestStructure()
+    // Four bars of drop, drums only, so the counts below follow from the
+    // house drum pattern: per bar 4 kicks, 2 claps, 12 closed and 4 open hats
+    TrackStructure makeDrumStructure()
     {
         TrackStructure structure;
         structure.genre = "House";
         structure.bpm = 120;
-        structure.key = "Am";
-        structure.scale = "Minor";
-        structure.progression = "i-VI-III-VII";
-        structure.sections.push_back({"intro", 0, 2, 3});
-        structure.sections.push_back({"drop", 2, 2, 10});
-        structure.hasDrums = true;
-        structure.hasBass = true;
-        structure.hasChords = true;
-        structure.hasLead = true;
-        structure.hasPads = false;
+        structure.sections.push_back({"drop", 0, 4, 10});
+        structure.hasBass = false;
+        structure.hasChords = false;
+        structure.hasLead = false;
         return structure;
+    }
+
+    constexpr int drumNotesPerBar = 4 + 2 + 12 + 4;
+
+    // Returns an empty string, or what is wrong with the sequence
+    juce::String checkSequence(const MIDIGenerator::Sequence& sequence)
+    {
+        std::map<std::pair<int, int>, bool> held;
+        double previous = 0.0;
+
+        for (const auto& event : sequence.events)
+        {
+            if (event.time < previous) return "events out of order";
+            previous = event.time;
+
+            if (event.noteNumber < 0 || event.noteNumber > 127) return "note out of range";
+            if (event.channel < 1 || event.channel > 16) return "channel out of range";
+
+            auto& isHeld = held[{event.channel, event.noteNumber}];
+            if (event.isNoteOn)
+            {
+                if (isHeld) return "note " + juce::String(event.noteNumber) + " on channel "
+                                   + juce::String(event.channel) + " starts again before it ends";
+                if (event.velocity < 1 || event.velocity > 127) return "velocity out of range";
+                isHeld = true;
+            }
+            else
+            {
+                if (! isHeld) return "note-off without a note-on";
+                isHeld = false;
+            }
+        }
+
+        for (const auto& note : held)
+            if (note.second) return "a note never ends";
+
+        return {};
     }
 
     struct MidiCounts
@@ -78,6 +117,12 @@ namespace
         return counts;
     }
 
+    void setParameter(AIProducerProcessor& processor, const char* id, float value)
+    {
+        auto* param = processor.getValueTreeState().getParameter(id);
+        param->setValueNotifyingHost(param->convertTo0to1(value));
+    }
+
     // Reports a transport state to the processor, as a host would
     class FakePlayHead : public juce::AudioPlayHead
     {
@@ -99,8 +144,11 @@ namespace
     // A processor wired to a fake host transport that advances as blocks are processed
     struct PlaybackHarness
     {
+        // An 8-bar loop: one drop section, so every part plays from bar 1
         PlaybackHarness()
         {
+            setParameter(processor, "length", 0.0f);
+            processor.regenerateIfChanged();
             processor.setPlayHead(&playHead);
             processor.prepareToPlay(testSampleRate, testBlockSize);
         }
@@ -129,11 +177,198 @@ namespace
 }
 
 //==============================================================================
+class AIProducerWritingTests : public juce::UnitTest
+{
+public:
+    AIProducerWritingTests()
+        : juce::UnitTest("Track Sketch Writing", "Plugins")
+    {
+    }
+
+    void runTest() override
+    {
+        testProgressionsAreRead();
+        testScaleDegrees();
+        testEveryGenreAndLengthIsWellFormed();
+        testEverythingIsInKey();
+        testSameSettingsGiveTheSameTrack();
+        testVariationChangesTheTrack();
+        testTheArrangementBuilds();
+        testEachPartPlaysOnlyItsOwnNotes();
+    }
+
+private:
+    void testProgressionsAreRead()
+    {
+        beginTest("Roman numeral progressions are read as scale degrees");
+
+        expect(MusicTheory::parseProgression("i-VI-III-VII") == std::vector<int>{0, 5, 2, 6}, "i-VI-III-VII");
+        expect(MusicTheory::parseProgression("I-V-vi-IV") == std::vector<int>{0, 4, 5, 3}, "I-V-vi-IV");
+        expect(MusicTheory::parseProgression("ii-x-") == std::vector<int>{1, 0}, "Unknown numerals count as the tonic");
+    }
+
+    void testScaleDegrees()
+    {
+        beginTest("Scale degrees continue into the octaves above and below");
+
+        expectEquals(MusicTheory::degreeToPitch(57, true, 0), 57, "A");
+        expectEquals(MusicTheory::degreeToPitch(57, true, 2), 60, "C, the minor third");
+        expectEquals(MusicTheory::degreeToPitch(57, true, 7), 69, "A an octave up");
+        expectEquals(MusicTheory::degreeToPitch(57, true, -1), 55, "G below");
+        expectEquals(MusicTheory::degreeToPitch(60, false, -7), 48, "C an octave down");
+    }
+
+    void testEveryGenreAndLengthIsWellFormed()
+    {
+        beginTest("Every genre and length gives a well-formed track");
+
+        const int expectedBars[] = {8, 32, 72};
+
+        for (int genre = 0; genre < static_cast<int>(Styles::genres().size()); ++genre)
+        {
+            for (int length = 0; length < 3; ++length)
+            {
+                Styles::Settings settings;
+                settings.genre = genre;
+                settings.length = length;
+                const auto structure = Styles::build(settings);
+                const auto sequence = MIDIGenerator::generateFromStructure(structure);
+                const auto name = structure.genre + ", length " + std::to_string(length);
+
+                expectEquals(sequence->totalBars, expectedBars[length], name);
+                expectEquals(sequence->bpm, static_cast<double>(Styles::genres()[static_cast<size_t>(genre)].bpm), name);
+                expect(! sequence->events.empty(), name + " has notes");
+                expectEquals(checkSequence(*sequence), juce::String(), name);
+            }
+        }
+    }
+
+    void testEverythingIsInKey()
+    {
+        beginTest("Bass, chords and lead stay in the key and scale chosen");
+
+        for (int key = 0; key < 12; ++key)
+        {
+            for (bool minor : {true, false})
+            {
+                Styles::Settings settings;
+                settings.keyRoot = key;
+                settings.minor = minor;
+                settings.drums = false;
+                const auto sequence = MIDIGenerator::generateFromStructure(Styles::build(settings));
+
+                const auto& intervals = MusicTheory::scaleIntervals(minor);
+                int outOfKey = 0;
+                for (const auto& event : sequence->events)
+                    if (event.isNoteOn
+                        && std::find(intervals.begin(), intervals.end(), ((event.noteNumber - key) % 12 + 12) % 12) == intervals.end())
+                        ++outOfKey;
+
+                expectEquals(outOfKey, 0, Styles::keyNames()[static_cast<size_t>(key)] + (minor ? " minor" : " major"));
+            }
+        }
+    }
+
+    void testSameSettingsGiveTheSameTrack()
+    {
+        beginTest("The same settings always give the same track");
+
+        Styles::Settings settings;
+        settings.genre = 2;
+        settings.variation = 7;
+        const auto first = MIDIGenerator::generateFromStructure(Styles::build(settings));
+        const auto second = MIDIGenerator::generateFromStructure(Styles::build(settings));
+
+        bool same = first->events.size() == second->events.size();
+        for (size_t i = 0; same && i < first->events.size(); ++i)
+            same = first->events[i].time == second->events[i].time
+                   && first->events[i].noteNumber == second->events[i].noteNumber;
+
+        expect(same, "Reloading a session must play what was saved");
+    }
+
+    void testVariationChangesTheTrack()
+    {
+        beginTest("A new variation changes the chords and the lead");
+
+        auto notesOn = [](int variation, int channel) {
+            Styles::Settings settings;
+            settings.variation = variation;
+            const auto sequence = MIDIGenerator::generateFromStructure(Styles::build(settings));
+            std::vector<int> notes;
+            for (const auto& event : sequence->events)
+                if (event.isNoteOn && event.channel == channel)
+                    notes.push_back(event.noteNumber);
+            return notes;
+        };
+
+        expect(notesOn(1, 2) != notesOn(2, 2), "Chords");
+        expect(notesOn(1, 3) != notesOn(2, 3), "Lead");
+    }
+
+    void testTheArrangementBuilds()
+    {
+        beginTest("The full song builds: parts come in and drop out by section");
+
+        const auto sequence = MIDIGenerator::generateFromStructure(Styles::build(Styles::Settings()));
+
+        // Note-ons per channel (and kicks) in a range of bars
+        auto count = [&](int fromBar, int toBar, int channel, int note = -1) {
+            int n = 0;
+            for (const auto& event : sequence->events)
+                if (event.isNoteOn && event.channel == channel && (note < 0 || event.noteNumber == note)
+                    && event.time >= fromBar * 4.0 && event.time < toBar * 4.0)
+                    ++n;
+            return n;
+        };
+        constexpr int bass = 1, chords = 2, lead = 3;
+
+        expect(count(0, 8, drumChannel, kickNote) > 0, "Intro: kick, for DJs to mix in");
+        expectEquals(count(0, 8, bass) + count(0, 8, lead), 0, "Intro: no bass or lead yet");
+        expect(count(8, 16, bass) > 0, "Build: the bass comes in");
+        for (int channel : {bass, chords, lead})
+            expect(count(16, 32, channel) > 0, "Drop: every part plays");
+        expect(count(16, 32, drumChannel, kickNote) > 0, "Drop: kick");
+        expectEquals(count(32, 40, drumChannel, kickNote), 0, "Breakdown: no kick, so the next drop hits");
+        expect(count(32, 40, lead) > 0, "Breakdown: the lead over the chords");
+        expectEquals(count(64, 72, drumChannel, kickNote) + count(64, 72, bass), 0, "Outro: kick and bass gone");
+    }
+
+    void testEachPartPlaysOnlyItsOwnNotes()
+    {
+        beginTest("Part plays just one part, note for note what All plays on its channel");
+
+        auto notes = [](int part, int channel) {
+            Styles::Settings settings;
+            settings.variation = 5;
+            settings.part = part;
+            const auto sequence = MIDIGenerator::generateFromStructure(Styles::build(settings));
+            std::vector<std::tuple<double, int, int, bool>> result;
+            for (const auto& event : sequence->events)
+                if (channel < 0 || event.channel == channel)
+                    result.emplace_back(event.time, event.channel, event.noteNumber, event.isNoteOn);
+            return result;
+        };
+
+        const int channels[] = {10, 1, 2, 3}; // Drums, bass, chords, lead
+        for (int part = 1; part <= 4; ++part)
+        {
+            const auto name = Styles::partNames()[static_cast<size_t>(part)];
+            const auto alone = notes(part, -1);
+            expect(! alone.empty(), name + " plays");
+            expect(alone == notes(0, channels[part - 1]), name + " matches its channel in All");
+        }
+    }
+};
+
+static AIProducerWritingTests aiProducerWritingTests;
+
+//==============================================================================
 class AIProducerSequencingTests : public juce::UnitTest
 {
 public:
     AIProducerSequencingTests()
-        : juce::UnitTest("AI Producer Sequencing", "Plugins")
+        : juce::UnitTest("Track Sketch Sequencing", "Plugins")
     {
     }
 
@@ -154,35 +389,21 @@ private:
     {
         beginTest("Generated sequence is time-ordered and balanced");
 
-        auto sequence = MIDIGenerator::generateFromStructure(makeTestStructure());
+        auto sequence = MIDIGenerator::generateFromStructure(makeDrumStructure());
 
-        // Per bar: 4 kicks + 2 snares + 8 hats, 4 bass notes, 2 chord notes.
-        // Plus one 8-note lead phrase in the two-bar drop.
-        const int expectedNotes = 4 * (14 + 4 + 2) + 8;
+        // Plus a crash at the top of the drop
+        const int expectedNotes = 4 * drumNotesPerBar + 1;
         expectEquals(static_cast<int>(sequence->events.size()), expectedNotes * 2,
                      "Each note should produce one note-on and one note-off");
         expectEquals(sequence->totalBars, 4, "Sections cover four bars");
-
-        int noteOns = 0;
-        bool ordered = true;
-
-        for (size_t i = 0; i < sequence->events.size(); ++i)
-        {
-            if (sequence->events[i].isNoteOn)
-                ++noteOns;
-            if (i > 0 && sequence->events[i].time < sequence->events[i - 1].time)
-                ordered = false;
-        }
-
-        expect(ordered, "Events should be sorted by time");
-        expectEquals(noteOns, expectedNotes, "Half of the events should be note-ons");
+        expectEquals(checkSequence(*sequence), juce::String());
     }
 
     void testBlockPlaybackEmitsEverythingOnce()
     {
         beginTest("Block-by-block playback emits every event exactly once");
 
-        auto sequence = MIDIGenerator::generateFromStructure(makeTestStructure());
+        auto sequence = MIDIGenerator::generateFromStructure(makeDrumStructure());
         MIDIGenerator::HeldNotes held;
         MidiCounts total;
 
@@ -210,18 +431,18 @@ private:
     {
         beginTest("Note-offs arrive in a later block than their note-on");
 
-        auto sequence = MIDIGenerator::generateFromStructure(makeTestStructure());
+        auto sequence = MIDIGenerator::generateFromStructure(makeDrumStructure());
         MIDIGenerator::HeldNotes held;
         const double blockPpq = testBlockSize * ppqPerSample;
 
-        // First block: kick, hat, bass and two chord notes start on beat 1.
+        // First block: kick, closed hat and crash start on beat 1.
         // None of them is shorter than a block, so nothing ends yet.
         juce::MidiBuffer firstBlock;
         MIDIGenerator::renderRange(*sequence, firstBlock, held, 0.0, blockPpq,
                                    0.0, ppqPerSample, testBlockSize);
         const auto first = countMidi(firstBlock);
 
-        expectEquals(first.noteOns, 5, "Five notes start on the first beat");
+        expectEquals(first.noteOns, 3, "Three notes start on the first beat");
         expectEquals(first.noteOffs, 0, "No note is shorter than one block");
         expect(! held.isEmpty(), "Notes should be sounding after the first block");
 
@@ -248,7 +469,7 @@ private:
     {
         beginTest("Events land on the right sample within a block");
 
-        auto sequence = MIDIGenerator::generateFromStructure(makeTestStructure());
+        auto sequence = MIDIGenerator::generateFromStructure(makeDrumStructure());
         MIDIGenerator::HeldNotes held;
 
         // Beat 2 is sample 24000, which is offset 448 into block 46
@@ -298,7 +519,7 @@ class AIProducerPlaybackTests : public juce::UnitTest
 {
 public:
     AIProducerPlaybackTests()
-        : juce::UnitTest("AI Producer Playback", "Plugins")
+        : juce::UnitTest("Track Sketch Playback", "Plugins")
     {
     }
 
@@ -317,7 +538,6 @@ private:
         beginTest("Silent while the transport is stopped");
 
         PlaybackHarness harness;
-        harness.processor.generateTrack("house");
 
         MidiCounts total;
         for (int i = 0; i < 10; ++i)
@@ -328,10 +548,9 @@ private:
 
     void testPlaysInTimeWithTheHost()
     {
-        beginTest("Plays the generated track in time with the host");
+        beginTest("Plays the track in time with the host");
 
         PlaybackHarness harness;
-        harness.processor.generateTrack("house");
         harness.playHead.playing = true;
 
         // Play the first two bars, stopping short of bar 3's downbeat
@@ -354,16 +573,16 @@ private:
         beginTest("First beat is played once, not every block");
 
         PlaybackHarness harness;
-        harness.processor.generateTrack("house");
         harness.playHead.playing = true;
 
         expectEquals(countMidi(harness.processBlock()).kicks, 1, "Kick on the first beat");
 
+        // Ten blocks end at sample 5120; the next 16th note at 128 BPM is at 5625
         MidiCounts following;
-        for (int i = 0; i < 10; ++i)
+        for (int i = 0; i < 9; ++i)
             following += countMidi(harness.processBlock());
 
-        expectEquals(following.noteOns, 0, "Nothing else starts before the next 8th note");
+        expectEquals(following.noteOns, 0, "Nothing else starts before the next 16th note");
     }
 
     void testSeekingReleasesHeldNotes()
@@ -371,15 +590,14 @@ private:
         beginTest("Seeking releases held notes and resumes from the new position");
 
         PlaybackHarness harness;
-        harness.processor.generateTrack("house");
         harness.playHead.playing = true;
 
         MidiCounts beforeSeek;
         for (int i = 0; i < 5; ++i)
             beforeSeek += countMidi(harness.processBlock());
 
-        // Jump to the downbeat of bar 17 (the first drop)
-        harness.playHead.ppq = 64.0;
+        // Jump to the downbeat of bar 5
+        harness.playHead.ppq = 16.0;
         const auto afterSeek = countMidi(harness.processBlock());
 
         expectEquals(afterSeek.noteOffs, beforeSeek.noteOns - beforeSeek.noteOffs,
@@ -389,18 +607,17 @@ private:
 
     void testReplacingTheTrackLeavesNoStuckNotes()
     {
-        beginTest("Replacing the track during playback leaves no stuck notes");
+        beginTest("Changing a control during playback leaves no stuck notes");
 
         PlaybackHarness harness;
-        harness.processor.generateTrack("house");
         harness.playHead.playing = true;
 
         MidiCounts total;
         for (int i = 0; i < 5; ++i)
             total += countMidi(harness.processBlock());
 
-        // Generate again while notes are sounding
-        harness.processor.generateTrack("house");
+        // A new variation while notes are sounding
+        harness.processor.nextVariation();
         for (int i = 0; i < 5; ++i)
             total += countMidi(harness.processBlock());
 
@@ -412,3 +629,120 @@ private:
 };
 
 static AIProducerPlaybackTests aiProducerPlaybackTests;
+
+//==============================================================================
+class AIProducerControlTests : public juce::UnitTest
+{
+public:
+    AIProducerControlTests()
+        : juce::UnitTest("Track Sketch Controls", "Plugins")
+    {
+    }
+
+    void runTest() override
+    {
+        testATrackIsReadyOnLoad();
+        testControlsRebuildTheTrack();
+        testNextVariationWraps();
+        testStateRoundTrip();
+        testDamagedStateIsIgnored();
+    }
+
+private:
+    void testATrackIsReadyOnLoad()
+    {
+        beginTest("A track is ready as soon as the plugin loads");
+
+        AIProducerProcessor processor;
+        expectEquals(processor.getDescription(), juce::String("House in A minor, 72 bars at 124 BPM"));
+    }
+
+    void testControlsRebuildTheTrack()
+    {
+        beginTest("Changing a control rebuilds the track");
+
+        AIProducerProcessor processor;
+        setParameter(processor, "genre", 5.0f);
+        setParameter(processor, "key", 2.0f);
+        setParameter(processor, "scale", 1.0f);
+        setParameter(processor, "length", 1.0f);
+        processor.regenerateIfChanged();
+
+        expectEquals(processor.getDescription(), juce::String("Drum & Bass in D major, 32 bars at 174 BPM"));
+    }
+
+    void testNextVariationWraps()
+    {
+        beginTest("New Variation counts up and wraps back to 1");
+
+        AIProducerProcessor processor;
+        auto* variation = processor.getValueTreeState().getRawParameterValue("variation");
+
+        processor.nextVariation();
+        expectEquals(juce::roundToInt(variation->load()), 2);
+
+        setParameter(processor, "variation", 100.0f);
+        processor.nextVariation();
+        expectEquals(juce::roundToInt(variation->load()), 1);
+    }
+
+    void testStateRoundTrip()
+    {
+        beginTest("Controls are saved and loaded with the session");
+
+        AIProducerProcessor original;
+        setParameter(original, "genre", 3.0f);
+        setParameter(original, "variation", 42.0f);
+        setParameter(original, "lead", 0.0f);
+        original.regenerateIfChanged();
+
+        juce::MemoryBlock state;
+        original.getStateInformation(state);
+
+        AIProducerProcessor restored;
+        restored.setStateInformation(state.getData(), static_cast<int>(state.getSize()));
+
+        auto& params = restored.getValueTreeState();
+        expectEquals(juce::roundToInt(params.getRawParameterValue("genre")->load()), 3);
+        expectEquals(juce::roundToInt(params.getRawParameterValue("variation")->load()), 42);
+        expectEquals(juce::roundToInt(params.getRawParameterValue("lead")->load()), 0);
+        expectEquals(restored.getDescription(), original.getDescription(), "The loaded track is rebuilt at once");
+    }
+
+    void testDamagedStateIsIgnored()
+    {
+        beginTest("A damaged or foreign state is ignored");
+
+        AIProducerProcessor processor;
+
+        const char garbage[] = "not a saved state";
+        processor.setStateInformation(garbage, sizeof(garbage));
+        processor.setStateInformation(nullptr, 0);
+
+        juce::MemoryBlock foreign;
+        juce::XmlElement other("SOMETHING_ELSE");
+        juce::AudioProcessor::copyXmlToBinary(other, foreign);
+        processor.setStateInformation(foreign.getData(), static_cast<int>(foreign.getSize()));
+
+        // Out-of-range values in our own format are clamped, not trusted
+        juce::XmlElement wild("PARAMETERS");
+        auto* genre = wild.createNewChildElement("PARAM");
+        genre->setAttribute("id", "genre");
+        genre->setAttribute("value", 999.0);
+        auto* variation = wild.createNewChildElement("PARAM");
+        variation->setAttribute("id", "variation");
+        variation->setAttribute("value", -5.0);
+        juce::MemoryBlock wildState;
+        juce::AudioProcessor::copyXmlToBinary(wild, wildState);
+        processor.setStateInformation(wildState.getData(), static_cast<int>(wildState.getSize()));
+
+        auto& params = processor.getValueTreeState();
+        const int genreIndex = juce::roundToInt(params.getRawParameterValue("genre")->load());
+        const int variationValue = juce::roundToInt(params.getRawParameterValue("variation")->load());
+        expect(genreIndex >= 0 && genreIndex < static_cast<int>(Styles::genres().size()), "Genre stays in range");
+        expect(variationValue >= 1 && variationValue <= 100, "Variation stays in range");
+        expect(processor.getDescription().isNotEmpty(), "A track is still ready");
+    }
+};
+
+static AIProducerControlTests aiProducerControlTests;

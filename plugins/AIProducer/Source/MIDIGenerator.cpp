@@ -1,4 +1,6 @@
 #include "MIDIGenerator.h"
+#include "MusicTheory.h"
+#include "Styles.h"
 #include <algorithm>
 #include <atomic>
 
@@ -51,46 +53,177 @@ bool MIDIGenerator::HeldNotes::isEmpty() const {
                        [](const std::bitset<128>& notes) { return notes.none(); });
 }
 
+bool MIDIGenerator::partPlays(Part part, const TrackStructure::Section& section) {
+    // Mostly by energy, so a plan with section types we don't know still
+    // builds sensibly. The exception is the breakdown: it drops the kick so the
+    // next drop hits, and brings the lead in over the chords.
+    const bool breakdown = section.type == "breakdown";
+    switch (part) {
+        case Part::Chords:   return true;
+        case Part::Hats:     return section.energy >= 2;
+        case Part::Kick:     return section.energy >= 3 && !breakdown;
+        case Part::Backbeat: return section.energy >= 6;
+        case Part::Bass:     return section.energy >= 6;
+        case Part::Lead:     return section.energy >= 9 || breakdown;
+    }
+    return true;
+}
+
+namespace {
+
+double sixteenth(int step) { return step * 0.25; }
+
+// Writes the notes of one track, a bar at a time. Each add*() method is one
+// part of the arrangement; the order they are called in is the order notes
+// are added, which the sort in finish() keeps for notes that share a time.
+class BarWriter {
+public:
+    explicit BarWriter(const TrackStructure& structure)
+        : structure_(structure),
+          style_(Styles::genre(structure.genre)),
+          minor_(structure.minor),
+          random_(structure.seed) {
+        const int key = std::clamp(structure.keyRoot, 0, 11);
+
+        // Bass from F1 to E2, chords from C3, lead from C4
+        bassRoot_ = 36 + key > 40 ? 24 + key : 36 + key;
+        chordRoot_ = 48 + key;
+        leadRoot_ = 60 + key;
+
+        chords_ = MusicTheory::parseProgression(structure.progression);
+        if (chords_.empty()) chords_ = {0};
+
+        // Two lead phrases, in scale steps above each bar's chord: the first
+        // plays three bars in four, the second answers it in the fourth
+        phrase_ = makePhrase();
+        answer_ = makePhrase();
+    }
+
+    void addBar(const TrackStructure::Section& section, int bar) {
+        const BarContext context{section, bar * 4.0, bar - section.startBar,
+                                 chords_[static_cast<size_t>(bar) % chords_.size()]};
+
+        if (structure_.hasDrums) addDrums(context);
+        if (structure_.hasBass && MIDIGenerator::partPlays(MIDIGenerator::Part::Bass, section)) addBass(context);
+        if (structure_.hasChords && MIDIGenerator::partPlays(MIDIGenerator::Part::Chords, section)) addChords(context);
+        if (structure_.hasLead && MIDIGenerator::partPlays(MIDIGenerator::Part::Lead, section)) addLead(context);
+    }
+
+    // Note-offs ahead of note-ons that share a time, so a re-struck pitch is
+    // released before it sounds again
+    std::vector<MIDIGenerator::Event> finish() {
+        std::stable_sort(events_.begin(), events_.end(), [](const MIDIGenerator::Event& a, const MIDIGenerator::Event& b) {
+            if (a.time != b.time) return a.time < b.time;
+            return !a.isNoteOn && b.isNoteOn;
+        });
+        return std::move(events_);
+    }
+
+private:
+    struct BarContext {
+        const TrackStructure::Section& section;
+        double barStart;     // In quarter notes
+        int barInSection;
+        int chord;           // Scale degree of the bar's chord
+    };
+
+    std::vector<int> makePhrase() {
+        std::vector<int> steps;
+        int step = 2 * random_.nextInt(3); // Start on the root, third or fifth
+        for (size_t i = 0; i < style_.lead.size(); ++i) {
+            steps.push_back(step);
+            step = std::clamp(step + random_.nextInt({-2, 3}), -2, 7);
+        }
+        return steps;
+    }
+
+    void addNote(int channel, int note, int velocity, double start, double length) {
+        note = std::clamp(note, 0, 127);
+        events_.push_back({start, channel, note, std::clamp(velocity, 1, 127), true});
+        events_.push_back({start + length, channel, note, 0, false});
+    }
+
+    void addDrums(const BarContext& bar) {
+        namespace Drums = MusicTheory::DrumNotes;
+        using Part = MIDIGenerator::Part;
+        const auto& section = bar.section;
+        const bool fillBar = section.type == "build" && bar.barInSection == section.lengthBars - 1;
+
+        if (section.type == "drop" && bar.barInSection == 0)
+            addNote(kDrumChannel, Drums::CRASH, 100, bar.barStart, 1.0);
+
+        if (MIDIGenerator::partPlays(Part::Kick, section))
+            for (int step : style_.kick)
+                addNote(kDrumChannel, Drums::KICK, step % 4 == 0 ? 110 : 95, bar.barStart + sixteenth(step), 0.1);
+
+        if (fillBar) { // A snare roll that rises into the next section
+            for (int step = 0; step < 16; ++step)
+                addNote(kDrumChannel, Drums::SNARE, 50 + step * 5, bar.barStart + sixteenth(step), 0.1);
+        } else if (MIDIGenerator::partPlays(Part::Backbeat, section)) {
+            for (int step : style_.backbeat)
+                addNote(kDrumChannel, style_.backbeatNote, 100, bar.barStart + sixteenth(step), 0.1);
+        }
+
+        if (MIDIGenerator::partPlays(Part::Hats, section)) {
+            for (int step : style_.closedHat)
+                addNote(kDrumChannel, Drums::CLOSED_HAT, step % 2 == 0 ? 72 : 55, bar.barStart + sixteenth(step), 0.1);
+            for (int step : style_.openHat)
+                addNote(kDrumChannel, Drums::OPEN_HAT, 75, bar.barStart + sixteenth(step), 0.2);
+        }
+    }
+
+    void addBass(const BarContext& bar) {
+        const int note = MusicTheory::degreeToPitch(bassRoot_, minor_, bar.chord);
+        for (size_t i = 0; i < style_.bass.size(); ++i) {
+            // Held for the genre's length, but released before the next bass note
+            const int start = style_.bass[i];
+            const int next = i + 1 < style_.bass.size() ? style_.bass[i + 1] : 16;
+            addNote(kBassChannel, note, i == 0 ? 105 : 88, bar.barStart + sixteenth(start),
+                    sixteenth(1) * std::min(style_.bassLength, static_cast<double>(next - start)) * 0.95);
+        }
+    }
+
+    void addChords(const BarContext& bar) {
+        for (int third = 0; third < 3; ++third) // Root, third and fifth from the scale
+            addNote(kChordChannel, MusicTheory::degreeToPitch(chordRoot_, minor_, bar.chord + 2 * third), 70,
+                    bar.barStart, 3.9);
+    }
+
+    void addLead(const BarContext& bar) {
+        const auto& steps = bar.barInSection % 4 == 3 ? answer_ : phrase_;
+        for (size_t i = 0; i < style_.lead.size(); ++i) {
+            const int start = style_.lead[i];
+            const int next = i + 1 < style_.lead.size() ? style_.lead[i + 1] : 16;
+            addNote(kLeadChannel, MusicTheory::degreeToPitch(leadRoot_, minor_, bar.chord + steps[i]), i == 0 ? 100 : 90,
+                    bar.barStart + sixteenth(start), sixteenth(std::min(next - start, 4)) * 0.9);
+        }
+    }
+
+    const TrackStructure& structure_;
+    const Styles::Genre& style_;
+    bool minor_;
+    juce::Random random_;
+    int bassRoot_ = 0, chordRoot_ = 0, leadRoot_ = 0;
+    std::vector<int> chords_, phrase_, answer_;
+    std::vector<MIDIGenerator::Event> events_;
+};
+
+} // namespace
+
 std::unique_ptr<const MIDIGenerator::Sequence> MIDIGenerator::generateFromStructure(const TrackStructure& structure) {
     auto sequence = std::make_unique<Sequence>();
     sequence->id = nextSequenceId();
     sequence->bpm = structure.bpm;
 
-    // Calculate total bars
+    BarWriter writer(structure);
     for (const auto& section : structure.sections) {
-        sequence->totalBars = std::max(sequence->totalBars, section.startBar + section.lengthBars);
+        for (int bar = section.startBar; bar < section.startBar + section.lengthBars; ++bar) {
+            sequence->totalBars = std::max(sequence->totalBars, bar + 1);
+            writer.addBar(section, bar);
+        }
     }
 
-    // Generate notes for each instrument
-    std::vector<MIDINote> notes;
-    if (structure.hasDrums) {
-        generateDrums(structure, notes);
-    }
-    if (structure.hasBass) {
-        generateBass(structure, notes);
-    }
-    if (structure.hasChords) {
-        generateChords(structure, notes);
-    }
-    if (structure.hasLead) {
-        generateLead(structure, notes);
-    }
-
-    // Split each note into a note-on and a note-off event. Keeping them as
-    // separate events means a note-off is found when playback reaches it,
-    // however many blocks after the note-on that is.
-    sequence->events.reserve(notes.size() * 2);
-    for (const auto& note : notes) {
-        sequence->events.push_back({note.startTime, note.channel, note.noteNumber, note.velocity, true});
-        sequence->events.push_back({note.startTime + note.duration, note.channel, note.noteNumber, 0, false});
-    }
-
-    std::stable_sort(sequence->events.begin(), sequence->events.end(),
-                     [](const Event& a, const Event& b) {
-                         if (a.time != b.time) return a.time < b.time;
-                         return !a.isNoteOn && b.isNoteOn; // Note-offs first
-                     });
-
+    sequence->events = writer.finish();
     return sequence;
 }
 
@@ -121,136 +254,6 @@ void MIDIGenerator::renderRange(const Sequence& sequence,
             // Only release notes that are sounding: after a seek, the range can
             // hold note-offs for notes whose note-on was never played
             buffer.addEvent(juce::MidiMessage::noteOff(event->channel, event->noteNumber), sampleOffset);
-        }
-    }
-}
-
-// Generate drums (4/4 house beat)
-void MIDIGenerator::generateDrums(const TrackStructure& structure, std::vector<MIDINote>& notes) {
-    MusicTheory::DrumPattern pattern = MusicTheory::DrumPatterns::houseClassic();
-
-    for (const auto& section : structure.sections) {
-        int startBar = section.startBar;
-        int endBar = section.startBar + section.lengthBars;
-
-        for (int bar = startBar; bar < endBar; ++bar) {
-            double barStart = bar * 4.0; // 4 quarter notes per bar
-
-            // Kick drum (every 16th note grid)
-            for (int step : pattern.kickSteps) {
-                MIDINote note;
-                note.channel = kDrumChannel;
-                note.noteNumber = MusicTheory::DrumNotes::KICK;
-                note.velocity = 100;
-                note.startTime = barStart + (step * 0.25); // 16th notes
-                note.duration = 0.1;
-                notes.push_back(note);
-            }
-
-            // Snare
-            for (int step : pattern.snareSteps) {
-                MIDINote note;
-                note.channel = kDrumChannel;
-                note.noteNumber = MusicTheory::DrumNotes::SNARE;
-                note.velocity = 90;
-                note.startTime = barStart + (step * 0.25);
-                note.duration = 0.1;
-                notes.push_back(note);
-            }
-
-            // Hi-hats
-            for (int step : pattern.hatSteps) {
-                MIDINote note;
-                note.channel = kDrumChannel;
-                note.noteNumber = MusicTheory::DrumNotes::CLOSED_HAT;
-                note.velocity = 70;
-                note.startTime = barStart + (step * 0.25);
-                note.duration = 0.1;
-                notes.push_back(note);
-            }
-        }
-    }
-}
-
-// Generate bass (simple root note pattern)
-void MIDIGenerator::generateBass(const TrackStructure& structure, std::vector<MIDINote>& notes) {
-    // Parse key (e.g., "Am" -> A = 57, minor)
-    int rootNote = 57; // A3 (MIDI note 57)
-    if (structure.key.find("C") != std::string::npos) rootNote = 48;
-    else if (structure.key.find("D") != std::string::npos) rootNote = 50;
-    else if (structure.key.find("E") != std::string::npos) rootNote = 52;
-    else if (structure.key.find("F") != std::string::npos) rootNote = 53;
-    else if (structure.key.find("G") != std::string::npos) rootNote = 55;
-    else if (structure.key.find("A") != std::string::npos) rootNote = 57;
-    else if (structure.key.find("B") != std::string::npos) rootNote = 59;
-
-    for (const auto& section : structure.sections) {
-        for (int bar = section.startBar; bar < section.startBar + section.lengthBars; ++bar) {
-            // Bass on every beat
-            for (int beat = 0; beat < 4; ++beat) {
-                MIDINote note;
-                note.channel = kBassChannel;
-                note.noteNumber = rootNote - 12; // One octave lower
-                note.velocity = 80;
-                note.startTime = bar * 4.0 + beat;
-                note.duration = 0.9; // Slightly staccato
-                notes.push_back(note);
-            }
-        }
-    }
-}
-
-// Generate chords (4-bar progression)
-void MIDIGenerator::generateChords(const TrackStructure& structure, std::vector<MIDINote>& notes) {
-    int rootNote = 60; // C4
-    if (structure.key.find("A") != std::string::npos) rootNote = 57;
-
-    // Simple chord progression (just root + fifth for now)
-    for (const auto& section : structure.sections) {
-        for (int bar = section.startBar; bar < section.startBar + section.lengthBars; ++bar) {
-            // Whole note chords
-            MIDINote root, fifth;
-            root.channel = kChordChannel;
-            root.noteNumber = rootNote + 12; // C5
-            root.velocity = 60;
-            root.startTime = bar * 4.0;
-            root.duration = 4.0;
-
-            fifth.channel = kChordChannel;
-            fifth.noteNumber = rootNote + 12 + 7; // Fifth
-            fifth.velocity = 60;
-            fifth.startTime = bar * 4.0;
-            fifth.duration = 4.0;
-
-            notes.push_back(root);
-            notes.push_back(fifth);
-        }
-    }
-}
-
-// Generate lead melody (simple pentatonic)
-void MIDIGenerator::generateLead(const TrackStructure& structure, std::vector<MIDINote>& notes) {
-    int rootNote = 72; // C5
-    if (structure.key.find("A") != std::string::npos) rootNote = 69;
-
-    // Pentatonic scale
-    std::vector<int> scale = {0, 2, 4, 7, 9}; // Pentatonic intervals
-
-    // Generate melody only in drop sections
-    for (const auto& section : structure.sections) {
-        if (section.type == "drop") {
-            for (int bar = section.startBar; bar < section.startBar + section.lengthBars; bar += 2) {
-                // Simple 8th note melody
-                for (int i = 0; i < 8; ++i) {
-                    MIDINote note;
-                    note.channel = kLeadChannel;
-                    note.noteNumber = rootNote + scale[i % scale.size()];
-                    note.velocity = 90;
-                    note.startTime = bar * 4.0 + i * 0.5;
-                    note.duration = 0.4;
-                    notes.push_back(note);
-                }
-            }
         }
     }
 }

@@ -1,42 +1,55 @@
 #include "PluginEditor.h"
 
+namespace {
+
+const char* const kChoiceIds[] = {"genre", "key", "scale", "length", "part"};
+const char* const kChoiceNames[] = {"Genre", "Key", "Scale", "Length", "Part"};
+const char* const kPartIds[] = {"drums", "bass", "chords", "lead"};
+const char* const kPartNames[] = {"Drums (ch 10)", "Bass (ch 1)", "Chords (ch 2)", "Lead (ch 3)"};
+
+} // namespace
+
 AIProducerEditor::AIProducerEditor(AIProducerProcessor& p)
     : AudioProcessorEditor(&p), processor_(p) {
+    auto& apvts = processor_.getValueTreeState();
 
-    // Generate button
-    generateButton_.setButtonText("🎵 Generate Track");
-    generateButton_.onClick = [this] { generateButtonClicked(); };
-    addAndMakeVisible(generateButton_);
+    for (size_t i = 0; i < choices_.size(); ++i) {
+        auto& choice = choices_[i];
+        choice.label.setText(kChoiceNames[i], juce::dontSendNotification);
+        choice.label.setJustificationType(juce::Justification::centredLeft);
+        if (auto* param = dynamic_cast<juce::AudioParameterChoice*>(apvts.getParameter(kChoiceIds[i])))
+            choice.box.addItemList(param->choices, 1);
+        choice.attachment = std::make_unique<ComboAttachment>(apvts, kChoiceIds[i], choice.box);
+        addAndMakeVisible(choice.label);
+        addAndMakeVisible(choice.box);
+    }
 
-    // Prompt label and editor
-    promptLabel_.setText("Describe your track:", juce::dontSendNotification);
-    promptLabel_.setFont(juce::Font(16.0f, juce::Font::bold));
-    addAndMakeVisible(promptLabel_);
+    for (size_t i = 0; i < parts_.size(); ++i) {
+        auto& part = parts_[i];
+        part.button.setButtonText(kPartNames[i]);
+        part.attachment = std::make_unique<ButtonAttachment>(apvts, kPartIds[i], part.button);
+        addAndMakeVisible(part.button);
+    }
 
-    promptEditor_.setMultiLine(true);
-    promptEditor_.setReturnKeyStartsNewLine(true);
-    promptEditor_.setText("Create a progressive house track with energetic drops and emotional breaks");
-    addAndMakeVisible(promptEditor_);
+    variationButton_.setButtonText("New Variation");
+    variationButton_.onClick = [this] { processor_.nextVariation(); };
+    addAndMakeVisible(variationButton_);
+    addAndMakeVisible(variationLabel_);
 
-    // Status label
-    statusLabel_.setText("Ready to generate", juce::dontSendNotification);
-    statusLabel_.setJustificationType(juce::Justification::centred);
-    statusLabel_.setFont(juce::Font(14.0f));
-    addAndMakeVisible(statusLabel_);
+    descriptionLabel_.setJustificationType(juce::Justification::centred);
+    descriptionLabel_.setFont(juce::Font(15.0f, juce::Font::bold));
+    addAndMakeVisible(descriptionLabel_);
 
-    // Info labels
-    infoLabel1_.setText("AI Producer will create a complete track arrangement with:", juce::dontSendNotification);
-    infoLabel1_.setJustificationType(juce::Justification::centred);
-    infoLabel1_.setFont(juce::Font(12.0f));
-    addAndMakeVisible(infoLabel1_);
+    routingLabel_.setText("Plays along the song from bar 1 at the tempo shown. Route each MIDI channel to its own "
+                          "instrument, or (in Live) use one copy per Part with the same settings.",
+                          juce::dontSendNotification);
+    routingLabel_.setJustificationType(juce::Justification::centred);
+    routingLabel_.setFont(juce::Font(12.0f));
+    addAndMakeVisible(routingLabel_);
 
-    infoLabel2_.setText("• Drums  • Bass  • Chords  • Lead Melody  • Full Arrangement", juce::dontSendNotification);
-    infoLabel2_.setJustificationType(juce::Justification::centred);
-    infoLabel2_.setFont(juce::Font(12.0f));
-    addAndMakeVisible(infoLabel2_);
-
-    startTimerHz(10); // Update status 10 times per second
-    setSize(600, 400);
+    timerCallback();
+    startTimerHz(5);
+    setSize(600, 420);
 }
 
 AIProducerEditor::~AIProducerEditor() {
@@ -44,57 +57,57 @@ AIProducerEditor::~AIProducerEditor() {
 }
 
 void AIProducerEditor::paint(juce::Graphics& g) {
-    g.fillAll(juce::Colour(0xff1a1a2e)); // Dark blue background
+    g.fillAll(juce::Colour(0xff1a1a2e));
 
-    // Title
     g.setColour(juce::Colours::white);
     g.setFont(juce::Font(28.0f, juce::Font::bold));
-    g.drawText("AI Producer", getLocalBounds().removeFromTop(60),
-               juce::Justification::centred);
+    g.drawText("Track Sketch", getLocalBounds().removeFromTop(60), juce::Justification::centred);
 
-    // Border
     g.setColour(juce::Colour(0xff16213e));
     g.drawRect(getLocalBounds(), 2);
 }
 
 void AIProducerEditor::resized() {
     auto bounds = getLocalBounds().reduced(20);
-    bounds.removeFromTop(60); // Title space
+    bounds.removeFromTop(50); // Title
 
-    // Info labels
-    infoLabel1_.setBounds(bounds.removeFromTop(25));
-    infoLabel2_.setBounds(bounds.removeFromTop(25));
-    bounds.removeFromTop(10);
+    // Drop-downs, two to a row
+    for (size_t first = 0; first < choices_.size(); first += 2) {
+        auto line = bounds.removeFromTop(32);
+        const int cellWidth = line.getWidth() / 2;
+        for (size_t i = first; i < std::min(first + 2, choices_.size()); ++i) {
+            auto& choice = choices_[i];
+            auto cell = line.removeFromLeft(cellWidth).reduced(6, 2);
+            choice.label.setBounds(cell.removeFromLeft(60));
+            choice.box.setBounds(cell);
+        }
+        bounds.removeFromTop(8);
+    }
 
-    // Prompt section
-    promptLabel_.setBounds(bounds.removeFromTop(30));
-    promptEditor_.setBounds(bounds.removeFromTop(100));
+    bounds.removeFromTop(6);
+    auto partRow = bounds.removeFromTop(30);
+    const int partWidth = partRow.getWidth() / static_cast<int>(parts_.size());
+    for (auto& part : parts_)
+        part.button.setBounds(partRow.removeFromLeft(partWidth).reduced(4, 0));
+
+    bounds.removeFromTop(16);
+    auto variationRow = bounds.removeFromTop(36).withSizeKeepingCentre(320, 36);
+    variationButton_.setBounds(variationRow.removeFromLeft(180));
+    variationLabel_.setBounds(variationRow.reduced(10, 0));
+
     bounds.removeFromTop(20);
-
-    // Generate button (large and prominent)
-    generateButton_.setBounds(bounds.removeFromTop(60).reduced(100, 0));
-    bounds.removeFromTop(20);
-
-    // Status
-    statusLabel_.setBounds(bounds.removeFromTop(30));
+    descriptionLabel_.setBounds(bounds.removeFromTop(28));
+    routingLabel_.setBounds(bounds.removeFromTop(40));
 }
 
 void AIProducerEditor::timerCallback() {
-    // Update status from processor
-    juce::String newStatus = processor_.getStatus();
-    if (statusLabel_.getText() != newStatus) {
-        statusLabel_.setText(newStatus, juce::dontSendNotification);
+    const auto description = processor_.getDescription();
+    if (descriptionLabel_.getText() != description)
+        descriptionLabel_.setText(description, juce::dontSendNotification);
+
+    if (auto* variation = processor_.getValueTreeState().getParameter("variation")) {
+        const auto text = "Variation " + variation->getCurrentValueAsText();
+        if (variationLabel_.getText() != text)
+            variationLabel_.setText(text, juce::dontSendNotification);
     }
-
-    // Update button state
-    generateButton_.setEnabled(!processor_.isGenerating());
-}
-
-void AIProducerEditor::generateButtonClicked() {
-    juce::String prompt = promptEditor_.getText();
-    if (prompt.isEmpty()) {
-        prompt = "Create a house track";
-    }
-
-    processor_.generateTrack(prompt);
 }

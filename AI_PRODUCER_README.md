@@ -1,404 +1,83 @@
-# 🤖 AI Producer - Track Sketch Generator Plugin
+# Track Sketch (plugins/AIProducer)
 
-**A VST3/AU plugin that writes a full MIDI arrangement into your DAW session.**
+**A plugin that writes a whole arrangement (drums, bass, chords and lead) as MIDI and plays it in time with your DAW.**
 
-## Overview
+Formats: VST3, AU, Standalone. The source lives in `plugins/AIProducer`; the plugin was called AI Producer before 2.1.1, and hosts still find saved sessions under the new name.
 
-AI Producer generates a complete arrangement (drums, bass, chords and lead) as MIDI and plays it in time with your DAW's transport. The goal is to drive that generation from a text prompt using an AI model.
+Track Sketch has no AI in it: it writes from musical rules, so the same settings always give the same track and it works offline. It is separate from the **AI Producer Remote Script** for Ableton Live (`ableton/remote-scripts/AIProducer`), which is where the AI work happens. A later version is planned to let the Remote Script send Track Sketch a plan to play.
 
-**What works today**: the plugin generates one fixed 72-bar house arrangement in A minor at 128 BPM and plays it back in sync with the host. **The text prompt is not used yet**, and no AI model is called; every prompt produces the same track. See [Known Limitations](#known-limitations).
+## Quick start
 
-**Status**: 🚧 Prototype - playback engine working, AI generation not implemented  
-**Install Location**: `~/Library/Audio/Plug-Ins/VST3/AI Producer.vst3`  
-**Formats**: VST3, AU, Standalone
+1. Put Track Sketch on a MIDI track. Make four more MIDI tracks with instruments and route Track Sketch's output to them by channel:
 
----
+   | Channel | Part |
+   |---|---|
+   | 10 | Drums (General MIDI notes: kick 36, snare 38, clap 39, hats 42 and 46, crash 49) |
+   | 1 | Bass |
+   | 2 | Chords |
+   | 3 | Lead |
 
-## Quick Start
+2. Choose a **Genre**, **Key**, **Scale** and **Length**, and switch parts on or off.
+3. Set your DAW's tempo to the one shown under the controls, then press play from bar 1.
+4. Press **New Variation** for a different chord progression and lead with the same settings.
 
-### 1. Load the Plugin
-- Open your DAW (Ableton, Logic, Reaper, etc.)
-- Create a new MIDI track
-- Load "AI Producer" as an instrument plugin
-- **Important**: Set up 4 MIDI instrument tracks to receive the generated MIDI:
-  - Track 1 (Channel 10): Drums
-  - Track 2 (Channel 1): Bass
-  - Track 3 (Channel 2): Chords
-  - Track 4 (Channel 3): Lead
+The track is laid out along the song timeline from bar 1, so stopping, looping and moving the playhead all behave as you would expect; sounding notes are released when the transport stops or jumps. Nothing plays while the transport is stopped. Any control change rebuilds the track within a fifth of a second, including host automation, and the controls are saved with the session.
 
-### 2. Generate Your Track
-- Click "🎵 Generate Track" (the prompt text is ignored for now)
-- Set your DAW's tempo to 128 BPM, the tempo the track is written for
-- Press play from bar 1 → the track plays in time with your DAW
+### In Ableton Live
 
-Playback follows the host transport: the arrangement is laid out along the song timeline starting at bar 1, so stopping, looping and moving the playhead all behave as you would expect. Nothing plays while the transport is stopped.
+Live can take MIDI from another track but cannot pick out one channel of it, so use one copy of Track Sketch per part:
 
-### 3. Customize
-- Edit the generated MIDI in your DAW's piano roll
-- Change instruments/sounds
-- Add effects
-- Export or continue producing
+1. Make four MIDI tracks (Sketch Drums, Sketch Bass, Sketch Chords, Sketch Lead), put Track Sketch on each, and set each one's **Part** to its part.
+2. Make four instrument tracks. On each, set **MIDI From** to its Sketch track, the box below to **Track Sketch**, and **Monitor** to **In**.
+3. Give all four copies the same Genre, Key, Scale, Length and Variation. The same settings always write the same notes, so the copies play together.
 
----
+The AI Producer Remote Script can do step 2 for you: `python3 live_control.py /live/track/set/input Bass "Sketch Bass" "Track Sketch"`.
 
-## Features
+## Controls
 
-### Current (prototype)
-✅ **Complete Arrangement** - Intro, Build, Drop, Breakdown, Build, Drop, Outro (72 bars)  
-✅ **Multi-Instrument Output** - Drums, Bass, Chords, Lead (4 MIDI channels)  
-✅ **Host-Synced Playback** - Follows the DAW transport, tempo and playhead position  
-✅ **Music Theory Library** - Scales, chords, progressions and drum patterns for several genres (only the house drum pattern is used so far)  
-✅ **Status Display** - Shows when the track is ready and what tempo to use
+| Control | Values |
+|---|---|
+| Genre | House (124 BPM), Techno (130), Trance (138), Hip-Hop (90), Trap (140), Drum & Bass (174) |
+| Key | C to B |
+| Scale | Minor, Major |
+| Length | 8-bar loop, 32 bars (intro, build, drop), Full song (72 bars: intro, build, drop, breakdown, build, drop, outro) |
+| Drums, Bass, Chords, Lead | On or off |
+| Variation | 1 to 100: picks the chord progression (four per scale) and writes the lead phrases |
+| Part | All, or just Drums, Bass, Chords or Lead (for hosts such as Live that cannot split MIDI by channel) |
 
-### Coming Soon (v2.0)
-⏳ **Text-Based Generation** - Describe what you want in natural language  
-⏳ **Real AI Integration** - Connect to OpenAI, Claude, or local Ollama  
-⏳ **Genre-Aware Patterns** - House, Techno, DnB, Hip-Hop, Trap  
-⏳ **Advanced Generation** - More sophisticated melodies and harmonies  
-⏳ **Humanization** - Subtle timing/velocity variations  
-⏳ **Mixing Controls** - Auto-set velocities for good mix balance  
-⏳ **Genre Selector** - Choose from 20+ genres  
-⏳ **Preset System** - Save/load your favorite generation settings  
-⏳ **Audio Export** - Render directly to audio
+Each genre has its own drum pattern, bass rhythm and lead rhythm. Chords are triads built from the scale, one per bar, following the progression; the bass plays each chord's root; the lead is a phrase in scale steps above the chord, with an answering phrase every fourth bar.
 
----
+## How the arrangement builds
 
-## How It Works
+Which parts play depends mostly on each section's energy (`MIDIGenerator::partPlays`):
 
-### 1. Music Theory Engine
-The plugin understands music theory:
-- **Scales**: Major, Minor, Dorian, Phrygian, Lydian, Mixolydian, etc.
-- **Chords**: Major, Minor, 7ths, Suspended, Add9, etc.
-- **Progressions**: I-V-vi-IV, i-VI-III-VII, and more
-- **Drum Patterns**: 4-on-floor, House, Techno, DnB, Trap, Hip-Hop
-- **BPM Ranges**: Correct tempos for each genre
+| Section | Plays |
+|---|---|
+| Intro | Kick, hats, chords |
+| Build | Adds backbeat and bass; the last bar is a rising snare roll |
+| Drop | Everything, with a crash on the first beat |
+| Breakdown | No kick or bass: hats, chords and the lead over them |
+| Outro | Hats and chords |
 
-### 2. Track Structure (planned: AI decision making)
-A track is described by a structure: genre, BPM, key and scale, chord progression, and an arrangement of sections with lengths and energy levels.
+## Code
 
-Today that structure is fixed in code (house, 128 BPM, A minor). The plan is for an AI model to choose it from your prompt.
+| File | What it does |
+|---|---|
+| `TrackStructure.h` | The plan for a track: genre, tempo, key, progression, sections and parts |
+| `Styles.h/.cpp` | The genres, and `build()`, which turns the controls into a plan |
+| `MusicTheory.h/.cpp` | Scales, scale degrees and Roman-numeral progressions |
+| `MIDIGenerator.h/.cpp` | Writes a plan as notes (message thread) and plays them block by block (audio thread) |
+| `PluginProcessor.h/.cpp` | Parameters, rebuilding when they change, saved state, transport-following playback |
+| `PluginEditor.h/.cpp` | The controls |
 
-### 3. MIDI Generation
-From the track structure, the plugin generates MIDI:
-- **Drums**: Kick, snare and hi-hats in a classic house pattern
-- **Bass**: The key's root note on every beat
-- **Chords**: Root and fifth, held for each bar
-- **Lead**: An 8th-note pentatonic phrase, in the drop sections only
+The audio thread never builds a track or waits for one: a new track is swapped in under a spin lock that the audio thread only tries to take, and freed on the message thread.
 
-The chord progression in the structure is not followed yet: bass and chords stay on the root.
+## Tests
 
-### 4. DAW Integration
-The generated MIDI outputs to your DAW:
-- **Channel 10 (Drums)**: Route to your drum sampler/synth
-- **Channel 1 (Bass)**: Route to your bass synth
-- **Channel 2 (Chords)**: Route to your pad/chord synth
-- **Channel 3 (Lead)**: Route to your lead synth
+`tests/Plugins/AIProducerTests.cpp`: every genre and length gives a well-formed track (sorted, no overlapping notes, everything released); bass, chords and lead stay in key for all 24 keys; the same settings give the same track; the arrangement builds as described above; playback follows the transport; controls rebuild the track and survive save and load; damaged saved state is ignored.
 
----
-
-## Example Prompts
-
-> **Not implemented yet.** These are the results the plugin is intended to produce once prompts drive generation. Today every prompt produces the house track described first.
-
-### House Music
+```bash
+cmake -S tests -B build/tests -DCMAKE_BUILD_TYPE=Release
+cmake --build build/tests --parallel
+./build/tests/TestRunner
 ```
-Create a progressive house track with emotional builds
-```
-**Result**: 128 BPM, minor key, 72 bars (Intro→Build→Drop→Break→Build→Drop→Outro)
-
-### Techno
-```
-Make a dark techno track
-```
-**Result**: 130 BPM, dark tonality, hypnotic patterns
-
-### Hip-Hop
-```
-Create a boom bap hip-hop beat
-```
-**Result**: 90 BPM, classic drum pattern, simple chord loop
-
-### DnB
-```
-Generate a liquid drum and bass track
-```
-**Result**: 174 BPM, fast drums, melodic bass
-
----
-
-## Technical Architecture
-
-### Components
-
-#### 1. **MusicTheory** (MusicTheory.h/cpp)
-Music theory knowledge base:
-- 12 musical scales with interval patterns
-- 12 chord types (Major, Minor, 7ths, Sus, Add9, etc.)
-- Chord progression patterns (I-V-vi-IV, etc.)
-- Genre-specific drum patterns (16th-note grid)
-- BPM ranges for genres
-
-#### 2. **AIClient** (AIClient.h/cpp)
-AI integration layer:
-- Supports OpenAI, Anthropic, and Ollama
-- Async generation with callbacks
-- Prompt engineering for music generation
-- JSON parsing for structured responses
-- **Current**: Stub implementation (returns hardcoded house track)
-- **Next**: Full API integration
-
-#### 3. **MIDIGenerator** (MIDIGenerator.h/cpp)
-Converts track structure to MIDI:
-- Generates MIDI notes for each instrument
-- Handles timing (quarter notes, bars)
-- Outputs to multiple MIDI channels
-- **Drums**: GM drum map (kick=36, snare=38, hat=42, etc.)
-- **Bass**: Root notes with rhythm
-- **Chords**: 2-4 note voicings
-- **Lead**: Scale-based melodies
-
-#### 4. **PluginProcessor** (PluginProcessor.h/cpp)
-Main plugin logic:
-- MIDI effect plugin (produces MIDI, not audio)
-- Manages generation workflow
-- Async callback handling
-- Status updates for UI
-
-#### 5. **PluginEditor** (PluginEditor.h/cpp)
-User interface:
-- Text prompt input
-- Generate button
-- Real-time status display
-- Modern, clean design (dark blue theme)
-
----
-
-## MIDI Channel Routing
-
-| Channel | Instrument | MIDI Notes | Typical Sound |
-|---------|------------|------------|---------------|
-| **10** | Drums | GM Drum Map | Kick, Snare, Hats, Crash |
-| **1** | Bass | C1-C3 (root notes) | Sub bass, Synth bass |
-| **2** | Chords | C3-C5 (triads/7ths) | Pads, Piano, Synth chords |
-| **3** | Lead | C5-C7 (melodies) | Lead synth, Pluck, Arp |
-
-### Setting Up in Your DAW
-
-**Ableton Live:**
-1. Create 4 MIDI tracks
-2. Each track: Load an instrument
-3. Set MIDI input to "AI Producer"
-4. Set MIDI channel to 10, 1, 2, 3 respectively
-5. Arm all tracks to receive MIDI
-6. Press play
-
-**Logic Pro:**
-1. Create 4 Software Instrument tracks
-2. Load AI Producer on track 1
-3. Tracks 2-4: Load instruments
-4. Set track MIDI channels in inspector
-5. Enable input monitoring
-6. Press play
-
-**Reaper:**
-1. Create 4 MIDI tracks
-2. Track 1: Load AI Producer
-3. Tracks 2-4: Load VSTi instruments
-4. Set MIDI channel routing
-5. Arm for input
-6. Press play
-
----
-
-## Music Theory Reference
-
-### Supported Scales
-- **Major**: [0, 2, 4, 5, 7, 9, 11] - Bright, happy
-- **Minor**: [0, 2, 3, 5, 7, 8, 10] - Dark, emotional
-- **Dorian**: [0, 2, 3, 5, 7, 9, 10] - Jazz, funk
-- **Phrygian**: [0, 1, 3, 5, 7, 8, 10] - Spanish, Middle Eastern
-- **Lydian**: [0, 2, 4, 6, 7, 9, 11] - Dreamy, bright
-- **Mixolydian**: [0, 2, 4, 5, 7, 9, 10] - Blues, rock
-- **Harmonic Minor**: [0, 2, 3, 5, 7, 8, 11] - Classical minor
-- **Melodic Minor**: [0, 2, 3, 5, 7, 9, 11] - Jazz minor
-- **Pentatonic**: [0, 2, 4, 7, 9] - Blues, rock, pop
-- **Blues**: [0, 3, 5, 6, 7, 10] - Blues scale
-
-### Common Chord Progressions
-- **I-V-vi-IV** - Pop classic (C-G-Am-F)
-- **i-VI-III-VII** - Dark house/techno
-- **I-V-vi-iii-IV** - Trance uplifting
-- **vi-IV-I-V** - Emotional pop
-- **i-i-i-i** - Hip-hop loop
-
-### Genre BPM Ranges
-| Genre | BPM Range | Typical |
-|-------|-----------|---------|
-| House | 120-130 | 128 |
-| Techno | 125-135 | 130 |
-| Trance | 130-140 | 138 |
-| DnB | 170-180 | 174 |
-| Hip-Hop | 80-100 | 90 |
-| Trap | 130-150 | 140 |
-
----
-
-## Troubleshooting
-
-### No MIDI Output
-- **Check**: Is the plugin loaded as a MIDI effect/instrument?
-- **Check**: Are your instrument tracks set to receive MIDI from the plugin?
-- **Check**: Are the MIDI channels correctly routed (10, 1, 2, 3)?
-- **Fix**: Reload the plugin, verify MIDI routing
-
-### Generation Hangs
-- **Cause**: AI API timeout or network issue
-- **Fix**: Currently uses stub implementation (instant), will add timeout handling in v2.0
-
-### Wrong Genre/Style
-- **Cause**: Prompt not specific enough
-- **Fix**: Be more specific: "Create a dark minimal techno track" instead of just "techno"
-
-### MIDI Sounds Off-Key
-- **Cause**: Your instruments might be in a different key
-- **Fix**: Transpose the MIDI or tune your instruments to match
-
----
-
-## Development Roadmap
-
-### Version 1.0 (Current - MVP)
-- ✅ Basic music theory engine
-- ✅ MIDI generation for 4 instruments
-- ✅ Simple UI with text prompt
-- ✅ Hardcoded house track generation
-- ✅ Multi-channel MIDI output
-
-### Version 2.0 (Next)
-- 🔲 Real AI integration (Ollama/OpenAI/Claude)
-- 🔲 Advanced melody generation
-- 🔲 Humanization (timing/velocity variation)
-- 🔲 Genre selector dropdown
-- 🔲 BPM override control
-- 🔲 Arrangement length control
-- 🔲 Variation/seed control
-
-### Version 3.0 (Future)
-- 🔲 Audio synthesis (built-in instruments)
-- 🔲 Audio export
-- 🔲 Advanced arrangement editing
-- 🔲 Multiple generation modes (sketch, full, minimal)
-- 🔲 Style transfer (match reference track)
-- 🔲 Mixing/mastering suggestions
-
----
-
-## Known Limitations
-
-### Current MVP Limitations
-1. **Hardcoded Output**: Generates the same house track every time. The prompt text is ignored and no AI model is called (AI integration coming in v2.0)
-2. **Limited Variation**: Drums and bass are simple patterns (will add variation in v2.0)
-3. **No Mixing**: All MIDI velocities are static (will add dynamics in v2.0)
-4. **One Genre**: Only generates house-style tracks (will add genre selector in v2.0)
-
-### Technical Limitations
-1. **MIDI Only**: Generates MIDI, not audio (requires your DAW's instruments)
-2. **Manual Routing**: You must manually route MIDI channels to instruments
-3. **No Undo**: Once generated, use your DAW's undo if you want to go back
-4. **No Real-Time**: Generation happens once, not during playback
-5. **Not Saved With the Project**: The generated track is not stored in the plugin's state, so it must be generated again after reopening a session
-6. **Tempo Is Not Set For You**: Playback follows the host tempo; set your DAW to the track's BPM yourself
-
----
-
-## Tips & Tricks
-
-### Getting Better Results
-1. **Be Specific**: "Dark minimal techno with driving bass" > "techno"
-2. **Mention Energy**: "High-energy" or "chill ambient" helps shape the output
-3. **Reference Styles**: "Like Deadmau5" or "90s progressive house"
-4. **Iterate**: Generate, tweak MIDI manually, regenerate sections
-
-### Workflow Ideas
-1. **Quick Sketches**: Generate → Edit → Expand
-2. **Learning Tool**: Study the generated MIDI to understand arrangement
-3. **Backing Tracks**: Generate drums/bass, add your own melody
-4. **Inspiration**: Use AI output as starting point, then customize heavily
-
-### Integration with Other Tools
-1. **Export MIDI**: Drag generated MIDI to other tracks
-2. **Layer Sounds**: Use multiple instruments per channel for richness
-3. **Add Effects**: Reverb, delay, compression on your instruments
-4. **Humanize**: Use your DAW's quantize (with low %) to add groove
-
----
-
-## Code Structure
-
-```
-plugins/AIProducer/
-├── CMakeLists.txt              # Build configuration
-└── Source/
-    ├── PluginProcessor.h/cpp   # Main plugin logic
-    ├── PluginEditor.h/cpp      # User interface
-    ├── MIDIGenerator.h/cpp     # MIDI note generation
-    ├── MusicTheory.h/cpp       # Scales, chords, patterns
-    └── AIClient.h/cpp          # AI API integration
-```
-
-**Total Code**: ~1,100 lines of C++  
-**Build Time**: ~2 minutes  
-**Dependencies**: JUCE framework only
-
----
-
-## FAQ
-
-**Q: Does this replace a real producer?**  
-A: No! It's a creative tool to speed up sketching and learning. You still need to arrange, mix, and add your creative touch.
-
-**Q: Can I sell tracks made with this?**  
-A: Yes! The generated MIDI is yours to use commercially.
-
-**Q: Which AI does it use?**  
-A: Currently uses hardcoded patterns (MVP). v2.0 will support OpenAI, Claude, or local Ollama.
-
-**Q: Why is it free?**  
-A: It's part of the AudioForge open-source project. Contributions welcome!
-
-**Q: Can I request features?**  
-A: Yes! Open an issue on the GitHub repo.
-
-**Q: Will it work in my DAW?**  
-A: Yes, if your DAW supports VST3 or AU MIDI effects/instruments.
-
----
-
-## License
-
-Open source - part of the AudioForge project.
-
-**Built with**:
-- JUCE Framework (GPL/Commercial)
-- C++17
-- CMake
-- Love for music and technology ❤️
-
----
-
-## Credits
-
-**Development**: AudioForge Team  
-**AI Assistant**: Claude Sonnet 4.5 (Anthropic)  
-**Session**: https://claude.ai/code/session_01YAWfD55nc5LWBfeDHu6JBq
-
----
-
-## Get Started
-
-1. **Load the plugin** in your DAW
-2. **Type a prompt**: "Create a house track"
-3. **Click Generate**
-4. **Press Play** → Enjoy your AI-generated music!
-
-**Welcome to the future of music production.** 🤖🎵

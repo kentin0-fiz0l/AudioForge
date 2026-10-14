@@ -6,8 +6,7 @@
 #include <cstdint>
 #include <memory>
 #include <vector>
-#include "MusicTheory.h"
-#include "AIClient.h"
+#include "TrackStructure.h"
 
 // Turns a TrackStructure into MIDI and plays it back block by block.
 //
@@ -72,24 +71,10 @@ public:
                             double ppqPerSample,
                             int numSamples);
 
-private:
-    struct MIDINote {
-        int channel;        // MIDI channel (1-16)
-        int noteNumber;     // MIDI note (0-127)
-        int velocity;       // Velocity (0-127)
-        double startTime;   // Start time in quarter notes
-        double duration;    // Duration in quarter notes
-    };
+    // The parts of the arrangement that come and go between sections
+    enum class Part { Kick, Backbeat, Hats, Bass, Chords, Lead };
 
-    static void generateDrums(const TrackStructure& structure,
-                              std::vector<MIDINote>& notes);
-
-    static void generateBass(const TrackStructure& structure,
-                             std::vector<MIDINote>& notes);
-
-    static void generateChords(const TrackStructure& structure,
-                               std::vector<MIDINote>& notes);
-
-    static void generateLead(const TrackStructure& structure,
-                             std::vector<MIDINote>& notes);
+    // Whether a part plays in a section. This is what makes an intro sparse,
+    // a build grow and a drop hit.
+    static bool partPlays(Part part, const TrackStructure::Section& section);
 };
