@@ -21,15 +21,17 @@ mkdir -p "$stage/VST3" "$stage/AU" "$stage/Standalone" logs
 extra=() retry=(--parallel 1)
 case "$(uname -s)" in
   Darwin) extra=(-DCMAKE_OSX_ARCHITECTURES="arm64;x86_64" -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0) ;;
-  # MSBuild still batches several sources into one CL.exe at --parallel 1; compile one file per process
+  # Also limits CL.exe to one compile thread (no /MP). MSBuild still passes all of a target's
+  # sources to a single CL.exe, so this is not one file per process
   MINGW*|MSYS*|CYGWIN*) retry=(--parallel 1 -- -p:CL_MPCount=1 -p:UseMultiToolTask=false) ;;
 esac
 
 # Build one plugin and copy its outputs into the stage; returns non-zero on failure
 build_and_stage() {
   local plugin=$1 start=$SECONDS
-  # A failed build is retried once on one core. On Windows the retry also gives each source
-  # its own CL.exe: MSVC has crashed (0xE06D7363) generating code for a large batch of files
+  # A failed build is retried once on one core, for failures that come from building in
+  # parallel. It did not get past the MSVC 19.44 crash (0xE06D7363) building WavetableSynth;
+  # moving the Windows build to the windows-2025-vs2026 runner (MSVC 19.51) did
   if ! cmake -S "plugins/$plugin" -B "build/$plugin" -DCMAKE_BUILD_TYPE=Release "${extra[@]}" \
          > "logs/$plugin-configure.log" 2>&1 \
      || ! { cmake --build "build/$plugin" --config Release --parallel 4 > "logs/$plugin-build.log" 2>&1 \
