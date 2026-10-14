@@ -29,7 +29,7 @@ StringEnsembleEditor::StringEnsembleEditor(StringEnsembleProcessor& p)
     brightnessAttachment_ = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
         processor_.getValueTreeState(), "brightness", brightnessSlider_);
 
-    attackLabel_.setText("Attack", juce::dontSendNotification);
+    attackLabel_.setText("Bow Pressure", juce::dontSendNotification);
     attackLabel_.setJustificationType(juce::Justification::centred);
     addAndMakeVisible(attackLabel_);
     setupRotarySlider(attackSlider_);
