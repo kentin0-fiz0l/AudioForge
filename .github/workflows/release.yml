@@ -80,7 +80,7 @@ jobs:
       matrix:
         os:
           - { name: macOS, runner: macos-14 }
-          - { name: Windows, runner: windows-2022 }
+          - { name: Windows, runner: windows-2025-vs2026 }   # VS 2026 (MSVC 19.51): the 19.44 compiler on windows-2022 crashes building WavetableSynth
           - { name: Linux, runner: ubuntu-22.04 }   # older glibc, so the build runs on more distributions
         shard: ${{ fromJson(needs.plan.outputs.matrix) }}
     steps:
