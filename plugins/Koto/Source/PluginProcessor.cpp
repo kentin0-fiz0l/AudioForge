@@ -21,7 +21,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout KotoProcessor::createParamet
 {
     std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
 
-    params.push_back(std::make_unique<juce::AudioParameterInt>(PARAM_SCALE, "Scale", 0, 4, 0));
+    params.push_back(std::make_unique<juce::AudioParameterInt>(PARAM_SCALE, "Scale", 0, 4, 4)); // Chromatic: notes as written
     params.push_back(std::make_unique<juce::AudioParameterInt>(PARAM_PLAY_STYLE, "Play Style", 0, 2, 0));
     params.push_back(std::make_unique<juce::AudioParameterFloat>(PARAM_BODY_RESONANCE, "Body Resonance", 0.0f, 1.0f, 0.5f));
     params.push_back(std::make_unique<juce::AudioParameterFloat>(PARAM_ATTACK, "Attack", 0.001f, 0.1f, 0.005f));
@@ -88,7 +88,7 @@ void KotoProcessor::updateVoiceParameters()
         case 2: scale = KotoEngine::Scale::Iwato; break;
         case 3: scale = KotoEngine::Scale::Kumoi; break;
         case 4: scale = KotoEngine::Scale::Chromatic; break;
-        default: scale = KotoEngine::Scale::InSen; break;
+        default: scale = KotoEngine::Scale::Chromatic; break;
     }
 
     KotoEngine::PlayStyle playStyle;
@@ -133,6 +133,7 @@ void KotoProcessor::getStateInformation(juce::MemoryBlock& destData)
 {
     auto state = apvts_.copyState();
     std::unique_ptr<juce::XmlElement> xml(state.createXml());
+    xml->setAttribute("stateVersion", currentStateVersion);
     xml->addChildElement(midiLearnManager_.saveToXml().release());
     xml->addChildElement(presetManager_.saveToXml().release());
     copyXmlToBinary(*xml, destData);
@@ -146,6 +147,13 @@ void KotoProcessor::setStateInformation(const void* data, int sizeInBytes)
     if (xmlState == nullptr || ! xmlState->hasTagName(apvts_.state.getType()))
         return;
 
+    // Before version 2 (AudioForge 2.1.1) Scale was stored but never applied,
+    // so every session played chromatically. Keep them sounding that way.
+    if (xmlState->getIntAttribute("stateVersion", 1) < 2)
+        for (auto* param : xmlState->getChildWithTagNameIterator("PARAM"))
+            if (param->getStringAttribute("id") == PARAM_SCALE)
+                param->setAttribute("value", 4); // Chromatic
+
     apvts_.replaceState(juce::ValueTree::fromXml(*xmlState));
 
     if (auto* midiXml = xmlState->getChildByName("MIDILearnMappings"))
@@ -154,7 +162,9 @@ void KotoProcessor::setStateInformation(const void* data, int sizeInBytes)
         presetManager_.loadFromXml(*presetXml);
 }
 
+#ifndef AUDIOFORGE_TESTS
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
     return new KotoProcessor();
 }
+#endif

@@ -33,6 +33,7 @@ add_executable(TestRunner
     Plugins/GateEngineTests.cpp
     Plugins/GrainWindowTests.cpp
     Plugins/KotoEngineTests.cpp
+    Plugins/KotoTests.cpp
     Plugins/SpectralProcessorTests.cpp
     Plugins/HiHatEngineTests.cpp
     Plugins/FreezeFXTests.cpp
@@ -120,6 +121,9 @@ target_sources(TestRunner PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/GranularEngine/Source/PluginProcessor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/GranularEngine/Source/PluginEditor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/Koto/Source/KotoEngine.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/Koto/Source/KotoVoice.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/Koto/Source/PluginProcessor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/Koto/Source/PluginEditor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/PhaserFlanger/Source/ModulationEngine.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/FreezeFX/Source/PluginProcessor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/FreezeFX/Source/PluginEditor.cpp
