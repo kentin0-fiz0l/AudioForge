@@ -7,6 +7,99 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+### In Progress (Phase 4)
+- Advanced Modulation System (4 LFOs + 2 ADSRs per plugin)
+- Modulation matrix
+- MPE (MIDI Polyphonic Expression) support
+- Visualization components (spectrum analyzer, oscilloscope)
+
+### Under Consideration
+- Plugin collaboration features
+
+---
+
+## [2.1.0] - 2026-10-13
+
+### Highlights
+- **Installers for macOS, Windows and Linux.** Every release now carries a macOS `.pkg`
+  (universal: Apple Silicon and Intel, macOS 11+), a Windows `Setup.exe` and a Linux
+  `.tar.gz` with `install.sh`, plus `.zip` versions to copy by hand. All 60 plugins: VST3
+  everywhere, AU on macOS, and standalone apps for 53 of them. The installers are not
+  code-signed, so macOS asks for "Open Anyway" and Windows for "Run anyway" once.
+- **Every instrument at the same level.** The instruments were up to 24 dB apart; they are
+  now calibrated to one output level, and effects no longer change the level when loaded.
+- **AI Producer for Ableton Live** grew from a track generator into a way to drive a Live
+  set from outside: mixer and devices, clips and warping, the Arrangement, locators and
+  playback. Its bass now follows the chords.
+
+### Added
+- DrumSynth: an open hi-hat and a clap, so it covers a whole house or techno kit, and it
+  now follows velocity and timing.
+- PanUtil is now a track utility: gain and mono alongside pan and width.
+- BasicSynth: bass, pad and lead patches.
+- ElectricPiano and Polysynth: an Output Level control.
+- AI Producer (`ableton/remote-scripts/AIProducer`, see its README):
+  - control Live's mixer, devices and meters from outside, and record listening feedback
+    with what Live was doing at the time
+  - read clips, set their warping and markers, copy them to the Arrangement and clear it
+  - place, list and jump to locators, and move the playhead
+  - load instruments it can count on in Live Intro
+
+### Changed
+- **Some sessions will sound different:**
+  - instrument and effect levels (see Highlights)
+  - PhaserFlanger's phaser mode is now a real phaser with feedback
+  - BrassSection's Fall-off falls on release
+  - GranularEngine: its Time Stretch control is now Scan Speed (saved values are kept), its
+    default level went from -28 dB to -4 dB, and its grains spread across the stereo field
+- Four plugins have plain names in your DAW's list instead of "AudioForge - Name".
+- CleanDelay shows Feedback and Mix as percentages.
+
+### Fixed
+- Plugins that were silent or nearly silent: HiHat, FreezeFX's Freeze and SpectralFreeze.
+- FreezeFX now holds the level and pitch it froze.
+- Limiter: it went over its ceiling, and its lookahead did nothing.
+- PlateReverb doubled its input.
+- BrassSection produced invalid output on loud Marcato notes.
+- 18 plugins read saved settings without checking them.
+- Controls that showed the defaults instead of the real settings in CleanDelay, SimpleGain,
+  SpectralFreeze, GranularEngine, BasicSynth and PanUtil.
+- DrumSynth: a choked hi-hat fades out instead of stepping down.
+- GranularEngine's Reverse now plays grains backwards.
+- Layout overlaps in PanUtil and GranularEngine.
+- Windows builds of OrganEmulator, PadSynth and WavetableSynth.
+- AI Producer: Live could not load or trigger it; it now follows Live's transport; clips Live
+  warps again after analysing them are kept unwarped; locators off Live's grid no longer
+  loop forever.
+
+### Known issues
+These plugins are marked **Experimental**: parts of them don't work as their controls say yet. They
+install with the rest; fixes are planned for 2.1.1.
+- **ShimmerReverb:** no pitch shifting; the "octave" taps are plain delays of the tail.
+- **VocalDoubler, VocalHarmonizer:** the pitch shifting is broken (wrong read speed), so voices are
+  garbled or reversed.
+- **MIDIHarmonizer:** only Chromatic mode gives the right intervals; scale modes are off.
+- **MIDIGrooveQuantizer:** notes can only move within one audio block, so the effect is small.
+- **PlateReverb:** a general stereo reverb, not a plate; Pre-Delay does nothing.
+- **Sitar:** Decay does nothing, and the drone strings start seconds into a note.
+- **Vocoder:** changing Bands while playing doesn't take effect; only the left input is used.
+- **FreezeFX:** its High-pass, Low-pass, FFT Size and Overlap controls take effect only when the
+  plugin is reloaded.
+- **ChordGenius:** doesn't output MIDI yet (export only), and IV chords come out as V.
+- **AIProducer (the plugin):** plays the same 72-bar house arrangement whatever you ask. The AI
+  Producer *Remote Script* for Ableton Live is separate and works.
+- **MelodyMaker, BassLine, DrumMachine:** self-playing generators with built-in sounds; styles and
+  settings are partly ignored and nothing is saved with your project.
+
+### Technical Details
+- CI builds every plugin on macOS, Windows and Linux, and runs each through a stress host at
+  extreme settings and a level check; pull requests build only what they change.
+- Releases are built by `.github/workflows/release.yml`; see `DEPLOYMENT.md`.
+
+---
+
 ## [2.0.0] - 2026-09-11
 
 ### 🎉 Major Features
@@ -106,27 +199,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [Unreleased]
-
-### In Progress (Phase 4)
-- Advanced Modulation System (4 LFOs + 2 ADSRs per plugin)
-- Modulation matrix
-- MPE (MIDI Polyphonic Expression) support
-- Visualization components (spectrum analyzer, oscilloscope)
-
-### Under Consideration
-- Windows VST3 builds
-- Linux VST3 builds  
-- Audio Units (AU) format
-- Standalone applications
-- Plugin collaboration features
-
----
-
 ## Version History
 
 | Version | Date | Major Changes |
 |---------|------|---------------|
+| **2.1.0** | 2026-10-13 | Installers for macOS, Windows and Linux; calibrated levels; AI Producer drives Live |
 | **2.0.0** | 2026-09-11 | Preset Management + MIDI Learn |
 | **1.0.0** | 2026-08-31 | Initial release with 51 plugins |
 

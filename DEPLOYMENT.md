@@ -20,9 +20,30 @@ cd website && npm ci && npm run build   # output in website/out
 
 ## Plugins
 
-Plugins are built and tested by GitHub Actions on every change. Releases are meant to carry
-installers for macOS, Windows and Linux, built by the "Build and Sign Release" workflow; that
-workflow is not producing files yet, so for now plugins are built from source (see the README).
+Plugins are built and tested by GitHub Actions on every change. `.github/workflows/release.yml`
+builds every plugin on macOS (universal), Windows and Linux and attaches the installers to a
+GitHub release:
+
+- `AudioForge-<version>-macOS.pkg` and `.zip` (VST3, AU, standalone apps)
+- `AudioForge-<version>-Windows-Setup.exe` and `.zip` (VST3, standalone apps)
+- `AudioForge-<version>-Linux-x86_64.tar.gz` (VST3, standalone apps, `install.sh`)
+- `SHA256SUMS.txt`
+
+To release, update `CHANGELOG.md` with a `## [X.Y.Z]` section, then push a tag:
+
+```bash
+git tag vX.Y.Z && git push origin vX.Y.Z      # builds and publishes the release (about an hour)
+```
+
+To try a change to the workflow, run it by hand; it makes a draft release only collaborators see:
+
+```bash
+gh workflow run release.yml --ref <branch> -f version=0.0.0-test
+```
+
+The installers are not code-signed (no Apple Developer ID or Windows certificate), so macOS asks
+for "Open Anyway" and Windows SmartScreen for "Run anyway" once; the release notes say so.
+`build-sign-release.yml` (signing and notarizing) runs only by hand and needs those certificates.
 
 ## Retired
 

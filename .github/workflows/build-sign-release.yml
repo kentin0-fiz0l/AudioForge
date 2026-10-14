@@ -1,9 +1,9 @@
 name: Build and Sign Release
 
+# Signing and notarizing need an Apple Developer ID certificate and notarization secrets,
+# which the repository does not have, so this runs only by hand. Releases are built by
+# release.yml, unsigned.
 on:
-  push:
-    tags:
-      - 'v*.*.*'
   workflow_dispatch:
     inputs:
       version:
