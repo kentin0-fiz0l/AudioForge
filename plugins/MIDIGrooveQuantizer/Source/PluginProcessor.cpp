@@ -39,7 +39,9 @@ MIDIGrooveQuantizerProcessor::MIDIGrooveQuantizerProcessor()
 MIDIGrooveQuantizerProcessor::~MIDIGrooveQuantizerProcessor() {}
 
 void MIDIGrooveQuantizerProcessor::prepareToPlay(double sampleRate, int samplesPerBlock) {
-    engine_.prepareToPlay(sampleRate);
+    updateEngineParameters();
+    engine_.prepareToPlay(sampleRate, samplesPerBlock);
+    setLatencySamples(engine_.getLatencySamples());
 }
 
 void MIDIGrooveQuantizerProcessor::processBlock(juce::AudioBuffer<float>& buffer,
@@ -51,13 +53,26 @@ void MIDIGrooveQuantizerProcessor::processBlock(juce::AudioBuffer<float>& buffer
     // Update engine with current parameters
     updateEngineParameters();
 
-    // Get playhead info for tempo sync
-    auto posInfo = getPlayHead()->getPosition();
-    if (posInfo.hasValue()) {
-        engine_.processBlock(midiMessages, buffer.getNumSamples(), *posInfo);
-    }
+    // Get playhead info for tempo sync (the engine passes MIDI through without it)
+    auto* playHead = getPlayHead();
+    engine_.processBlock(midiMessages, buffer.getNumSamples(),
+                         playHead != nullptr ? playHead->getPosition()
+                                             : juce::Optional<juce::AudioPlayHead::PositionInfo>{});
+
+    // The quantizer delays MIDI by a lookahead; tell the host so it can compensate
+    if (getLatencySamples() != engine_.getLatencySamples())
+        setLatencySamples(engine_.getLatencySamples());
 
     // Clear audio buffer (MIDI effect, no audio processing)
+    buffer.clear();
+}
+
+void MIDIGrooveQuantizerProcessor::processBlockBypassed(juce::AudioBuffer<float>& buffer,
+                                                          juce::MidiBuffer& midiMessages) {
+    // Run the engine with no beat grid: it releases whatever it is still
+    // delaying (so a note bypassed mid-way is not left sounding) and passes the
+    // input straight through
+    engine_.processBlock(midiMessages, buffer.getNumSamples(), {});
     buffer.clear();
 }
 
@@ -94,6 +109,8 @@ void MIDIGrooveQuantizerProcessor::setStateInformation(const void* data, int siz
     }
 }
 
+#ifndef AUDIOFORGE_TESTS
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter() {
     return new MIDIGrooveQuantizerProcessor();
 }
+#endif
