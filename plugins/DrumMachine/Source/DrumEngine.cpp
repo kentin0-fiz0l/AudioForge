@@ -13,9 +13,15 @@ DrumEngine::DrumEngine()
 
 void DrumEngine::addHit(DrumPattern& pattern, DrumVoice voice, int step, float velocity)
 {
-    if (step >= 0 && step < pattern.numSteps) {
-        pattern.voices[voice].push_back({voice, step, velocity});
-    }
+    if (step < 0 || step >= pattern.numSteps)
+        return;
+
+    // One hit per voice per step: a fill's crash can land where a style already has one
+    for (const auto& hit : pattern.voices[voice])
+        if (hit.step == step)
+            return;
+
+    pattern.voices[voice].push_back({voice, step, velocity});
 }
 
 float DrumEngine::randomVelocity(float base, float variation)
@@ -35,47 +41,39 @@ void DrumEngine::addHumanization(DrumPattern& pattern)
     }
 }
 
-void DrumEngine::addFill(DrumPattern& pattern, int startStep)
+void DrumEngine::addFill(DrumPattern& pattern)
 {
-    // Tom fill in last 2 beats
+    // Tom fill on the last beat
+    const int startStep = pattern.numSteps - 4;
     for (int i = 0; i < 4; ++i) {
         addHit(pattern, TOM, startStep + i, 0.7f + (i * 0.05f));
     }
-    // Crash at the end
-    addHit(pattern, CRASH, startStep + 4, 0.9f);
-}
-
-std::vector<DrumEngine::DrumHit> DrumEngine::getHitsAtStep(const DrumPattern& pattern, int step) const
-{
-    std::vector<DrumHit> hits;
-    for (int voice = 0; voice < NUM_VOICES; ++voice) {
-        for (const auto& hit : pattern.voices[voice]) {
-            if (hit.step == step) {
-                hits.push_back(hit);
-            }
-        }
-    }
-    return hits;
+    // Crash on the downbeat the fill leads into (the pattern loops)
+    addHit(pattern, CRASH, 0, 0.9f);
 }
 
 DrumEngine::DrumPattern DrumEngine::generatePattern(const PatternParams& params)
 {
-    if (params.style == "Rock")
-        return generateRockPattern(params);
-    else if (params.style == "Hip-Hop")
-        return generateHipHopPattern(params);
+    DrumPattern pattern;
+    if (params.style == "Hip-Hop")
+        pattern = generateHipHopPattern(params);
     else if (params.style == "Jazz")
-        return generateJazzPattern(params);
+        pattern = generateJazzPattern(params);
     else if (params.style == "EDM")
-        return generateEDMPattern(params);
+        pattern = generateEDMPattern(params);
     else if (params.style == "Funk")
-        return generateFunkPattern(params);
+        pattern = generateFunkPattern(params);
     else if (params.style == "Latin")
-        return generateLatinPattern(params);
+        pattern = generateLatinPattern(params);
     else if (params.style == "Blues")
-        return generateBluesPattern(params);
+        pattern = generateBluesPattern(params);
+    else
+        pattern = generateRockPattern(params);
 
-    return generateRockPattern(params);
+    if (params.fillsEnabled)
+        addFill(pattern);
+
+    return pattern;
 }
 
 DrumEngine::DrumPattern DrumEngine::generateRockPattern(const PatternParams& params)
@@ -106,11 +104,6 @@ DrumEngine::DrumPattern DrumEngine::generateRockPattern(const PatternParams& par
         for (int i = 0; i < 16; i += 2) {
             addHit(pattern, HIHAT, i, 0.7f);
         }
-    }
-
-    // Add fill if enabled
-    if (params.fillsEnabled) {
-        addFill(pattern, 12);
     }
 
     addHumanization(pattern);
@@ -176,12 +169,10 @@ DrumEngine::DrumPattern DrumEngine::generateJazzPattern(const PatternParams& par
         addHit(pattern, SNARE, 14, 0.3f);
     }
 
-    // Ride/Hihat: swing feel (triplet-based)
-    // Approximating swing with 16th grid
+    // Ride/Hihat: 8ths, plus off-beat 16ths that the Swing control delays
     for (int i = 0; i < 16; i += 2) {
         addHit(pattern, HIHAT, i, 0.65f);
-        if (params.swing > 0.3f) {
-            // Add swing (delayed upbeat)
+        if (params.complexity > 5) {
             addHit(pattern, HIHAT, i + 1, 0.45f);
         }
     }
