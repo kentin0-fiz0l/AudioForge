@@ -70,11 +70,15 @@ std::vector<BassEngine::Note> BassEngine::generateBassLineInKey(
     // Create simple chord progression in key
     std::vector<ChordInfo> chords;
 
+    // Chord roots are pitch classes (0-11); the octave comes from params.octave.
+    // keyRoot may be a MIDI note (the editor passes 48 + key), so reduce it too.
+    const int root = ((keyRoot % 12) + 12) % 12;
+
     // I - IV - V - I progression (simplified)
-    ChordInfo chord1 = {keyRoot, keyIsMajor, 0.0f, 4.0f};
-    ChordInfo chord2 = {(keyRoot + 5) % 12, keyIsMajor, 4.0f, 4.0f};
-    ChordInfo chord3 = {(keyRoot + 7) % 12, keyIsMajor, 8.0f, 4.0f};
-    ChordInfo chord4 = {keyRoot, keyIsMajor, 12.0f, 4.0f};
+    ChordInfo chord1 = {root, keyIsMajor, 0.0f, 4.0f};
+    ChordInfo chord2 = {(root + 5) % 12, keyIsMajor, 4.0f, 4.0f};
+    ChordInfo chord3 = {(root + 7) % 12, keyIsMajor, 8.0f, 4.0f};
+    ChordInfo chord4 = {root, keyIsMajor, 12.0f, 4.0f};
 
     chords.push_back(chord1);
     chords.push_back(chord2);

@@ -38,9 +38,11 @@ public:
 
     // BassLine specific
     BassEngine& getBassEngine() { return bassEngine_; }
-    std::vector<BassEngine::Note>& getCurrentBassLine() { return currentBassLine_; }
+    // A copy, taken under the edit lock: the line may be replaced from another thread
+    std::vector<BassEngine::Note> getCurrentBassLine() const;
 
     void generateNewBassLine(const std::string& style, int numBars = 4);
+    const std::string& getStyle() const { return style_; }
     void setBassEnabled(bool enabled) { bassEnabled_ = enabled; }
     bool isBassEnabled() const { return bassEnabled_; }
 
@@ -78,12 +80,19 @@ public:
     float getDelayMix() const { return delayMix_; }
 
 private:
+    void setBassLine(std::vector<BassEngine::Note>&& line);
+
     BassEngine bassEngine_;
     std::vector<BassEngine::Note> currentBassLine_;
+    juce::SpinLock bassLineLock_;  // processBlock reads the line; the message thread replaces it
+    // Held by everything outside the audio thread that replaces the line or reads it (saving,
+    // export, the window): a host can save or load from a background thread
+    juce::CriticalSection lineEditLock_;
 
     double sampleRate_ = 44100.0;
     bool bassEnabled_ = true;
     int bassLengthInBeats_ = 16; // 4 bars at 4/4
+    std::string style_ = "Rock";
 
     int keyRoot_ = 60;       // C4
     bool keyIsMajor_ = true; // Major scale
