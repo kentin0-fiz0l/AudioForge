@@ -12,6 +12,7 @@
 #include "../../plugins/ElectricPiano/Source/PluginProcessor.h"
 #include "../../plugins/Polysynth/Source/PluginProcessor.h"
 #include "../../plugins/PlateReverb/Source/PluginProcessor.h"
+#include "../../plugins/MelodyMaker/Source/PluginProcessor.h"
 
 class StateRestoreTests : public juce::UnitTest
 {
@@ -26,9 +27,11 @@ public:
         testSurvivesBadState<ElectricPianoProcessor>("ElectricPiano");
         testSurvivesBadState<PolysynthProcessor>("Polysynth");
         testSurvivesBadState<ReverbProcessor>("PlateReverb");
+        testSurvivesBadState<MelodyMakerProcessor>("MelodyMaker");
         testKeepsItsOwnState<ElectricPianoProcessor>("ElectricPiano");
         testKeepsItsOwnState<PolysynthProcessor>("Polysynth");
         testKeepsItsOwnState<ReverbProcessor>("PlateReverb");
+        testKeepsItsOwnState<MelodyMakerProcessor>("MelodyMaker");
     }
 
 private:

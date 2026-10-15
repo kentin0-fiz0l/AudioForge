@@ -10,7 +10,6 @@
 class MelodyMakerEditor : public juce::AudioProcessorEditor,
                           private juce::Button::Listener,
                           private juce::ComboBox::Listener,
-                          private juce::Slider::Listener,
                           private juce::Timer
 {
 public:
@@ -24,7 +23,8 @@ public:
 private:
     void buttonClicked (juce::Button* button) override;
     void comboBoxChanged (juce::ComboBox* comboBox) override;
-    void sliderValueChanged (juce::Slider* slider) override;
+    void generateMelody();
+    void updateStats();
     void drawMelody (juce::Graphics& g, const std::vector<MelodyEngine::Note>& melody);
 
     MelodyMakerProcessor& processor_;
@@ -44,6 +44,15 @@ private:
     juce::Label waveformLabel_, adsrLabel_;
     juce::Label attackLabel_, decayLabel_, sustainLabel_, releaseLabel_;
     juce::Label effectsLabel_, reverbLabel_, delayLabel_, filterLabel_;
+
+    using SliderAttachment = juce::AudioProcessorValueTreeState::SliderAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> waveformAttachment_;
+    std::unique_ptr<SliderAttachment> attackAttachment_, decayAttachment_, sustainAttachment_, releaseAttachment_;
+    std::unique_ptr<SliderAttachment> reverbAttachment_, delayMixAttachment_, filterCutoffAttachment_;
+
+    // Kept here while its dialog is open: launchAsync returns at once, and
+    // the dialog closes without calling back if the chooser is destroyed
+    std::unique_ptr<juce::FileChooser> fileChooser_;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MelodyMakerEditor)
 };

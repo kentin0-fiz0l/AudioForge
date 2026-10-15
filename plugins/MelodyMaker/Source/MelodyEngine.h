@@ -60,6 +60,7 @@ private:
     int findNearestScaleNote(int note, const std::vector<int>& scale);
 
     // Melody generation strategies
+    std::vector<Note> generateStyleMelody(std::string style, const std::vector<int>& scale, int numBars);
     std::vector<Note> generatePopMelody(const std::vector<int>& scale, int numBars);
     std::vector<Note> generateJazzMelody(const std::vector<int>& scale, int numBars);
     std::vector<Note> generateEDMMelody(const std::vector<int>& scale, int numBars);
