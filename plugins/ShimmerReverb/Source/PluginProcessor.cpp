@@ -55,4 +55,6 @@ void ShimmerProcessor::setStateInformation(const void* d, int sz) {
             presetManager_.loadFromXml(*presetXml);
     }
 }
+#ifndef AUDIOFORGE_TESTS
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter() { return new ShimmerProcessor(); }
+#endif
