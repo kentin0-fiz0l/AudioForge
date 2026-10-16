@@ -30,9 +30,10 @@ VocoderProcessor::VocoderProcessor()
 
 VocoderProcessor::~VocoderProcessor() {}
 
-void VocoderProcessor::prepareToPlay(double sr, int sb) { 
-    engine_.prepareToPlay(sr, sb); 
+void VocoderProcessor::prepareToPlay(double sr, int sb) {
+    // Parameters first, so the band filters are built for the current Bands and Formant Shift
     updateEngineParameters();
+    engine_.prepareToPlay(sr, sb);
 }
 
 void VocoderProcessor::processBlock(juce::AudioBuffer<float>& buf, juce::MidiBuffer& midi) {
@@ -84,4 +85,6 @@ void VocoderProcessor::setStateInformation(const void* d, int sz) {
     }
 }
 
+#ifndef AUDIOFORGE_TESTS
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter() { return new VocoderProcessor(); }
+#endif
