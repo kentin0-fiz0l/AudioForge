@@ -37,6 +37,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout SitarProcessor::createParame
 void SitarProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
     synth_.setCurrentPlaybackSampleRate(sampleRate);
+    drone_.prepareToPlay(sampleRate);
 
     for (int i = 0; i < synth_.getNumVoices(); ++i)
     {
@@ -46,6 +47,16 @@ void SitarProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 }
 
 void SitarProcessor::releaseResources() {}
+
+// The host stopped or jumped: cut every note and the drone that rings after them
+void SitarProcessor::reset()
+{
+    for (int i = 0; i < synth_.getNumVoices(); ++i)
+        if (auto* voice = synth_.getVoice(i); voice->isVoiceActive())
+            voice->stopNote(0.0f, false);
+
+    drone_.reset();
+}
 
 bool SitarProcessor::isBusesLayoutSupported(const BusesLayout& layouts) const
 {
@@ -60,12 +71,23 @@ static constexpr float outputTrim = 0.376f;  // -8.5 dB
 void SitarProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     juce::ScopedNoDenormals noDenormals;
+    int firstNoteOn = -1;
     for (const auto metadata : midiMessages)
+    {
         midiLearnManager_.processMidiMessage(metadata.getMessage());
+        if (firstNoteOn < 0 && metadata.getMessage().isNoteOn())
+            firstNoteOn = metadata.samplePosition;
+    }
     buffer.clear();
 
     updateVoiceParameters();
     synth_.renderNextBlock(buffer, midiMessages, 0, buffer.getNumSamples());
+
+    bool notesSounding = false;
+    for (int i = 0; i < synth_.getNumVoices(); ++i)
+        notesSounding = notesSounding || synth_.getVoice(i)->isVoiceActive();
+
+    drone_.render(buffer, firstNoteOn, notesSounding);
 
     buffer.applyGain(outputTrim);
 }
@@ -80,7 +102,7 @@ void SitarProcessor::updateVoiceParameters()
     float pitchBend = *apvts_.getRawParameterValue(PARAM_PITCH_BEND);
     float vibratoRate = *apvts_.getRawParameterValue(PARAM_VIBRATO_RATE);
     float vibratoDepth = *apvts_.getRawParameterValue(PARAM_VIBRATO_DEPTH);
-    float droneLevel = *apvts_.getRawParameterValue(PARAM_DRONE_LEVEL);
+    drone_.setLevel(*apvts_.getRawParameterValue(PARAM_DRONE_LEVEL));
 
     SitarEngine::RagaScale scale;
     switch (scaleParam)
@@ -104,7 +126,6 @@ void SitarProcessor::updateVoiceParameters()
             voice->setPitchBend(pitchBend);
             voice->setVibratoRate(vibratoRate);
             voice->setVibratoDepth(vibratoDepth);
-            voice->setDroneLevel(droneLevel);
         }
     }
 }
@@ -147,7 +168,9 @@ void SitarProcessor::setStateInformation(const void* data, int sizeInBytes)
         presetManager_.loadFromXml(*presetXml);
 }
 
+#ifndef AUDIOFORGE_TESTS
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
     return new SitarProcessor();
 }
+#endif

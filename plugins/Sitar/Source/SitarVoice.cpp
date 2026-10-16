@@ -27,7 +27,7 @@ void SitarVoice::stopNote(float, bool allowTailOff)
 
 void SitarVoice::renderNextBlock(juce::AudioBuffer<float>& outputBuffer, int startSample, int numSamples)
 {
-    if (currentFrequency_ <= 0.0f)
+    if (!isVoiceActive())
         return;
 
     for (int sample = 0; sample < numSamples; ++sample)
@@ -42,7 +42,7 @@ void SitarVoice::renderNextBlock(juce::AudioBuffer<float>& outputBuffer, int sta
 
         samplesSinceNoteOn_++;
 
-        if (!isNoteOn_ && std::abs(currentSample) < 0.0001f)
+        if (!isNoteOn_ && engine_.isReleased())
         {
             clearCurrentNote();
             break;

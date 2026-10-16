@@ -13,6 +13,7 @@ public:
 
     void prepareToPlay(double sampleRate, int samplesPerBlock) override;
     void releaseResources() override;
+    void reset() override;
     bool isBusesLayoutSupported(const BusesLayout& layouts) const override;
     void processBlock(juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
 
@@ -43,6 +44,7 @@ private:
     void updateVoiceParameters();
 
     juce::Synthesiser synth_;
+    SitarDrone drone_;
     juce::AudioProcessorValueTreeState apvts_;
 
     static constexpr const char* PARAM_RAGA_SCALE = "ragaScale";

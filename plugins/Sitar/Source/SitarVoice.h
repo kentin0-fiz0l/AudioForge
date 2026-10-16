@@ -23,7 +23,6 @@ public:
     void setPitchBend(float bend) { engine_.setPitchBend(bend); }
     void setVibratoRate(float rate) { engine_.setVibratoRate(rate); }
     void setVibratoDepth(float depth) { engine_.setVibratoDepth(depth); }
-    void setDroneLevel(float level) { engine_.setDroneLevel(level); }
 
     void prepareToPlay(double sampleRate, int samplesPerBlock)
     {

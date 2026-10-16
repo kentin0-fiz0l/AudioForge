@@ -1,13 +1,33 @@
 #include "SitarEngine.h"
 
+namespace
+{
+    // Damping of the string loops, in hertz: enough to darken the tone as it
+    // rings, little enough to keep the bright attack. An A3's 8th harmonic
+    // fades about 9 dB a second faster than its fundamental.
+    constexpr float stringDampingHz = 17600.0f;
+
+    // A released note fades 60 dB over this many seconds
+    constexpr float releaseSeconds = 1.0f;
+
+    // The drone strings fall 60 dB over this many seconds, about the tail the
+    // processor reports
+    constexpr float droneRingSeconds = 5.0f;
+
+    // Length of the noise burst that plucks a string
+    constexpr int pluckSamples = 20;
+}
+
 SitarEngine::SitarEngine()
 {
+    mainString_.dampingHz = stringDampingHz;
     updateSympatheticTuning();
 }
 
 void SitarEngine::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
     sampleRate_ = sampleRate;
+    releaseCoeff_ = std::pow(0.001f, 1.0f / (releaseSeconds * static_cast<float>(sampleRate)));
     reset();
 }
 
@@ -16,12 +36,9 @@ void SitarEngine::reset()
     mainString_.reset();
     for (auto& string : sympatheticStrings_)
         string.reset();
-    droneString1_.reset();
-    droneString2_.reset();
 
     vibratoPhase_ = 0.0f;
-    dronePhase1_ = 0.0f;
-    dronePhase2_ = 0.0f;
+    releaseLevel_ = 1.0f;
 }
 
 float SitarEngine::processSample(float baseFrequency, float velocity, bool noteOn, int samplesSinceNoteOn)
@@ -34,13 +51,12 @@ float SitarEngine::processSample(float baseFrequency, float velocity, bool noteO
     float vibrato = 1.0f + vibratoDepth_ * std::sin(vibratoPhase_);
     float frequency = baseFrequency * vibrato * std::pow(2.0f, pitchBendAmount_ / 12.0f);
 
-    // Update main string delay length
-    float delayLength = static_cast<float>(sampleRate_) / frequency;
-    mainString_.delayLength = delayLength;
+    // Tune the main string; Decay is the time it takes to fall 20 dB
+    mainString_.tune(frequency, 0.1f, decayTime_, sampleRate_);
 
     // Pluck excitation (noise burst at note start)
     float excitation = 0.0f;
-    if (noteOn && samplesSinceNoteOn < 20)
+    if (noteOn && samplesSinceNoteOn < pluckSamples)
     {
         excitation = (random_.nextFloat() * 2.0f - 1.0f) * velocity;
     }
@@ -58,15 +74,18 @@ float SitarEngine::processSample(float baseFrequency, float velocity, bool noteO
         attackEnv = static_cast<float>(samplesSinceNoteOn) / (attackTime_ * static_cast<float>(sampleRate_));
     }
 
-    float decayEnv = noteOn ? 1.0f : std::pow(0.9999f, static_cast<float>(samplesSinceNoteOn));
-    mainOutput *= attackEnv * decayEnv * velocity;
+    mainOutput *= attackEnv * velocity;
+
+    // Release, counted from note-off
+    if (!noteOn)
+        releaseLevel_ *= releaseCoeff_;
 
     // Process sympathetic strings (excited by main string output)
     float sympatheticOutput = 0.0f;
     for (int i = 0; i < NUM_SYMPATHETIC_STRINGS; ++i)
     {
         float sympatheticFreq = baseFrequency * sympatheticTuning_[i];
-        sympatheticStrings_[i].delayLength = static_cast<float>(sampleRate_) / sympatheticFreq;
+        sympatheticStrings_[i].setFrequency(sympatheticFreq, sampleRate_);
         sympatheticStrings_[i].feedback = 0.998f; // High feedback for long sustain
 
         // Feed main string output into sympathetic strings
@@ -74,44 +93,7 @@ float SitarEngine::processSample(float baseFrequency, float velocity, bool noteO
     }
     sympatheticOutput *= sympatheticResonance_ / static_cast<float>(NUM_SYMPATHETIC_STRINGS);
 
-    // Drone strings (continuous excitation)
-    float droneOutput = 0.0f;
-    if (droneLevel_ > 0.0f)
-    {
-        // Tonic drone
-        float droneFreq1 = 130.81f; // C3
-        droneString1_.delayLength = static_cast<float>(sampleRate_) / droneFreq1;
-        droneString1_.feedback = 0.9995f;
-
-        // Fifth drone
-        float droneFreq2 = droneFreq1 * 1.5f; // G3
-        droneString2_.delayLength = static_cast<float>(sampleRate_) / droneFreq2;
-        droneString2_.feedback = 0.9995f;
-
-        // Continuous pluck-like excitation for drones
-        dronePhase1_ += 1.0f;
-        dronePhase2_ += 1.0f;
-
-        float droneExcite1 = 0.0f;
-        float droneExcite2 = 0.0f;
-
-        if (dronePhase1_ > 4.0f * sampleRate_) // Pluck every 4 seconds
-        {
-            droneExcite1 = (random_.nextFloat() * 2.0f - 1.0f) * 0.3f;
-            dronePhase1_ = 0.0f;
-        }
-
-        if (dronePhase2_ > 5.0f * sampleRate_) // Slightly different timing
-        {
-            droneExcite2 = (random_.nextFloat() * 2.0f - 1.0f) * 0.3f;
-            dronePhase2_ = 0.0f;
-        }
-
-        droneOutput = droneString1_.process(droneExcite1) + droneString2_.process(droneExcite2);
-        droneOutput *= droneLevel_ * 0.3f;
-    }
-
-    return (mainOutput + sympatheticOutput + droneOutput) * 0.5f;
+    return (mainOutput + sympatheticOutput) * 0.5f * releaseLevel_;
 }
 
 float SitarEngine::applyJawari(float sample)
@@ -174,4 +156,74 @@ std::array<float, SitarEngine::NUM_SYMPATHETIC_STRINGS> SitarEngine::getScaleRat
     }
 
     return ratios;
+}
+
+void SitarDrone::prepareToPlay(double sampleRate)
+{
+    sampleRate_ = sampleRate;
+
+    for (auto& string : strings_)
+    {
+        string.loop.dampingHz = stringDampingHz;
+        string.loop.tune(string.frequency, 0.001f, droneRingSeconds, sampleRate);
+    }
+
+    reset();
+}
+
+void SitarDrone::reset()
+{
+    cycling_ = false;
+
+    for (auto& string : strings_)
+    {
+        string.loop.reset();
+        string.samplesToPluck = 0;
+        string.excitationLeft = 0;
+    }
+}
+
+void SitarDrone::render(juce::AudioBuffer<float>& buffer, int noteOnSample, bool notesSounding)
+{
+    for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
+    {
+        // A note starting while the drone is idle plucks both strings at once
+        if (sample == noteOnSample)
+            cycling_ = true;
+
+        float droneOutput = 0.0f;
+        for (auto& string : strings_)
+        {
+            if (cycling_ && --string.samplesToPluck <= 0)
+            {
+                // Noise for one whole period, the classic Karplus-Strong
+                // pluck: a full, sustained tone rather than a click
+                string.excitationLeft = static_cast<int>(sampleRate_ / string.frequency);
+                string.samplesToPluck = static_cast<int>(string.pluckIntervalSeconds * sampleRate_);
+            }
+
+            float excitation = 0.0f;
+            if (string.excitationLeft > 0)
+            {
+                --string.excitationLeft;
+                excitation = random_.nextFloat() * 2.0f - 1.0f;
+            }
+
+            droneOutput += string.loop.process(excitation);
+        }
+
+        // Same mix as the drone had inside each voice
+        droneOutput *= level_ * 0.3f * 0.5f;
+
+        for (int channel = 0; channel < buffer.getNumChannels(); ++channel)
+            buffer.addSample(channel, sample, droneOutput);
+    }
+
+    // Once every note has finished, the next note starts a fresh cycle
+    if (!notesSounding)
+    {
+        cycling_ = false;
+        for (auto& string : strings_)
+            string.samplesToPluck = 0;
+    }
 }
