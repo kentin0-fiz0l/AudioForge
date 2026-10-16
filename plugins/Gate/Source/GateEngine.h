@@ -34,7 +34,7 @@ namespace audioforge
  * Signal Flow:
  * Input → Lookahead Buffer → Delayed Audio ─┐
  *    ↓                                        ↓
- * Sidechain → Envelope Follower → Level      ↓
+ * Key or Input → SC Filters → Envelope Follower → Level
  *    ↓                                        ↓
  * Gain Reduction Calculator ← Threshold      ↓
  *    ↓                                        ↓
@@ -98,7 +98,11 @@ public:
      * @brief Process a stereo audio buffer
      *
      * @param buffer Audio buffer to process (modified in-place)
-     * @param sidechainBuffer Optional sidechain input (nullptr to use main input)
+     * @param sidechainBuffer Optional external key input. It feeds the detector
+     *                        when the sidechain is enabled; otherwise the main
+     *                        input does. Either way the detector signal passes
+     *                        through the sidechain filters, and in listen mode
+     *                        that filtered signal is the output.
      */
     void process(juce::AudioBuffer<float>& buffer,
                  const juce::AudioBuffer<float>* sidechainBuffer = nullptr);
@@ -132,6 +136,10 @@ private:
 
     EnvelopeFollower envelopeFollower;
     Sidechain sidechain;
+
+    // Detector signal (key or main input) filtered by the sidechain;
+    // allocated in prepare()
+    juce::AudioBuffer<float> detectorBuffer;
 
     // Lookahead delay line (circular buffer)
     juce::AudioBuffer<float> lookaheadBuffer;

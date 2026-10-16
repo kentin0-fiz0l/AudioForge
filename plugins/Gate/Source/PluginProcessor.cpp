@@ -301,22 +301,20 @@ void GateAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::Mi
         : audioforge::EnvelopeFollower::Peak);
     envelopeFollower.setRMSWindow(*rmsWindowParam);
 
-    // Get sidechain buffer (if available)
-    juce::AudioBuffer<float>* sidechainBuffer = nullptr;
+    // The key input, if the host has connected one. getBusBuffer only refers
+    // to the channels in the main buffer, so nothing is copied or allocated;
+    // the engine filters its own copy of the detector signal.
     if (getBusCount(true) > 1)
     {
-        auto sidechainBus = getBusBuffer(buffer, true, 1);
-        if (sidechainBus.getNumChannels() > 0 && sidechainBus.getNumSamples() > 0)
+        const auto sidechainBus = getBusBuffer(buffer, true, 1);
+        if (sidechainBus.getNumChannels() > 0)
         {
-            // Create a temporary buffer for sidechain
-            static juce::AudioBuffer<float> tempSidechain;
-            tempSidechain.makeCopyOf(sidechainBus);
-            sidechainBuffer = &tempSidechain;
+            gateEngine.process(buffer, &sidechainBus);
+            return;
         }
     }
 
-    // Process audio
-    gateEngine.process(buffer, sidechainBuffer);
+    gateEngine.process(buffer);
 }
 
 //==============================================================================

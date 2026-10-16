@@ -56,7 +56,8 @@ public:
     /**
      * @brief Enable/disable sidechain
      *
-     * @param enabled If true, use external input; if false, use main input
+     * @param enabled If true, use external input; if false, use main input.
+     *                The filters apply in both cases.
      */
     void setEnabled(bool enabled) { sidechainEnabled = enabled; }
 
@@ -77,7 +78,7 @@ public:
     /**
      * @brief Enable/disable listen mode
      *
-     * @param enabled If true, output filtered sidechain; if false, pass through main signal
+     * @param enabled If true, output the filtered detector signal; if false, output the processed main signal
      */
     void setListenMode(bool enabled) { listenModeEnabled = enabled; }
 
@@ -90,25 +91,16 @@ public:
     // Processing
 
     /**
-     * @brief Process sidechain signal (mono)
+     * @brief Filter the detector signal in place
      *
-     * Applies high-pass and low-pass filtering to isolate target frequencies.
+     * Applies the high-pass and low-pass filters to isolate target
+     * frequencies. Filtering applies whether the detector is fed from the
+     * external key input or the main input. Each channel (up to two) keeps
+     * its own filter state.
      *
-     * @param samples Sidechain input samples (from external source or main input)
-     * @param numSamples Number of samples
+     * @param block Detector samples (one or two channels)
      */
-    void process(float* samples, int numSamples);
-
-    /**
-     * @brief Process sidechain signal (stereo)
-     *
-     * Applies filtering to both channels, then returns max level.
-     *
-     * @param leftSamples Left channel samples
-     * @param rightSamples Right channel samples
-     * @param numSamples Number of samples per channel
-     */
-    void processStereo(float* leftSamples, float* rightSamples, int numSamples);
+    void process(juce::dsp::AudioBlock<float> block);
 
     /**
      * @brief Get filtered sidechain level (for metering/detection)
@@ -152,9 +144,6 @@ private:
 
     float highPassFreq = 80.0f;   // Hz
     float lowPassFreq = 8000.0f;  // Hz
-
-    // Processing context for DSP filters
-    juce::dsp::AudioBlock<float> audioBlock;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Sidechain)
 };
