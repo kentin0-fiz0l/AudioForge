@@ -2,7 +2,8 @@
 #include <cmath>
 
 DeEsserEngine::DeEsserEngine()
-    : envelope_(0.0f),
+    : bandCoefficients_(new Coefficients(1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f)),
+      envelope_(0.0f),
       attackCoeff_(0.0f),
       releaseCoeff_(0.0f),
       frequency_(7000.0f),
@@ -12,40 +13,37 @@ DeEsserEngine::DeEsserEngine()
       mix_(1.0f),
       sampleRate_(44100.0),
       currentGainReduction_(0.0f) {
+    for (auto& filter : bandFilters_)
+        filter.coefficients = bandCoefficients_;
 }
 
-void DeEsserEngine::prepare(double sampleRate, int samplesPerBlock) {
+void DeEsserEngine::prepare(double sampleRate, int /*samplesPerBlock*/) {
     sampleRate_ = sampleRate;
-
-    juce::dsp::ProcessSpec spec;
-    spec.sampleRate = sampleRate;
-    spec.maximumBlockSize = static_cast<juce::uint32>(samplesPerBlock);
-    spec.numChannels = 2;
-
-    highPassFilter_.prepare(spec);
-    lowPassFilter_.prepare(spec);
-    bandPassFilter_.prepare(spec);
-
     updateFilters();
     reset();
 }
 
 void DeEsserEngine::reset() {
-    highPassFilter_.reset();
-    lowPassFilter_.reset();
-    bandPassFilter_.reset();
+    for (auto& filter : bandFilters_)
+        filter.reset();
     envelope_ = 0.0f;
     currentGainReduction_ = 0.0f;
 }
 
 void DeEsserEngine::setFrequency(float freqHz) {
-    frequency_ = juce::jlimit(4000.0f, 10000.0f, freqHz);
-    updateFilters();
+    freqHz = juce::jlimit(4000.0f, 10000.0f, freqHz);
+    if (freqHz != frequency_) {
+        frequency_ = freqHz;
+        updateFilters();
+    }
 }
 
 void DeEsserEngine::setBandwidth(float octaves) {
-    bandwidth_ = juce::jlimit(0.5f, 4.0f, octaves);
-    updateFilters();
+    octaves = juce::jlimit(0.5f, 4.0f, octaves);
+    if (octaves != bandwidth_) {
+        bandwidth_ = octaves;
+        updateFilters();
+    }
 }
 
 void DeEsserEngine::setThreshold(float thresholdDb) {
@@ -71,22 +69,11 @@ void DeEsserEngine::setMix(float mix) {
 }
 
 void DeEsserEngine::updateFilters() {
-    // Calculate low and high frequencies for the band
+    // Band-pass around the sibilance (unity gain at the centre). Updated in
+    // place: the array form of the coefficients does not allocate.
     const float Q = 1.0f / bandwidth_;
-
-    // Bandpass filter for sidechain (detects sibilance)
-    auto bandPass = Coefficients::makeBandPass(sampleRate_, frequency_, Q);
-    bandPassFilter_.state = *bandPass;
-
-    // High-pass and low-pass for splitting signal
-    const float lowFreq = frequency_ / std::pow(2.0f, bandwidth_ / 2.0f);
-    const float highFreq = frequency_ * std::pow(2.0f, bandwidth_ / 2.0f);
-
-    auto highPass = Coefficients::makeHighPass(sampleRate_, lowFreq);
-    auto lowPass = Coefficients::makeLowPass(sampleRate_, highFreq);
-
-    highPassFilter_.state = *highPass;
-    lowPassFilter_.state = *lowPass;
+    const float frequency = juce::jmin(frequency_, static_cast<float>(sampleRate_) * 0.45f);
+    *bandCoefficients_ = juce::dsp::IIR::ArrayCoefficients<float>::makeBandPass(sampleRate_, frequency, Q);
 }
 
 float DeEsserEngine::calculateGainReduction(float sidechainLevel) {
@@ -105,34 +92,24 @@ float DeEsserEngine::calculateGainReduction(float sidechainLevel) {
 
 void DeEsserEngine::process(juce::AudioBuffer<float>& buffer) {
     const int numSamples = buffer.getNumSamples();
-    const int numChannels = buffer.getNumChannels();
+    const int numChannels = juce::jmin(buffer.getNumChannels(), kMaxChannels);
 
     if (numSamples == 0 || numChannels == 0)
         return;
 
-    // Create a copy for dry signal
-    juce::AudioBuffer<float> dryBuffer(numChannels, numSamples);
+    std::array<float*, kMaxChannels> channelData {};
     for (int ch = 0; ch < numChannels; ++ch)
-        dryBuffer.copyFrom(ch, 0, buffer, ch, 0, numSamples);
+        channelData[static_cast<size_t>(ch)] = buffer.getWritePointer(ch);
 
-    // Create sidechain signal (bandpass filtered)
-    juce::AudioBuffer<float> sidechainBuffer(numChannels, numSamples);
-    for (int ch = 0; ch < numChannels; ++ch)
-        sidechainBuffer.copyFrom(ch, 0, buffer, ch, 0, numSamples);
-
-    juce::dsp::AudioBlock<float> sidechainBlock(sidechainBuffer);
-    juce::dsp::ProcessContextReplacing<float> sidechainContext(sidechainBlock);
-    bandPassFilter_.process(sidechainContext);
-
-    // Process each sample
     float maxGainReduction = 0.0f;
 
     for (int sample = 0; sample < numSamples; ++sample) {
-        // Analyze sidechain (sibilance detection)
+        // Split off the sibilant band and detect its level (linked stereo)
+        std::array<float, kMaxChannels> band {};
         float sidechainLevel = 0.0f;
-        for (int ch = 0; ch < numChannels; ++ch) {
-            float value = std::abs(sidechainBuffer.getSample(ch, sample));
-            sidechainLevel = std::max(sidechainLevel, value);
+        for (size_t ch = 0; ch < static_cast<size_t>(numChannels); ++ch) {
+            band[ch] = bandFilters_[ch].processSample(channelData[ch][sample]);
+            sidechainLevel = std::max(sidechainLevel, std::abs(band[ch]));
         }
 
         // Envelope follower
@@ -141,34 +118,14 @@ void DeEsserEngine::process(juce::AudioBuffer<float>& buffer) {
         else
             envelope_ = releaseCoeff_ * envelope_ + (1.0f - releaseCoeff_) * sidechainLevel;
 
-        // Calculate gain reduction
-        float gainReduction = calculateGainReduction(envelope_);
+        const float gainReduction = calculateGainReduction(envelope_);
         maxGainReduction = std::max(maxGainReduction, 1.0f - gainReduction);
 
-        // Apply gain reduction to high frequency content only
-        juce::AudioBuffer<float> highBuffer(numChannels, 1);
-        for (int ch = 0; ch < numChannels; ++ch) {
-            highBuffer.setSample(ch, 0, buffer.getSample(ch, sample));
-        }
-
-        // Split into high and low
-        juce::dsp::AudioBlock<float> highBlock(highBuffer);
-        juce::dsp::ProcessContextReplacing<float> highContext(highBlock);
-
-        // Process high band with compression
-        for (int ch = 0; ch < numChannels; ++ch) {
-            float highSample = buffer.getSample(ch, sample);
-
-            // Simple approximation: apply gain reduction to original signal
-            // (In production, would use proper crossover)
-            float processedSample = highSample * gainReduction;
-
-            // Mix dry/wet
-            float outputSample = dryBuffer.getSample(ch, sample) * (1.0f - mix_) +
-                                processedSample * mix_;
-
-            buffer.setSample(ch, sample, outputSample);
-        }
+        // Output = rest of signal + reduced band = input + (gain - 1) * band,
+        // blended with the dry input by the mix amount
+        const float bandGain = mix_ * (gainReduction - 1.0f);
+        for (size_t ch = 0; ch < static_cast<size_t>(numChannels); ++ch)
+            channelData[ch][sample] += bandGain * band[ch];
     }
 
     currentGainReduction_ = maxGainReduction;
