@@ -6,17 +6,19 @@ HarmonizerEngine::HarmonizerEngine() {
 
 void HarmonizerEngine::prepare(double sampleRate, int samplesPerBlock) {
     sampleRate_ = sampleRate;
-    maxDelaySamples_ = static_cast<int>(sampleRate * kMaxDelayMs / 1000.0);
+    windowSamples_ = static_cast<float>(sampleRate * kWindowMs / 1000.0);
 
-    // Initialize delay buffers
+    // Initialize delay buffers: long enough for the longest tap delay
+    // (1 + windowSamples_) plus the sample after it for interpolation
     for (auto& voice : voices_) {
-        voice.delayBuffer.setSize(2, maxDelaySamples_ + samplesPerBlock);
+        voice.delayBuffer.setSize(2, static_cast<int>(windowSamples_) + 3);
         voice.delayBuffer.clear();
-        voice.formantBuffer.setSize(2, samplesPerBlock);
-        voice.formantBuffer.clear();
         voice.writePos = 0;
-        voice.readPos = 0.0f;
+        voice.phase = 0.0f;
     }
+
+    dryBuffer_.setSize(2, samplesPerBlock);
+    voiceBuffer_.setSize(2, samplesPerBlock);
 
     // Initialize filters
     juce::dsp::ProcessSpec spec;
@@ -49,9 +51,8 @@ void HarmonizerEngine::prepare(double sampleRate, int samplesPerBlock) {
 void HarmonizerEngine::reset() {
     for (auto& voice : voices_) {
         voice.delayBuffer.clear();
-        voice.formantBuffer.clear();
         voice.writePos = 0;
-        voice.readPos = 0.0f;
+        voice.phase = 0.0f;
     }
 
     for (auto& filter : highPassFilters_) {
@@ -141,8 +142,9 @@ void HarmonizerEngine::process(juce::AudioBuffer<float>& buffer) {
 
     if (numChannels == 0 || numSamples == 0) return;
 
-    // Save dry signal
-    juce::AudioBuffer<float> dryBuffer(numChannels, numSamples);
+    // Save dry signal (no reallocation unless the host exceeds the prepared block size)
+    auto& dryBuffer = dryBuffer_;
+    dryBuffer.setSize(numChannels, numSamples, false, false, true);
     for (int ch = 0; ch < numChannels; ++ch) {
         dryBuffer.copyFrom(ch, 0, buffer, ch, 0, numSamples);
     }
@@ -157,11 +159,15 @@ void HarmonizerEngine::process(juce::AudioBuffer<float>& buffer) {
         // Apply scale quantization to pitch
         float quantizedPitch = quantizePitchToScale(voice.pitchShift);
 
-        // Calculate read speed from pitch shift
-        // Positive pitch = faster playback, negative = slower
-        voice.readSpeed = std::pow(2.0f, quantizedPitch / 12.0f);
+        // Reading at `speed` times the input rate shifts pitch by that ratio.
+        // The write head advances 1 sample per sample and the read head `speed`,
+        // so the tap delays change by (1 - speed) per sample: they shrink when
+        // shifting up and grow when shifting down.
+        const float speed = std::pow(2.0f, quantizedPitch / 12.0f);
+        const float phaseStep = (1.0f - speed) / windowSamples_;
 
-        juce::AudioBuffer<float> voiceBuffer(numChannels, numSamples);
+        auto& voiceBuffer = voiceBuffer_;
+        voiceBuffer.setSize(numChannels, numSamples, false, false, true);
 
         // Process each sample
         for (int sample = 0; sample < numSamples; ++sample) {
@@ -171,17 +177,24 @@ void HarmonizerEngine::process(juce::AudioBuffer<float>& buffer) {
                                            dryBuffer.getSample(ch, sample));
             }
 
-            // Read with pitch shift
-            voice.readPos += voice.readSpeed;
+            // Two taps half a window apart. Each tap's delay wraps when it reaches
+            // the end of the window; the Hann crossfade (gains sum to 1) has that
+            // tap silent at that moment, so the wrap doesn't click.
+            voice.phase += phaseStep;
+            voice.phase -= std::floor(voice.phase);
+            const float phaseB = voice.phase < 0.5f ? voice.phase + 0.5f : voice.phase - 0.5f;
 
-            // Keep readPos in valid range
-            if (voice.readPos >= maxDelaySamples_) {
-                voice.readPos -= maxDelaySamples_;
-            }
+            const float window = std::sin(juce::MathConstants<float>::pi * voice.phase);
+            const float gainA = window * window;
+            const float gainB = 1.0f - gainA;
 
-            // Read interpolated samples
+            // Delays start at 1 sample so interpolation never reads past the write head
+            const float delayA = 1.0f + voice.phase * windowSamples_;
+            const float delayB = 1.0f + phaseB * windowSamples_;
+
             for (int ch = 0; ch < numChannels; ++ch) {
-                float shifted = readInterpolated(voice, ch, voice.readPos);
+                float shifted = gainA * readInterpolated(voice, ch, delayA)
+                              + gainB * readInterpolated(voice, ch, delayB);
                 voiceBuffer.setSample(ch, sample, shifted);
             }
 
@@ -255,12 +268,14 @@ void HarmonizerEngine::setScale(Scale scale) {
 
 void HarmonizerEngine::setFormantShift(float semitones) {
     formantShift_ = juce::jlimit(-12.0f, 12.0f, semitones);
-    // Note: Full formant preservation is complex and would require
-    // spectral processing. This is a placeholder for future enhancement.
+    // Placeholder: stored but not yet applied. Formant shifting needs spectral
+    // or LPC processing; the parameter is kept so saved sessions still load.
 }
 
 void HarmonizerEngine::setHighPass(float freqHz) {
-    highPassFreq_ = juce::jlimit(20.0f, 500.0f, freqHz);
+    const float newFreq = juce::jlimit(20.0f, 500.0f, freqHz);
+    if (newFreq == highPassFreq_) return; // Called every block: only rebuild coefficients on change
+    highPassFreq_ = newFreq;
 
     auto coeffs = juce::dsp::IIR::Coefficients<float>::makeHighPass(
         sampleRate_, highPassFreq_);
@@ -271,7 +286,9 @@ void HarmonizerEngine::setHighPass(float freqHz) {
 }
 
 void HarmonizerEngine::setLowPass(float freqHz) {
-    lowPassFreq_ = juce::jlimit(2000.0f, 20000.0f, freqHz);
+    const float newFreq = juce::jlimit(2000.0f, 20000.0f, freqHz);
+    if (newFreq == lowPassFreq_) return; // Called every block: only rebuild coefficients on change
+    lowPassFreq_ = newFreq;
 
     auto coeffs = juce::dsp::IIR::Coefficients<float>::makeLowPass(
         sampleRate_, lowPassFreq_);

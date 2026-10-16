@@ -45,16 +45,10 @@ private:
         int writePos = 0;
         float pitchShift = 0.0f;        // In semitones
         float panPosition = 0.0f;       // -1 to +1
-        float readSpeed = 1.0f;         // Playback speed for pitch shifting
-        float readPos = 0.0f;           // Fractional read position
-
-        // Formant preservation buffers
-        juce::AudioBuffer<float> formantBuffer;
+        float phase = 0.0f;             // 0-1: where tap A sits in the window (tap B is half a window away)
     };
 
     float quantizePitchToScale(float semitones);
-    void applyFormantPreservation(Voice& voice, const juce::AudioBuffer<float>& input,
-                                  juce::AudioBuffer<float>& output);
     float readInterpolated(const Voice& voice, int channel, float offset);
 
     double sampleRate_ = 44100.0;
@@ -66,8 +60,14 @@ private:
     float mix_ = 0.5f;
     float outputGain_ = 1.0f;
 
-    static constexpr int kMaxDelayMs = 100;
-    int maxDelaySamples_ = 4410; // 100ms at 44.1kHz
+    // Each voice reads its delay line through two taps sweeping a window of this
+    // length, half a window apart, crossfaded so each is silent when it wraps
+    static constexpr int kWindowMs = 50;
+    float windowSamples_ = 2205.0f; // 50ms at 44.1kHz
+
+    // Scratch buffers sized in prepare(), so process() doesn't allocate
+    juce::AudioBuffer<float> dryBuffer_;
+    juce::AudioBuffer<float> voiceBuffer_;
 
     // Filters for each voice
     std::vector<juce::dsp::ProcessorDuplicator<juce::dsp::IIR::Filter<float>,
