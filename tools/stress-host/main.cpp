@@ -7,6 +7,7 @@
 //
 // Usage: StressHost [--max-peak <level>] <plugin.vst3> [more plugins...]
 //        StressHost --levels [--level-range <low dBFS> <high dBFS>] <plugin.vst3> [more plugins...]
+//        StressHost --render <out.wav> --phrase keys|bass|lead|drums|effect <plugin.vst3>
 //
 // With --levels it does not stress anything. It reports how loud each
 // instrument is at its default settings, and with --level-range fails any
@@ -15,6 +16,7 @@
 // Options apply to the plugins named after them, so put them first.
 
 #include <juce_audio_processors/juce_audio_processors.h>
+#include "Demo.h"
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -296,6 +298,7 @@ int main(int argc, char* argv[])
     Limits limits;
     bool levelsOnly = false;
     LevelRange levelRange;
+    juce::String renderTo, renderPhrase = "keys";
     int numFailed = 0;
 
     for (int arg = 1; arg < argc; ++arg)
@@ -305,6 +308,18 @@ int main(int argc, char* argv[])
         if (path == "--max-peak" && arg + 1 < argc)
         {
             limits.maxPeak = juce::String(argv[++arg]).getFloatValue();
+            continue;
+        }
+
+        if (path == "--render" && arg + 1 < argc)
+        {
+            renderTo = argv[++arg];
+            continue;
+        }
+
+        if (path == "--phrase" && arg + 1 < argc)
+        {
+            renderPhrase = argv[++arg];
             continue;
         }
 
@@ -331,6 +346,18 @@ int main(int argc, char* argv[])
         {
             std::cout << name << "\tLOAD-FAILED\tno plugin found in bundle" << std::endl;
             ++numFailed;
+            continue;
+        }
+
+        if (renderTo.isNotEmpty()) // an audio demo for the website (see Demo.h)
+        {
+            juce::String error;
+            auto plugin = formatManager.createPluginInstance(*descriptions[0], demo::sampleRate, demo::blockSize, error);
+            if (plugin != nullptr)
+                error = demo::render(*plugin, renderPhrase, juce::File::getCurrentWorkingDirectory().getChildFile(renderTo));
+            std::cout << name << "\t" << (error.isEmpty() ? "rendered\t" + renderTo : "NOT-RENDERED\t" + error) << std::endl;
+            if (error.isNotEmpty())
+                ++numFailed;
             continue;
         }
 

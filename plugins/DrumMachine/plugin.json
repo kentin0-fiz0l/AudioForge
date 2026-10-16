@@ -1,0 +1,28 @@
+{
+  "tagline": "Self-playing drum pattern generator with five synthesized voices",
+  "category": "synthesis",
+  "description": "Generates a one-bar, 16-step drum pattern in one of seven styles and plays it with built-in synthesized drums, looped in time with the host transport. It ignores incoming MIDI and outputs no MIDI; Export MIDI saves the pattern as a .mid file. Settings are not saved with the project.",
+  "experimental": true,
+  "features": [
+    {
+      "name": "Seven Styles",
+      "description": "Rock, Hip-Hop, Jazz, EDM, Funk, Latin and Blues patterns, with Complexity 1-10 adding ghost notes and extra hits."
+    },
+    {
+      "name": "Five Drum Voices",
+      "description": "Kick (sine sweeping 150 to 50 Hz), snare (200 Hz tone plus noise), tom (120 to 100 Hz), and hi-hat and crash as unfiltered noise bursts with short and long decays."
+    },
+    {
+      "name": "Swing and Fills",
+      "description": "Swing only affects the Jazz style, adding off-beat hats above 0.3 rather than shifting timing; Fills only affect Rock, adding a four-step tom run."
+    },
+    {
+      "name": "Transport Sync",
+      "description": "Steps follow the host's beat position, with each hit starting at the beginning of the host's audio block."
+    },
+    {
+      "name": "MIDI Export",
+      "description": "Writes the pattern on channel 10 with General MIDI notes (36, 38, 42, 47, 49)."
+    }
+  ]
+}

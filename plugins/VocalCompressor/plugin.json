@@ -1,0 +1,27 @@
+{
+  "tagline": "A vocal compressor with RMS or peak detection and a parallel blend",
+  "category": "mixing",
+  "description": "A stereo-linked compressor aimed at vocals, with a choice of RMS (512-sample window) or peak level detection, manual makeup gain and a parallel mix control. Use it to even out a vocal's level, or blend in the dry signal for parallel compression that keeps the transients.",
+  "features": [
+    {
+      "name": "RMS or peak detection",
+      "description": "RMS mode averages the level over a 512-sample window for smoother gain changes; Peak mode follows the instantaneous level."
+    },
+    {
+      "name": "Core controls",
+      "description": "Threshold -60 to 0 dB (default -18), Ratio 1:1 to 20:1, Attack 0.1 to 100 ms and Release 10 to 1000 ms."
+    },
+    {
+      "name": "Makeup gain",
+      "description": "Manual makeup from -12 to +24 dB applied to the compressed signal."
+    },
+    {
+      "name": "Parallel mix",
+      "description": "Parallel Mix from 0 to 100% blends the uncompressed input back in; 0% is fully compressed."
+    },
+    {
+      "name": "Level readouts",
+      "description": "The editor shows gain reduction and output level for each block."
+    }
+  ]
+}

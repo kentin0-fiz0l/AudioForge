@@ -1,0 +1,27 @@
+{
+  "tagline": "Tempo-synced arpeggiator for held MIDI notes",
+  "category": "midi",
+  "description": "Turns held chords into a stepped sequence of single notes at a tempo-synced rate, replacing the incoming notes with the arpeggio. Use it on a MIDI track ahead of any instrument to turn sustained chords into rhythmic patterns. Built as a MIDI effect, so Ableton Live will not load it; use a host that accepts third-party MIDI effects.",
+  "features": [
+    {
+      "name": "Six patterns",
+      "description": "Up, Down, Up-Down, Down-Up, Random and Played Order."
+    },
+    {
+      "name": "Rate",
+      "description": "Nine step lengths from 1/1 to 1/32, including 1/4, 1/8 and 1/16 triplets, timed from the host tempo."
+    },
+    {
+      "name": "Octave range and gate",
+      "description": "Repeats the pattern over 1 to 4 octaves; Gate sets note length from 0 to 100% of a step."
+    },
+    {
+      "name": "Latch",
+      "description": "Keeps the arpeggio running after the keys are released."
+    },
+    {
+      "name": "Velocity",
+      "description": "Uses the average velocity of the held notes, or a fixed velocity from 1 to 127."
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "tagline": "Gate and downward expander with hold, range and external key input",
+  "category": "mixing",
+  "description": "A noise gate that can also work as a downward expander. It reads its level from the track or, with Sidechain Enable on, from an external key input, using RMS or peak detection. Attack, hold, release, range and up to 10 ms of lookahead shape how it opens and closes.",
+  "features": [
+    {
+      "name": "Gate and Expander modes",
+      "description": "Gate drops the signal by the full Range below the threshold; Expander turns it down by the Ratio (1:1 to 20:1), never further than Range"
+    },
+    {
+      "name": "Threshold and Range",
+      "description": "Threshold -60 dB to 0 dB; Range -96 dB to 0 dB sets how far the gate closes"
+    },
+    {
+      "name": "Attack, Hold and Release",
+      "description": "Attack 0.1-100 ms, hold 0-1000 ms, release 10-1000 ms"
+    },
+    {
+      "name": "Lookahead",
+      "description": "Delays the audio by 0 ms to 10 ms behind the detector so the gate is open when a transient arrives"
+    },
+    {
+      "name": "Key input and detection",
+      "description": "Optional external sidechain input for detection; RMS (1-50 ms window) or peak detection, linked across both channels"
+    },
+    {
+      "name": "Meters",
+      "description": "Input level and gain reduction meters"
+    }
+  ],
+  "useCases": [
+    "Reduce cymbal bleed on close-miked kick and snare",
+    "Mute amp noise between guitar phrases",
+    "Gentle expansion to lower breaths and room noise between vocal lines",
+    "Key a gate from another track through the sidechain input"
+  ],
+  "screenshots": [
+    "/screenshots/plugins/Gate/gate-main.png"
+  ]
+}

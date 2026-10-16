@@ -1,0 +1,28 @@
+{
+  "tagline": "Plucked-string sitar voice with sympathetic strings",
+  "category": "synthesis",
+  "description": "A six-voice plucked-string instrument: a noise burst excites a tuned feedback delay (Karplus-Strong), a soft clipper adds bridge buzz, and 13 further tuned delays ring along as sympathetic strings. Use it for sitar-like melodic lines and drones.",
+  "features": [
+    {
+      "name": "Jawari",
+      "description": "Blends in tanh soft clipping of the string output for a buzzing, brighter tone."
+    },
+    {
+      "name": "Sympathetic strings",
+      "description": "13 resonators fed by the main string, tuned to the played note in a Chromatic, Bhairavi, Yaman or Kafi scale."
+    },
+    {
+      "name": "Drone",
+      "description": "Two resonators at C3 and G3, plucked every 4 and 5 seconds, so they are heard only on notes held that long."
+    },
+    {
+      "name": "Pitch and vibrato",
+      "description": "Pitch Bend from -2 to +2 semitones and sine vibrato up to 10 Hz and 5% depth."
+    },
+    {
+      "name": "Attack",
+      "description": "Fade-in from 1 to 100 ms; the Decay control is read but not used by the engine."
+    }
+  ],
+  "experimental": true
+}

@@ -1,0 +1,38 @@
+{
+  "tagline": "8-voice wavetable synth with 32 tables and an enveloped filter",
+  "category": "synthesis",
+  "description": "An 8-voice synth that reads from 32 built-in single-cycle wavetables, from sine and saw to formant, bell and noise. One Position control moves through the tables, crossfading between neighbours, into a multi-mode filter with its own envelope and an amp envelope.",
+  "features": [
+    {
+      "name": "32 wavetables",
+      "description": "Basic waves, harmonic series, pulses, saw variants, digital, formant, vowel, bell, glass, organ, noise, chip and pad tables, generated in code"
+    },
+    {
+      "name": "Wavetable Position",
+      "description": "0 to 1 across all 32 tables, interpolating between the two nearest"
+    },
+    {
+      "name": "Multi-mode filter",
+      "description": "Low-pass, high-pass, band-pass or notch; cutoff 20 Hz to 20 kHz, resonance 0.5 to 10"
+    },
+    {
+      "name": "Filter envelope",
+      "description": "Its own ADSR, adding up to 10 kHz to the cutoff, scaled by Env Amount"
+    },
+    {
+      "name": "Amp envelope and velocity",
+      "description": "ADSR with attack and decay up to 2 s and release up to 5 s; velocity sets the note level"
+    },
+    {
+      "name": "8-voice polyphony",
+      "description": "Eight voices through the shared AudioForge voice manager"
+    }
+  ],
+  "useCases": [
+    "Pads - a soft table with slow attack and release",
+    "Leads - a bright table with a resonant low-pass and a short filter envelope",
+    "Bass - a saw or pulse table with the cutoff low and a snappy filter envelope",
+    "Exploring timbre - sweep Position while holding a note"
+  ],
+  "screenshots": []
+}

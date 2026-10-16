@@ -18,16 +18,16 @@ const faqs: FAQItem[] = [
     answer: 'AudioForge plugins work in any DAW that supports VST3 format (Ableton Live, FL Studio, Reaper, Bitwig, etc.) or AU format on macOS (Logic Pro, GarageBand, Ableton, etc.). Standalone versions are also available. The eight MIDI tools (Arpeggiator, Chord Generator, Harmonizer and the rest) are MIDI effects, which Ableton Live does not load from third parties; use them in Logic Pro, Reaper or Bitwig.',
   },
   {
-    question: 'Is there a download yet?',
-    answer: 'Not yet. Ready-made installers are on the way; for now you build the plugins from the source code, which takes a few commands (see Getting Started in the docs). No account is needed, and nothing collects personal information.',
+    question: 'Do I need an account?',
+    answer: 'No. Download the installer for your platform from the latest release; nothing collects personal information.',
   },
   {
     question: 'How do I install the plugins?',
-    answer: 'Build them from source (see Getting Started in the docs): the build copies each plugin into your system plugin folder. Then restart your DAW and rescan plugins.',
+    answer: 'Run the installer for your platform: the macOS .pkg, the Windows Setup.exe, or install.sh from the Linux download. It puts the plugins where your DAW looks for them. Then restart your DAW and rescan plugins. The installers are not code-signed, so macOS asks you to choose Open Anyway and Windows SmartScreen asks for Run anyway, once.',
   },
   {
     question: 'Are the plugins compatible with Apple Silicon (M1/M2/M3)?',
-    answer: 'Yes. A build runs natively on the kind of Mac it is built on, Apple Silicon or Intel.',
+    answer: 'Yes. The macOS downloads are universal: they run natively on Apple Silicon and Intel Macs, macOS 11 or later.',
   },
   {
     question: 'Can I use AudioForge plugins commercially?',
@@ -35,7 +35,7 @@ const faqs: FAQItem[] = [
   },
   {
     question: 'How are these different from paid plugins?',
-    answer: 'AudioForge plugins focus on essential, well-executed features with clean, tested code. While paid plugins might have more complex UIs or exotic features, our plugins excel at core DSP tasks with professional quality.',
+    answer: 'AudioForge is open source: you can read, change and learn from every line, and it costs nothing. Paid plugins usually have more polish and more features. Some AudioForge plugins are marked Experimental on their pages because parts of them do not work as intended yet; each page says what.',
   },
   {
     question: 'Can I contribute to the project?',

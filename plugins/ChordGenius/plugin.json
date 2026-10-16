@@ -1,0 +1,20 @@
+{
+  "tagline": "Four-chord progression templates with MIDI file export",
+  "category": "midi",
+  "description": "Shows a four-chord progression built from one of eight genre templates in C major and saves it as a .mid file. It does not produce MIDI in real time: the processor passes incoming MIDI through unchanged, and nothing is saved with the project. It is built as a MIDI effect (IS_MIDI_EFFECT TRUE), so Ableton Live will not load it.",
+  "experimental": true,
+  "features": [
+    {
+      "name": "Genre Templates",
+      "description": "Pop, Rock, Jazz, Blues, EDM, Emotional, Happy and Sad map to fixed Roman-numeral progressions; a parsing bug currently turns every IV chord into a V."
+    },
+    {
+      "name": "Triads in C Major",
+      "description": "Each chord is a root-position major or minor triad built on the C major scale; there is no key selector."
+    },
+    {
+      "name": "MIDI File Export",
+      "description": "Writes the four chords one bar each on channel 1 at velocity 100, with a 120 BPM tempo marker."
+    }
+  ]
+}

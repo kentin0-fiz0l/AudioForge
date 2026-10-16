@@ -1,0 +1,27 @@
+{
+  "tagline": "Six-voice saw and square synth with unison",
+  "category": "synthesis",
+  "description": "A six-voice subtractive synth with a sawtooth and a square oscillator per voice, up to six detuned unison copies, a simple low-pass/high-pass filter and an ADSR envelope. Use it for basic leads, basses and pads.",
+  "features": [
+    {
+      "name": "Two oscillators",
+      "description": "Saw and square, crossfaded by Osc Mix; the square can be detuned from -24 to +24 semitones."
+    },
+    {
+      "name": "Unison",
+      "description": "1 to 6 stacked copies per voice, spread across up to 50 cents."
+    },
+    {
+      "name": "Filter",
+      "description": "One-pole (6 dB/octave) low-pass and high-pass, blended by LP/HP Mix, with cutoff from 20 Hz to 20 kHz."
+    },
+    {
+      "name": "ADSR envelope",
+      "description": "Attack and decay up to 2 s, sustain level, release up to 5 s."
+    },
+    {
+      "name": "Output Level",
+      "description": "-24 to +12 dB, ramped across each block to avoid clicks."
+    }
+  ]
+}

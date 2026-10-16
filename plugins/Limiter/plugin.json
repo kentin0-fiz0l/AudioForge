@@ -1,0 +1,36 @@
+{
+  "tagline": "Lookahead peak limiter with a true-peak warning light",
+  "category": "mixing",
+  "description": "A brickwall peak limiter with up to 10 ms of lookahead, so gain comes down before a peak arrives and the output stays under the ceiling. Threshold and auto makeup raise the level into the limiter; release, output trim and meters complete it. A 4x oversampled true-peak check on the output lights a TP indicator when intersample peaks pass 0 dBFS.",
+  "features": [
+    {
+      "name": "Ceiling",
+      "description": "-12 dB to 0 dB (default -0.3 dB); limiting is linked across both channels, with instant attack"
+    },
+    {
+      "name": "Lookahead",
+      "description": "0 ms to 10 ms (default 5 ms), reported to the host as latency; the reduction is held and averaged over the lookahead so it is complete when the peak comes out"
+    },
+    {
+      "name": "Threshold and Auto Makeup",
+      "description": "With Auto Makeup on, the signal is raised so the threshold level (-24 dB to 0 dB) comes out at the ceiling, up to 12 dB of gain"
+    },
+    {
+      "name": "Release and Output Trim",
+      "description": "Exponential release 10 ms to 1000 ms; output trim ±12 dB after the limiter"
+    },
+    {
+      "name": "Meters",
+      "description": "Input, output and gain reduction meters, plus a TP light from a 4x oversampled true-peak check of the output"
+    }
+  ],
+  "useCases": [
+    "Catch peaks on the master bus before export",
+    "Raise the level of a mix with Threshold and Auto Makeup",
+    "Protect a bus from occasional overs",
+    "Check for intersample overs with the TP light"
+  ],
+  "screenshots": [
+    "/screenshots/plugins/Limiter/limiter-main.png"
+  ]
+}

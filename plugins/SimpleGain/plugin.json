@@ -1,0 +1,39 @@
+{
+  "tagline": "Gain control from -60 dB to +12 dB with a peak meter",
+  "category": "utility",
+  "description": "A single gain knob from -60 dB to +12 dB, smoothed so changes do not click, with a peak level meter. It is the smallest plugin in the set and a starting point for learning buffer processing in JUCE.",
+  "features": [
+    {
+      "name": "Gain",
+      "description": "-60 dB to +12 dB in 0.1 dB steps, default 0 dB (unity)"
+    },
+    {
+      "name": "Peak meter",
+      "description": "Shows the output peak level, redrawn 30 times a second"
+    },
+    {
+      "name": "Parameter smoothing",
+      "description": "Gain changes ramp over 50 ms, so moving the knob does not click"
+    },
+    {
+      "name": "Rotary knob",
+      "description": "One knob with a dB readout below it"
+    }
+  ],
+  "learningFocus": [
+    "Audio buffer processing",
+    "Decibel to linear conversion",
+    "Parameter smoothing",
+    "Level metering",
+    "Sample-by-sample processing",
+    "AudioProcessor basics",
+    "AudioParameterFloat usage",
+    "GUI with AudioProcessorEditor",
+    "Timer-based UI updates",
+    "Thread-safe communication (atomics)"
+  ],
+  "screenshots": [
+    "/screenshots/plugins/SimpleGain/simplegain-main.png"
+  ],
+  "graphic": "/plugin-graphics/simplegain.svg"
+}

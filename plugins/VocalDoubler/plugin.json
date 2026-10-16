@@ -1,0 +1,28 @@
+{
+  "tagline": "Up to four delayed, detuned, panned copies of a vocal",
+  "category": "mixing",
+  "description": "A doubler that builds one to four extra voices from the input, each with its own timing offset, small pitch offset and pan position, filtered and mixed back with the dry signal. It is meant for widening a lead vocal or faking a double-tracked part. The per-voice delay read position does not yet track the input correctly, so the voices currently come out as a stepped, held version of the input rather than a clean double.",
+  "experimental": true,
+  "features": [
+    {
+      "name": "Voices and width",
+      "description": "Voices sets one to four copies, spread evenly across the stereo field by Stereo Width (0 to 100%) with constant-power panning."
+    },
+    {
+      "name": "Timing and pitch offsets",
+      "description": "Timing Shift (0 to 30 ms) and Pitch Variation (0 to 20 cents) are scaled up per voice, with pitch offsets alternating sharp and flat."
+    },
+    {
+      "name": "Humanize",
+      "description": "Humanize (0 to 100%) adds a slow LFO wobble to each voice's delay and a small random pitch jitter."
+    },
+    {
+      "name": "Voice filtering",
+      "description": "A high-pass (20 to 500 Hz) and low-pass (2 to 20 kHz) filter shape the doubled voices only."
+    },
+    {
+      "name": "Mix and output gain",
+      "description": "Mix blends dry and doubled signal (0 to 100%), and Output Gain trims the doubles by -12 to +12 dB."
+    }
+  ]
+}

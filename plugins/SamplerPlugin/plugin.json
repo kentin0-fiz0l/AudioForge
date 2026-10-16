@@ -1,0 +1,38 @@
+{
+  "tagline": "16-voice sampler with key zones, velocity layers and looping",
+  "category": "synthesis",
+  "description": "A sampler that loads WAV, AIFF and FLAC files, by file dialog or by dragging them onto the window, and plays them back repitched from each zone's root note. Key zones and velocity layers, with round-robin between samples on the same layer, map samples across the keyboard; amp and filter envelopes and a multi-mode filter shape the sound.",
+  "features": [
+    {
+      "name": "Sample loading",
+      "description": "WAV, AIFF or FLAC, from a Load Sample dialog or dropped onto the window, listed in a sample browser with memory use"
+    },
+    {
+      "name": "Key zones and velocity layers",
+      "description": "Zones cover a range of notes with a root note; each zone holds velocity layers, cycling round-robin when several samples match"
+    },
+    {
+      "name": "Looping",
+      "description": "None, Forward or Ping-Pong per sample, with loop start and end dragged on the waveform display"
+    },
+    {
+      "name": "Amp and filter envelopes",
+      "description": "Two ADSRs (attack and decay up to 5 s, release up to 10 s); the filter envelope amount runs from -1 to +1"
+    },
+    {
+      "name": "Multi-mode filter",
+      "description": "Low-pass, high-pass, band-pass or notch; cutoff 20 Hz to 20 kHz, resonance 0.5 to 10"
+    },
+    {
+      "name": "16-voice polyphony",
+      "description": "Sixteen voices with master volume; velocity sets the level"
+    }
+  ],
+  "useCases": [
+    "Play a single recorded note across the keyboard",
+    "Build a drum kit with one zone per note",
+    "Multi-sampled instruments with velocity layers and round-robin",
+    "Sustained sounds from short samples with forward or ping-pong loops"
+  ],
+  "screenshots": []
+}

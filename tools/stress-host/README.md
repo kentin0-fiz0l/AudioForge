@@ -77,3 +77,18 @@ An instrument is brought into range with the `outputTrim` constant at the end of
 A peak well above 1.0 is not automatically a bug. Compressors with maximum makeup gain, saturators at full drive, and filters at high resonance are legitimately loud. Look for peaks that are orders of magnitude out, output from an effect that exceeds what its controls could explain, and anything non-finite.
 
 Runs on macOS and, without a display, on Linux. Not tried on Windows.
+
+## Audio demos for the website
+
+`--render` plays an instrument, or feeds an effect, a short phrase and writes the output to a WAV
+(see `Demo.h`): `keys`, `bass`, `lead` or `drums` for instruments, `effect` for effects, which are
+fed a built-in loop of drums and chords. No recordings are used, so the demos carry no licence.
+
+```bash
+build/stress-host/StressHost_artefacts/Release/StressHost --render demo.wav --phrase keys path/to/Plugin.vst3
+```
+
+`tools/render-demos.sh <dir of .vst3 bundles>` renders every instrument and effect in the catalog
+to `website/public/demos/<id>.mp3`, level-matched to -18 LUFS, choosing the phrase that suits each.
+MIDI tools, self-playing generators and plugins that need setup (the sampler, the vocoder) are left
+without a demo. Afterwards rebuild the catalog with `node website/scripts/build-catalog.mjs`.

@@ -1,0 +1,36 @@
+{
+  "tagline": "Spectral freeze that holds a sound's level and pitch",
+  "category": "creative",
+  "description": "FreezeFX passes audio through until you press Freeze, then holds the spectrum it captured, using an STFT with FFT sizes from 1024 to 8192 and 2x, 4x or 8x overlap. Each bin keeps the phase advance measured just after freezing, so the held sound keeps its pitch and level; phase randomization and spectral blur can then animate or smear it.",
+  "features": [
+    {
+      "name": "Freeze",
+      "description": "Captures the magnitude of every bin and keeps advancing each bin's phase at the rate it was measured, so the held sound stays at the pitch and level it had"
+    },
+    {
+      "name": "Freeze Mix",
+      "description": "0% to 100% (default 100%), adding the frozen spectrum to the live one bin by bin"
+    },
+    {
+      "name": "Phase Random and Phase Speed",
+      "description": "Below 50% a smooth random walk that pulls neighbouring bins together; from 50% up, per-bin sine modulation for denser movement. Speed 0.1 Hz to 10 Hz"
+    },
+    {
+      "name": "Spectral Blur",
+      "description": "Averages each frozen bin with its neighbours, over 1 to 6 bins"
+    },
+    {
+      "name": "Status display",
+      "description": "Shows FROZEN or PROCESSING"
+    }
+  ],
+  "useCases": [
+    "Hold a chord or vowel as a sustained pad",
+    "Extend the decay of a percussive hit",
+    "Drones built from a short sample",
+    "Slowly shifting textures with Phase Random and Blur"
+  ],
+  "screenshots": [],
+  "graphic": "/plugin-graphics/freezefx.svg",
+  "experimental": true
+}

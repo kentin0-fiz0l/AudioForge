@@ -1,0 +1,28 @@
+{
+  "tagline": "A channel vocoder: audio input shapes a MIDI-played sawtooth carrier",
+  "category": "creative",
+  "description": "A filter-bank vocoder that splits the audio input (the modulator) into 8 to 32 band-pass bands spaced from 100 Hz to 8 kHz, follows each band's level, and applies those levels to the same bands of an internal sawtooth carrier played from MIDI notes. It is built as an instrument that also takes audio input, so the host has to route a voice or other signal into it while you play notes. The Formant Shift control is stored but not used by the DSP.",
+  "experimental": true,
+  "features": [
+    {
+      "name": "MIDI-played carrier",
+      "description": "Up to eight simultaneous MIDI notes each play a sawtooth, scaled by velocity and by Carrier Level (0 to 1)."
+    },
+    {
+      "name": "Band count",
+      "description": "Bands sets 8 to 32 log-spaced band-pass filters (Q 5); filter frequencies are only recalculated when playback is prepared."
+    },
+    {
+      "name": "Envelope timing",
+      "description": "Attack (1 to 100 ms) and Release (10 to 500 ms) set how quickly each band follows the modulator."
+    },
+    {
+      "name": "Modulator level and mix",
+      "description": "Modulator Level scales the vocoded output, and Mix blends it with the dry input (default fully wet)."
+    },
+    {
+      "name": "Band level display",
+      "description": "The editor draws a bar for each band's envelope level, updated 30 times a second."
+    }
+  ]
+}

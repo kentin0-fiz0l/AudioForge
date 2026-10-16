@@ -1,0 +1,40 @@
+{
+  "tagline": "Real-time granular effect on the last 10 seconds of input",
+  "category": "creative",
+  "description": "GranularEngine records its input into a 10-second buffer and plays it back as overlapping grains, up to 64 at a time. You set grain size, density, scan speed, read position, pitch, spray, reverse probability and stereo spread, and choose one of six grain windows. MIDI notes, when present, scale grain density by velocity.",
+  "features": [
+    {
+      "name": "Grain controls",
+      "description": "Size 10-500 ms, density 1-100 grains per second, pitch -24 to +24 semitones"
+    },
+    {
+      "name": "Scan Speed and Position",
+      "description": "Scan Speed (0.25x to 4x) sets how fast grains move through the input; Position sets where in the buffer they read from"
+    },
+    {
+      "name": "Spray, Reverse and Stereo Width",
+      "description": "Spray scatters each grain's start point; Reverse is the chance a grain plays backwards; Stereo Width (0-200%) spreads grains at random across the stereo field"
+    },
+    {
+      "name": "Six windows",
+      "description": "Hann, Gaussian, Triangle, Tukey, Blackman and Kaiser, with a Shape control for Gaussian width and Tukey taper"
+    },
+    {
+      "name": "Displays",
+      "description": "Waveform of the 10-second buffer with the read position, a preview of the window, and grain activity, redrawn 60 times a second"
+    },
+    {
+      "name": "Velocity-scaled density",
+      "description": "While a MIDI note is held, grain density is multiplied by its velocity"
+    }
+  ],
+  "useCases": [
+    "Turn a sustained vocal or instrument into a grain cloud",
+    "Stutter and glitch textures with short grains and high spray",
+    "Slow, smeared versions of the input with Scan Speed below 1x",
+    "Octave-shifted textures with Pitch at ±12 semitones",
+    "Backwards-sounding textures with Reverse near 100%"
+  ],
+  "screenshots": [],
+  "graphic": "/plugin-graphics/granularengine.svg"
+}

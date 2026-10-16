@@ -1,0 +1,78 @@
+{
+  "tagline": "Waveshaping distortion with five curves and a tone filter",
+  "category": "creative",
+  "description": "A waveshaper with five transfer curves, drive up to 11x, dry/wet mix, a low-pass tone filter and output gain. A display draws the selected curve, and a 20 Hz high-pass removes DC from the output.",
+  "features": [
+    {
+      "name": "Five shapes",
+      "description": "Soft Clip, Hard Clip, Tanh, Cubic and Asymmetric"
+    },
+    {
+      "name": "Drive",
+      "description": "0% to 100%, multiplying the input by 1x to 11x before shaping"
+    },
+    {
+      "name": "Curve display",
+      "description": "Draws the selected transfer curve and redraws when you change the shape"
+    },
+    {
+      "name": "Mix",
+      "description": "0% (dry) to 100% (shaped) for parallel distortion"
+    },
+    {
+      "name": "Tone",
+      "description": "12 dB/octave low-pass from 500 Hz to 20 kHz after the shaper; off at 100%"
+    },
+    {
+      "name": "Output and meters",
+      "description": "Output gain -12 dB to +12 dB, with input and output peak readouts updated 30 times a second"
+    }
+  ],
+  "useCases": [
+    "Gentle saturation - Soft Clip with low drive (10-30%)",
+    "Hard digital clipping - Hard Clip with high drive",
+    "Smooth saturation - Tanh with medium drive (40-60%)",
+    "Even-harmonic colour - Asymmetric mode, where the two halves of the wave clip differently",
+    "Parallel distortion - Mix around 50%",
+    "Darker distortion - lower Tone to roll off the highs the shaper adds"
+  ],
+  "learningFocus": [
+    "Waveshaping algorithms (polynomial, tanh, clipping)",
+    "Transfer function visualization",
+    "Per-sample nonlinear processing",
+    "Harmonic distortion (odd vs even harmonics)",
+    "Soft vs hard clipping behavior",
+    "DC offset and blocking filters",
+    "Parallel processing",
+    "Post-distortion tone shaping"
+  ],
+  "algorithms": [
+    {
+      "name": "Soft Clip",
+      "description": "Straight below 1.0, then bends over smoothly toward ±1.5, meeting the straight part with the same slope",
+      "code": "// Soft clipping (input limited to ±3)\nif (|input| < 1.0)\n    return input;\nsign = input > 0 ? 1.0 : -1.0;\nreturn sign * (1.5 - 0.5 / (2.0 * |input| - 1.0));"
+    },
+    {
+      "name": "Hard Clip",
+      "description": "Clamps the signal at ±1",
+      "code": "return clamp(input, -1.0, 1.0);"
+    },
+    {
+      "name": "Tanh Saturation",
+      "description": "Hyperbolic tangent curve",
+      "code": "return tanh(input);  // Approaches ±1 asymptotically"
+    },
+    {
+      "name": "Cubic Waveshaping",
+      "description": "x - x³/3, which adds odd harmonics; past |x| = 1 the curve turns back down, so high drive folds the wave",
+      "code": "input = clamp(input, -2.0, 2.0);\noutput = input - (input³ / 3.0);\nreturn clamp(output, -1.0, 1.0);"
+    },
+    {
+      "name": "Asymmetric Waveshaping",
+      "description": "Different curves for positive and negative halves, which adds even harmonics",
+      "code": "if (input > 0.0)\n    return tanh(input * 1.5) * 0.85;  // Harder positive\nelse\n    return tanh(input * 0.8) * 0.95;  // Softer negative"
+    }
+  ],
+  "screenshots": [],
+  "graphic": "/plugin-graphics/waveshaper.svg"
+}

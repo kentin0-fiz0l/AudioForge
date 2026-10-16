@@ -1,0 +1,23 @@
+{
+  "tagline": "Tremolo or vibrato from one LFO with sine, triangle or square shapes",
+  "category": "creative",
+  "description": "A modulation effect with two modes: Tremolo varies the volume and Vibrato varies the pitch by sweeping a short delay line. Both use the same LFO, waveform and depth controls. Use it for amp-style pulsing, choppy square-wave gating, or wavering pitch on guitars, keys and synths.",
+  "features": [
+    {
+      "name": "Two modes",
+      "description": "Tremolo scales the level between full and (1 - Depth); Vibrato reads a delay line swept between about 7 and 13 ms with linear interpolation."
+    },
+    {
+      "name": "Three LFO waveforms",
+      "description": "Sine, Triangle and Square shapes, with the square giving hard on/off gating in Tremolo mode."
+    },
+    {
+      "name": "Rate and depth",
+      "description": "Rate runs from 0.1 to 20 Hz (default 5 Hz) and Depth from 0 to 1."
+    },
+    {
+      "name": "Mix",
+      "description": "Blends the dry and modulated signal from 0 to 1 (default fully wet)."
+    }
+  ]
+}

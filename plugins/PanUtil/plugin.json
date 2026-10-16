@@ -1,0 +1,58 @@
+{
+  "tagline": "Pan, width, gain and mono for one stereo track",
+  "category": "utility",
+  "description": "A track utility for stereo signals: pan or balance, stereo width from mono to 200%, output gain from -36 dB to +24 dB, and a mono switch. All four controls are smoothed, and L/R meters and a pan indicator show the result.",
+  "features": [
+    {
+      "name": "Pan or Balance",
+      "description": "Pan mode uses a constant-power pan law; Balance mode (the default) only turns the opposite side down, so a centred signal keeps its level"
+    },
+    {
+      "name": "Width",
+      "description": "Mid/side width from 0% (mono) through 100% (unchanged) to 200%"
+    },
+    {
+      "name": "Gain",
+      "description": "Output gain from -36 dB to +24 dB; double-click returns it to 0 dB"
+    },
+    {
+      "name": "Mono",
+      "description": "Sums to mono whatever Width is set to, smoothed so switching does not click"
+    },
+    {
+      "name": "Meters",
+      "description": "Left and right peak meters and a pan position indicator"
+    }
+  ],
+  "useCases": [
+    "Re-centre a source recorded slightly to one side",
+    "Place instruments across the stereo field",
+    "Widen a synth or pad with width above 100%",
+    "Check mono compatibility with the Mono switch",
+    "Trim a track's level without touching the fader"
+  ],
+  "learningFocus": [
+    "Stereo processing (L/R channels)",
+    "Constant-power panning algorithm",
+    "M/S (Mid/Side) processing for width control",
+    "Dual-channel metering",
+    "Pan vs Balance behavior",
+    "Choice and bool parameters",
+    "Keeping saved state compatible when parameters are added",
+    "Custom drawing in the editor"
+  ],
+  "algorithms": [
+    {
+      "name": "Constant-Power Panning",
+      "description": "Keeps perceived loudness about constant as you pan across the stereo field",
+      "code": "// Convert pan (-1 to +1) to angle (0 to π/2)\nfloat angle = (pan + 1.0) * 0.25 * π;\nleftGain = cos(angle);\nrightGain = sin(angle);"
+    },
+    {
+      "name": "Width Control (M/S Processing)",
+      "description": "Mid/Side processing for stereo width adjustment",
+      "code": "// Convert L/R to M/S\nmid = (L + R) * 0.5;    // Mono sum\nside = (L - R) * 0.5;   // Stereo difference\n\n// Scale side by width\nside *= width;  // 0.0 = mono, 1.0 = normal, 2.0 = wide\n\n// Convert back to L/R\nL = mid + side;\nR = mid - side;"
+    }
+  ],
+  "screenshots": [],
+  "graphic": "/plugin-graphics/panutil.svg"
+}

@@ -1,0 +1,38 @@
+{
+  "tagline": "Synthesized kick, snare, clap and hi-hats on the GM drum map",
+  "category": "synthesis",
+  "description": "A drum synth with five sounds made from oscillators and filtered noise: kick, snare, clap, closed hi-hat and open hi-hat. Notes follow the General MIDI drum map, each hit plays at its own position in the block and at its velocity, and a closed hat chokes an open one.",
+  "features": [
+    {
+      "name": "Kick",
+      "description": "Sine with a pitch sweep from 3x down to the set pitch (30-100 Hz), plus decay, click, tone and drive"
+    },
+    {
+      "name": "Snare",
+      "description": "A tuned body mixed with band-passed noise (3.5-6.5 kHz), with tune, snap, tone, decay and mix"
+    },
+    {
+      "name": "Clap",
+      "description": "Several short bursts of band-passed noise followed by a tail, with tone and decay"
+    },
+    {
+      "name": "Closed and open hi-hat",
+      "description": "Filtered noise with tune, decay, tone and click; the open hat rings longer, and a closed or pedal hat cuts it off"
+    },
+    {
+      "name": "GM note map",
+      "description": "C1 kick, D1 snare, D#1 clap, F#1 and G#1 closed hat, A#1 open hat"
+    },
+    {
+      "name": "Velocity and timing",
+      "description": "Each hit's level follows its velocity, and hits start on their exact sample within the block"
+    }
+  ],
+  "useCases": [
+    "Electronic drum parts programmed on the GM drum map",
+    "Drum clips written for other GM instruments, played back unchanged",
+    "Layering a synthesized kick or clap under recorded drums",
+    "Learning how kicks, snares and hats are built from oscillators and noise"
+  ],
+  "screenshots": []
+}

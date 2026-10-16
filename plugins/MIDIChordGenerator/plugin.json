@@ -1,0 +1,27 @@
+{
+  "tagline": "Plays a chord of a chosen type from each incoming note",
+  "category": "midi",
+  "description": "Builds a chord on every incoming note using a fixed chord type and voicing, and releases the whole chord when the note is released. Use it to play full chords from single keys or to turn a bass line into a chord part. Built as a MIDI effect, so Ableton Live will not load it; use a host that accepts third-party MIDI effects.",
+  "features": [
+    {
+      "name": "18 chord types",
+      "description": "Triads, sus2/sus4, sixths, sevenths (including dim7 and m7b5) and add9/ninth chords."
+    },
+    {
+      "name": "Voicings",
+      "description": "Root position, 1st to 3rd inversion, Spread, Drop-2 and Drop-3."
+    },
+    {
+      "name": "Octave shift",
+      "description": "Moves the chord from 2 octaves down to 2 octaves up from the played note."
+    },
+    {
+      "name": "Strum",
+      "description": "Offsets each chord note after the first by a set amount; the 0 to 100 value is applied in samples, so the spread is at most a few milliseconds."
+    },
+    {
+      "name": "Velocity",
+      "description": "Uses the played velocity or a fixed velocity from 1 to 127."
+    }
+  ]
+}

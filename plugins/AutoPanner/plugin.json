@@ -1,0 +1,23 @@
+{
+  "tagline": "LFO auto-panner and tremolo with stereo width control",
+  "category": "creative",
+  "description": "A stereo effect that moves the left and right channel gains with a free-running LFO, using an equal-power gain law. The Phase Offset between the two channels decides the effect: at 0 the channels move in opposition for a left-right pan, and at the default 0.5 they rise and fall together, which sounds as a tremolo. A mid/side width control is applied before the movement.",
+  "features": [
+    {
+      "name": "Waveform",
+      "description": "Sine, Triangle or Square LFO; the square switches hard between positions."
+    },
+    {
+      "name": "Rate and Depth",
+      "description": "Rate from 0.01 to 20 Hz, not synced to tempo; Depth 0-1 sets how far the gains swing."
+    },
+    {
+      "name": "Phase Offset",
+      "description": "Phase between the left and right LFOs from 0 to 1 cycle; 0 gives auto-pan and 0.5 gives tremolo."
+    },
+    {
+      "name": "Stereo Width",
+      "description": "Scales the side signal from 0 (mono) to 2 (twice as wide) before panning."
+    }
+  ]
+}

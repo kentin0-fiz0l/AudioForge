@@ -1,0 +1,28 @@
+{
+  "tagline": "Up to four pitch-shifted voices at fixed intervals, each panned",
+  "category": "creative",
+  "description": "A harmonizer that adds one to four voices, each set to a fixed interval of -24 to +24 semitones and its own pan position, then filtered and mixed with the dry signal. The Scale setting snaps each interval to the nearest step of the chosen scale; it does not detect the sung note. The pitch shifter is a single delay-line read without crossfading and does not yet produce the set intervals correctly, and the Formant Shift control is a placeholder that does nothing.",
+  "experimental": true,
+  "features": [
+    {
+      "name": "Four interval voices",
+      "description": "Voices sets how many of the four voices play; each has a Pitch control from -24 to +24 semitones (defaults +3, +7, +12, -12)."
+    },
+    {
+      "name": "Per-voice panning",
+      "description": "Each voice has a Pan control from -100 to +100 with constant-power panning."
+    },
+    {
+      "name": "Scale snapping",
+      "description": "Twelve scale choices (Chromatic, Major, Minor, the modes, Harmonic Minor, Melodic Minor, Pentatonic) round each voice's interval to a scale step."
+    },
+    {
+      "name": "Voice filtering",
+      "description": "A high-pass (20 to 500 Hz) and low-pass (2 to 20 kHz) filter shape the harmony voices only."
+    },
+    {
+      "name": "Mix and output gain",
+      "description": "Mix blends dry and harmony signal (0 to 100%), and Output Gain trims the harmonies by -12 to +12 dB."
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 import React from 'react';
 import Image from 'next/image';
-import type { Plugin } from '@/lib/plugins';
+import { pluginTypeLabel, type Plugin } from '@/lib/plugins';
 import { Badge } from '@/components/Badge';
 
 interface PluginCardProps {
@@ -80,7 +80,7 @@ export const PluginCard: React.FC<PluginCardProps> = ({ plugin, className = '' }
               {plugin.name}
             </h3>
             <span className="text-sm text-foreground-dim ml-2 mt-1 font-mono">
-              v{plugin.version}
+              {pluginTypeLabel[plugin.type]}
             </span>
           </div>
           <p className="text-accent text-sm font-medium">

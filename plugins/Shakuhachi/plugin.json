@@ -1,0 +1,27 @@
+{
+  "tagline": "Breathy flute voice from noise and a tuned delay",
+  "category": "synthesis",
+  "description": "A four-voice instrument that sends filtered pink noise through a feedback delay line tuned to the note, giving a breathy, flute-like tone. It is a simple delay-line resonator rather than a full physical model of the bamboo tube. Use it for airy lead lines and textures.",
+  "features": [
+    {
+      "name": "Breath Pressure",
+      "description": "Sets how much noise drives the resonator and how bright that noise is."
+    },
+    {
+      "name": "Embouchure (Meri/Kari)",
+      "description": "Shifts the pitch by up to 2 semitones down (meri) or up (kari)."
+    },
+    {
+      "name": "Air Noise and Brightness",
+      "description": "Air Noise blends unpitched breath noise against the tone; Brightness opens a low-pass filter on the tone."
+    },
+    {
+      "name": "Breath attack",
+      "description": "During the attack (10 to 500 ms) the sound fades from breath noise into the tone; release runs from 0.1 to 2 s."
+    },
+    {
+      "name": "Vibrato",
+      "description": "Sine vibrato with rate up to 10 Hz and depth up to 5% of the pitch."
+    }
+  ]
+}

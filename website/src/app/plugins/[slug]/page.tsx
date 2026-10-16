@@ -2,7 +2,8 @@ import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
-import { getPluginById, plugins } from '@/lib/plugins';
+import { getPluginById, plugins, pluginTypeLabel } from '@/lib/plugins';
+import { Badge } from '@/components/Badge';
 
 interface PluginPageProps {
   params: Promise<{ slug: string }>;
@@ -72,13 +73,30 @@ export default async function PluginPage({ params }: PluginPageProps) {
                   {plugin.name}
                 </h1>
                 <span className="px-3 py-1 bg-green-500/20 text-green-400 border border-green-500/30 rounded-full text-xs font-medium mt-2">
-                  v{plugin.version}
+                  {pluginTypeLabel[plugin.type]}
                 </span>
+                {plugin.badges?.map((badge) => (
+                  <span key={badge} className="mt-2">
+                    <Badge type={badge} />
+                  </span>
+                ))}
               </div>
 
               <p className="text-xl lg:text-2xl text-accent font-medium mb-6">
                 {plugin.tagline}
               </p>
+
+              {plugin.demo && (
+                <div className="mb-6">
+                  <audio controls preload="none" src={plugin.demo} className="w-full max-w-md">
+                    Your browser cannot play this audio demo.
+                  </audio>
+                  <p className="text-foreground/50 text-xs mt-1">
+                    {plugin.type === 'effect' ? 'A drum and chord loop played through it' : 'A short phrase played on it'}, at its
+                    default settings. Demos are level-matched.
+                  </p>
+                </div>
+              )}
 
               <p className="text-lg text-foreground/80 mb-8">
                 {plugin.description}

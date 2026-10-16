@@ -1,0 +1,28 @@
+{
+  "tagline": "Bass-line pattern generator with a built-in bass synth",
+  "category": "synthesis",
+  "description": "Generates a 4-bar bass pattern over a fixed I-IV-V-I progression in one of seven styles and plays it with its own synth, looped in time with the host transport. It ignores incoming MIDI and outputs no MIDI; the Export MIDI button saves the pattern as a .mid file. Settings are not saved with the project.",
+  "experimental": true,
+  "features": [
+    {
+      "name": "Seven Styles",
+      "description": "Rock, Funk, Jazz, EDM, Reggae, Latin and Blues are rule-based patterns of roots, fifths and chord tones, with small random timing and velocity changes on all but EDM."
+    },
+    {
+      "name": "Key, Scale and Octave",
+      "description": "Choose the root key, major or minor (which only changes the Jazz chord tones) and an octave of C1, C2 or C3."
+    },
+    {
+      "name": "Bass Synth",
+      "description": "8-voice Sine, Saw, Square or Triangle oscillator with ADSR and a one-pole low-pass from 100 to 2000 Hz."
+    },
+    {
+      "name": "Delay and Reverb",
+      "description": "A 250 ms delay with fixed 30% feedback and a JUCE reverb, each with a 0-1 mix control."
+    },
+    {
+      "name": "MIDI Export",
+      "description": "Writes the current pattern to a .mid file on channel 1 at 120 BPM."
+    }
+  ]
+}

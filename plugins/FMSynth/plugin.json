@@ -1,0 +1,34 @@
+{
+  "tagline": "Four-operator FM synth with eight algorithms",
+  "category": "synthesis",
+  "description": "A 6-voice FM synthesizer with four sine operators, each with its own level, frequency ratio and ADSR envelope. Eight algorithms connect the operators in different modulator and carrier layouts, and operator 1 can feed back into itself.",
+  "features": [
+    {
+      "name": "Four sine operators",
+      "description": "Each with level, ratio (0.25 to 16 in steps of 0.25) and its own ADSR envelope"
+    },
+    {
+      "name": "Eight algorithms",
+      "description": "From four parallel carriers, through pairs and stacks, to a four-operator serial chain"
+    },
+    {
+      "name": "Feedback",
+      "description": "Operator 1 modulates its own phase, from 0 to 1"
+    },
+    {
+      "name": "Velocity",
+      "description": "Note velocity scales the voice's output level"
+    },
+    {
+      "name": "6-voice polyphony",
+      "description": "Six voices, managed by JUCE's Synthesiser"
+    }
+  ],
+  "useCases": [
+    "Electric piano tones - a modulator at ratio 1 into a carrier, with a fast-decaying modulator envelope",
+    "Bell tones - non-integer ratios such as 3.5 for inharmonic partials",
+    "FM bass - low ratios and a short modulator envelope",
+    "Bright leads - high modulator levels and some feedback"
+  ],
+  "screenshots": []
+}

@@ -1,0 +1,58 @@
+{
+  "tagline": "Stereo delay up to 2 seconds with feedback and ping-pong",
+  "category": "mixing",
+  "description": "A stereo delay built on a circular buffer, with delay time from 1 ms to 2 s, feedback up to 99%, and a wet/dry mix. Ping-pong mode feeds the left delay line into the right channel's feedback. Input and output meters show levels.",
+  "features": [
+    {
+      "name": "Delay Time",
+      "description": "1 ms to 2 s, with the knob skewed toward short times"
+    },
+    {
+      "name": "Feedback",
+      "description": "0% to 99%, shown as a percentage"
+    },
+    {
+      "name": "Mix",
+      "description": "0% (dry) to 100% (wet), shown as a percentage"
+    },
+    {
+      "name": "Ping-Pong",
+      "description": "The right channel's feedback is taken from the left delay line instead of its own"
+    },
+    {
+      "name": "Meters",
+      "description": "Input and output level meters"
+    }
+  ],
+  "useCases": [
+    "Vocal slapback - quick doubling (80-120 ms, low feedback)",
+    "Eighth-note echo - 250 ms at 120 BPM",
+    "Long ambient echoes - 500-800 ms with high feedback",
+    "Haas widening - 10-30 ms, no feedback",
+    "Dub-style throws - 375 ms (dotted eighth at 120 BPM), automate Mix"
+  ],
+  "learningFocus": [
+    "Circular buffer implementation for delay lines",
+    "Cross-channel feedback",
+    "Wet/dry signal mixing",
+    "Buffer index wrapping",
+    "Multi-channel processing with shared write position",
+    "Real-time parameter control (delay time, feedback, mix)",
+    "State persistence (save/restore delay parameters)",
+    "Showing a 0-1 parameter as a percentage"
+  ],
+  "algorithms": [
+    {
+      "name": "Circular Buffer Delay",
+      "description": "Delay line that wraps its read and write positions around a fixed buffer",
+      "code": "// Read the delayed sample\nreadPosition = writePosition - delaySamples;\nif (readPosition < 0) readPosition += MAX_DELAY_SAMPLES;\ndelayed = delayBuffer[readPosition];\n\n// Write input plus feedback\ndelayBuffer[writePosition] = input + feedbackSource * feedback;\n\n// Mix and advance\noutput = input * (1 - mix) + delayed * mix;\nwritePosition = (writePosition + 1) % MAX_DELAY_SAMPLES;"
+    },
+    {
+      "name": "Ping-Pong Feedback",
+      "description": "The right channel takes its feedback from the left delay line",
+      "code": "// Left feeds back into itself\nleftBuffer[writePos] = leftIn + leftBuffer[readPos] * feedback;\n\n// Right feeds back from the left line when ping-pong is on\nsource = pingPong ? leftBuffer[readPos] : rightBuffer[readPos];\nrightBuffer[writePos] = rightIn + source * feedback;"
+    }
+  ],
+  "screenshots": [],
+  "graphic": "/plugin-graphics/cleandelay.svg"
+}

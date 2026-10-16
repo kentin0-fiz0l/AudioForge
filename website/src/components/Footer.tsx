@@ -17,7 +17,7 @@ export const Footer: React.FC = () => {
             <div className="md:col-span-2">
               <Logo size="sm" />
               <p className="text-foreground-muted text-sm mt-4 leading-relaxed max-w-md">
-                Professional VST3 and AU plugins for music production. Built with JUCE and modern C++, free and open source forever.
+                Free, open-source VST3 and AU plugins for music production, built with JUCE and modern C++.
               </p>
               <div className="flex gap-4 mt-6">
                 <a
@@ -50,9 +50,7 @@ export const Footer: React.FC = () => {
                 </li>
                 <li>
                   <a
-                    href="/docs/#getting-started"
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    href="/#download"
                     className="text-foreground-muted hover:text-primary transition-colors text-sm"
                   >
                     Download

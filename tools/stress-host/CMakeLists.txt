@@ -16,6 +16,7 @@ target_compile_definitions(StressHost PRIVATE
 
 target_link_libraries(StressHost PRIVATE
     juce::juce_audio_processors
+    juce::juce_audio_formats
     juce::juce_recommended_config_flags)
 
 target_compile_features(StressHost PRIVATE cxx_std_17)
