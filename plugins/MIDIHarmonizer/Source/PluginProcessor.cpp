@@ -142,6 +142,8 @@ void MIDIHarmonizerProcessor::setStateInformation(const void* data, int sizeInBy
     }
 }
 
+#ifndef AUDIOFORGE_TESTS
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter() {
     return new MIDIHarmonizerProcessor();
 }
+#endif

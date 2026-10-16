@@ -61,14 +61,14 @@ std::vector<int> HarmonizerEngine::generateHarmonyNotes(int rootNote) {
 
     // Third above
     if (thirdAbove_) {
-        int harmonyNote = transposeInScale(rootNote, 2);  // 2 scale degrees up
+        int harmonyNote = transposeInScale(rootNote, 2, 4);
         if (harmonyNote != rootNote)
             notes.push_back(harmonyNote);
     }
 
     // Fifth above
     if (fifthAbove_) {
-        int harmonyNote = transposeInScale(rootNote, 4);  // 4 scale degrees up
+        int harmonyNote = transposeInScale(rootNote, 4, 7);
         if (harmonyNote != rootNote)
             notes.push_back(harmonyNote);
     }
@@ -82,14 +82,14 @@ std::vector<int> HarmonizerEngine::generateHarmonyNotes(int rootNote) {
 
     // Third below
     if (thirdBelow_) {
-        int harmonyNote = transposeInScale(rootNote, -2);  // 2 scale degrees down
+        int harmonyNote = transposeInScale(rootNote, -2, -4);
         if (harmonyNote != rootNote)
             notes.push_back(harmonyNote);
     }
 
     // Fifth below
     if (fifthBelow_) {
-        int harmonyNote = transposeInScale(rootNote, -4);  // 4 scale degrees down
+        int harmonyNote = transposeInScale(rootNote, -4, -7);
         if (harmonyNote != rootNote)
             notes.push_back(harmonyNote);
     }
@@ -104,107 +104,65 @@ std::vector<int> HarmonizerEngine::generateHarmonyNotes(int rootNote) {
     return notes;
 }
 
-int HarmonizerEngine::transposeInScale(int noteNumber, int degrees) {
-    if (scale_ == Scale::Chromatic) {
-        // In chromatic mode, use fixed semitone intervals
-        if (degrees == 2) return noteNumber + 4;      // Major 3rd
-        if (degrees == -2) return noteNumber - 4;     // Major 3rd down
-        if (degrees == 4) return noteNumber + 7;      // Perfect 5th
-        if (degrees == -4) return noteNumber - 7;     // Perfect 5th down
-        return noteNumber;
-    }
+// Returns the harmony note `degrees` scale steps from noteNumber (2 = 3rd, 4 = 5th,
+// negative = below). `semitones` is the interval used where scale steps don't apply.
+int HarmonizerEngine::transposeInScale(int noteNumber, int degrees, int semitones) const {
+    if (scale_ == Scale::Chromatic)
+        return noteNumber + semitones;
 
-    // Get scale pattern
-    auto pattern = getScalePattern(scale_);
+    const auto scale = getScaleTones(scale_);
+    const int keyOffset = static_cast<int>(key_);
+    auto inScale = [&](int note) {
+        int pitchClass = ((note - keyOffset) % 12 + 12) % 12;
+        for (int i = 0; i < scale.size; ++i)
+            if (scale.tones[i] == pitchClass) return true;
+        return false;
+    };
 
-    // Find current position in scale
-    int keyOffset = static_cast<int>(key_);
-    int relativeNote = (noteNumber - keyOffset + 120) % 12;  // +120 to ensure positive
-
-    // Find which scale degree we're on
-    int currentDegree = -1;
-    for (int i = 0; i < 7; ++i) {
-        if (pattern[i] == relativeNote) {
-            currentDegree = i;
-            break;
+    if (scale.size < 7) {
+        // Pentatonic/Blues have no diatonic 3rd or 5th: use the scale note nearest
+        // to the chromatic interval, preferring the one closer to the input note.
+        const int target = noteNumber + semitones;
+        const int towardInput = semitones > 0 ? -1 : 1;
+        for (int distance = 0; distance < 12; ++distance) {
+            if (inScale(target + towardInput * distance)) return target + towardInput * distance;
+            if (inScale(target - towardInput * distance)) return target - towardInput * distance;
         }
+        return target;
     }
 
-    // If note not in scale, find closest
-    if (currentDegree == -1) {
-        for (int i = 0; i < 7; ++i) {
-            if (pattern[i] >= relativeNote) {
-                currentDegree = i;
-                break;
-            }
-        }
-        if (currentDegree == -1) currentDegree = 0;
-    }
+    // Seven-note scale: find the input's degree (the scale note at or below it)
+    const int relative = noteNumber - keyOffset;
+    const int octave = (relative >= 0 ? relative : relative - 11) / 12;
+    const int pitchClass = relative - octave * 12;
+    int degree = 0;
+    while (degree < 6 && scale.tones[degree + 1] <= pitchClass) ++degree;
 
-    // Calculate target degree
-    int targetDegree = (currentDegree + degrees + 70) % 7;  // +70 to ensure positive
-    int octaveShift = (currentDegree + degrees) / 7;
-    if (currentDegree + degrees < 0) octaveShift = -1;
+    // An out-of-key note harmonizes from its scale neighbour on the harmony's side
+    if (scale.tones[degree] != pitchClass && degrees > 0)
+        ++degree;
 
-    // Get target note in scale
-    int targetRelative = pattern[targetDegree];
-    int targetNote = keyOffset + targetRelative + (octaveShift * 12);
-
-    // Adjust to match original octave range
-    while (targetNote < noteNumber - 6 && degrees > 0) targetNote += 12;
-    while (targetNote > noteNumber + 6 && degrees < 0) targetNote -= 12;
-
-    return juce::jlimit(0, 127, targetNote);
+    const int target = octave * 7 + degree + degrees;
+    const int targetOctave = (target >= 0 ? target : target - 6) / 7;
+    return keyOffset + targetOctave * 12 + scale.tones[target - targetOctave * 7];
 }
 
-std::array<int, 12> HarmonizerEngine::getScalePattern(Scale scale) {
-    // Returns semitone positions for 7 notes (rest are -1)
-    std::array<int, 12> pattern;
-    pattern.fill(-1);
-
+HarmonizerEngine::ScaleTones HarmonizerEngine::getScaleTones(Scale scale) {
     switch (scale) {
-        case Scale::Chromatic:
-            for (int i = 0; i < 12; ++i) pattern[i] = i;
-            break;
-        case Scale::Major:
-            pattern = {0, -1, 2, -1, 4, 5, -1, 7, -1, 9, -1, 11};
-            break;
         case Scale::Minor:
-        case Scale::Aeolian:
-            pattern = {0, -1, 2, 3, -1, 5, -1, 7, 8, -1, 10, -1};
-            break;
-        case Scale::Dorian:
-            pattern = {0, -1, 2, 3, -1, 5, -1, 7, -1, 9, 10, -1};
-            break;
-        case Scale::Phrygian:
-            pattern = {0, 1, -1, 3, -1, 5, -1, 7, 8, -1, 10, -1};
-            break;
-        case Scale::Lydian:
-            pattern = {0, -1, 2, -1, 4, -1, 6, 7, -1, 9, -1, 11};
-            break;
-        case Scale::Mixolydian:
-            pattern = {0, -1, 2, -1, 4, 5, -1, 7, -1, 9, 10, -1};
-            break;
-        case Scale::Locrian:
-            pattern = {0, 1, -1, 3, -1, 5, 6, -1, 8, -1, 10, -1};
-            break;
-        case Scale::HarmonicMinor:
-            pattern = {0, -1, 2, 3, -1, 5, -1, 7, 8, -1, -1, 11};
-            break;
-        case Scale::MelodicMinor:
-            pattern = {0, -1, 2, 3, -1, 5, -1, 7, -1, 9, -1, 11};
-            break;
-        case Scale::Pentatonic:
-            pattern = {0, -1, 2, -1, 4, -1, -1, 7, -1, 9, -1, -1};
-            break;
-        case Scale::Blues:
-            pattern = {0, -1, -1, 3, -1, 5, 6, 7, -1, -1, 10, -1};
-            break;
-        default:
-            pattern = {0, -1, 2, -1, 4, 5, -1, 7, -1, 9, -1, 11};  // Default to Major
+        case Scale::Aeolian:       return {{0, 2, 3, 5, 7, 8, 10}, 7};
+        case Scale::Dorian:        return {{0, 2, 3, 5, 7, 9, 10}, 7};
+        case Scale::Phrygian:      return {{0, 1, 3, 5, 7, 8, 10}, 7};
+        case Scale::Lydian:        return {{0, 2, 4, 6, 7, 9, 11}, 7};
+        case Scale::Mixolydian:    return {{0, 2, 4, 5, 7, 9, 10}, 7};
+        case Scale::Locrian:       return {{0, 1, 3, 5, 6, 8, 10}, 7};
+        case Scale::HarmonicMinor: return {{0, 2, 3, 5, 7, 8, 11}, 7};
+        case Scale::MelodicMinor:  return {{0, 2, 3, 5, 7, 9, 11}, 7};
+        case Scale::Pentatonic:    return {{0, 2, 4, 7, 9}, 5};
+        case Scale::Blues:         return {{0, 3, 5, 6, 7, 10}, 6};
+        case Scale::Major:
+        default:                   return {{0, 2, 4, 5, 7, 9, 11}, 7};
     }
-
-    return pattern;
 }
 
 int HarmonizerEngine::getVelocityForNote(int inputVelocity) const {
