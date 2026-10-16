@@ -16,22 +16,10 @@ ChordGeniusEditor::ChordGeniusEditor (ChordGeniusProcessor& p)
     titleLabel_.setJustificationType (juce::Justification::centred);
     addAndMakeVisible (titleLabel_);
 
-    // Genre selector
-    genreSelector_.addItem ("Pop", 1);
-    genreSelector_.addItem ("Rock", 2);
-    genreSelector_.addItem ("Jazz", 3);
-    genreSelector_.addItem ("Blues", 4);
-    genreSelector_.addItem ("EDM", 5);
-    genreSelector_.addItem ("Emotional", 6);
-    genreSelector_.addItem ("Happy", 7);
-    genreSelector_.addItem ("Sad", 8);
-    genreSelector_.setSelectedId (1);
-    addAndMakeVisible (genreSelector_);
-
-    // Generate button
-    generateButton_.setButtonText ("Generate Progression");
-    generateButton_.addListener (this);
-    addAndMakeVisible (generateButton_);
+    // Key, mode and genre selectors
+    setUpSelector (keySelector_, "key", keyAttachment_);
+    setUpSelector (modeSelector_, "mode", modeAttachment_);
+    setUpSelector (genreSelector_, "genre", genreAttachment_);
 
     // Export button
     exportButton_.setButtonText ("Export MIDI");
@@ -39,12 +27,12 @@ ChordGeniusEditor::ChordGeniusEditor (ChordGeniusProcessor& p)
     addAndMakeVisible (exportButton_);
 
     // Key display
-    keyLabel_.setText ("Key: C Major", juce::dontSendNotification);
+    keyLabel_.setText ("Key:", juce::dontSendNotification);
     keyLabel_.setFont (juce::Font (18.0f));
     addAndMakeVisible (keyLabel_);
 
     // Create chord labels (4 chords)
-    for (int i = 0; i < 4; ++i)
+    for (int i = 0; i < ChordGeniusProcessor::kChordsPerProgression; ++i)
     {
         auto chordLabel = std::make_unique<juce::Label>();
         chordLabel->setFont (juce::Font (24.0f, juce::Font::bold));
@@ -61,17 +49,33 @@ ChordGeniusEditor::ChordGeniusEditor (ChordGeniusProcessor& p)
         romanLabels_.push_back (std::move(romanLabel));
     }
 
-    // Display initial progression
-    auto& progression = processor_.getCurrentProgression();
+    showProgression();
+}
+
+ChordGeniusEditor::~ChordGeniusEditor()
+{
+}
+
+void ChordGeniusEditor::setUpSelector (juce::ComboBox& selector, const juce::String& paramID,
+                                       std::unique_ptr<ComboBoxAttachment>& attachment)
+{
+    auto& state = processor_.getValueTreeState();
+    if (auto* choice = dynamic_cast<juce::AudioParameterChoice*> (state.getParameter (paramID)))
+        selector.addItemList (choice->choices, 1);
+
+    attachment = std::make_unique<ComboBoxAttachment> (state, paramID, selector);
+    selector.onChange = [this] { showProgression(); };
+    addAndMakeVisible (selector);
+}
+
+void ChordGeniusEditor::showProgression()
+{
+    const auto progression = processor_.getCurrentProgression();
     for (size_t i = 0; i < progression.size() && i < chordLabels_.size(); ++i)
     {
         chordLabels_[i]->setText (progression[i].name, juce::dontSendNotification);
         romanLabels_[i]->setText (progression[i].romanNumeral, juce::dontSendNotification);
     }
-}
-
-ChordGeniusEditor::~ChordGeniusEditor()
-{
 }
 
 void ChordGeniusEditor::paint (juce::Graphics& g)
@@ -90,11 +94,11 @@ void ChordGeniusEditor::paint (juce::Graphics& g)
 void ChordGeniusEditor::resized()
 {
     titleLabel_.setBounds (0, 20, getWidth(), 40);
-    keyLabel_.setBounds (20, 70, 200, 30);
+    keyLabel_.setBounds (20, 70, 50, 30);
+    keySelector_.setBounds (70, 70, 80, 30);
+    modeSelector_.setBounds (160, 70, 100, 30);
     genreSelector_.setBounds (getWidth() - 220, 70, 200, 30);
-    // Generate and Export buttons
-    generateButton_.setBounds ((getWidth() - 420) / 2, 320, 200, 35);
-    exportButton_.setBounds ((getWidth() - 420) / 2 + 220, 320, 200, 35);
+    exportButton_.setBounds ((getWidth() - 200) / 2, 320, 200, 35);
 
     // Position chord labels
     for (int i = 0; i < 4; ++i)
@@ -107,37 +111,9 @@ void ChordGeniusEditor::resized()
 
 void ChordGeniusEditor::buttonClicked (juce::Button* button)
 {
-    if (button == &generateButton_)
-    {
-        // Get selected genre
-        int selectedId = genreSelector_.getSelectedId();
-        std::string genre = "pop";
-
-        switch (selectedId)
-        {
-            case 1: genre = "pop"; break;
-            case 2: genre = "rock"; break;
-            case 3: genre = "jazz"; break;
-            case 4: genre = "blues"; break;
-            case 5: genre = "edm"; break;
-            case 6: genre = "emotional"; break;
-            case 7: genre = "happy"; break;
-            case 8: genre = "sad"; break;
-        }
-
-        // Generate new progression
-        processor_.generateNewProgression(genre);
-
-        // Update display
-        auto& progression = processor_.getCurrentProgression();
-        for (size_t i = 0; i < progression.size() && i < chordLabels_.size(); ++i)
-        {
-            chordLabels_[i]->setText (progression[i].name, juce::dontSendNotification);
-            romanLabels_[i]->setText (progression[i].romanNumeral, juce::dontSendNotification);
-        }
-    }
-    else if (button == &exportButton_) {
-        auto fileChooser = std::make_unique<juce::FileChooser>(
+    if (button == &exportButton_) {
+        // Kept as a member: an async chooser closes as soon as it is destroyed
+        fileChooser_ = std::make_unique<juce::FileChooser>(
             "Export MIDI File",
             juce::File::getSpecialLocation(juce::File::userDocumentsDirectory),
             "*.mid"
@@ -146,7 +122,7 @@ void ChordGeniusEditor::buttonClicked (juce::Button* button)
         auto chooserFlags = juce::FileBrowserComponent::saveMode |
                            juce::FileBrowserComponent::canSelectFiles;
 
-        fileChooser->launchAsync(chooserFlags, [this](const juce::FileChooser& chooser) {
+        fileChooser_->launchAsync(chooserFlags, [this](const juce::FileChooser& chooser) {
             auto file = chooser.getResult();
             if (file != juce::File()) {
                 if (!file.hasFileExtension(".mid"))
