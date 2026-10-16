@@ -1,7 +1,7 @@
 #include "CompressorEngine.h"
 #include <cmath>
 
-CompressorEngine::CompressorEngine()
+VocalCompressorEngine::VocalCompressorEngine()
     : threshold_(-18.0f),
       ratio_(4.0f),
       knee_(3.0f),
@@ -16,10 +16,10 @@ CompressorEngine::CompressorEngine()
       currentGainReduction_(0.0f),
       outputLevel_(0.0f) {
 
-    std::fill(std::begin(rmsWindow_), std::end(rmsWindow_), 0.0f);
+    reset();
 }
 
-void CompressorEngine::prepare(double sampleRate, int samplesPerBlock) {
+void VocalCompressorEngine::prepare(double sampleRate, int samplesPerBlock) {
     sampleRate_ = sampleRate;
 
     dryBuffer_.setSize(2, samplesPerBlock);
@@ -27,107 +27,84 @@ void CompressorEngine::prepare(double sampleRate, int samplesPerBlock) {
     reset();
 }
 
-void CompressorEngine::reset() {
+void VocalCompressorEngine::reset() {
     envelope_ = 0.0f;
     currentGainReduction_ = 0.0f;
     outputLevel_ = 0.0f;
     rmsIndex_ = 0;
-    std::fill(std::begin(rmsWindow_), std::end(rmsWindow_), 0.0f);
+    for (auto& window : rmsWindow_)
+        std::fill(std::begin(window), std::end(window), 0.0f);
 }
 
-void CompressorEngine::setThreshold(float thresholdDb) {
+void VocalCompressorEngine::setThreshold(float thresholdDb) {
     threshold_ = juce::jlimit(-60.0f, 0.0f, thresholdDb);
 }
 
-void CompressorEngine::setRatio(float ratio) {
+void VocalCompressorEngine::setRatio(float ratio) {
     ratio_ = juce::jlimit(1.0f, 20.0f, ratio);
 }
 
-void CompressorEngine::setAttack(float attackMs) {
+void VocalCompressorEngine::setAttack(float attackMs) {
     attackMs = juce::jlimit(0.1f, 100.0f, attackMs);
     attackCoeff_ = std::exp(-1.0f / (attackMs * 0.001f * static_cast<float>(sampleRate_)));
 }
 
-void CompressorEngine::setRelease(float releaseMs) {
+void VocalCompressorEngine::setRelease(float releaseMs) {
     releaseMs = juce::jlimit(10.0f, 1000.0f, releaseMs);
     releaseCoeff_ = std::exp(-1.0f / (releaseMs * 0.001f * static_cast<float>(sampleRate_)));
 }
 
-void CompressorEngine::setKnee(float kneeDb) {
+void VocalCompressorEngine::setKnee(float kneeDb) {
     knee_ = juce::jlimit(0.0f, 12.0f, kneeDb);
 }
 
-void CompressorEngine::setMakeupGain(float gainDb) {
+void VocalCompressorEngine::setMakeupGain(float gainDb) {
     makeupGain_ = juce::jlimit(-12.0f, 24.0f, gainDb);
 }
 
-void CompressorEngine::setParallelMix(float mix) {
+void VocalCompressorEngine::setParallelMix(float mix) {
     parallelMix_ = juce::jlimit(0.0f, 1.0f, mix);
 }
 
-void CompressorEngine::setDetectionMode(bool usePeak) {
+void VocalCompressorEngine::setDetectionMode(bool usePeak) {
     usePeak_ = usePeak;
 }
 
-float CompressorEngine::detectLevel(float sample) {
-    float absValue = std::abs(sample);
-
+float VocalCompressorEngine::detectLevel(int channel, float sample) {
     if (usePeak_) {
         // Peak detection
-        return absValue;
+        return std::abs(sample);
     } else {
-        // RMS detection with 512-sample window
-        rmsWindow_[rmsIndex_] = sample * sample;
-        rmsIndex_ = (rmsIndex_ + 1) % 512;
+        // RMS detection with a 512-sample window per channel
+        float* window = rmsWindow_[channel];
+        window[rmsIndex_] = sample * sample;
 
         float sum = 0.0f;
-        for (int i = 0; i < 512; ++i)
-            sum += rmsWindow_[i];
+        for (int i = 0; i < kRmsWindowSize; ++i)
+            sum += window[i];
 
-        return std::sqrt(sum / 512.0f);
+        return std::sqrt(sum / static_cast<float>(kRmsWindowSize));
     }
 }
 
-float CompressorEngine::applyKnee(float inputDb, float thresholdDb, float kneeDb) {
-    if (kneeDb <= 0.0f) {
-        // Hard knee
-        return inputDb;
+float VocalCompressorEngine::calculateGainReduction(float level) {
+    const float overDb = juce::Decibels::gainToDecibels(level, -60.0f) - threshold_;
+    const float slope = 1.0f - 1.0f / ratio_;
+    float reductionDb = 0.0f;
+
+    if (2.0f * overDb >= knee_) {
+        // Above the knee (or hard knee): follow the ratio line
+        reductionDb = slope * overDb;
+    } else if (2.0f * overDb > -knee_) {
+        // Inside the soft knee: quadratic blend from no reduction to the ratio line
+        const float intoKnee = overDb + knee_ / 2.0f;
+        reductionDb = slope * intoKnee * intoKnee / (2.0f * knee_);
     }
 
-    // Soft knee
-    float kneeStart = thresholdDb - kneeDb / 2.0f;
-    float kneeEnd = thresholdDb + kneeDb / 2.0f;
-
-    if (inputDb < kneeStart) {
-        return inputDb;
-    } else if (inputDb > kneeEnd) {
-        return inputDb;
-    } else {
-        // Smooth curve in knee region
-        float x = (inputDb - kneeStart) / kneeDb;
-        float curve = x * x / 2.0f; // Quadratic curve
-        return inputDb - curve * kneeDb;
-    }
+    return juce::Decibels::decibelsToGain(-reductionDb);
 }
 
-float CompressorEngine::calculateGainReduction(float level) {
-    // Convert to dB
-    float levelDb = juce::Decibels::gainToDecibels(level, -60.0f);
-
-    // Apply knee
-    float kneedLevel = applyKnee(levelDb, threshold_, knee_);
-
-    if (kneedLevel > threshold_) {
-        // Calculate gain reduction
-        float excess = kneedLevel - threshold_;
-        float reductionDb = excess * (1.0f - 1.0f / ratio_);
-        return juce::Decibels::decibelsToGain(-reductionDb);
-    }
-
-    return 1.0f; // No reduction
-}
-
-void CompressorEngine::process(juce::AudioBuffer<float>& buffer) {
+void VocalCompressorEngine::process(juce::AudioBuffer<float>& buffer) {
     const int numSamples = buffer.getNumSamples();
     const int numChannels = buffer.getNumChannels();
 
@@ -146,10 +123,11 @@ void CompressorEngine::process(juce::AudioBuffer<float>& buffer) {
     for (int sample = 0; sample < numSamples; ++sample) {
         // Detect level (stereo-linked)
         float detectedLevel = 0.0f;
-        for (int ch = 0; ch < numChannels; ++ch) {
-            float level = detectLevel(buffer.getSample(ch, sample));
+        for (int ch = 0; ch < std::min(numChannels, kMaxChannels); ++ch) {
+            float level = detectLevel(ch, buffer.getSample(ch, sample));
             detectedLevel = std::max(detectedLevel, level);
         }
+        rmsIndex_ = (rmsIndex_ + 1) % kRmsWindowSize;
 
         // Envelope follower
         if (detectedLevel > envelope_)

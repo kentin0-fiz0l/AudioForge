@@ -51,7 +51,7 @@ private:
 
     juce::AudioProcessorValueTreeState apvts_;
     AudioForge::PresetManager presetManager_;
-    CompressorEngine compressor_;
+    VocalCompressorEngine compressor_;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(VocalCompressorProcessor)
 };
