@@ -61,6 +61,11 @@ public:
     void setLoopPoints(double startSec, double endSec);
 
     /**
+     * Set loop points in samples (the end is the loop's last sample).
+     */
+    void setLoopPointsInSamples(int startSample, int endSample);
+
+    /**
      * Get loop start in samples.
      */
     int getLoopStartSamples() const { return loopStartSamples; }
@@ -91,6 +96,20 @@ public:
      */
     int getRootNote() const { return rootNote; }
 
+    /**
+     * The file the sample was loaded from (empty if it didn't come from one).
+     */
+    const juce::File& getSourceFile() const { return sourceFile; }
+    void setSourceFile(const juce::File& file) { sourceFile = file; }
+
+    /**
+     * Whether the file has its own loop (a WAV's smpl chunk), and where it is
+     * in samples. An SFZ region without loop opcodes uses it.
+     */
+    bool hasFileLoop() const { return fileLoopEnd > fileLoopStart; }
+    int getFileLoopStart() const { return fileLoopStart; }
+    int getFileLoopEnd() const { return fileLoopEnd; }
+
 private:
     juce::AudioBuffer<float> audioData;
     double sampleRate = 44100.0;
@@ -104,4 +123,8 @@ private:
 
     // Musical settings
     int rootNote = 60;  // Middle C by default
+
+    juce::File sourceFile;
+    int fileLoopStart = 0;
+    int fileLoopEnd = 0;
 };

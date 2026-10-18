@@ -27,6 +27,7 @@ std::shared_ptr<Sample> SampleLibrary::loadSample(const juce::File& file)
 
     // Create sample from reader
     auto sample = std::make_shared<Sample>(*reader, 30.0);
+    sample->setSourceFile(file);
 
     // Check memory budget
     size_t sampleSize = sample->getSizeInBytes();

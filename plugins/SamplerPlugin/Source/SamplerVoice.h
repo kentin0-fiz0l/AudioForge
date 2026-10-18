@@ -17,6 +17,30 @@
 class SamplerVoice
 {
 public:
+    /**
+     * What a voice plays and how: the sample, its pitch and level, which part
+     * of it, and any envelope settings of its own (an SFZ region's).
+     */
+    struct Playback
+    {
+        std::shared_ptr<Sample> sample;
+        double pitchRatio = 1.0;        // Note frequency over the sample's recorded pitch
+        float gainLeft = 1.0f;          // Level, velocity and pan together
+        float gainRight = 1.0f;
+        int startFrame = 0;
+        int endFrame = -1;              // Last frame to play; -1 for the whole sample
+        Sample::LoopMode loopMode = Sample::LoopMode::None;
+        int loopStart = 0;              // Frames; loopEnd is the last frame of the loop
+        int loopEnd = 0;
+        bool oneShot = false;           // Ignores note-off and plays to the end
+
+        // Negative: use the plugin's Amp envelope parameter
+        float attack = -1.0f;
+        float decay = -1.0f;
+        float sustain = -1.0f;
+        float release = -1.0f;
+    };
+
     SamplerVoice();
 
     /**
@@ -27,6 +51,11 @@ public:
      * @param sampleRate Current sample rate
      */
     void noteOn(int midiNote, float velocity, double sampleRate);
+
+    /**
+     * Start playing a note with what to play.
+     */
+    void start(int midiNote, const Playback& playback, double sampleRate);
 
     /**
      * Stop playing the current note (VoiceManager interface).
@@ -44,6 +73,11 @@ public:
     bool isActive() const { return active; }
 
     /**
+     * Whether the note has been let go and the voice is in its release.
+     */
+    bool isReleased() const { return released; }
+
+    /**
      * Get current MIDI note (VoiceManager interface).
      */
     int getMidiNote() const { return currentNote; }
@@ -54,16 +88,7 @@ public:
     float getLevel() const;
 
     /**
-     * Set the current sample and zone to play.
-     * Called during noteOn when zone lookup succeeds.
-     *
-     * @param sample Shared pointer to sample
-     * @param zone Zone containing this note
-     */
-    void setSample(std::shared_ptr<Sample> sample, const KeyZone* zone);
-
-    /**
-     * Process one sample of audio.
+     * Render one sample of audio, adding it into left and right.
      *
      * @param sampleRate Current sample rate
      * @param attack Amplitude envelope attack time (seconds)
@@ -78,21 +103,21 @@ public:
      * @param filtDecay Filter envelope decay time (seconds)
      * @param filtSustain Filter envelope sustain level (0.0-1.0)
      * @param filtRelease Filter envelope release time (seconds)
-     * @return Processed audio sample (mono)
      */
-    float processSample(double sampleRate,
+    void processSample(double sampleRate,
                        float attack, float decay, float sustain, float release,
                        float filterCutoff, float filterResonance, int filterType,
                        float filterEnvAmount,
-                       float filtAttack, float filtDecay, float filtSustain, float filtRelease);
+                       float filtAttack, float filtDecay, float filtSustain, float filtRelease,
+                       float& left, float& right);
 
 private:
     bool active = false;
+    bool released = false;
     int currentNote = -1;
     float noteVelocity = 0.0f;
 
-    std::shared_ptr<Sample> currentSample;
-    const KeyZone* currentZone = nullptr;
+    Playback playback;
 
     double playbackPosition = 0.0;  // Current position in sample (fractional)
     double playbackRate = 1.0;      // Pitch multiplier
@@ -100,7 +125,8 @@ private:
 
     ADSREnvelope ampEnvelope;
     ADSREnvelope filterEnvelope;
-    MultiModeFilter filter;
+    MultiModeFilter filterLeft;
+    MultiModeFilter filterRight;
 
     /**
      * Get interpolated sample value from audio buffer.
@@ -113,17 +139,4 @@ private:
      */
     float getInterpolatedSample(const juce::AudioBuffer<float>& buffer,
                                int channel, double position) const;
-
-    /**
-     * Calculate playback rate for pitch shifting.
-     * Uses equal temperament formula: f = 440 * 2^((n-69)/12)
-     *
-     * @param midiNote Target MIDI note
-     * @param rootNote Root note of the sample
-     * @param sampleRate Original sample rate
-     * @param targetSampleRate Target playback sample rate
-     * @return Playback rate multiplier
-     */
-    static double calculatePlaybackRate(int midiNote, int rootNote,
-                                        double sampleRate, double targetSampleRate);
 };

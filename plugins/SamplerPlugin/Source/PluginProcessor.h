@@ -6,6 +6,7 @@
 #include "SamplerVoice.h"
 #include "SampleLibrary.h"
 #include "KeyZone.h"
+#include "SfzSampleMap.h"
 #include "../../../midi/MIDILearnManager.h"
 #include "../../../shared/preset/PresetManager.h"
 
@@ -21,7 +22,10 @@
  * - Round-robin playback
  * - Loop points (forward, pingpong)
  * - ADSR envelope + filter modulation
- * - 16-voice polyphony with voice stealing
+ * - 32-voice polyphony with voice stealing
+ * - SFZ instruments: a saved state with sfz="/path/file.sfz" on its root
+ *   loads one, and plays it in place of the key zones
+ * - MIDI: sustain pedal (CC64), volume (CC7) and expression (CC11)
  */
 class SamplerPluginProcessor : public juce::AudioProcessor
 {
@@ -67,6 +71,15 @@ public:
     //==============================================================================
     // Sample management
     bool loadSample(const juce::File& file);
+
+    /**
+     * Load an SFZ instrument (see SfzParser.h for what it reads). While one
+     * is loaded, notes play it rather than the key zones. Notes on what it
+     * left out go to the log.
+     */
+    bool loadSfz(const juce::File& file, juce::String& error);
+    void clearSfz();
+    const SfzSampleMap* getSfz() const { return sfzMap.get(); }
     SampleLibrary& getSampleLibrary() { return sampleLibrary; }
     KeyZoneMap& getKeyZoneMap() { return keyZoneMap; }
     const KeyZoneMap& getKeyZoneMap() const { return keyZoneMap; }
@@ -105,12 +118,31 @@ public:
 private:
     //==============================================================================
     juce::AudioProcessorValueTreeState apvts;
-    AudioForge::VoiceManager<SamplerVoice, 16> voiceManager;
+    AudioForge::VoiceManager<SamplerVoice, 32> voiceManager;
 
     SampleLibrary sampleLibrary;
     KeyZoneMap keyZoneMap;
+    std::unique_ptr<SfzSampleMap> sfzMap;
+
+    // Held while the instrument changes; the audio thread skips a block
+    // rather than wait for it
+    juce::CriticalSection instrumentLock;
 
     double currentSampleRate = 44100.0;
+
+    // MIDI controller state
+    bool sustainPedal = false;
+    std::array<bool, 128> heldByPedal {};
+    float channelVolume = 1.0f;     // CC7
+    float expression = 1.0f;        // CC11
+    juce::SmoothedValue<float> controllerGain { 1.0f };
+    juce::Random random { 1 };      // For SFZ random round robin; seeded, so renders repeat
+
+    void handleMidi(const juce::MidiMessage& message);
+    void startNote(int midiNote, int velocity);
+    void releaseNote(int midiNote);
+    SamplerVoice& findVoiceToStart();
+    void renderVoices(juce::AudioBuffer<float>& buffer, int startSample, int endSample);
 
     //==============================================================================
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();

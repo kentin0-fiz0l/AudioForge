@@ -47,7 +47,9 @@ add_executable(TestRunner
     Plugins/EditorParameterTests.cpp
     Plugins/GranularEngineTests.cpp
     Plugins/PhaserEngineTests.cpp
+    Plugins/SamplerSfzTests.cpp
     Plugins/ConvolutionReverbTests.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/SamplerPlugin/Source/SamplerTests.cpp
     Integration/PluginIntegrationTests.cpp)
 
 # Link JUCE libraries
@@ -159,6 +161,18 @@ target_sources(TestRunner PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/VintageCompressor/Source/PluginProcessor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/VintageCompressor/Source/PluginEditor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/VintageCompressor/Source/CompressorEngine.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/SamplerPlugin/Source/PluginProcessor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/SamplerPlugin/Source/PluginEditor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/SamplerPlugin/Source/Sample.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/SamplerPlugin/Source/SampleLibrary.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/SamplerPlugin/Source/SamplerVoice.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/SamplerPlugin/Source/SfzParser.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/SamplerPlugin/Source/SfzSampleMap.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/SamplerPlugin/Source/KeyZone.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/SamplerPlugin/Source/ZoneEditor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/SamplerPlugin/Source/WaveformDisplay.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/SamplerPlugin/Source/VelocityLayerEditor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/SamplerPlugin/Source/SampleBrowser.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/ConvolutionReverb/Source/PluginProcessor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/ConvolutionReverb/Source/PluginEditor.cpp)
 
