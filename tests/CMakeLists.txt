@@ -47,12 +47,14 @@ add_executable(TestRunner
     Plugins/EditorParameterTests.cpp
     Plugins/GranularEngineTests.cpp
     Plugins/PhaserEngineTests.cpp
+    Plugins/ConvolutionReverbTests.cpp
     Integration/PluginIntegrationTests.cpp)
 
 # Link JUCE libraries
 target_link_libraries(TestRunner PRIVATE
     juce::juce_audio_processors
     juce::juce_audio_utils
+    juce::juce_audio_formats
     juce::juce_dsp)
 
 # Add include directories for plugin sources and DSP library
@@ -156,7 +158,9 @@ target_sources(TestRunner PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/SpectralFreeze/Source/SpectralProcessor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/VintageCompressor/Source/PluginProcessor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/VintageCompressor/Source/PluginEditor.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/VintageCompressor/Source/CompressorEngine.cpp)
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/VintageCompressor/Source/CompressorEngine.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/ConvolutionReverb/Source/PluginProcessor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/ConvolutionReverb/Source/PluginEditor.cpp)
 
 # Compiler definitions
 target_compile_definitions(TestRunner PUBLIC

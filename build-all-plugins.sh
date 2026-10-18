@@ -25,6 +25,7 @@ PLUGINS=(
     "BasicSynth"
     "ChorusFlanger"
     "CleanDelay"
+    "ConvolutionReverb"
     "DrumSynth"
     "FMSynth"
     "FreezeFX"
