@@ -13,8 +13,16 @@
 //   --midi <file.mid>       Notes to play (all tracks, tempo map honoured)
 //   --in <file.wav>         Audio to feed the plugin's inputs (an effect)
 //   --program <n>           Factory program to start from
+//   --state <file.xml>      Give the plugin this XML as its saved state
+//                           (before any --param), e.g. a sampler's
+//                           instrument or a convolution reverb's impulse
 //   --param <name>=<value>  Set a parameter by name (case-insensitive), as
 //                           the normalised value 0..1; repeat as needed
+//   --automate "<name>=<t>:<v>,<t>:<v>,..."
+//                           Move a parameter during the render: times in
+//                           seconds, normalised values, a straight line
+//                           between them, held before the first and after
+//                           the last; repeat for more parameters
 //   --rate <hz>             Sample rate (default 48000)
 //   --tail <seconds>        How long to keep rendering after the last note
 //                           or the end of the input (default 3)
@@ -23,15 +31,22 @@
 // --list prints the plugin's programs and parameters (name, current value,
 // and its text at that value) so you can find what to set; with --param
 // before it, it shows what those values mean.
+//
+// MIDI controllers in the --midi file (CC1 mod wheel, CC11 expression, CC64
+// sustain...) reach the plugin as MIDI: the VST3 wrapper carries them as its
+// "MIDI CC" parameters and turns them back into MIDI on the plugin's side.
 
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <juce_audio_formats/juce_audio_formats.h>
+#include <algorithm>
 #include <iostream>
 #include <memory>
+#include <vector>
 
 namespace
 {
     constexpr int blockSize = 512;
+    constexpr int automationBlockSize = 32;  // How often automation moves a parameter
 
     void fail(const juce::String& message)
     {
@@ -67,6 +82,73 @@ namespace
         return nullptr;
     }
 
+    // A parameter moving along straight lines between breakpoints
+    struct Automation
+    {
+        juce::AudioProcessorParameter* param = nullptr;
+        std::vector<std::pair<double, float>> points;  // Seconds, normalised value
+        float lastValue = -1.0f;
+
+        float valueAt(double time) const
+        {
+            if (time <= points.front().first)
+                return points.front().second;
+            for (size_t i = 1; i < points.size(); ++i)
+            {
+                const auto& [t1, v1] = points[i];
+                if (time < t1)
+                {
+                    const auto& [t0, v0] = points[i - 1];
+                    return v0 + (v1 - v0) * (float) ((time - t0) / (t1 - t0));
+                }
+            }
+            return points.back().second;
+        }
+    };
+
+    Automation parseAutomation(juce::AudioPluginInstance& plugin, const juce::String& setting)
+    {
+        Automation automation;
+        const auto name = setting.upToLastOccurrenceOf("=", false, false).trim();
+        automation.param = findParameter(plugin, name);
+        if (automation.param == nullptr)
+            fail("no parameter called \"" + name + "\" (try --list)");
+
+        for (const auto& point : juce::StringArray::fromTokens(setting.fromLastOccurrenceOf("=", false, false), ",", ""))
+        {
+            if (! point.containsChar(':'))
+                fail("--automate " + name + ": \"" + point + "\" isn't time:value");
+            automation.points.emplace_back(point.upToFirstOccurrenceOf(":", false, false).trim().getDoubleValue(),
+                                           juce::jlimit(0.0f, 1.0f, point.fromFirstOccurrenceOf(":", false, false).trim().getFloatValue()));
+        }
+        if (automation.points.empty())
+            fail("--automate " + name + " has no time:value points");
+
+        std::stable_sort(automation.points.begin(), automation.points.end(),
+                         [](const auto& a, const auto& b) { return a.first < b.first; });
+        return automation;
+    }
+
+    // Hands the plugin an XML file as its state. A hosted VST3's state is the
+    // host's wrapper around what the plugin itself saves, so the plugin's
+    // own state goes in that wrapper as the component state.
+    void loadState(juce::AudioPluginInstance& plugin, const juce::File& file)
+    {
+        auto xml = juce::parseXML(file);
+        if (xml == nullptr)
+            fail("can't read XML from " + file.getFullPathName());
+
+        juce::MemoryBlock pluginState;
+        juce::AudioProcessor::copyXmlToBinary(*xml, pluginState);
+
+        juce::XmlElement hostState("VST3PluginState");
+        hostState.createNewChildElement("IComponent")->addTextElement(pluginState.toBase64Encoding());
+
+        juce::MemoryBlock data;
+        juce::AudioProcessor::copyXmlToBinary(hostState, data);
+        plugin.setStateInformation(data.getData(), (int) data.getSize());
+    }
+
     // Every note event in the file, on one track, with timestamps in seconds
     juce::MidiMessageSequence loadMidi(const juce::File& file)
     {
@@ -96,8 +178,8 @@ int main(int argc, char* argv[])
         fail("usage: RenderHost <plugin.vst3> [--list | options --out <out.wav>]");
 
     const juce::String pluginPath(argv[1]);
-    juce::File midiFile, inFile, outFile;
-    juce::StringArray paramSettings;
+    juce::File midiFile, inFile, outFile, stateFile;
+    juce::StringArray paramSettings, automationSettings;
     int program = -1;
     double sampleRate = 48000.0;
     double tail = 3.0;
@@ -119,6 +201,8 @@ int main(int argc, char* argv[])
         else if (option == "--out")      outFile = juce::File::getCurrentWorkingDirectory().getChildFile(next());
         else if (option == "--program")  program = next().getIntValue();
         else if (option == "--param")    paramSettings.add(next());
+        else if (option == "--automate") automationSettings.add(next());
+        else if (option == "--state")    stateFile = juce::File::getCurrentWorkingDirectory().getChildFile(next());
         else if (option == "--rate")     sampleRate = next().getDoubleValue();
         else if (option == "--tail")     tail = next().getDoubleValue();
         else if (option == "--gain")     gainDb = next().getFloatValue();
@@ -141,6 +225,9 @@ int main(int argc, char* argv[])
     if (program >= 0)
         plugin->setCurrentProgram(program);
 
+    if (stateFile != juce::File())
+        loadState(*plugin, stateFile);
+
     for (const auto& setting : paramSettings)
     {
         const auto name = setting.upToLastOccurrenceOf("=", false, false).trim();
@@ -150,6 +237,10 @@ int main(int argc, char* argv[])
             fail("no parameter called \"" + name + "\" (try --list)");
         param->setValueNotifyingHost(juce::jlimit(0.0f, 1.0f, value));
     }
+
+    std::vector<Automation> automations;
+    for (const auto& setting : automationSettings)
+        automations.push_back(parseAutomation(*plugin, setting));
 
     if (listOnly) // after the settings, so --param with --list shows what a value means
     {
@@ -205,10 +296,23 @@ int main(int argc, char* argv[])
     int nextNote = 0;
     float peak = 0.0f;
 
-    for (juce::int64 start = 0; start < totalSamples; start += blockSize)
+    // With automation, render in short blocks so the parameters move smoothly
+    const int step = automations.empty() ? blockSize : automationBlockSize;
+
+    for (juce::int64 start = 0; start < totalSamples; start += step)
     {
-        const int count = (int) juce::jmin((juce::int64) blockSize, totalSamples - start);
+        const int count = (int) juce::jmin((juce::int64) step, totalSamples - start);
         buffer.clear();
+
+        for (auto& automation : automations)
+        {
+            const float value = automation.valueAt((double) start / sampleRate);
+            if (value != automation.lastValue)
+            {
+                automation.param->setValueNotifyingHost(value);
+                automation.lastValue = value;
+            }
+        }
 
         if (input != nullptr)
         {
