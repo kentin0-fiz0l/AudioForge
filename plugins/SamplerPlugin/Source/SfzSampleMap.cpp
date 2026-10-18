@@ -25,7 +25,11 @@ bool SfzSampleMap::load(const juce::File& sfzFile, juce::String& error)
         return false;
     }
 
-    auto instrument = Sfz::parse(sfzFile.loadFileAsString());
+    juce::String sfzText;
+    if (! AudioForge::FileSafety::readText(sfzFile, sfzText, error))
+        return false;
+
+    auto instrument = Sfz::parse(sfzText);
     warnings = instrument.warnings;
 
     // Each file is loaded once, however many regions use it

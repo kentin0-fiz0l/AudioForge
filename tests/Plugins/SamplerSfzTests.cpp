@@ -548,6 +548,20 @@ private:
         expect(small.loadSample(shortFile) != nullptr);
         expect(small.loadSample(shortFile) != nullptr);
         expect(small.loadSample(shortFile) == nullptr, "the third doesn't fit");
+
+        beginTest("An SFZ is read only if it's a regular file under the size cap");
+        juce::String text, why;
+        const auto smallSfz = folder.getChildFile("bad/small.sfz");
+        smallSfz.replaceWithText("<region> sample=short.wav\n");
+        expect(AudioForge::FileSafety::readText(smallSfz, text, why) && text.contains("short.wav"));
+        expect(! AudioForge::FileSafety::readText(smallSfz, text, why, 8), "longer than the cap is refused");
+        expect(why.contains("larger"), why);
+        expect(! AudioForge::FileSafety::readText(folder, text, why), "a folder is refused");
+       #if JUCE_MAC || JUCE_LINUX
+        expect(! AudioForge::FileSafety::readText(juce::File("/dev/zero"), text, why), "a device is refused");
+        SfzSampleMap endless;
+        expect(! endless.load(juce::File("/dev/zero"), error) && error.contains("regular"), error);
+       #endif
     }
 };
 
