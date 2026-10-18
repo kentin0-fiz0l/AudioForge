@@ -12,10 +12,12 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <juce_audio_formats/juce_audio_formats.h>
 #include <cmath>
+#include <cstring>
 
 #include "../../plugins/SamplerPlugin/Source/PluginProcessor.h"
 #include "../../plugins/SamplerPlugin/Source/SfzParser.h"
 #include "../../plugins/SamplerPlugin/Source/SfzSampleMap.h"
+#include "../../shared/utils/AudioFileSafety.h"
 
 class SamplerSfzTests : public juce::UnitTest
 {
@@ -40,6 +42,7 @@ public:
         testProcessorPlaysAnSfz();
         testControllers();
         testSamplePathsRestore();
+        testUntrustedFiles();
 
         folder.deleteRecursively();
     }
@@ -72,6 +75,25 @@ private:
                                                       .withMetadataValues(metadata));
         writer->writeFromAudioSampleBuffer(buffer, 0, length);
         return file;
+    }
+
+    // Rewrites a WAV's header: its sample rate, or its channel count
+    static void patchWavHeader(const juce::File& file, juce::uint32 sampleRateValue, juce::uint16 channels = 0)
+    {
+        juce::MemoryBlock data;
+        file.loadFileAsData(data);
+        auto* bytes = static_cast<char*>(data.getData());
+        for (size_t i = 12; i + 16 < data.getSize(); ++i)
+        {
+            if (std::memcmp(bytes + i, "fmt ", 4) == 0)
+            {
+                if (channels != 0)
+                    std::memcpy(bytes + i + 10, &channels, 2);
+                std::memcpy(bytes + i + 12, &sampleRateValue, 4);
+                break;
+            }
+        }
+        file.replaceWithData(data.getData(), data.getSize());
     }
 
     juce::File writeSfz(const juce::String& name, const juce::String& text)
@@ -454,6 +476,78 @@ private:
         missing.setStateInformation(saved.getData(), static_cast<int>(saved.getSize()));
         expectEquals(missing.getSampleLibrary().getNumSamples(), 0);
         expectEquals(missing.getKeyZoneMap().getZones()[0].velocityLayers[0].sampleIndex, -1);
+    }
+
+    void testUntrustedFiles()
+    {
+        beginTest("Network paths are refused: in sfz=, in sample= and default_path, and in restored samples");
+
+        expect(AudioForge::FileSafety::isNetworkPath("\\\\host\\share\\x.sfz"));
+        expect(AudioForge::FileSafety::isNetworkPath("//host/share/x.sfz"));
+        expect(AudioForge::FileSafety::isNetworkPath("smb://host/share/x.sfz"));
+        expect(! AudioForge::FileSafety::isNetworkPath("/Users/me/vsco/x.sfz"));
+        expect(! AudioForge::FileSafety::isNetworkPath("../Samples/x.wav"));
+        expect(! AudioForge::FileSafety::isNetworkPath("C:\\Samples\\x.wav"));
+
+        SamplerPluginProcessor processor;
+        for (const auto* path : { "//host/share/x.sfz", "\\\\host\\share\\x.sfz" })
+        {
+            juce::XmlElement state("Parameters");
+            state.setAttribute("sfz", path);
+            setState(processor, state);
+            expect(processor.getSfz() == nullptr, path);
+        }
+
+        writeSine("net/local.wav", 440.0);
+        const auto sfz = writeSfz("net.sfz",
+            "<region> sample=\\\\host\\share\\a.wav key=60\n"
+            "<region> sample=//host/share/b.wav key=61\n"
+            "<control> default_path=\\\\host\\share\\\n<region> sample=c.wav key=62\n"
+            "<control> default_path=net/\n<region> sample=local.wav key=63\n");
+        SfzSampleMap map;
+        juce::String error;
+        expect(map.load(sfz, error), error);
+        expectEquals((int) map.getRegions().size(), 1, "only the local sample loads");
+        expect(map.getWarnings().joinIntoString(" ").contains("network"), "and the others are noted");
+
+        SampleLibrary library;
+        expect(library.loadSample(juce::File("//host/share/a.wav")) == nullptr);
+        expect(library.getLastError().contains("Network"));
+
+        juce::XmlElement saved("Parameters");
+        auto* samples = saved.createNewChildElement("SamplerState")->createNewChildElement("Samples");
+        for (const auto* path : { "//host/share/a.wav", "\\\\host\\share\\b.wav", "relative.wav" })
+        {
+            auto* sample = samples->createNewChildElement("Sample");
+            sample->setAttribute("index", samples->getNumChildElements() - 1);
+            sample->setAttribute("path", path);
+        }
+        SamplerPluginProcessor restored;
+        setState(restored, saved);
+        expectEquals(restored.getSampleLibrary().getNumSamples(), 0);
+
+        beginTest("A sample whose header gives an unlikely rate or channel count isn't loaded");
+        for (const juce::uint32 rate : { 1000000000u, 4000u, 0u })
+        {
+            const auto file = writeSine("bad/rate.wav", 440.0);
+            patchWavHeader(file, rate);
+            expect(library.loadSample(file) == nullptr, juce::String(rate) + " Hz");
+        }
+        const auto manyChannels = writeSine("bad/channels.wav", 440.0);
+        patchWavHeader(manyChannels, 48000u, 12);
+        expect(library.loadSample(manyChannels) == nullptr, "12 channels");
+        const auto good = writeSine("bad/ok.wav", 440.0);
+        expect(library.loadSample(good) != nullptr, "an ordinary file still loads");
+
+        beginTest("A sample too big for what's left of the memory budget is refused before it's read");
+        SampleLibrary small(100000);  // 100 kB: a second of 48 kHz stereo floats is 384 kB
+        expect(small.loadSample(good) == nullptr);
+        expect(small.getLastError().contains("budget"));
+        expectEquals((int) small.getTotalMemoryUsed(), 0);
+        const auto shortFile = writeSine("bad/short.wav", 440.0, sampleRate, 1, 0.1);  // 38 kB
+        expect(small.loadSample(shortFile) != nullptr);
+        expect(small.loadSample(shortFile) != nullptr);
+        expect(small.loadSample(shortFile) == nullptr, "the third doesn't fit");
     }
 };
 

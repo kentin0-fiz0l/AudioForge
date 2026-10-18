@@ -1,14 +1,20 @@
 #include "Sample.h"
+#include "../../../shared/utils/AudioFileSafety.h"
+#include <limits>
 
 Sample::Sample(juce::AudioFormatReader& reader, double maxLengthSecs)
 {
-    sampleRate = reader.sampleRate;
+    // The header's rate bounds the length; SampleLibrary refuses one out of
+    // this range, and anything else that makes a Sample is held to it too
+    sampleRate = juce::jlimit(AudioForge::FileSafety::minSampleRate,
+                              AudioForge::FileSafety::maxSampleRate, reader.sampleRate);
     numChannels = static_cast<int>(reader.numChannels);
 
     // Limit sample length to maxLengthSecs
-    auto maxSamples = static_cast<int>(maxLengthSecs * sampleRate);
-    lengthInSamples = static_cast<int>(juce::jmin(reader.lengthInSamples,
-                                                    static_cast<juce::int64>(maxSamples)));
+    const auto maxSamples = static_cast<juce::int64>(maxLengthSecs * sampleRate);
+    lengthInSamples = static_cast<int>(juce::jlimit(static_cast<juce::int64>(0),
+                                                    juce::jmin(maxSamples, static_cast<juce::int64>(std::numeric_limits<int>::max())),
+                                                    reader.lengthInSamples));
 
     // Allocate buffer (always use stereo for simplicity; the reader copies a
     // mono file into both channels)

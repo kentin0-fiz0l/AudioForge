@@ -1,5 +1,6 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
+#include "../../../shared/utils/AudioFileSafety.h"
 
 namespace {
     // A float parameter whose text is its value to a fixed number of
@@ -135,6 +136,11 @@ void ConvolutionReverbProcessor::processBlock(juce::AudioBuffer<float>& buf, juc
 }
 
 bool ConvolutionReverbProcessor::loadImpulseResponse(const juce::File& file, juce::String& error) {
+    if (AudioForge::FileSafety::isNetworkPath(file.getFullPathName())) {
+        error = "network paths aren't loaded: " + file.getFullPathName();
+        return false;
+    }
+
     juce::AudioFormatManager formats;
     formats.registerBasicFormats();
     std::unique_ptr<juce::AudioFormatReader> reader(formats.createReaderFor(file));
@@ -143,13 +149,19 @@ bool ConvolutionReverbProcessor::loadImpulseResponse(const juce::File& file, juc
         return false;
     }
 
-    const int channels = juce::jmin(2, static_cast<int>(reader->numChannels));
-    const auto length = static_cast<int>(juce::jmin(reader->lengthInSamples,
-                                                    static_cast<juce::int64>(maxImpulseSeconds * reader->sampleRate)));
-    if (length <= 0) {
-        error = "the impulse response in " + file.getFullPathName() + " is empty";
+    // The header's numbers decide how much is allocated, so check them first
+    const auto problem = AudioForge::FileSafety::checkReader(*reader);
+    if (problem.isNotEmpty()) {
+        error = "the impulse response in " + file.getFullPathName() + ": " + problem;
         return false;
     }
+
+    const int channels = juce::jmin(2, static_cast<int>(reader->numChannels));
+    // Capped in 64 bits at the longest response at the highest rate allowed,
+    // whatever the header says, before it becomes an int
+    const auto maxFrames = static_cast<juce::int64>(maxImpulseSeconds * AudioForge::FileSafety::maxSampleRate);
+    const auto length = static_cast<int>(juce::jmin(reader->lengthInSamples, maxFrames,
+                                                    static_cast<juce::int64>(maxImpulseSeconds * reader->sampleRate)));
 
     juce::AudioBuffer<float> impulse(channels, length);
     reader->read(&impulse, 0, length, 0, true, channels > 1);
@@ -204,7 +216,11 @@ void ConvolutionReverbProcessor::setStateInformation(const void* d, int sz) {
     // The impulse response: a relative path is taken from the working directory
     const auto irPath = x->getStringAttribute("ir");
     const auto ir = juce::File::getCurrentWorkingDirectory().getChildFile(irPath);
-    if (irPath.isNotEmpty() && ir != irFile_) {
+    if (AudioForge::FileSafety::isNetworkPath(irPath)) {
+        juce::Logger::writeToLog("ConvolutionReverb: network paths aren't loaded: " + irPath);
+        irFile_ = juce::File();
+        irSeconds_ = 0.0;
+    } else if (irPath.isNotEmpty() && ir != irFile_) {
         juce::String error;
         if (! loadImpulseResponse(ir, error))
             juce::Logger::writeToLog("ConvolutionReverb: " + error);

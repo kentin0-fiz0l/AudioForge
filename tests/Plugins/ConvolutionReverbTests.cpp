@@ -11,6 +11,7 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <juce_audio_formats/juce_audio_formats.h>
 #include <cmath>
+#include <cstring>
 
 #include "../../plugins/ConvolutionReverb/Source/PluginProcessor.h"
 
@@ -34,6 +35,7 @@ public:
         testNoImpulseNoWet();
         testStateKeepsTheImpulse();
         testParametersReadInUnits();
+        testUntrustedFiles();
 
         impulse.deleteFile();
     }
@@ -222,6 +224,40 @@ private:
         expectEquals(text("lowcut", 250.0f), juce::String("250 Hz"));
         expectEquals(text("highcut", 8000.0f), juce::String("8000 Hz"));
         expectEquals(text("output", -6.0f), juce::String("-6.0 dB"));
+    }
+    void testUntrustedFiles()
+    {
+        beginTest("An impulse response on a network path, or with an unlikely header, isn't loaded");
+
+        ConvolutionReverbProcessor processor;
+        juce::String error;
+        expect(! processor.loadImpulseResponse(juce::File("//host/share/hall.wav"), error));
+        expect(error.contains("network"));
+
+        juce::XmlElement state("PARAMETERS");
+        state.setAttribute("ir", "\\\\host\\share\\hall.wav");
+        juce::MemoryBlock data;
+        juce::AudioProcessor::copyXmlToBinary(state, data);
+        processor.setStateInformation(data.getData(), static_cast<int>(data.getSize()));
+        expect(processor.getImpulseResponseFile() == juce::File());
+
+        const auto bad = juce::File::getSpecialLocation(juce::File::tempDirectory)
+                             .getNonexistentChildFile("ConvolutionReverbBadHeader", ".wav");
+        for (const juce::uint32 rate : { 1000000000u, 4000u })
+        {
+            writeImpulse(bad);
+            juce::MemoryBlock bytes;
+            bad.loadFileAsData(bytes);
+            auto* raw = static_cast<char*>(bytes.getData());
+            for (size_t i = 12; i + 16 < bytes.getSize(); ++i)
+                if (std::memcmp(raw + i, "fmt ", 4) == 0) { std::memcpy(raw + i + 12, &rate, 4); break; }
+            bad.replaceWithData(bytes.getData(), bytes.getSize());
+
+            expect(! processor.loadImpulseResponse(bad, error), juce::String(rate) + " Hz");
+            expect(error.contains("sample rate"), error);
+        }
+        bad.deleteFile();
+        expect(processor.getImpulseResponseFile() == juce::File(), "nothing was loaded");
     }
 };
 

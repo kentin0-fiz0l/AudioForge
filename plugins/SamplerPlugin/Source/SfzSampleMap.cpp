@@ -1,4 +1,5 @@
 #include "SfzSampleMap.h"
+#include "../../../shared/utils/AudioFileSafety.h"
 #include <cmath>
 #include <map>
 
@@ -11,6 +12,12 @@ bool SfzSampleMap::load(const juce::File& sfzFile, juce::String& error)
     keyswitchLow = 128;
     keyswitchHigh = -1;
     currentKeyswitch = -1;
+
+    if (AudioForge::FileSafety::isNetworkPath(sfzFile.getFullPathName()))
+    {
+        error = "network paths aren't loaded: " + sfzFile.getFullPathName();
+        return false;
+    }
 
     if (! sfzFile.existsAsFile())
     {
@@ -29,6 +36,14 @@ bool SfzSampleMap::load(const juce::File& sfzFile, juce::String& error)
     {
         if (opcodes.releaseTrigger)
             continue;  // Release samples aren't played
+
+        // A library may reach outside its folder (../, absolute paths),
+        // but not onto another machine
+        if (AudioForge::FileSafety::isNetworkPath(opcodes.sample))
+        {
+            warnings.addIfNotAlreadyThere("network paths aren't loaded: " + opcodes.sample);
+            continue;
+        }
 
         const auto sampleFile = Sfz::resolveSample(sfzFile, opcodes.sample);
         const auto path = sampleFile.getFullPathName();
