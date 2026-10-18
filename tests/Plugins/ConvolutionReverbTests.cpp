@@ -230,6 +230,8 @@ private:
         beginTest("An impulse response on a network path, or with an unlikely header, isn't loaded");
 
         ConvolutionReverbProcessor processor;
+        loadFromState(processor);
+        expect(processor.getImpulseResponseFile() == impulse);
         juce::String error;
         expect(! processor.loadImpulseResponse(juce::File("//host/share/hall.wav"), error));
         expect(error.contains("network"));
@@ -239,7 +241,10 @@ private:
         juce::MemoryBlock data;
         juce::AudioProcessor::copyXmlToBinary(state, data);
         processor.setStateInformation(data.getData(), static_cast<int>(data.getSize()));
-        expect(processor.getImpulseResponseFile() == juce::File());
+        expect(processor.getImpulseResponseFile() == juce::File(), "the older impulse response doesn't stay");
+        expectEquals(processor.getImpulseResponseSeconds(), 0.0);
+        set(processor, "mix", 100.0f);
+        expectEquals(clickThrough(processor, 0.2).getMagnitude(0, 0, 9600), 0.0f, "and nothing of it plays");
 
         const auto bad = juce::File::getSpecialLocation(juce::File::tempDirectory)
                              .getNonexistentChildFile("ConvolutionReverbBadHeader", ".wav");
