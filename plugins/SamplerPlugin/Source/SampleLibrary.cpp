@@ -12,9 +12,9 @@ std::shared_ptr<Sample> SampleLibrary::loadSample(const juce::File& file)
 {
     lastError.clear();
 
-    if (AudioForge::FileSafety::isNetworkPath(file.getFullPathName()))
+    if (const auto why = AudioForge::FileSafety::refusal(file); why.isNotEmpty())
     {
-        lastError = "Network paths aren't loaded: " + file.getFullPathName();
+        lastError = why;
         return nullptr;
     }
 

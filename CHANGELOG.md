@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+- Sampler and ConvolutionReverb load a file on another machine (a network path, a mapped network drive, a mounted share, or `/net`) only from a library folder you've approved. Picking or dropping a file by hand approves its folder. To approve one ahead of time, list it in `library-roots.txt`, one folder per line, in AudioForge's settings folder (`~/Library/Application Support/AudioForge` on macOS, `%APPDATA%\AudioForge` on Windows, `~/.config/AudioForge` on Linux); the render host also reads `AUDIOFORGE_LIBRARY_ROOTS`. Files on this machine load as before.
+- The Sampler reads an SFZ only if it's a regular file of at most 16 MB.
+
 ### In Progress (Phase 4)
 - Advanced Modulation System (4 LFOs + 2 ADSRs per plugin)
 - Modulation matrix

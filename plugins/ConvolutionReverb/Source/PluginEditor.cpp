@@ -1,4 +1,5 @@
 #include "PluginEditor.h"
+#include "../../../shared/utils/AudioFileSafety.h"
 ConvolutionReverbEditor::ConvolutionReverbEditor(ConvolutionReverbProcessor& p) : AudioProcessorEditor(&p), processor_(p) {
     setSize(700, 350);
 
@@ -28,6 +29,9 @@ ConvolutionReverbEditor::ConvolutionReverbEditor(ConvolutionReverbProcessor& p) 
                               [this](const juce::FileChooser& fc) {
                                   if (fc.getResult() == juce::File())
                                       return;
+                                  // Chosen by hand: its folder is one the user means to load from
+                                  if (AudioForge::FileSafety::refusal(fc.getResult()).isNotEmpty())
+                                      AudioForge::FileSafety::approve(fc.getResult().getParentDirectory());
                                   juce::String error;
                                   if (! processor_.loadImpulseResponse(fc.getResult(), error))
                                       irLabel_.setText(error, juce::dontSendNotification);
