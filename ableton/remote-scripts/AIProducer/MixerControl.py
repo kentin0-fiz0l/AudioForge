@@ -33,6 +33,7 @@ class MixerControl:
             '/live/track/set/volume_db': self.set_volume_db,
             '/live/track/set/pan': self.set_pan,
             '/live/track/set/send': self.set_send,
+            '/live/track/set/input': self.set_input,
             '/live/device/load': self.load_device,
             '/live/device/params': self.get_device_params,
             '/live/device/set': self.set_device_param,
@@ -211,6 +212,30 @@ class MixerControl:
     def set_send(self, target, send_index, value):
         sends = self._track(target).mixer_device.sends
         return self._set(self._at(sends, send_index, 'send', 'the track'), value)
+
+    MONITOR_IN = 0  # Live's Track.monitoring_states: 0 In, 1 Auto, 2 Off
+
+    def set_input(self, target, source, tap=None):
+        """Take a track's input from another track ('MIDI From' / 'Audio From'),
+        optionally from a point in that track's chain such as a device that
+        outputs MIDI, and monitor it so it plays without arming the track"""
+        track = self._track(target)
+        track.input_routing_type = self._routing(track.available_input_routing_types, source, 'input')
+        if tap is not None:
+            track.input_routing_channel = self._routing(track.available_input_routing_channels, tap, 'tap point')
+        track.current_monitoring_state = self.MONITOR_IN
+        self.log(f"'{track.name}' now takes its input from '{track.input_routing_type.display_name}'")
+        return {'track': track.name,
+                'input': track.input_routing_type.display_name,
+                'tap': track.input_routing_channel.display_name}
+
+    @staticmethod
+    def _routing(choices, wanted, what):
+        for choice in choices:
+            if choice.display_name.lower() == str(wanted).lower():
+                return choice
+        names = ', '.join(choice.display_name for choice in choices)
+        raise ValueError(f"No {what} called '{wanted}'. Choices: {names}")
 
     # ------------------------------------------------------------------
     # Locators
