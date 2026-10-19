@@ -2,6 +2,7 @@
 
 #include <juce_audio_formats/juce_audio_formats.h>
 #include <filesystem>
+#include <vector>
 
 #if JUCE_MAC
  #include <sys/mount.h>
@@ -10,6 +11,7 @@
 #elif JUCE_WINDOWS
  // From <windows.h>, which isn't included here: it would clash with JUCE's names
  extern "C" __declspec(dllimport) unsigned int __stdcall GetDriveTypeW(const wchar_t*);
+ extern "C" __declspec(dllimport) unsigned long __stdcall GetFileAttributesW(const wchar_t*);
 #endif
 
 namespace AudioForge {
@@ -49,54 +51,161 @@ inline std::filesystem::path fsPath(const juce::File& file)
    #endif
 }
 
+#if JUCE_MAC || JUCE_LINUX || JUCE_BSD
+/** Whether `path` is an automount's folder or inside one, where looking would mount it. */
+inline bool isAutomount(const juce::String& path)
+{
+   #if JUCE_MAC  // its volumes ignore case: /NET is /net
+    for (const auto* folder : { "/net", "/Network", "/home" })
+        if (path.equalsIgnoreCase(folder) || path.startsWithIgnoreCase(juce::String(folder) + "/"))
+            return true;
+   #else
+    for (const auto* folder : { "/net", "/misc" })
+        if (path == folder || path.startsWith(juce::String(folder) + "/"))
+            return true;
+   #endif
+    return false;
+}
+
 /**
- * Whether `file` is on another machine: a network path, or on a mounted
- * network volume. The volume is asked only of a path that's already mounted
- * or local: an automount's folder (/net, /Network) is refused by its name,
- * since looking inside it would mount it.
+ * The deepest folder of `path` that exists, with its links followed one step
+ * at a time (lstat, never stat), so that nothing inside an automount is ever
+ * looked up. False if the path, or a link along it, leads into one, or the
+ * links go round.
+ */
+inline bool resolveWithoutMounting(const juce::String& path, std::filesystem::path& deepest)
+{
+    std::vector<std::string> todo;  // components still to walk, last first
+    const auto addComponents = [&todo](const std::filesystem::path& p)
+    {
+        std::vector<std::string> parts;
+        for (const auto& c : p.relative_path())
+            parts.push_back(c.string());
+        todo.insert(todo.end(), parts.rbegin(), parts.rend());
+    };
+    addComponents(std::filesystem::path(path.toStdString()));
+    std::filesystem::path at = "/";
+    int links = 0;
+    while (! todo.empty())
+    {
+        const auto part = todo.back();
+        todo.pop_back();
+        if (part.empty() || part == ".")
+            continue;
+        if (part == "..")
+        {
+            at = at.parent_path();
+            continue;
+        }
+        const auto next = at / part;
+        if (isAutomount(juce::String(next.string())))
+            return false;
+        std::error_code ec;
+        const auto status = std::filesystem::symlink_status(next, ec);
+        if (ec || ! std::filesystem::exists(status))
+            break;  // what's left doesn't exist yet: `at` is as deep as it goes
+        if (std::filesystem::is_symlink(status))
+        {
+            const auto target = std::filesystem::read_symlink(next, ec);
+            if (ec || ++links > 40)
+                return false;
+            if (target.is_absolute())
+                at = "/";
+            addComponents(target);
+            continue;
+        }
+        at = next;
+    }
+    deepest = at;
+    return true;
+}
+#endif
+
+#if JUCE_LINUX || JUCE_BSD
+/** Whether a file system (statfs's f_type) is one on this machine's own disks or memory. */
+inline bool isLocalFileSystem(unsigned long type)
+{
+    switch (type)
+    {
+        case 0xEF53:      // ext2, ext3, ext4
+        case 0x58465342:  // XFS
+        case 0x9123683E:  // Btrfs
+        case 0x2FC12FC1:  // ZFS
+        case 0xF2F52010:  // F2FS
+        case 0xCA451A4E:  // bcachefs
+        case 0x52654973:  // ReiserFS
+        case 0x3153464A:  // JFS
+        case 0x3434:      // NILFS
+        case 0x01021994:  // tmpfs
+        case 0x858458F6:  // ramfs
+        case 0x794C7630:  // overlayfs (containers)
+        case 0x73717368:  // SquashFS
+        case 0x4D44:      // FAT
+        case 0x2011BAB0:  // exFAT
+        case 0x5346544E:  // NTFS
+        case 0x7366746E:  // NTFS (ntfs3)
+        case 0x482B:      // HFS+
+        case 0x9660:      // ISO 9660
+        case 0x15013346:  // UDF
+        case 0xF15F:      // eCryptfs
+            return true;
+        default:
+            return false;  // NFS, SMB, FUSE (sshfs), Ceph and the rest: another machine, or can't tell
+    }
+}
+#endif
+
+/**
+ * Whether `file` is on another machine, or might be: a network path, or on a
+ * volume that isn't one of this machine's own. Links along the path are
+ * followed to where they lead, and an automount (/net) is refused by name,
+ * never looked inside, since looking would mount it. When it can't tell, it
+ * says remote: a library there loads once its folder is approved.
  */
 inline bool isRemote(const juce::File& file)
 {
     const auto path = file.getFullPathName();
     if (isNetworkPath(path))
         return true;
-   #if JUCE_MAC
-    if (path.startsWith("/net/") || path.startsWith("/Network/"))
-        return true;
-   #elif JUCE_LINUX || JUCE_BSD
-    if (path.startsWith("/net/"))
-        return true;
-   #endif
 
-    auto existing = file;  // the volume is asked of the deepest folder that exists
-    while (! existing.exists() && existing.getParentDirectory() != existing)
-        existing = existing.getParentDirectory();
-
-   #if JUCE_MAC
+   #if JUCE_MAC || JUCE_LINUX || JUCE_BSD
+    std::filesystem::path deepest;
+    if (! resolveWithoutMounting(path, deepest))
+        return true;
     struct statfs fs;
-    return statfs(existing.getFullPathName().toRawUTF8(), &fs) == 0 && (fs.f_flags & MNT_LOCAL) == 0;
-   #elif JUCE_LINUX || JUCE_BSD
-    struct statfs fs;
-    if (statfs(existing.getFullPathName().toRawUTF8(), &fs) != 0)
-        return false;
-    switch ((unsigned long) fs.f_type)
+    if (statfs(deepest.c_str(), &fs) != 0)
+        return true;
+    #if JUCE_MAC
+    return (fs.f_flags & MNT_LOCAL) == 0;
+    #else
+    return ! isLocalFileSystem((unsigned long) fs.f_type);
+    #endif
+   #elif JUCE_WINDOWS
+    // A drive letter, mapped to a share or not; then no folder along the way
+    // may be a link (a junction or symlink can lead to a share). A link's own
+    // attributes are read without following it.
+    if (path.length() < 3 || path[1] != ':' || path[2] != '\\')
+        return true;
+    switch (GetDriveTypeW(path.substring(0, 3).toWideCharPointer()))
     {
-        case 0x6969:      // NFS
-        case 0x517B:      // SMB
-        case 0xFF534D42:  // CIFS
-        case 0xFE534D42:  // SMB2
-        case 0x73757245:  // Coda
-        case 0x5346414F:  // AFS
-        case 0x01021997:  // 9p
+        case 2: case 3: case 5: case 6:  // removable, fixed, CD, RAM disk: this machine's
+            break;
+        default:  // remote (a mapped share), or no such drive
             return true;
-        default:
+    }
+    for (int i = path.indexOfChar(3, '\\'); ; i = path.indexOfChar(i + 1, '\\'))
+    {
+        const auto prefix = i < 0 ? path : path.substring(0, i);
+        const auto attributes = GetFileAttributesW(prefix.toWideCharPointer());
+        if (attributes == 0xFFFFFFFFul)
+            return false;  // what's left doesn't exist yet
+        if ((attributes & 0x400ul) != 0)  // FILE_ATTRIBUTE_REPARSE_POINT
+            return true;
+        if (i < 0)
             return false;
     }
-   #elif JUCE_WINDOWS
-    const auto drive = path.substring(0, 3);  // "Z:\"
-    return drive.length() == 3 && drive[1] == ':' && GetDriveTypeW(drive.toWideCharPointer()) == 4;  // DRIVE_REMOTE
    #else
-    return false;
+    return true;
    #endif
 }
 

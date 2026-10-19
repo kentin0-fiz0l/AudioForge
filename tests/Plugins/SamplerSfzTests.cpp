@@ -586,6 +586,27 @@ private:
         expect(refusal(onShare).contains("network"), refusal(onShare));
         expect(refusal(folder.getChildFile("x.wav")).isEmpty(), "a local file needs no approval");
         expect(refusal(juce::File::getCurrentWorkingDirectory()).isEmpty());
+       #if JUCE_MAC
+        expect(isRemote(juce::File("/NET/nas/x.wav")), "a Mac's volumes ignore case, and so does the automount's name");
+       #endif
+       #if JUCE_MAC || JUCE_LINUX
+        // A link is followed to where it leads, without looking inside the automount
+        const auto toShare = folder.getChildFile("to-share");
+        expect(juce::File::createSymbolicLink(toShare, share, true));
+        expect(isRemote(toShare.getChildFile("x.wav")), "a local link into /net is the share it leads to");
+        const auto loop = folder.getChildFile("loop");
+        expect(juce::File::createSymbolicLink(loop, loop.getFullPathName(), true));
+        expect(isRemote(loop.getChildFile("x.wav")), "links that go round can't be judged, so they're refused");
+        const auto toLocal = folder.getChildFile("to-local");
+        folder.getChildFile("real").createDirectory();
+        expect(juce::File::createSymbolicLink(toLocal, folder.getChildFile("real").getFullPathName(), true));
+        expect(! isRemote(toLocal.getChildFile("x.wav")), "a link to a folder on this machine is local");
+       #endif
+       #if JUCE_LINUX
+        expect(isLocalFileSystem(0xEF53) && isLocalFileSystem(0x794C7630), "ext4 and overlayfs are local");
+        expect(! isLocalFileSystem(0x6969) && ! isLocalFileSystem(0x65735546) && ! isLocalFileSystem(0x00C36400),
+               "NFS, FUSE (sshfs) and Ceph aren't, nor is anything unknown");
+       #endif
 
         beginTest("Approving a folder lets its files load, and only its files");
         expect(approvedRoots().isEmpty());
