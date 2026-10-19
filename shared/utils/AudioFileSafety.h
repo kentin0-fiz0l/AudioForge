@@ -63,7 +63,7 @@ inline bool readText(const juce::File& file, juce::String& text, juce::String& e
         return false;
     }
     juce::MemoryBlock data;
-    in.readIntoMemoryBlock(data, (ssize_t) maxBytes + 1);
+    in.readIntoMemoryBlock(data, (juce::pointer_sized_int) (maxBytes + 1));
     if ((juce::int64) data.getSize() > maxBytes)
     {
         error = "larger than " + juce::String(maxBytes / (1024 * 1024)) + " MB: " + file.getFullPathName();
