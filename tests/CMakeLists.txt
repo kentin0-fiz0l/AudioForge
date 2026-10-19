@@ -37,6 +37,7 @@ add_executable(TestRunner
     Plugins/HiHatEngineTests.cpp
     Plugins/FreezeFXTests.cpp
     Plugins/DrumSynthTests.cpp
+    Plugins/DrumMachineTests.cpp
     Plugins/LimiterTests.cpp
     Plugins/PlateReverbTests.cpp
     Plugins/OutputLevelTests.cpp
@@ -140,6 +141,10 @@ target_sources(TestRunner PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/DrumSynth/Source/ClapModule.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/DrumSynth/Source/PluginProcessor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/DrumSynth/Source/PluginEditor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/DrumMachine/Source/DrumEngine.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/DrumMachine/Source/DrumSynth.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/DrumMachine/Source/PluginProcessor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/DrumMachine/Source/PluginEditor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/Limiter/Source/PluginProcessor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/Limiter/Source/PluginEditor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/Limiter/Source/LimiterEngine.cpp

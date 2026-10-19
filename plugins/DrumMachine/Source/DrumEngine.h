@@ -35,17 +35,14 @@ public:
     struct PatternParams {
         std::string style;      // Rock, Hip-Hop, Jazz, etc.
         int complexity;         // 1-10
-        float swing;            // 0.0-1.0 (swing amount)
-        bool fillsEnabled;      // Add fills at end of pattern
+        float swing;            // 0.0-1.0 (playback timing only, see DrumMachineProcessor)
+        bool fillsEnabled;      // Tom fill on the last beat, crash on the downbeat
     };
 
     DrumEngine();
 
     // Generate drum pattern
     DrumPattern generatePattern(const PatternParams& params);
-
-    // Get all hits at a specific step
-    std::vector<DrumHit> getHitsAtStep(const DrumPattern& pattern, int step) const;
 
 private:
     std::mt19937 rng_;
@@ -62,6 +59,6 @@ private:
     // Helper functions
     void addHit(DrumPattern& pattern, DrumVoice voice, int step, float velocity);
     void addHumanization(DrumPattern& pattern);
-    void addFill(DrumPattern& pattern, int startStep);
+    void addFill(DrumPattern& pattern);
     float randomVelocity(float base, float variation);
 };

@@ -24,7 +24,12 @@ DrumMachineEditor::DrumMachineEditor (DrumMachineProcessor& p)
     styleSelector_.addItem ("Funk", 5);
     styleSelector_.addItem ("Latin", 6);
     styleSelector_.addItem ("Blues", 7);
-    styleSelector_.setSelectedId (1);
+    // Show the processor's settings, which a saved session may have restored
+    const juce::String currentStyle (processor_.getCurrentPattern().style);
+    styleSelector_.setSelectedId (1, juce::dontSendNotification);
+    for (int i = 0; i < styleSelector_.getNumItems(); ++i)
+        if (styleSelector_.getItemText (i) == currentStyle)
+            styleSelector_.setSelectedItemIndex (i, juce::dontSendNotification);
     styleSelector_.addListener (this);
     addAndMakeVisible (styleSelector_);
 
@@ -34,7 +39,7 @@ DrumMachineEditor::DrumMachineEditor (DrumMachineProcessor& p)
     addAndMakeVisible (complexityLabel_);
 
     complexitySlider_.setRange (1, 10, 1);
-    complexitySlider_.setValue (5);
+    complexitySlider_.setValue (processor_.getComplexity(), juce::dontSendNotification);
     complexitySlider_.setSliderStyle (juce::Slider::Rotary);
     complexitySlider_.setTextBoxStyle (juce::Slider::TextBoxBelow, false, 50, 20);
     complexitySlider_.addListener (this);
@@ -46,7 +51,7 @@ DrumMachineEditor::DrumMachineEditor (DrumMachineProcessor& p)
     addAndMakeVisible (swingLabel_);
 
     swingSlider_.setRange (0.0, 1.0, 0.01);
-    swingSlider_.setValue (0.0);
+    swingSlider_.setValue (processor_.getSwing(), juce::dontSendNotification);
     swingSlider_.setSliderStyle (juce::Slider::Rotary);
     swingSlider_.setTextBoxStyle (juce::Slider::TextBoxBelow, false, 50, 20);
     swingSlider_.addListener (this);
@@ -58,6 +63,7 @@ DrumMachineEditor::DrumMachineEditor (DrumMachineProcessor& p)
     addAndMakeVisible (fillsLabel_);
 
     fillsToggle_.setButtonText ("");
+    fillsToggle_.setToggleState (processor_.getFillsEnabled(), juce::dontSendNotification);
     fillsToggle_.addListener (this);
     addAndMakeVisible (fillsToggle_);
 
@@ -83,7 +89,7 @@ DrumMachineEditor::DrumMachineEditor (DrumMachineProcessor& p)
     addAndMakeVisible (editLabel_);
 
     // Stats label
-    statsLabel_.setText ("Rock | 4 bars | 16 steps", juce::dontSendNotification);
+    statsLabel_.setText (styleSelector_.getText() + " | 1 bar | 16 steps", juce::dontSendNotification);
     statsLabel_.setFont (juce::Font (14.0f));
     addAndMakeVisible (statsLabel_);
 
@@ -184,7 +190,7 @@ void DrumMachineEditor::comboBoxChanged (juce::ComboBox* comboBox)
 
         processor_.generateNewPattern(style);
 
-        juce::String stats = juce::String(style) + " | 4 bars | 16 steps";
+        juce::String stats = juce::String(style) + " | 1 bar | 16 steps";
         statsLabel_.setText (stats, juce::dontSendNotification);
 
         repaint();
@@ -209,17 +215,13 @@ void DrumMachineEditor::buttonClicked (juce::Button* button)
 
         processor_.generateNewPattern(style);
 
-        juce::String stats = juce::String(style) + " | 4 bars | 16 steps";
+        juce::String stats = juce::String(style) + " | 1 bar | 16 steps";
         statsLabel_.setText (stats, juce::dontSendNotification);
 
         repaint();
     }
     else if (button == &clearButton_) {
-        // Clear all hits from the pattern
-        auto& pattern = processor_.getCurrentPattern();
-        for (auto& voiceHits : pattern.voices) {
-            voiceHits.clear();
-        }
+        processor_.clearPattern();
         repaint();
     }
     else if (button == &exportButton_) {
@@ -365,29 +367,7 @@ void DrumMachineEditor::toggleHitAtPosition (int x, int y)
     if (voice == -1 || step == -1)
         return;
 
-    auto& pattern = processor_.getCurrentPattern();
-    auto& voiceHits = pattern.voices[voice];
-
-    // Check if hit already exists at this position
-    bool hitExists = false;
-    for (auto it = voiceHits.begin(); it != voiceHits.end(); ++it) {
-        if (it->step == step) {
-            // Remove existing hit
-            voiceHits.erase(it);
-            hitExists = true;
-            break;
-        }
-    }
-
-    // If no hit existed, add one
-    if (!hitExists) {
-        DrumEngine::DrumHit newHit;
-        newHit.voice = static_cast<DrumEngine::DrumVoice>(voice);
-        newHit.step = step;
-        newHit.velocity = 0.8f;  // Default velocity
-        voiceHits.push_back(newHit);
-    }
-
+    processor_.toggleHit(voice, step);
     repaint();
 }
 
@@ -405,25 +385,6 @@ void DrumMachineEditor::mouseDrag (const juce::MouseEvent& event)
     if (voice == -1 || step == -1)
         return;
 
-    auto& pattern = processor_.getCurrentPattern();
-    auto& voiceHits = pattern.voices[voice];
-
-    // Check if hit already exists
-    bool hitExists = false;
-    for (const auto& hit : voiceHits) {
-        if (hit.step == step) {
-            hitExists = true;
-            break;
-        }
-    }
-
-    // Add hit if it doesn't exist
-    if (!hitExists) {
-        DrumEngine::DrumHit newHit;
-        newHit.voice = static_cast<DrumEngine::DrumVoice>(voice);
-        newHit.step = step;
-        newHit.velocity = 0.8f;
-        voiceHits.push_back(newHit);
+    if (processor_.setHit(voice, step, true))
         repaint();
-    }
 }

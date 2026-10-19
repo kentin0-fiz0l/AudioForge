@@ -3,7 +3,14 @@
 */
 
 #include "PluginProcessor.h"
+#include <algorithm>
+#include <cmath>
 #include "PluginEditor.h"
+
+namespace
+{
+    const juce::StringArray styles { "Rock", "Hip-Hop", "Jazz", "EDM", "Funk", "Latin", "Blues" };
+}
 
 DrumMachineProcessor::DrumMachineProcessor()
     : AudioProcessor (BusesProperties()
@@ -27,10 +34,18 @@ void DrumMachineProcessor::prepareToPlay (double sampleRate, int samplesPerBlock
 {
     sampleRate_ = sampleRate;
     drumSynth_.prepare(sampleRate, samplesPerBlock);
+    resetSequencer();
 }
 
 void DrumMachineProcessor::releaseResources()
 {
+}
+
+void DrumMachineProcessor::resetSequencer()
+{
+    lastTriggeredStep_ = -1;
+    expectedBlockStartBeat_ = 0.0;
+    resync_ = true;
 }
 
 void DrumMachineProcessor::processBlock (juce::AudioBuffer<float>& buffer,
@@ -38,63 +53,84 @@ void DrumMachineProcessor::processBlock (juce::AudioBuffer<float>& buffer,
 {
     buffer.clear();
 
+    const int numSamples = buffer.getNumSamples();
+    int renderedSamples = 0;
+
     // Get transport info
-    auto playHead = getPlayHead();
-    if (playHead != nullptr)
+    juce::Optional<juce::AudioPlayHead::PositionInfo> position;
+    if (auto* playHead = getPlayHead())
+        position = playHead->getPosition();
+
+    if (position.hasValue() && position->getIsPlaying() && patternEnabled_)
     {
-        auto position = playHead->getPosition();
-        if (position.hasValue())
+        // Get tempo and beat position
+        auto bpm = position->getBpm();
+        double tempo = bpm.hasValue() && std::isfinite (*bpm) && *bpm > 0.0 ? *bpm : 120.0;
+        double beatsPerSample = tempo / 60.0 / sampleRate_;
+
+        // Without a host position, carry on from where the last block ended. A count-in or
+        // pre-roll is negative: step 0 then lands where the position crosses 0.
+        auto ppqPos = position->getPpqPosition();
+        double blockStartBeat = ppqPos.hasValue() && std::isfinite (*ppqPos) ? *ppqPos : expectedBlockStartBeat_;
+        double blockEndBeat = blockStartBeat + numSamples * beatsPerSample;
+
+        // The host jumped (a loop, a locate): start counting steps afresh. A smaller
+        // difference is the tempo changing within a block; missed steps catch up at sample 0.
+        if (std::abs(blockStartBeat - expectedBlockStartBeat_) > beatsPerStep)
+            resetSequencer();
+        expectedBlockStartBeat_ = blockEndBeat;
+
+        // If the pattern is being replaced, this block's steps catch up in the next one
+        const juce::SpinLock::ScopedTryLockType patternLock (patternLock_);
+        if (patternLock.isLocked())
         {
-            auto isPlaying = position->getIsPlaying();
-            if (isPlaying && patternEnabled_)
+            // Swing delays the off-beat 16ths, up to a third of a step (the 16th triplet)
+            const double swingDelay = swing_.load() * beatsPerStep / 3.0;
+            const int numSteps = currentPattern_.numSteps;
+
+            // Steps are counted from the start of the song and each fires once. A step the
+            // last block did not reach (rounding, tempo drift, or swing turned down) fires at
+            // sample 0; after a start or a jump, steps already passed are skipped.
+            const double earliestBeat = blockStartBeat - beatsPerSample;
+            for (auto step = std::max<juce::int64>(0, static_cast<juce::int64>(std::floor(earliestBeat / beatsPerStep)) - 1); ; ++step)
             {
-                // Get tempo and beat position
-                auto bpm = position->getBpm();
-                double tempo = bpm.hasValue() ? *bpm : 120.0;
-
-                double beatsPerSecond = tempo / 60.0;
-                double beatsPerSample = beatsPerSecond / sampleRate_;
-
-                auto ppqPos = position->getPpqPosition();
-                double currentBeat = ppqPos.hasValue() ? *ppqPos : 0.0;
-                if (currentBeat < 0.0)
-                    currentBeat = 0.0;
-
-                // Loop the pattern (4 beats = 16 steps)
-                double loopStartBeat = std::floor(currentBeat / patternLengthInBeats_) * patternLengthInBeats_;
-                double beatInLoop = currentBeat - loopStartBeat;
-
-                int numSamples = buffer.getNumSamples();
-
-                // Process each sample to detect step triggers
-                for (int sample = 0; sample < numSamples; ++sample) {
-                    double sampleBeat = beatInLoop + (sample * beatsPerSample);
-
-                    // Convert beat to step (16 steps per 4 beats)
-                    int currentStep = static_cast<int>((sampleBeat / patternLengthInBeats_) * 16.0) % 16;
-
-                    // Trigger drums when entering a new step
-                    if (currentStep != lastProcessedStep_) {
-                        lastProcessedStep_ = currentStep;
-
-                        // Get all hits at this step
-                        auto hits = drumEngine_.getHitsAtStep(currentPattern_, currentStep);
-
-                        // Trigger each drum hit
-                        for (const auto& hit : hits) {
-                            drumSynth_.triggerDrum(hit.voice, hit.velocity);
-                        }
-                    }
+                const int stepInPattern = static_cast<int>(step % numSteps);
+                const double onsetBeat = step * beatsPerStep + (stepInPattern % 2 == 1 ? swingDelay : 0.0);
+                if (onsetBeat >= blockEndBeat)
+                    break;
+                if (step <= lastTriggeredStep_)
+                    continue;
+                if (resync_ && onsetBeat < earliestBeat)
+                {
+                    lastTriggeredStep_ = step;
+                    continue;
                 }
-            } else {
-                // Reset step counter when not playing
-                lastProcessedStep_ = -1;
+
+                const int onsetSample = std::max(0, juce::roundToInt((onsetBeat - blockStartBeat) / beatsPerSample));
+                if (onsetSample >= numSamples)
+                    break;  // Rounds into the next block, which picks it up
+
+                // Render up to the hit so it starts on its own sample
+                drumSynth_.renderNextBlock(buffer, renderedSamples, onsetSample - renderedSamples);
+                renderedSamples = onsetSample;
+
+                for (const auto& voiceHits : currentPattern_.voices)
+                    for (const auto& hit : voiceHits)
+                        if (hit.step == stepInPattern)
+                            drumSynth_.triggerDrum(hit.voice, hit.velocity);
+
+                lastTriggeredStep_ = step;
             }
+            resync_ = false;
         }
     }
+    else
+    {
+        resetSequencer();
+    }
 
-    // Render drum synth audio
-    drumSynth_.renderNextBlock(buffer, 0, buffer.getNumSamples());
+    // Render the rest of the block
+    drumSynth_.renderNextBlock(buffer, renderedSamples, numSamples - renderedSamples);
 }
 
 juce::AudioProcessorEditor* DrumMachineProcessor::createEditor()
@@ -102,14 +138,123 @@ juce::AudioProcessorEditor* DrumMachineProcessor::createEditor()
     return new DrumMachineEditor (*this);
 }
 
-void DrumMachineProcessor::getStateInformation (juce::MemoryBlock&)
+void DrumMachineProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
-    // Save state
+    juce::XmlElement state ("DrumMachine");
+    state.setAttribute ("complexity", complexity_.load());
+    state.setAttribute ("swing", static_cast<double> (swing_.load()));
+    state.setAttribute ("fills", fillsEnabled_.load());
+    state.setAttribute ("enabled", patternEnabled_.load());
+
+    // The pattern itself: generation is random and the grid can be edited
+    const juce::ScopedLock edit (patternEditLock_);
+    state.setAttribute ("style", juce::String (currentPattern_.style));
+    for (const auto& voiceHits : currentPattern_.voices) {
+        for (const auto& hit : voiceHits) {
+            auto* hitXml = state.createNewChildElement ("Hit");
+            hitXml->setAttribute ("voice", static_cast<int> (hit.voice));
+            hitXml->setAttribute ("step", hit.step);
+            hitXml->setAttribute ("velocity", static_cast<double> (hit.velocity));
+        }
+    }
+
+    copyXmlToBinary (state, destData);
 }
 
-void DrumMachineProcessor::setStateInformation (const void*, int)
+void DrumMachineProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
-    // Restore state
+    auto state = getXmlFromBinary (data, sizeInBytes);
+    if (state == nullptr || ! state->hasTagName ("DrumMachine"))
+        return;
+
+    // A project file can be damaged or hand-edited, so nothing from it reaches the audio thread
+    // unchecked: settings are kept to their ranges (a non-finite one is ignored), only known
+    // styles are taken, hits must be in the grid, and each cell holds at most one hit.
+    complexity_ = juce::jlimit (1, 10, state->getIntAttribute ("complexity", complexity_));
+    if (const double swing = state->getDoubleAttribute ("swing", swing_.load()); std::isfinite (swing))
+        swing_ = juce::jlimit (0.0f, 1.0f, static_cast<float> (swing));
+    fillsEnabled_ = state->getBoolAttribute ("fills", fillsEnabled_);
+    patternEnabled_ = state->getBoolAttribute ("enabled", patternEnabled_.load());
+
+    const juce::ScopedLock edit (patternEditLock_);
+    DrumEngine::DrumPattern pattern;
+    pattern.numSteps = 16;
+    const auto style = state->getStringAttribute ("style");
+    pattern.style = styles.contains (style) ? style.toStdString() : currentPattern_.style;
+
+    for (auto* hitXml : state->getChildWithTagNameIterator ("Hit")) {
+        const int voice = hitXml->getIntAttribute ("voice", -1);
+        const int step = hitXml->getIntAttribute ("step", -1);
+        if (voice < 0 || voice >= DrumEngine::NUM_VOICES || step < 0 || step >= pattern.numSteps)
+            continue;
+
+        auto& voiceHits = pattern.voices[voice];
+        if (std::any_of (voiceHits.begin(), voiceHits.end(), [step] (const auto& hit) { return hit.step == step; }))
+            continue;
+
+        double velocity = hitXml->getDoubleAttribute ("velocity", 0.8);
+        if (std::isnan (velocity))
+            velocity = 0.8;
+        voiceHits.push_back ({ static_cast<DrumEngine::DrumVoice> (voice), step,
+                               juce::jlimit (0.0f, 1.0f, static_cast<float> (velocity)) });
+    }
+
+    setPattern (std::move (pattern));
+}
+
+DrumEngine::DrumPattern DrumMachineProcessor::getCurrentPattern() const
+{
+    const juce::ScopedLock edit (patternEditLock_);
+    return currentPattern_;
+}
+
+void DrumMachineProcessor::setPattern (DrumEngine::DrumPattern pattern)
+{
+    pattern.numSteps = juce::jlimit (1, 16, pattern.numSteps);  // The audio thread wraps steps by it
+
+    const juce::ScopedLock edit (patternEditLock_);
+    {
+        // Swap rather than assign, so the audio thread never waits on an allocation
+        const juce::SpinLock::ScopedLockType lock (patternLock_);
+        std::swap (currentPattern_, pattern);
+    }
+    // The old pattern is freed here, outside the audio thread's lock
+}
+
+bool DrumMachineProcessor::setHit (int voice, int step, bool on)
+{
+    if (voice < 0 || voice >= DrumEngine::NUM_VOICES || step < 0 || step >= 16)
+        return false;
+
+    const juce::ScopedLock edit (patternEditLock_);
+    auto pattern = currentPattern_;
+    auto& voiceHits = pattern.voices[voice];
+    const auto it = std::find_if (voiceHits.begin(), voiceHits.end(), [step] (const auto& hit) { return hit.step == step; });
+    if ((it != voiceHits.end()) == on)
+        return false;
+
+    if (on)
+        voiceHits.push_back ({ static_cast<DrumEngine::DrumVoice> (voice), step, 0.8f });
+    else
+        voiceHits.erase (it);
+    setPattern (std::move (pattern));
+    return true;
+}
+
+void DrumMachineProcessor::toggleHit (int voice, int step)
+{
+    const juce::ScopedLock edit (patternEditLock_);
+    if (! setHit (voice, step, true))
+        setHit (voice, step, false);
+}
+
+void DrumMachineProcessor::clearPattern()
+{
+    const juce::ScopedLock edit (patternEditLock_);
+    auto pattern = currentPattern_;
+    for (auto& voiceHits : pattern.voices)
+        voiceHits.clear();
+    setPattern (std::move (pattern));
 }
 
 void DrumMachineProcessor::generateNewPattern(const std::string& style)
@@ -120,7 +265,8 @@ void DrumMachineProcessor::generateNewPattern(const std::string& style)
     params.swing = swing_;
     params.fillsEnabled = fillsEnabled_;
 
-    currentPattern_ = drumEngine_.generatePattern(params);
+    const juce::ScopedLock edit (patternEditLock_);
+    setPattern (drumEngine_.generatePattern(params));
 }
 
 void DrumMachineProcessor::exportToMidiFile(const juce::File& file)
@@ -151,8 +297,9 @@ void DrumMachineProcessor::exportToMidiFile(const juce::File& file)
     int ticksPerBeat = 480;  // Quarter note
     int ticksPer16th = ticksPerBeat / 4;
 
+    const auto pattern = getCurrentPattern();
     for (int v = 0; v < DrumEngine::NUM_VOICES; ++v) {
-        const auto& voiceHits = currentPattern_.voices[v];
+        const auto& voiceHits = pattern.voices[v];
 
         for (const auto& hit : voiceHits) {
             int midiNote = drumNoteMap[hit.voice];
@@ -177,8 +324,10 @@ void DrumMachineProcessor::exportToMidiFile(const juce::File& file)
     }
 }
 
+#ifndef AUDIOFORGE_TESTS
 // This creates new instances of the plugin
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
     return new DrumMachineProcessor();
 }
+#endif

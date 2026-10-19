@@ -11,7 +11,7 @@ DrumMachine generates rhythmic drum patterns using synthesized drum sounds and g
 ### 🎵 7 Musical Styles
 - **Rock** - 4-on-floor kick, backbeat snare, 8th/16th hihats
 - **Hip-Hop** - Boom-bap patterns, syncopated kicks, ghost snares
-- **Jazz** - Swing feel, ride patterns, feathered snares
+- **Jazz** - Ride patterns, feathered snares (add Swing for the swing feel)
 - **EDM** - Four-on-floor, quantized, high-energy
 - **Funk** - Syncopated grooves, heavy ghost notes, 16th hihats
 - **Latin** - Clave patterns, tresillo rhythms, percussive
@@ -27,8 +27,8 @@ DrumMachine generates rhythmic drum patterns using synthesized drum sounds and g
 ### 🎛️ Pattern Controls
 - **Style Selector** - 7 genres with distinct grooves
 - **Complexity** - 1-10 (affects note density and variation)
-- **Swing** - 0.0-1.0 (triplet feel vs straight)
-- **Fills** - Toggle drum fills at end of pattern
+- **Swing** - 0.0-1.0: delays the off-beat 16ths, from straight (0) to the 16th triplet (1); applies live while playing
+- **Fills** - Tom fill on the last beat and a crash on the downbeat, in every style (applies to the next generated pattern)
 - **16-Step Grid** - Visual pattern display
 
 ---
@@ -39,9 +39,8 @@ DrumMachine generates rhythmic drum patterns using synthesized drum sounds and g
 
 #### **DrumEngine** (Pure C++)
 - `generatePattern()` - Genre-specific pattern generation
-- `getHitsAtStep()` - Retrieve hits for sequencer
 - Style-specific generators for each genre
-- 16-step grid (4 bars of 16th notes)
+- 16-step grid (1 bar of 16th notes)
 
 #### **DrumSynth** (Audio Synthesis)
 - Synthesized drum sounds (no samples)
@@ -53,8 +52,9 @@ DrumMachine generates rhythmic drum patterns using synthesized drum sounds and g
 
 #### **PluginProcessor** (JUCE Sequencer)
 - Transport-synced pattern playback
-- Step triggering based on DAW position
-- Pattern looping (4 bars)
+- Sample-accurate step triggering based on DAW position, with swing
+- Pattern looping (1 bar)
+- Settings and the pattern (including grid edits) are saved with the session
 
 #### **PluginEditor** (JUCE UI)
 - Pattern grid visualization (5 voices × 16 steps)
@@ -101,7 +101,7 @@ DrumMachine generates rhythmic drum patterns using synthesized drum sounds and g
 **Jazz**:
 - Kick: Sparse (1, 3)
 - Snare: Light backbeat + feathering
-- Hihat: Swing feel (triplet-based)
+- Hihat: 8ths, plus off-beat 16ths at complexity 6+ (swing them with the Swing control)
 
 **EDM**:
 - Kick: Every beat (quantized)
@@ -196,7 +196,7 @@ Layer all four for instant song arrangements!
 **Requirements**: C++17, JUCE 7.0+  
 **Sample Rate**: Any  
 **Latency**: None (real-time generation)  
-**Pattern Length**: 16 steps (4 bars of 16th notes)  
+**Pattern Length**: 16 steps (1 bar of 16th notes)  
 **Voices**: 5 (Kick, Snare, Hihat, Tom, Crash)  
 **Synthesis**: Procedural (no samples)
 
