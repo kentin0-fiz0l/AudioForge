@@ -7,13 +7,16 @@ bool KotoVoice::canPlaySound(juce::SynthesiserSound* sound)
     return dynamic_cast<KotoSound*>(sound) != nullptr;
 }
 
-void KotoVoice::startNote(int midiNoteNumber, float velocity, juce::SynthesiserSound*, int)
+void KotoVoice::startNote(int midiNoteNumber, float velocity, juce::SynthesiserSound*, int currentPitchWheelPosition)
 {
-    currentFrequency_ = juce::MidiMessage::getMidiNoteInHertz(midiNoteNumber);
+    currentFrequency_ = static_cast<float>(juce::MidiMessage::getMidiNoteInHertz(engine_.snapToScale(midiNoteNumber)));
     currentVelocity_ = velocity;
     isNoteOn_ = true;
     samplesSinceNoteOn_ = 0;
 
+    // Wheel first: reset() starts the bend glide at the wheel's position, so
+    // a new note does not slide in from the last one's bend
+    engine_.setPitchWheel(currentPitchWheelPosition);
     engine_.reset();
 }
 
@@ -42,7 +45,7 @@ void KotoVoice::renderNextBlock(juce::AudioBuffer<float>& outputBuffer, int star
 
         samplesSinceNoteOn_++;
 
-        if (!isNoteOn_ && std::abs(currentSample) < 0.0001f)
+        if (engine_.isReleaseFinished())
         {
             clearCurrentNote();
             break;

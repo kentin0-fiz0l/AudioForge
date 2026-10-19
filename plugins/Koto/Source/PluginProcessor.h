@@ -54,6 +54,9 @@ private:
     static constexpr const char* PARAM_TREMOLO_RATE = "tremoloRate";
     static constexpr const char* PARAM_TONE = "tone";
 
+    // Saved with the state. 2 = Scale is applied to notes (AudioForge 2.1.1)
+    static constexpr int currentStateVersion = 2;
+
     AudioForge::MIDILearnManager midiLearnManager_;
     AudioForge::PresetManager presetManager_;
 
