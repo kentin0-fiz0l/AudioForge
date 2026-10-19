@@ -222,9 +222,9 @@ private:
         expectEquals(instrument.regions[2].sample, juce::String("Brass/horn.flac"), "a second <control> changes the path");
 
         const auto sfz = juce::File("/libs/vsco/Violin.sfz");
-        expectEquals(Sfz::resolveSample(sfz, "Strings/a b.wav").getFullPathName(), juce::String("/libs/vsco/Strings/a b.wav"));
-        expectEquals(Sfz::resolveSample(sfz, "..\\x.wav").getFullPathName(), juce::String("/libs/x.wav"));
-        expectEquals(Sfz::resolveSample(sfz, "/abs/x.wav").getFullPathName(), juce::String("/abs/x.wav"));
+        expectEquals(Sfz::resolveSample(sfz, "Strings/a b.wav").getFullPathName(), juce::File("/libs/vsco/Strings/a b.wav").getFullPathName());
+        expectEquals(Sfz::resolveSample(sfz, "..\\x.wav").getFullPathName(), juce::File("/libs/x.wav").getFullPathName());
+        expectEquals(Sfz::resolveSample(sfz, "/abs/x.wav").getFullPathName(), juce::File("/abs/x.wav").getFullPathName());
     }
 
     void testRegionsAreChosen()
