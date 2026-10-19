@@ -602,7 +602,11 @@ private:
         expect(juce::File::createSymbolicLink(toLocal, folder.getChildFile("real").getFullPathName(), true));
         expect(! isRemote(toLocal.getChildFile("x.wav")), "a link to a folder on this machine is local");
         expect(! isAutofs(std::filesystem::path(folder.getFullPathName().toStdString())), "a local folder isn't an automount");
-        expect(isAutomount("/System/Volumes/Data/net/nas") == (bool) JUCE_MAC, "on a Mac, /net's other name is one too");
+       #if JUCE_MAC
+        expect(isAutomount("/System/Volumes/Data/net/nas"), "on a Mac, /net's other name is one too");
+       #else
+        expect(! isAutomount("/System/Volumes/Data/net/nas"), "that name is only a Mac's");
+       #endif
        #endif
        #if JUCE_LINUX
         expect(isLocalFileSystem(0xEF53) && isLocalFileSystem(0x794C7630), "ext4 and overlayfs are local");
