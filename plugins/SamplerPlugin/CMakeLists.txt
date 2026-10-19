@@ -30,6 +30,8 @@ target_sources(SamplerPlugin PRIVATE
     Source/Sample.cpp
     Source/SampleLibrary.cpp
     Source/SamplerVoice.cpp
+    Source/SfzParser.cpp
+    Source/SfzSampleMap.cpp
     Source/KeyZone.cpp
     Source/ZoneEditor.cpp
     Source/WaveformDisplay.cpp
@@ -58,27 +60,5 @@ target_link_libraries(SamplerPlugin PRIVATE
 # Set C++ standard
 target_compile_features(SamplerPlugin PRIVATE cxx_std_17)
 
-# Tests
-if(BUILD_TESTING)
-    enable_testing()
-
-    add_executable(SamplerPluginTests
-        Source/SamplerTests.cpp
-        Source/Sample.cpp
-        Source/SampleLibrary.cpp
-        Source/KeyZone.cpp
-        Source/SamplerVoice.cpp
-        Source/PluginProcessor.cpp)
-
-    target_link_libraries(SamplerPluginTests PRIVATE
-        juce::juce_audio_processors
-        juce::juce_audio_formats
-        juce::juce_dsp
-        AudioForgeDSP
-        AudioForgeSynth
-        AudioForgePresets)
-
-    target_compile_features(SamplerPluginTests PRIVATE cxx_std_17)
-
-    add_test(NAME SamplerPluginTests COMMAND SamplerPluginTests)
-endif()
+# Tests: Source/SamplerTests.cpp and tests/Plugins/SamplerSfzTests.cpp run in
+# the suite under tests/

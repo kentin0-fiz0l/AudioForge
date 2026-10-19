@@ -21,7 +21,7 @@ Professional multi-sample instrument with key zone mapping, velocity layers, and
 - ✅ Filter envelope amount control
 
 ### Polyphony
-- ✅ 16 voices with voice stealing
+- ✅ 32 voices with voice stealing
 - ✅ Key zone mapping
 - ✅ Velocity layer support
 - ✅ Round-robin playback
@@ -47,6 +47,38 @@ The plugin is automatically installed to:
 - ✅ **Zone management** (add, delete, resize via mouse)
 - ✅ **Parameter controls** (ADSR sliders, filter controls)
 - ✅ **Memory/zone status** display
+
+## SFZ instruments
+
+The sampler plays SFZ instruments, such as those in [VSCO 2 Community Edition](https://github.com/sgossner/VSCO-2-CE). A saved state names one with an `sfz` attribute on its root element, and loading the state loads it and every sample it uses:
+
+```xml
+<Parameters sfz="/Users/me/vsco2/ViolinEnsSusVib.sfz"/>
+```
+
+That is the XML to give the [render host](../../tools/render-host/README.md) with `--state`. While an instrument is loaded, notes play it instead of the key zones, and the state the plugin saves keeps the path. A relative path is taken from the working directory.
+
+What it reads:
+
+| | |
+|---|---|
+| Headers | `<control>`, `<global>`, `<master>`, `<group>`, `<region>`; a region takes the opcodes of the headers above it and can override them |
+| Files | `sample`, `default_path`; paths relative to the .sfz, `\` or `/`, spaces allowed; WAV, AIFF, FLAC |
+| Mapping | `lokey`, `hikey`, `key`, `lovel`, `hivel`; keys as numbers or names (`c4` is 60, `f#3`, `eb2`) |
+| Pitch | `pitch_keycenter`, `pitch_keytrack`, `tune` (cents), `transpose`; notes away from the key centre are resampled |
+| Level | `volume` (dB), `amplitude`, `pan`, `amp_veltrack` (velocity squared, as SFZ does by default) |
+| Envelope | `ampeg_attack`, `ampeg_decay`, `ampeg_sustain`, `ampeg_release` |
+| Playback | `offset`, `end`, `loop_mode` (`no_loop`, `one_shot`, `loop_continuous`, `loop_sustain`), `loop_start`, `loop_end`; without a `loop_mode`, a WAV's own loop is used |
+| Round robin | `seq_length`, `seq_position`, `lorand`, `hirand` |
+| Keyswitches | `sw_lokey`, `sw_hikey`, `sw_last`, `sw_default` |
+
+Release-triggered regions (`trigger=release`) are left out, and other opcodes are ignored; what was ignored, and any samples that couldn't be loaded, are written to the log (the terminal, under the render host). A region's envelope opcodes override the Amp envelope parameters; where it has none, attack and release come from those parameters and the sustain is full. `loop_sustain` loops like `loop_continuous`. The filter, Master Volume and Master Tune apply to SFZ instruments too.
+
+The random round robin is seeded the same way every time, so a render comes out the same each time it's made.
+
+### MIDI
+
+Notes start at their exact sample in the block. The sustain pedal (CC64) holds notes, and volume (CC7) and expression (CC11) scale the output on a square-law curve; both start at full.
 
 ## Quick Start
 
@@ -88,7 +120,9 @@ Sample              → Holds audio data + loop settings
 SampleLibrary       → Manages loaded samples (512 MB budget)
 KeyZone             → Maps MIDI notes → samples + velocity layers
 SamplerVoice        → Playback engine (pitch shift, ADSR, filter)
-PluginProcessor     → Main audio processor (16-voice polyphony)
+SfzParser           → Reads SFZ text into regions
+SfzSampleMap        → An SFZ instrument with its samples: which regions a note plays
+PluginProcessor     → Main audio processor (32-voice polyphony)
 PluginEditor        → UI (basic in Phase 1, enhanced in Phase 4)
 ```
 
@@ -97,7 +131,7 @@ PluginEditor        → UI (basic in Phase 1, enhanced in Phase 4)
 - **Max sample length**: 30 seconds per sample
 - **Memory budget**: 512 MB total
 - **Sample formats**: WAV, AIFF, FLAC (16/24/32-bit, mono/stereo)
-- **Polyphony**: 16 voices (configurable)
+- **Polyphony**: 32 voices
 - **Sample rate**: Any (tested at 44.1kHz and 48kHz)
 - **CPU usage**: <10% target (per instance at 44.1kHz)
 

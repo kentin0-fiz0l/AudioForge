@@ -1,6 +1,8 @@
 #include "SampleLibrary.h"
+#include "../../../shared/utils/AudioFileSafety.h"
 
-SampleLibrary::SampleLibrary()
+SampleLibrary::SampleLibrary(size_t memoryBudgetBytes)
+    : memoryBudget(memoryBudgetBytes)
 {
     // Register common audio formats
     formatManager.registerBasicFormats();
@@ -9,6 +11,12 @@ SampleLibrary::SampleLibrary()
 std::shared_ptr<Sample> SampleLibrary::loadSample(const juce::File& file)
 {
     lastError.clear();
+
+    if (AudioForge::FileSafety::isNetworkPath(file.getFullPathName()))
+    {
+        lastError = "Network paths aren't loaded: " + file.getFullPathName();
+        return nullptr;
+    }
 
     if (!file.existsAsFile())
     {
@@ -25,25 +33,35 @@ std::shared_ptr<Sample> SampleLibrary::loadSample(const juce::File& file)
         return nullptr;
     }
 
-    // Create sample from reader
-    auto sample = std::make_shared<Sample>(*reader, 30.0);
+    // The header's numbers decide how much is allocated, so check them first
+    const auto problem = AudioForge::FileSafety::checkReader(*reader);
+    if (problem.isNotEmpty())
+    {
+        lastError = problem + ": " + file.getFullPathName();
+        return nullptr;
+    }
 
-    // Check memory budget
-    size_t sampleSize = sample->getSizeInBytes();
-    size_t newTotal = totalMemoryUsed + sampleSize;
+    // Check memory budget: up to maxLengthSecs, always two channels of floats
+    const auto frames = juce::jmin(reader->lengthInSamples,
+                                   static_cast<juce::int64>(maxLengthSecs * reader->sampleRate));
+    const auto sampleSize = static_cast<size_t>(frames) * 2 * sizeof(float);
 
-    if (newTotal > MAX_MEMORY_BYTES)
+    if (sampleSize > memoryBudget || totalMemoryUsed > memoryBudget - sampleSize)
     {
         lastError = juce::String("Memory budget exceeded. Current: ") +
                     juce::String(totalMemoryUsed / (1024 * 1024)) + " MB, " +
                     "Sample: " + juce::String(sampleSize / (1024 * 1024)) + " MB, " +
-                    "Limit: " + juce::String(MAX_MEMORY_BYTES / (1024 * 1024)) + " MB";
+                    "Limit: " + juce::String(memoryBudget / (1024 * 1024)) + " MB";
         return nullptr;
     }
 
+    // Create sample from reader
+    auto sample = std::make_shared<Sample>(*reader, maxLengthSecs);
+    sample->setSourceFile(file);
+
     // Add sample to library
     samples.push_back(sample);
-    totalMemoryUsed = newTotal;
+    totalMemoryUsed += sample->getSizeInBytes();
 
     return sample;
 }

@@ -16,11 +16,15 @@ class SampleLibrary
 public:
     static constexpr size_t MAX_MEMORY_BYTES = 512 * 1024 * 1024;  // 512 MB
 
-    SampleLibrary();
+    static constexpr double maxLengthSecs = 30.0;  // Longer samples are cut short
+
+    explicit SampleLibrary(size_t memoryBudgetBytes = MAX_MEMORY_BYTES);
 
     /**
      * Load a sample from a file.
      * Returns nullptr if file cannot be loaded or exceeds memory budget.
+     * A network path, or a file whose header gives an unlikely sample rate
+     * or channel count, isn't loaded.
      *
      * @param file Audio file to load
      * @return Shared pointer to loaded sample, or nullptr on failure
@@ -64,6 +68,7 @@ public:
 
 private:
     std::vector<std::shared_ptr<Sample>> samples;
+    size_t memoryBudget;
     size_t totalMemoryUsed = 0;
     juce::AudioFormatManager formatManager;
     juce::String lastError;

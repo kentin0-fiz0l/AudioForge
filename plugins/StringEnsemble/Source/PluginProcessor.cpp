@@ -29,7 +29,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout StringEnsembleProcessor::cre
         PARAM_BRIGHTNESS, "Brightness", 0.0f, 1.0f, 0.7f));
 
     params.push_back(std::make_unique<juce::AudioParameterFloat>(
-        PARAM_ATTACK, "Attack", 0.0f, 1.0f, 0.5f));
+        PARAM_ATTACK, "Bow Pressure", 0.0f, 1.0f, 0.5f));  // the ID stays "attack" so saved sessions load; it was never a time
 
     params.push_back(std::make_unique<juce::AudioParameterFloat>(
         PARAM_DECAY, "Decay", 0.0f, 1.0f, 0.7f));
