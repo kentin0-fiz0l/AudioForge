@@ -12,6 +12,7 @@
  // From <windows.h>, which isn't included here: it would clash with JUCE's names
  extern "C" __declspec(dllimport) unsigned int __stdcall GetDriveTypeW(const wchar_t*);
  extern "C" __declspec(dllimport) unsigned long __stdcall GetFileAttributesW(const wchar_t*);
+ extern "C" __declspec(dllimport) unsigned long __stdcall GetLastError();
 #endif
 
 namespace AudioForge {
@@ -56,7 +57,8 @@ inline std::filesystem::path fsPath(const juce::File& file)
 inline bool isAutomount(const juce::String& path)
 {
    #if JUCE_MAC  // its volumes ignore case: /NET is /net
-    for (const auto* folder : { "/net", "/Network", "/home" })
+    for (const auto* folder : { "/net", "/Network", "/home", "/System/Volumes/Data/net",
+                                "/System/Volumes/Data/Network", "/System/Volumes/Data/home" })
         if (path.equalsIgnoreCase(folder) || path.startsWithIgnoreCase(juce::String(folder) + "/"))
             return true;
    #else
@@ -65,6 +67,23 @@ inline bool isAutomount(const juce::String& path)
             return true;
    #endif
     return false;
+}
+
+/**
+ * Whether the folder `at` (already reached without mounting anything) is an
+ * automount, configured anywhere: looking up a name inside it would mount it.
+ * When it can't tell, it says it is.
+ */
+inline bool isAutofs(const std::filesystem::path& at)
+{
+    struct statfs fs;
+    if (statfs(at.c_str(), &fs) != 0)
+        return true;
+   #if JUCE_MAC
+    return juce::String(fs.f_fstypename) == "autofs";
+   #else
+    return (unsigned long) fs.f_type == 0x0187;  // AUTOFS_SUPER_MAGIC
+   #endif
 }
 
 /**
@@ -98,7 +117,7 @@ inline bool resolveWithoutMounting(const juce::String& path, std::filesystem::pa
             continue;
         }
         const auto next = at / part;
-        if (isAutomount(juce::String(next.string())))
+        if (isAutomount(juce::String(next.string())) || isAutofs(at))
             return false;
         std::error_code ec;
         const auto status = std::filesystem::symlink_status(next, ec);
@@ -198,7 +217,10 @@ inline bool isRemote(const juce::File& file)
         const auto prefix = i < 0 ? path : path.substring(0, i);
         const auto attributes = GetFileAttributesW(prefix.toWideCharPointer());
         if (attributes == 0xFFFFFFFFul)
-            return false;  // what's left doesn't exist yet
+        {
+            const auto error = GetLastError();
+            return error != 2 && error != 3;  // only "not found" means what's left doesn't exist yet
+        }
         if ((attributes & 0x400ul) != 0)  // FILE_ATTRIBUTE_REPARSE_POINT
             return true;
         if (i < 0)
