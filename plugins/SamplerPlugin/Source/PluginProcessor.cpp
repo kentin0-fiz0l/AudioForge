@@ -427,15 +427,16 @@ void SamplerPluginProcessor::setStateInformation(const void* data, int sizeInByt
 
     // The SFZ instrument: a relative path is taken from the working directory
     const auto sfzPath = xmlState->getStringAttribute("sfz");
-    if (AudioForge::FileSafety::isNetworkPath(sfzPath))
+    const auto sfz = juce::File::getCurrentWorkingDirectory().getChildFile(sfzPath);
+    if (const auto why = AudioForge::FileSafety::refusal(sfzPath, sfz); sfzPath.isNotEmpty() && why.isNotEmpty())
     {
-        juce::Logger::writeToLog("Sampler: network paths aren't loaded: " + sfzPath);
+        juce::Logger::writeToLog("Sampler: " + why);
         clearSfz();
     }
     else if (sfzPath.isNotEmpty())
     {
         juce::String error;
-        loadSfz(juce::File::getCurrentWorkingDirectory().getChildFile(sfzPath), error);
+        loadSfz(sfz, error);
     }
     else
     {
@@ -460,9 +461,10 @@ void SamplerPluginProcessor::setStateInformation(const void* data, int sizeInByt
         for (auto* sampleElement : samplesElement->getChildWithTagNameIterator("Sample"))
         {
             const auto path = sampleElement->getStringAttribute("path");
-            if (AudioForge::FileSafety::isNetworkPath(path) || !juce::File::isAbsolutePath(path))
+            if (!juce::File::isAbsolutePath(path)
+                || AudioForge::FileSafety::refusal(path, juce::File(path)).isNotEmpty())
             {
-                juce::Logger::writeToLog("Sampler: can't restore sample " + path + " (network or not absolute)");
+                juce::Logger::writeToLog("Sampler: can't restore sample " + path + " (not absolute, or a network file outside the approved libraries)");
                 continue;
             }
 

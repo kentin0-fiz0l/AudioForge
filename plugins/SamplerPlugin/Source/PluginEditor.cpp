@@ -1,4 +1,5 @@
 #include "PluginEditor.h"
+#include "../../../shared/utils/AudioFileSafety.h"
 #include "../../shared/ui/AudioForgeTheme.h"
 
 SamplerPluginEditor::SamplerPluginEditor(SamplerPluginProcessor& p)
@@ -410,6 +411,10 @@ void SamplerPluginEditor::loopPointsChanged(double loopStartSec, double loopEndS
 
 void SamplerPluginEditor::loadSampleFile(const juce::File& file)
 {
+    // Chosen or dropped by hand: its folder is one the user means to load from
+    if (AudioForge::FileSafety::refusal(file).isNotEmpty())
+        AudioForge::FileSafety::approve(file.getParentDirectory());
+
     // Load sample into library
     auto sample = processor.getSampleLibrary().loadSample(file);
 

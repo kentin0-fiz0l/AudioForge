@@ -13,9 +13,9 @@ bool SfzSampleMap::load(const juce::File& sfzFile, juce::String& error)
     keyswitchHigh = -1;
     currentKeyswitch = -1;
 
-    if (AudioForge::FileSafety::isNetworkPath(sfzFile.getFullPathName()))
+    if (const auto why = AudioForge::FileSafety::refusal(sfzFile); why.isNotEmpty())
     {
-        error = "network paths aren't loaded: " + sfzFile.getFullPathName();
+        error = why;
         return false;
     }
 
@@ -42,14 +42,13 @@ bool SfzSampleMap::load(const juce::File& sfzFile, juce::String& error)
             continue;  // Release samples aren't played
 
         // A library may reach outside its folder (../, absolute paths),
-        // but not onto another machine
-        if (AudioForge::FileSafety::isNetworkPath(opcodes.sample))
+        // but not onto another machine, unless that's an approved library
+        const auto sampleFile = Sfz::resolveSample(sfzFile, opcodes.sample);
+        if (const auto why = AudioForge::FileSafety::refusal(opcodes.sample, sampleFile); why.isNotEmpty())
         {
-            warnings.addIfNotAlreadyThere("network paths aren't loaded: " + opcodes.sample);
+            warnings.addIfNotAlreadyThere(why);
             continue;
         }
-
-        const auto sampleFile = Sfz::resolveSample(sfzFile, opcodes.sample);
         const auto path = sampleFile.getFullPathName();
 
         auto found = loaded.find(path);

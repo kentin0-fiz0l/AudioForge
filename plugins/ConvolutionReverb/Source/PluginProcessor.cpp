@@ -136,8 +136,8 @@ void ConvolutionReverbProcessor::processBlock(juce::AudioBuffer<float>& buf, juc
 }
 
 bool ConvolutionReverbProcessor::loadImpulseResponse(const juce::File& file, juce::String& error) {
-    if (AudioForge::FileSafety::isNetworkPath(file.getFullPathName())) {
-        error = "network paths aren't loaded: " + file.getFullPathName();
+    if (const auto why = AudioForge::FileSafety::refusal(file); why.isNotEmpty()) {
+        error = why;
         return false;
     }
 
@@ -216,8 +216,8 @@ void ConvolutionReverbProcessor::setStateInformation(const void* d, int sz) {
     // The impulse response: a relative path is taken from the working directory
     const auto irPath = x->getStringAttribute("ir");
     const auto ir = juce::File::getCurrentWorkingDirectory().getChildFile(irPath);
-    if (AudioForge::FileSafety::isNetworkPath(irPath)) {
-        juce::Logger::writeToLog("ConvolutionReverb: network paths aren't loaded: " + irPath);
+    if (const auto why = AudioForge::FileSafety::refusal(irPath, ir); irPath.isNotEmpty() && why.isNotEmpty()) {
+        juce::Logger::writeToLog("ConvolutionReverb: " + why);
         irFile_ = juce::File();
         irSeconds_ = 0.0;
     } else if (irPath.isNotEmpty() && ir != irFile_) {

@@ -32,6 +32,9 @@ public:
         folder = juce::File::getSpecialLocation(juce::File::tempDirectory)
                      .getNonexistentChildFile("SamplerSfzTests", "");
         folder.createDirectory();
+        // The approved libraries are the test's own, never the user's
+        const auto userRoots = AudioForge::FileSafety::rootsFile();
+        AudioForge::FileSafety::rootsFile() = folder.getChildFile("library-roots.txt");
 
         testNoteNames();
         testOpcodesInherit();
@@ -43,7 +46,9 @@ public:
         testControllers();
         testSamplePathsRestore();
         testUntrustedFiles();
+        testApprovedLibraries();
 
+        AudioForge::FileSafety::rootsFile() = userRoots;
         folder.deleteRecursively();
     }
 
@@ -512,7 +517,7 @@ private:
 
         SampleLibrary library;
         expect(library.loadSample(juce::File("//host/share/a.wav")) == nullptr);
-        expect(library.getLastError().contains("Network"));
+        expect(library.getLastError().containsIgnoreCase("network"), library.getLastError());
 
         juce::XmlElement saved("Parameters");
         auto* samples = saved.createNewChildElement("SamplerState")->createNewChildElement("Samples");
@@ -562,6 +567,47 @@ private:
         SfzSampleMap endless;
         expect(! endless.load(juce::File("/dev/zero"), error) && error.contains("regular"), error);
        #endif
+    }
+
+    void testApprovedLibraries()
+    {
+        using namespace AudioForge::FileSafety;
+       #if JUCE_WINDOWS
+        const juce::String share = "\\\\nas\\samples", other = "\\\\nas\\private";
+       #else
+        const juce::String share = "/net/nas/samples", other = "/net/nas/private";
+       #endif
+        const auto sep = juce::File::getSeparatorString();
+        const juce::File onShare(share + sep + "vsco" + sep + "x.wav");
+
+        beginTest("A file on another machine is refused unless its library is approved");
+        expect(isRemote(onShare), "an automount or a share is another machine");
+        expect(! isRemote(folder.getChildFile("x.wav")), "the temporary folder is this one");
+        expect(refusal(onShare).contains("network"), refusal(onShare));
+        expect(refusal(folder.getChildFile("x.wav")).isEmpty(), "a local file needs no approval");
+        expect(refusal(juce::File::getCurrentWorkingDirectory()).isEmpty());
+
+        beginTest("Approving a folder lets its files load, and only its files");
+        expect(approvedRoots().isEmpty());
+        approve(juce::File(share));
+        approve(juce::File(share));
+        expectEquals(approvedRoots().size(), 1, "approving twice lists it once");
+        expect(refusal(onShare).isEmpty(), refusal(onShare));
+        expect(refusal(juce::File(other + sep + "x.wav")).isNotEmpty(), "a folder beside it isn't approved");
+        expect(refusal(juce::File(share + "-old" + sep + "x.wav")).isNotEmpty(), "nor one whose name only starts the same");
+        expect(refusal("//elsewhere/share/x.wav", folder.getChildFile("x.wav")).contains("network"), "a network name is judged as written, however local it resolves");
+
+        // (Nothing here opens a file on the share: on a Mac that would mount /net)
+        beginTest("An SFZ's sample outside the approved libraries is still refused, and noted");
+        const auto sfz = folder.getChildFile("elsewhere.sfz");
+        sfz.replaceWithText("<region> sample=" + other + sep + "y.wav\n");
+        SfzSampleMap map;
+        juce::String error;
+        map.load(sfz, error);
+        const auto warnings = map.getWarnings().joinIntoString(" ");
+        expect(warnings.contains("network") && warnings.contains("private"), warnings);
+        rootsFile().deleteFile();
+        expect(approvedRoots().isEmpty());
     }
 };
 
