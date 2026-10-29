@@ -37,7 +37,7 @@ float ShakuhachiEngine::processSample(float baseFrequency, float velocity, bool 
     frequency *= vibrato;
 
     // Update waveguide delay length
-    tube_.delayLength = static_cast<float>(sampleRate_) / frequency;
+    tube_.setDelay(static_cast<float>(sampleRate_) / frequency);
 
     // Generate breath noise (primary excitation)
     float breathNoise = generateBreathNoise();
