@@ -78,12 +78,13 @@ void SaturationAudioProcessor::changeProgramName (int, const juce::String&) {}
 void SaturationAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
     currentSampleRate = sampleRate;
+    preparedBlockSize = juce::jmax(1, samplesPerBlock);
 
     // Determine oversampling factor
     int oversamplingIndex = oversamplingParam->getIndex();
     int newFactor = (oversamplingIndex == 0) ? 1 : (oversamplingIndex == 1) ? 2 : 4;
 
-    if (newFactor != currentOversamplingFactor || oversampler == nullptr)
+    if (newFactor != currentOversamplingFactor || (newFactor > 1 && oversampler == nullptr))
     {
         currentOversamplingFactor = newFactor;
 
@@ -97,8 +98,6 @@ void SaturationAudioProcessor::prepareToPlay (double sampleRate, int samplesPerB
                 true,  // Use steep filter
                 false  // Don't normalize gain
             );
-
-            oversampler->initProcessing(static_cast<size_t>(samplesPerBlock));
         }
         else
         {
@@ -106,9 +105,24 @@ void SaturationAudioProcessor::prepareToPlay (double sampleRate, int samplesPerB
         }
     }
 
+    // Size the oversampler for this block size on every prepare: a host may
+    // prepare again with a bigger block and the same factor
+    if (oversampler != nullptr)
+    {
+        oversampler->initProcessing(static_cast<size_t>(preparedBlockSize));
+        oversampler->reset();
+        setLatencySamples(juce::roundToInt(oversampler->getLatencyInSamples()));
+    }
+    else
+    {
+        setLatencySamples(0);
+    }
+
+    dryBuffer.setSize(getTotalNumOutputChannels(), preparedBlockSize, false, false, true);
+
     juce::dsp::ProcessSpec spec;
     spec.sampleRate = sampleRate * currentOversamplingFactor;
-    spec.maximumBlockSize = static_cast<juce::uint32>(samplesPerBlock * currentOversamplingFactor);
+    spec.maximumBlockSize = static_cast<juce::uint32>(preparedBlockSize * currentOversamplingFactor);
     spec.numChannels = static_cast<juce::uint32>(getTotalNumOutputChannels());
 
     // Initialize tone filters
@@ -121,7 +135,7 @@ void SaturationAudioProcessor::prepareToPlay (double sampleRate, int samplesPerB
     // Initialize DC blocker (at original sample rate)
     juce::dsp::ProcessSpec dcSpec;
     dcSpec.sampleRate = sampleRate;
-    dcSpec.maximumBlockSize = static_cast<juce::uint32>(samplesPerBlock);
+    dcSpec.maximumBlockSize = static_cast<juce::uint32>(preparedBlockSize);
     dcSpec.numChannels = spec.numChannels;
 
     dcBlocker.prepare(dcSpec);
@@ -157,12 +171,13 @@ void SaturationAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
     const float toneLowGain = toneLowParam->get();
     const float toneHighGain = toneHighParam->get();
 
-    // Update oversampling if changed
+    // Update oversampling if changed (or if the host never prepared us)
     int oversamplingIndex = oversamplingParam->getIndex();
     int newFactor = (oversamplingIndex == 0) ? 1 : (oversamplingIndex == 1) ? 2 : 4;
-    if (newFactor != currentOversamplingFactor)
+    if (newFactor != currentOversamplingFactor || preparedBlockSize == 0)
     {
-        prepareToPlay(currentSampleRate, buffer.getNumSamples());
+        prepareToPlay(currentSampleRate,
+                      preparedBlockSize > 0 ? preparedBlockSize : buffer.getNumSamples());
     }
 
     // Calculate input peak level
@@ -175,31 +190,6 @@ void SaturationAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
     }
     inputMeter.updateLevel(inputPeak);
 
-    // Store dry signal for mixing
-    juce::AudioBuffer<float> dryBuffer(totalNumInputChannels, buffer.getNumSamples());
-    for (int ch = 0; ch < totalNumInputChannels; ++ch)
-        dryBuffer.copyFrom(ch, 0, buffer, ch, 0, buffer.getNumSamples());
-
-    // Apply oversampling if enabled
-    juce::AudioBuffer<float>* processingBuffer = &buffer;
-    std::unique_ptr<juce::AudioBuffer<float>> oversampledBuffer;
-
-    if (oversampler != nullptr)
-    {
-        auto oversampledBlock = oversampler->processSamplesUp(juce::dsp::AudioBlock<float>(buffer));
-        oversampledBuffer = std::make_unique<juce::AudioBuffer<float>>(
-            oversampledBlock.getNumChannels(),
-            oversampledBlock.getNumSamples()
-        );
-
-        for (size_t ch = 0; ch < oversampledBlock.getNumChannels(); ++ch)
-            oversampledBuffer->copyFrom(static_cast<int>(ch), 0,
-                                       oversampledBlock.getChannelPointer(ch),
-                                       static_cast<int>(oversampledBlock.getNumSamples()));
-
-        processingBuffer = oversampledBuffer.get();
-    }
-
     // Update tone filter coefficients (at oversampled rate)
     const double oversampledSampleRate = currentSampleRate * currentOversamplingFactor;
 
@@ -209,55 +199,15 @@ void SaturationAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
     *highShelf.state = *juce::dsp::IIR::Coefficients<float>::makeHighShelf(
         oversampledSampleRate, 5000.0, 0.707f, juce::Decibels::decibelsToGain(toneHighGain));
 
-    // Process audio with saturation
-    const int numSamples = processingBuffer->getNumSamples();
+    // The oversampler and dry buffer are sized for the prepared block size,
+    // so a bigger block from the host is processed in pieces of that size
+    const int numChannels = juce::jmin(totalNumInputChannels, dryBuffer.getNumChannels());
 
-    for (int channel = 0; channel < totalNumInputChannels; ++channel)
+    for (int start = 0; start < buffer.getNumSamples(); start += preparedBlockSize)
     {
-        auto* channelData = processingBuffer->getWritePointer(channel);
-
-        for (int sample = 0; sample < numSamples; ++sample)
-        {
-            float input = channelData[sample];
-
-            // Apply drive (0-10x multiplier)
-            float driven = input * (1.0f + drive * 9.0f);
-
-            // Apply saturation based on selected mode
-            float saturated = AudioForge::DSP::SaturationAlgorithms::saturate(driven, mode);
-
-            channelData[sample] = saturated;
-        }
+        const int numSamples = juce::jmin(preparedBlockSize, buffer.getNumSamples() - start);
+        processChunk(buffer, start, numSamples, numChannels, drive, mix, mode);
     }
-
-    // Apply tone filters
-    juce::dsp::AudioBlock<float> block(*processingBuffer);
-    juce::dsp::ProcessContextReplacing<float> context(block);
-    lowShelf.process(context);
-    highShelf.process(context);
-
-    // Downsample if we used oversampling
-    if (oversampler != nullptr)
-    {
-        auto oversampledBlock = juce::dsp::AudioBlock<float>(*processingBuffer);
-        auto outputBlock = juce::dsp::AudioBlock<float>(buffer);
-        oversampler->processSamplesDown(outputBlock);
-    }
-
-    // Mix dry/wet
-    for (int ch = 0; ch < totalNumInputChannels; ++ch)
-    {
-        auto* wet = buffer.getWritePointer(ch);
-        const auto* dry = dryBuffer.getReadPointer(ch);
-
-        for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
-            wet[sample] = dry[sample] * (1.0f - mix) + wet[sample] * mix;
-    }
-
-    // Apply DC blocker
-    juce::dsp::AudioBlock<float> finalBlock(buffer);
-    juce::dsp::ProcessContextReplacing<float> dcContext(finalBlock);
-    dcBlocker.process(dcContext);
 
     // Calculate output peak level
     float outputPeak = 0.0f;
@@ -268,6 +218,60 @@ void SaturationAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
             outputPeak = std::max(outputPeak, std::abs(channelData[sample]));
     }
     outputMeter.updateLevel(outputPeak);
+}
+
+void SaturationAudioProcessor::processChunk (juce::AudioBuffer<float>& buffer, int startSample,
+                                             int numSamples, int numChannels,
+                                             float drive, float mix, int mode)
+{
+    // Store dry signal for mixing
+    for (int ch = 0; ch < numChannels; ++ch)
+        dryBuffer.copyFrom(ch, 0, buffer, ch, startSample, numSamples);
+
+    auto block = juce::dsp::AudioBlock<float>(buffer)
+                     .getSubsetChannelBlock(0, static_cast<size_t>(numChannels))
+                     .getSubBlock(static_cast<size_t>(startSample), static_cast<size_t>(numSamples));
+
+    // Saturate and shape the oversampled block in place, so that the
+    // downsampler reads the processed signal back
+    auto processingBlock = (oversampler != nullptr) ? oversampler->processSamplesUp(block) : block;
+
+    for (size_t channel = 0; channel < processingBlock.getNumChannels(); ++channel)
+    {
+        auto* channelData = processingBlock.getChannelPointer(channel);
+
+        for (size_t sample = 0; sample < processingBlock.getNumSamples(); ++sample)
+        {
+            // Apply drive (0-10x multiplier)
+            float driven = channelData[sample] * (1.0f + drive * 9.0f);
+
+            // Apply saturation based on selected mode
+            channelData[sample] = AudioForge::DSP::SaturationAlgorithms::saturate(driven, mode);
+        }
+    }
+
+    // Apply tone filters
+    juce::dsp::ProcessContextReplacing<float> context(processingBlock);
+    lowShelf.process(context);
+    highShelf.process(context);
+
+    // Downsample if we used oversampling
+    if (oversampler != nullptr)
+        oversampler->processSamplesDown(block);
+
+    // Mix dry/wet
+    for (int ch = 0; ch < numChannels; ++ch)
+    {
+        auto* wet = buffer.getWritePointer(ch, startSample);
+        const auto* dry = dryBuffer.getReadPointer(ch);
+
+        for (int sample = 0; sample < numSamples; ++sample)
+            wet[sample] = dry[sample] * (1.0f - mix) + wet[sample] * mix;
+    }
+
+    // Apply DC blocker
+    juce::dsp::ProcessContextReplacing<float> dcContext(block);
+    dcBlocker.process(dcContext);
 }
 
 bool SaturationAudioProcessor::hasEditor() const

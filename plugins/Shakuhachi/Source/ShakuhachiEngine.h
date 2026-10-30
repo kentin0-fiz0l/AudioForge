@@ -30,21 +30,49 @@ private:
     {
         std::array<float, DELAY_BUFFER_SIZE> buffer{};
         int writePos = 0;
-        float delayLength = 0.0f;
         float feedback = 0.98f;
+
+        // Loop length = intDelay whole samples + a first-order allpass whose
+        // phase delay at the fundamental supplies the fractional remainder
+        int intDelay = 1;
+        float allpassCoeff = 0.0f;
+        float allpassState = 0.0f;
 
         void reset()
         {
             buffer.fill(0.0f);
             writePos = 0;
+            allpassState = 0.0f;
+        }
+
+        // Sets the loop length in samples (sampleRate / frequency)
+        void setDelay(float delaySamples)
+        {
+            const float delay = juce::jlimit(4.0f, static_cast<float>(DELAY_BUFFER_SIZE - 2), delaySamples);
+
+            // Keep the allpass delay in [0.5, 1.5), where it is well behaved
+            intDelay = static_cast<int>(std::floor(delay - 0.5f));
+            const float fraction = delay - static_cast<float>(intDelay);
+
+            // Thiran's (1 - d) / (1 + d) is exact only near DC; this form gives
+            // phase delay of exactly d at the fundamental, so the loop's phase
+            // there is a whole cycle and the note is in tune at any length
+            const float omega = juce::MathConstants<float>::twoPi / delay;
+            allpassCoeff = juce::jlimit(-0.99f, 0.99f,
+                                        std::sin(omega * (1.0f - fraction) * 0.5f)
+                                            / std::sin(omega * (1.0f + fraction) * 0.5f));
         }
 
         float process(float input)
         {
-            int readPos = static_cast<int>(writePos - delayLength);
+            int readPos = writePos - intDelay;
             if (readPos < 0) readPos += DELAY_BUFFER_SIZE;
+            const int prevPos = (readPos == 0) ? DELAY_BUFFER_SIZE - 1 : readPos - 1;
 
-            float output = buffer[readPos % DELAY_BUFFER_SIZE];
+            // First-order allpass: y[n] = a * x[n] + x[n-1] - a * y[n-1]
+            float output = allpassCoeff * (buffer[readPos] - allpassState) + buffer[prevPos];
+            allpassState = output;
+
             buffer[writePos] = input + output * feedback;
             writePos = (writePos + 1) % DELAY_BUFFER_SIZE;
 

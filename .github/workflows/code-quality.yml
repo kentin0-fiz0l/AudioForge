@@ -15,7 +15,8 @@ concurrency:
 jobs:
   clang-format-check:
     name: Check Code Formatting
-    runs-on: ubuntu-latest
+    # ubuntu-latest is now 26.04, which no longer packages clang-format-14
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout code

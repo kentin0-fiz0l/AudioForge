@@ -56,6 +56,9 @@ public:
     };
 
 private:
+    void processChunk (juce::AudioBuffer<float>& buffer, int startSample, int numSamples,
+                       int numChannels, float drive, float mix, int mode);
+
     // Tone filters (low and high shelves)
     juce::dsp::ProcessorDuplicator<juce::dsp::IIR::Filter<float>,
                                     juce::dsp::IIR::Coefficients<float>> lowShelf;
@@ -69,6 +72,10 @@ private:
     // Oversampling
     std::unique_ptr<juce::dsp::Oversampling<float>> oversampler;
     int currentOversamplingFactor = 1;
+    int preparedBlockSize = 0;
+
+    // Dry copy for the mix, sized in prepareToPlay
+    juce::AudioBuffer<float> dryBuffer;
 
     double currentSampleRate = 44100.0;
 

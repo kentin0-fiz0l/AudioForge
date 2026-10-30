@@ -13,6 +13,7 @@
  */
 
 #include <juce_audio_processors/juce_audio_processors.h>
+#include <cmath>
 
 // Include Saturation plugin headers
 #include "../../plugins/Saturation/Source/PluginProcessor.h"
@@ -34,6 +35,9 @@ public:
         testToneControls();
         testMixControl();
         testOversamplingModes();
+        testOversamplingWithLargeBlocks();
+        testOversampledPathIsSaturated();
+        testOversamplingReportsLatency();
         testStateManagement();
         testLevelMetering();
     }
@@ -323,6 +327,126 @@ private:
             expect(std::isfinite(buffer.getMagnitude(0, 512)),
                  "Output should be finite with oversampling mode " + juce::String(mode));
         }
+    }
+
+    static void setOversampling(SaturationAudioProcessor& processor, int index)
+    {
+        processor.oversamplingParam->setValueNotifyingHost(
+            processor.oversamplingParam->convertTo0to1(static_cast<float>(index)));
+    }
+
+    static void fillSine(juce::AudioBuffer<float>& buffer, double sampleRate,
+                         double frequency, float amplitude, int64_t& phaseSample)
+    {
+        for (int i = 0; i < buffer.getNumSamples(); ++i)
+        {
+            const auto t = static_cast<double>(phaseSample + i) / sampleRate;
+            const auto value = amplitude * static_cast<float>(
+                std::sin(juce::MathConstants<double>::twoPi * frequency * t));
+            for (int ch = 0; ch < buffer.getNumChannels(); ++ch)
+                buffer.setSample(ch, i, value);
+        }
+        phaseSample += buffer.getNumSamples();
+    }
+
+    void testOversamplingWithLargeBlocks()
+    {
+        beginTest("4x oversampling survives blocks larger than the first prepare");
+
+        // pedalboard prepares once with a small block, then again with the
+        // render buffer size; it used to crash at 2048 and 4096
+        for (int blockSize : { 2048, 4096 })
+        {
+            SaturationAudioProcessor processor;
+            setOversampling(processor, 2);
+            processor.driveParam->setValueNotifyingHost(processor.driveParam->convertTo0to1(60.0f));
+            processor.prepareToPlay(44100.0, 512);
+            processor.prepareToPlay(44100.0, blockSize);
+
+            juce::AudioBuffer<float> buffer(2, blockSize);
+            juce::MidiBuffer midi;
+            int64_t phase = 0;
+            bool allFinite = true;
+
+            for (int block = 0; block < 4; ++block)
+            {
+                fillSine(buffer, 44100.0, 440.0, 0.5f, phase);
+                processor.processBlock(buffer, midi);
+                for (int ch = 0; ch < 2; ++ch)
+                    for (int i = 0; i < blockSize; ++i)
+                        allFinite = allFinite && std::isfinite(buffer.getSample(ch, i));
+            }
+
+            expect(allFinite, "Output should be finite at block size " + juce::String(blockSize));
+        }
+
+        // A host that sends a bigger block than it prepared for must not crash either
+        SaturationAudioProcessor processor;
+        setOversampling(processor, 2);
+        processor.prepareToPlay(44100.0, 512);
+
+        juce::AudioBuffer<float> buffer(2, 4096);
+        juce::MidiBuffer midi;
+        int64_t phase = 0;
+        fillSine(buffer, 44100.0, 440.0, 0.5f, phase);
+        processor.processBlock(buffer, midi);
+
+        bool allFinite = true;
+        for (int ch = 0; ch < 2; ++ch)
+            for (int i = 0; i < buffer.getNumSamples(); ++i)
+                allFinite = allFinite && std::isfinite(buffer.getSample(ch, i));
+        expect(allFinite, "Output should be finite for a block larger than prepared");
+        expect(buffer.getMagnitude(0, 2048, 2048) > 0.1f,
+               "The whole oversized block should be processed, not left silent");
+    }
+
+    void testOversampledPathIsSaturated()
+    {
+        beginTest("Oversampled output carries the saturation");
+
+        // Crest factor (peak / RMS) of a sine is 1.414; hard drive squares it
+        // off towards 1. Measured after the oversampler latency has settled.
+        auto crestFactorFor = [](int oversamplingIndex)
+        {
+            SaturationAudioProcessor processor;
+            setOversampling(processor, oversamplingIndex);
+            processor.driveParam->setValueNotifyingHost(processor.driveParam->convertTo0to1(100.0f));
+            processor.prepareToPlay(44100.0, 1024);
+
+            juce::AudioBuffer<float> buffer(2, 1024);
+            juce::MidiBuffer midi;
+            int64_t phase = 0;
+
+            for (int block = 0; block < 8; ++block)
+            {
+                fillSine(buffer, 44100.0, 441.0, 0.5f, phase);
+                processor.processBlock(buffer, midi);
+            }
+
+            const float peak = buffer.getMagnitude(0, 0, 1024);
+            const float rms = buffer.getRMSLevel(0, 0, 1024);
+            return rms > 0.0f ? peak / rms : 0.0f;
+        };
+
+        const float offCrest = crestFactorFor(0);
+        const float x4Crest = crestFactorFor(2);
+
+        expect(offCrest < 1.3f, "Off path should be saturated, crest " + juce::String(offCrest));
+        expect(x4Crest < 1.3f, "4x path should be saturated like the Off path, crest "
+                                   + juce::String(x4Crest));
+    }
+
+    void testOversamplingReportsLatency()
+    {
+        beginTest("Oversampling reports its latency to the host");
+
+        SaturationAudioProcessor processor;
+        processor.prepareToPlay(44100.0, 512);
+        expectEquals(processor.getLatencySamples(), 0, "Off should add no latency");
+
+        setOversampling(processor, 2);
+        processor.prepareToPlay(44100.0, 512);
+        expect(processor.getLatencySamples() > 0, "4x should report the oversampler latency");
     }
 
     void testStateManagement()
